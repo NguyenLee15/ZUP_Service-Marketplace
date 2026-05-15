@@ -14,13 +14,13 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://service-marketplace-ibjt.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://service-marketplace-qq3u.onrender.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://service-marketplace-ibjt.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://service-marketplace-qq3u.onrender.com"
       }
     }
   },

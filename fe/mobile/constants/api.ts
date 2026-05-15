@@ -16,7 +16,7 @@ const DEV_API_URL = Platform.select({
 });
 
 // Production API URL (Render.com)
-const PROD_API_URL = 'https://service-marketplace-ibjt.onrender.com';
+const PROD_API_URL = 'https://service-marketplace-qq3u.onrender.com';
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? DEV_API_URL : PROD_API_URL);
 export const WS_URL = API_BASE_URL;
