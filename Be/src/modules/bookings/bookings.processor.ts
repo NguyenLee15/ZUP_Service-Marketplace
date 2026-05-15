@@ -1,0 +1,149 @@
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NOTIFICATION_EVENTS } from '../../common/events/notification-events';
+
+import { RedisService } from '../../shared/redis/redis.service';
+
+@Processor('booking-queue')
+export class BookingsProcessor extends WorkerHost {
+  private readonly logger = new Logger(BookingsProcessor.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private redisService: RedisService,
+    private eventEmitter: EventEmitter2,
+  ) {
+    super();
+  }
+
+  async process(job: Job<any, any, string>): Promise<any> {
+    switch (job.name) {
+      case 'booking.auto-complete':
+        return this.handleAutoComplete(job.data.bookingId);
+      case 'booking.sla-noshow-alert':
+        return this.handleNoshowAlert(job.data.bookingId);
+      case 'booking.sla-stuck-inprogress':
+        return this.handleStuckInProgress(job.data.bookingId);
+      default:
+        this.logger.warn(`Unknown job name: ${job.name}`);
+    }
+  }
+
+  private async handleAutoComplete(bookingId: number) {
+    this.logger.log(`Processing auto-complete for booking #${bookingId}`);
+
+    return this.prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.findUnique({
+        where: { id: bookingId },
+        include: { quotation: true },
+      });
+
+      if (!booking || booking.status !== 'DONE' || booking.autoCompletedAt) {
+        return;
+      }
+
+      // 1. Cập nhật autoCompletedAt
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: { autoCompletedAt: new Date() },
+      });
+
+      // 2. Ghi log timeline
+      await tx.bookingStatusHistory.create({
+        data: {
+          bookingId: booking.id,
+          fromStatus: 'DONE',
+          toStatus: 'DONE',
+          changedBy: 0, // System
+          note: 'Hệ thống tự động chốt đơn sau 24h',
+        },
+      });
+
+      // 3. Trừ hoa hồng
+      if (booking.quotation) {
+        const commissionFee =
+          (Number(booking.quotation.actualPrice) *
+            Number(booking.quotation.commissionRateSnapshot)) /
+          100;
+
+        if (commissionFee > 0) {
+          const wallet = await tx.providerWallet.update({
+            where: { providerId: booking.providerId },
+            data: { balance: { decrement: commissionFee } },
+          });
+
+          await tx.walletTransaction.create({
+            data: {
+              walletId: wallet.id,
+              amount: -commissionFee,
+              type: 'COMMISSION',
+              status: 'SUCCESS',
+              bookingId: booking.id,
+            },
+          });
+
+          if (Number(wallet.balance) < 0 && !wallet.isRestricted) {
+            await tx.providerWallet.update({
+              where: { id: wallet.id },
+              data: { isRestricted: true },
+            });
+          }
+        }
+      }
+    });
+  }
+
+  private async handleNoshowAlert(bookingId: number) {
+    this.logger.log(`Processing No-show alert for booking #${bookingId}`);
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+    if (!booking || booking.status !== 'CONFIRMED') return;
+
+    // Emit event thay vì gọi prisma trực tiếp — NotificationListener xử lý
+    this.eventEmitter.emit(NOTIFICATION_EVENTS.SEND, {
+      userId: booking.customerId,
+      type: 'SLA_NOSHOW',
+      title: 'Nhà cung cấp chưa đến?',
+      content: `Đơn hàng #${booking.bookingCode} đã quá giờ hẹn khảo sát. Bạn có thể chọn hủy đơn nếu Nhà cung cấp không phản hồi.`,
+      referenceId: bookingId,
+    });
+
+    // Set flag in Redis to allow free cancellation even if CONFIRMED
+    await this.redisService.set(
+      `booking:noshow:${bookingId}`,
+      'true',
+      24 * 60 * 60,
+    );
+  }
+
+  private async handleStuckInProgress(bookingId: number) {
+    this.logger.log(`Processing Stuck In-Progress for booking #${bookingId}`);
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+    if (!booking || booking.status !== 'IN_PROGRESS') return;
+
+    // Logic: Nếu quá Y ngày -> Cảnh báo. Nếu quá Z ngày -> Tự động chuyển DONE.
+    // Giả sử job này được add khi đạt mốc Z ngày.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: 'DONE', completedAt: new Date() },
+      });
+
+      await tx.bookingStatusHistory.create({
+        data: {
+          bookingId: booking.id,
+          fromStatus: 'IN_PROGRESS',
+          toStatus: 'DONE',
+          changedBy: 0,
+          note: 'Hệ thống tự động chuyển DONE do đơn hàng ở trạng thái IN_PROGRESS quá lâu',
+        },
+      });
+    });
+  }
+}
