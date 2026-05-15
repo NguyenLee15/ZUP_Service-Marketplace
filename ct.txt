@@ -1,0 +1,1 @@
+UI, UX, Performance (Hiệu năng), Functionality (Chức năng cốt lõi), System Design / Scalability, Security (Bảo mật), Data & Analytics, Dev Experience (DX), Reliability (Độ ổn định)

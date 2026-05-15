@@ -1,0 +1,220 @@
+/**
+ * Chat tab - conversation list + unread badges.
+ */
+import { useCallback, useEffect, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Avatar, Badge, Text, useTheme } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { chatApi } from '../../features/chat/chat.api';
+import { Colors } from '../../constants/colors';
+import {
+  ProviderCard,
+  ProviderEmptyState,
+  ProviderInlineMessage,
+  ProviderPageHeader,
+  ProviderScreen,
+} from '../../components/provider/provider-ui';
+
+export default function ChatListScreen() {
+  const theme = useTheme();
+  const router = useRouter();
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchConversations = useCallback(async () => {
+    try {
+      const res = await chatApi.getConversations();
+      setConversations(res.data?.data || []);
+    } catch {
+      setMessage('Không thể tải danh sách tin nhắn. Kéo xuống để thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setMessage(null);
+    await fetchConversations();
+    setRefreshing(false);
+  }, [fetchConversations]);
+
+  const formatTime = (date: string) => {
+    const d = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'Vừa xong';
+    if (diffMin < 60) return `${diffMin} phút`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH} giờ`;
+    return d.toLocaleDateString('vi-VN');
+  };
+
+  const renderConversation = ({ item }: { item: any }) => {
+    const customer = item.customer;
+    const lastMessage = item.lastMessage;
+    const unread = item.unreadCount || 0;
+    const isAi = lastMessage?.isAiGenerated;
+    const contextName = item.service?.name || item.booking?.service?.name || (item.booking ? `Đơn #${item.booking.bookingCode}` : 'Trao đổi trước đặt');
+
+    return (
+      <ProviderCard
+        style={styles.conversationCard}
+        contentStyle={styles.conversationRow}
+        accessibilityLabel={`Tin nhắn với ${customer?.fullName || 'khách hàng'}`}
+        onPress={() =>
+          router.push({
+            pathname: '/chat-room/[id]' as any,
+            params: {
+              id: item.id,
+              customerName: customer?.fullName || 'Khách hàng',
+              serviceName: contextName,
+              contextType: item.booking ? 'booking' : 'service',
+            },
+          })
+        }
+      >
+        <View style={styles.avatarContainer}>
+          <Avatar.Text
+            size={48}
+            label={customer?.fullName?.charAt(0) || 'K'}
+            style={styles.avatar}
+            labelStyle={styles.avatarLabel}
+          />
+          {unread > 0 && <Badge style={styles.badge}>{unread > 9 ? '9+' : unread}</Badge>}
+        </View>
+
+        <View style={styles.conversationContent}>
+          <View style={styles.conversationHeader}>
+            <Text variant="titleSmall" style={[styles.customerName, unread > 0 && styles.unreadText]} numberOfLines={1}>
+              {customer?.fullName || 'Khách hàng'}
+            </Text>
+            <Text variant="labelSmall" style={[styles.timeText, unread > 0 && { color: theme.colors.primary }]}>
+              {lastMessage ? formatTime(lastMessage.createdAt) : ''}
+            </Text>
+          </View>
+          <View style={styles.lastMessageRow}>
+            {isAi && <MaterialCommunityIcons name="robot-outline" size={14} color={Colors.light.secondary} />}
+            <Text variant="bodySmall" style={[styles.lastMessage, unread > 0 && styles.unreadText]} numberOfLines={1}>
+              {lastMessage?.content || 'Chưa có tin nhắn'}
+            </Text>
+          </View>
+          <Text variant="labelSmall" style={styles.serviceName} numberOfLines={1}>
+            {contextName}
+          </Text>
+        </View>
+      </ProviderCard>
+    );
+  };
+
+  return (
+    <ProviderScreen>
+      <FlatList
+        data={conversations}
+        keyExtractor={item => String(item.id)}
+        renderItem={renderConversation}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />}
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          <View style={styles.headerStack}>
+            <ProviderPageHeader title="Tin nhắn" subtitle="Trao đổi với khách hàng theo dịch vụ hoặc đơn hàng." />
+            {message && <ProviderInlineMessage tone="error" message={message} />}
+          </View>
+        }
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator style={styles.loading} color={theme.colors.primary} />
+          ) : (
+            <ProviderEmptyState
+              icon="chat-outline"
+              title="Chưa có cuộc trò chuyện"
+              description="Tin nhắn từ khách hàng sẽ xuất hiện tại đây khi họ hỏi về dịch vụ hoặc tạo đơn."
+            />
+          )
+        }
+      />
+    </ProviderScreen>
+  );
+}
+
+const styles = StyleSheet.create({
+  listContent: {
+    padding: 16,
+    paddingBottom: 112,
+  },
+  headerStack: {
+    gap: 12,
+    marginBottom: 12,
+  },
+  conversationCard: {
+    marginBottom: 10,
+  },
+  conversationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatar: {
+    backgroundColor: `${Colors.light.primary}16`,
+  },
+  avatarLabel: {
+    color: Colors.light.primary,
+    fontWeight: '800',
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: Colors.light.error,
+  },
+  conversationContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  conversationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  customerName: {
+    flex: 1,
+    color: Colors.light.text,
+    fontWeight: '700',
+  },
+  unreadText: {
+    fontWeight: '800',
+    color: Colors.light.text,
+  },
+  timeText: {
+    color: Colors.light.textSecondary,
+  },
+  lastMessageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  lastMessage: {
+    flex: 1,
+    color: Colors.light.textSecondary,
+  },
+  serviceName: {
+    color: Colors.light.textSecondary,
+    marginTop: 4,
+  },
+  loading: {
+    marginTop: 40,
+  },
+});

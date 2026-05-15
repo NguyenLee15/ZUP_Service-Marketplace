@@ -1,0 +1,10 @@
+import { NextRequest } from 'next/server';
+import { proxyToBackend } from '@/app/api/_lib/proxy';
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  return proxyToBackend(req, `/bookings/${id}/dispute`);
+}
