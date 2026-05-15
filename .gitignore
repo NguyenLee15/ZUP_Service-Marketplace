@@ -1,0 +1,25 @@
+node_modules/
+.env
+dist/
+build/
+coverage/
+*.tsbuildinfo
+__pycache__/
+*.pyc
+.expo/
+.next/
+.vercel/
+.v0-trash/
+.snowflake/
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+
+# Environment variables
+.env*.local
+**/deploy/*-env-vars.txt
+
+# Generated performance reports. Keep only reports/perf/.gitkeep in git.
+reports/perf/*.json
+reports/perf/*.html
+!reports/perf/.gitkeep

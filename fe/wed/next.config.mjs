@@ -1,0 +1,30 @@
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+});
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  images: {
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    remotePatterns: [
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'api.dicebear.com' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'i.pravatar.cc' },
+    ],
+  },
+  turbopack: {},
+}
+
+export default withPWA(nextConfig)

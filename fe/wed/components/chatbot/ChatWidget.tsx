@@ -1,0 +1,484 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import {
+  Bot,
+  CalendarCheck,
+  Check,
+  ChevronRight,
+  Clock,
+  Loader2,
+  MessageSquare,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  User,
+  Wrench,
+  X,
+} from "lucide-react";
+import api from "@/lib/axios";
+
+interface ChatService {
+  id: number;
+  name: string;
+  description?: string;
+  referencePrice: number;
+  providerId: number;
+  providerName: string;
+  avgRating: number;
+  totalReviews: number;
+  categoryName: string;
+  imageUrl?: string;
+}
+
+interface QuickReply {
+  label: string;
+  message: string;
+}
+
+interface AssistantAction {
+  id: string;
+  type:
+    | "CREATE_BOOKING_DRAFT"
+    | "CONFIRM_CREATE_BOOKING"
+    | "OPEN_PROVIDER_CHAT"
+    | "VIEW_BOOKING"
+    | "REBOOK"
+    | "CANCEL_BOOKING_DRAFT";
+  label: string;
+  summary: string;
+  payload: Record<string, unknown>;
+  requiresConfirmation: boolean;
+  href?: string;
+}
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  services?: ChatService[];
+  quickReplies?: QuickReply[];
+  action?: AssistantAction;
+}
+
+function renderMarkdown(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} className="font-semibold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function messageId() {
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export function ChatWidget() {
+  const pathname = usePathname();
+  const hiddenRoutes = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ];
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content:
+        "Xin chào, tôi là Customer AI Assistant. Tôi có thể tìm dịch vụ, so sánh lựa chọn, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
+      quickReplies: [
+        {
+          label: "Tìm dịch vụ",
+          message: "Máy lạnh chảy nước thì nên chọn dịch vụ nào?",
+        },
+        {
+          label: "So sánh",
+          message: "So sánh dịch vụ vệ sinh máy lạnh giúp tôi",
+        },
+        { label: "Đơn của tôi", message: "Đơn của tôi tới đâu rồi?" },
+      ],
+    },
+  ]);
+
+  const pageContext = useMemo(() => {
+    const serviceMatch = pathname?.match(/\/services\/(\d+)/);
+    const bookingMatch = pathname?.match(/\/bookings\/(\d+)/);
+    return {
+      path: pathname || "/",
+      serviceId: serviceMatch?.[1],
+      bookingId: bookingMatch?.[1],
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("chatbot-session-id");
+    if (stored) setSessionId(stored);
+  }, []);
+
+  useEffect(() => {
+    if (sessionId) {
+      window.localStorage.setItem("chatbot-session-id", sessionId);
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isOpen, isLoading]);
+
+  if (hiddenRoutes.includes(pathname)) return null;
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(Number(price || 0));
+
+  const sendMessage = async (
+    text: string,
+    options?: { confirmedActionId?: string; visibleText?: string },
+  ) => {
+    const trimmed = text.trim();
+    if ((!trimmed && !options?.confirmedActionId) || isLoading) return;
+
+    const visibleText = options?.visibleText || trimmed;
+    if (visibleText) {
+      setMessages((prev) => [
+        ...prev,
+        { id: messageId(), role: "user", content: visibleText },
+      ]);
+    }
+
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const history = messages.slice(-8).map((message) => ({
+        role: message.role,
+        content: message.content,
+      }));
+
+      const response = await api.post("/chatbot/ask", {
+        message: trimmed,
+        sessionId,
+        pageContext,
+        history,
+        confirmedActionId: options?.confirmedActionId,
+      });
+      const data = response.data?.data;
+
+      if (data?.sessionId) setSessionId(data.sessionId);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: messageId(),
+          role: "assistant",
+          content: data?.reply || "Tôi chưa có phản hồi phù hợp lúc này.",
+          services: data?.services || [],
+          quickReplies: data?.quickReplies || [],
+          action: data?.action,
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: messageId(),
+          role: "assistant",
+          content:
+            "Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây, thao tác trước đó chưa được thực hiện.",
+          quickReplies: [{ label: "Thử lại", message: trimmed }],
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const confirmAction = (action: AssistantAction) => {
+    sendMessage("", {
+      confirmedActionId: action.id,
+      visibleText: action.label,
+    });
+  };
+
+  return (
+    <>
+      {!isOpen && (
+        <button
+          id="chat-widget-btn"
+          onClick={() => setIsOpen(true)}
+          aria-label="Mở trợ lý AI"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/25 transition hover:-translate-y-0.5 hover:bg-blue-700"
+        >
+          <MessageSquare className="h-6 w-6" />
+        </button>
+      )}
+
+      {isOpen && (
+        <div
+          id="chat-widget-modal"
+          className="fixed bottom-6 right-6 z-50 flex h-[620px] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15"
+        >
+          <div className="border-b border-slate-200 bg-white px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="truncate text-sm font-semibold text-slate-950">
+                    Customer AI Assistant
+                  </h3>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Tìm dịch vụ, đặt lịch, tra cứu đơn
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                aria-label="Đóng trợ lý AI"
+                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 px-3 py-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                {message.role === "assistant" && (
+                  <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                    <Bot className="h-3.5 w-3.5" />
+                  </div>
+                )}
+
+                <div className="max-w-[84%] space-y-2">
+                  <div
+                    className={`whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
+                      message.role === "user"
+                        ? "rounded-tr-md bg-blue-600 text-white"
+                        : "rounded-tl-md border border-slate-200 bg-white text-slate-800"
+                    }`}
+                  >
+                    {message.role === "assistant"
+                      ? renderMarkdown(message.content)
+                      : message.content}
+                  </div>
+
+                  {message.services && message.services.length > 0 && (
+                    <div className="space-y-2">
+                      {message.services.map((service) => (
+                        <Link
+                          key={service.id}
+                          href={`/services/${service.id}`}
+                          className="group block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+                        >
+                          <div className="flex gap-3">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 text-slate-500">
+                              {service.imageUrl ? (
+                                <img
+                                  src={service.imageUrl}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <Wrench className="h-5 w-5" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="line-clamp-2 text-sm font-semibold text-slate-950 group-hover:text-blue-700">
+                                  {service.name}
+                                </p>
+                                <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-600" />
+                              </div>
+                              <p className="mt-1 truncate text-xs text-slate-500">
+                                {service.categoryName} · {service.providerName}
+                              </p>
+                              <div className="mt-2 flex items-center justify-between gap-2">
+                                <span className="text-sm font-semibold text-blue-700">
+                                  {formatPrice(service.referencePrice)}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
+                                  <Star className="h-3.5 w-3.5 fill-current" />
+                                  {Number(service.avgRating || 0).toFixed(1)}
+                                  <span className="text-slate-400">
+                                    ({service.totalReviews || 0})
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {message.action && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-950 shadow-sm">
+                      <div className="flex items-start gap-2">
+                        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                        <div className="min-w-0">
+                          <p className="font-semibold">
+                            {message.action.label}
+                          </p>
+                          <p className="mt-1 text-xs leading-relaxed text-blue-800">
+                            {message.action.summary}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {message.action.requiresConfirmation ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => confirmAction(message.action!)}
+                              disabled={isLoading}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                              Xác nhận
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => sendMessage("Hủy nháp đặt lịch")}
+                              disabled={isLoading}
+                              className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-50"
+                            >
+                              Hủy
+                            </button>
+                          </>
+                        ) : message.action.href ? (
+                          <Link
+                            href={message.action.href}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                          >
+                            Mở ngay
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </Link>
+                        ) : null}
+                      </div>
+                    </div>
+                  )}
+
+                  {message.quickReplies && message.quickReplies.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {message.quickReplies.map((reply) => (
+                        <button
+                          key={`${message.id}-${reply.label}`}
+                          type="button"
+                          onClick={() => sendMessage(reply.message)}
+                          disabled={isLoading}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-50"
+                        >
+                          {reply.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {message.role === "user" && (
+                  <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600">
+                    <User className="h-3.5 w-3.5" />
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex justify-start gap-2">
+                <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                  <Bot className="h-3.5 w-3.5" />
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-600 shadow-sm">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  Đang phân tích dữ liệu thật
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="border-t border-slate-200 bg-white p-3">
+            <div className="mb-2 grid grid-cols-3 gap-1.5">
+              <button
+                type="button"
+                onClick={() => sendMessage("Tìm dịch vụ phù hợp cho tôi")}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Tìm
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  sendMessage("Tôi muốn đặt lịch dịch vụ này ngày mai lúc 9h")
+                }
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
+              >
+                <CalendarCheck className="h-3.5 w-3.5" />
+                Đặt
+              </button>
+              <button
+                type="button"
+                onClick={() => sendMessage("Đơn của tôi tới đâu rồi?")}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
+              >
+                <Clock className="h-3.5 w-3.5" />
+                Đơn
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") sendMessage(input);
+                }}
+                placeholder="Nhập nhu cầu, ví dụ: máy lạnh chảy nước..."
+                disabled={isLoading}
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-3.5 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:opacity-60"
+              />
+              <button
+                type="button"
+                onClick={() => sendMessage(input)}
+                disabled={!input.trim() || isLoading}
+                aria-label="Gửi tin nhắn"
+                className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
