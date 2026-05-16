@@ -14,8 +14,6 @@ import { HeroSection } from '@/app/components/home/HeroSection';
 import { CategoryGrid } from '@/app/components/home/CategoryGrid';
 import { FeaturedServices } from '@/app/components/home/FeaturedServices';
 import { HowItWorks } from '@/app/components/home/HowItWorks';
-import { Testimonials } from '@/app/components/home/Testimonials';
-import { FaqSection } from '@/app/components/home/FaqSection';
 import { UnifiedServiceCard } from '@/app/components/services/UnifiedServiceCard';
 
 export default function Home() {
@@ -131,10 +129,6 @@ export default function Home() {
           <FeaturedServices services={featuredServices} />
 
           <HowItWorks />
-
-          <Testimonials />
-
-          <FaqSection />
         </div>
       </main>
 
