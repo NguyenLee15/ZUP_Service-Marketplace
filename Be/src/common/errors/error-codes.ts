@@ -1,0 +1,39 @@
+/**
+ * Error codes tập trung — FE dựa vào code này để switch case xử lý UI.
+ * Không parse message string.
+ */
+export const ErrorCodes = {
+  // 400 Bad Request
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  OTP_INVALID: 'OTP_INVALID',
+  OTP_RATE_LIMIT: 'OTP_RATE_LIMIT',
+  BOOKING_INVALID_STATE: 'BOOKING_INVALID_STATE',
+  INVALID_STATUS: 'INVALID_STATUS',
+  SERVICE_NOT_ACTIVE: 'SERVICE_NOT_ACTIVE',
+  WALLET_INSUFFICIENT: 'WALLET_INSUFFICIENT',
+  KYC_PENDING: 'KYC_PENDING',
+
+  // 401 Unauthorized
+  UNAUTHORIZED: 'UNAUTHORIZED',
+
+  // 403 Forbidden
+  FORBIDDEN: 'FORBIDDEN',
+  ACCOUNT_LOCKED: 'ACCOUNT_LOCKED',
+  TENANT_VIOLATION: 'TENANT_VIOLATION',
+
+  // 404 Not Found
+  NOT_FOUND: 'NOT_FOUND',
+
+  // 409 Conflict
+  DUPLICATE_EMAIL: 'DUPLICATE_EMAIL',
+  DUPLICATE_KYC: 'DUPLICATE_KYC',
+
+  // 422 Unprocessable Entity
+  PAYMENT_HASH_INVALID: 'PAYMENT_HASH_INVALID',
+  PAYMENT_DUPLICATE: 'PAYMENT_DUPLICATE',
+
+  // 500 Internal Server Error
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

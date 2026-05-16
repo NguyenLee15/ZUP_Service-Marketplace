@@ -1,0 +1,39 @@
+1. PostgreSQL — Neon.tech
+DATABASE_URL="postgresql://<user>:<password>@<host>/<database>?sslmode=require&channel_binding=require"
+
+2. Redis — Upstash
+REDIS_URL="rediss://default:<password>@<host>:6379"
+UPSTASH_REDIS_REST_URL="https://<host>"
+UPSTASH_REDIS_REST_TOKEN="<upstash-rest-token>"
+
+3. Cloudinary
+CLOUDINARY_CLOUD_NAME="<cloud-name>"
+CLOUDINARY_API_KEY="<api-key>"
+CLOUDINARY_API_SECRET="<api-secret>"
+CLOUDINARY_UPLOAD_PRESET="<upload-preset>"
+
+4. Gmail SMTP (Nodemailer)
+GMAIL_USER="<mail-user>"
+GMAIL_APP_PASSWORD="<gmail-app-password>"
+MAIL_FROM="Marketplace <mail-user>"
+
+5. OpenAI
+OPENAI_API_KEY="<gemini-api-key>"
+OPENAI_BASE_URL="https://generativelanguage.googleapis.com/v1beta/openai/"
+OPENAI_CHAT_MODEL="gemini-2.0-flash"        
+OPENAI_EMBEDDING_MODEL="text-embedding-004" 
+
+6. VNPay Sandbox
+VNPAY_TMN_CODE="<vnpay-tmn-code>"
+VNPAY_HASH_SECRET="<vnpay-hash-secret>"
+VNPAY_URL="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+VNPAY_RETURN_URL="http://localhost:3000/payment/return"
+VNPAY_IPN_URL="http://localhost:3001/wallets/vnpay/ipn"
+⚠️ **IPN URL cần public endpoint.** Khi dev local, dùng [ngrok](https://ngrok.com): `ngrok http 3001` → copy URL https → dán vào `VNPAY_IPN_URL`.
+
+7. Google reCAPTCHA v3
+# Backend
+RECAPTCHA_SECRET_KEY="<recaptcha-secret-key>"
+
+# Frontend
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY="<recaptcha-site-key>"

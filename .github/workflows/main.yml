@@ -1,0 +1,48 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  backend:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./Be
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: './Be/package-lock.json'
+    - run: npm ci
+    - run: npx prisma generate
+    - run: npm run lint
+    - run: npm run build
+
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fe/wed
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'pnpm'
+        cache-dependency-path: './fe/wed/pnpm-lock.yaml'
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm run lint
+    - run: pnpm run build
