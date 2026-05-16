@@ -331,10 +331,6 @@ export function ChatWidget() {
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 px-3 py-4">
-            {/* DEBUG — xóa sau khi fix xong */}
-            <div className="rounded bg-yellow-100 p-2 text-xs text-yellow-800">
-              status: {status} | msgs: {messages.length} | error: {error?.message || "none"}
-            </div>
             {messages.map((message) => {
               const meta = metaMap[message.id] || {};
               const text = getMessageText(message);
