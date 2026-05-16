@@ -255,6 +255,110 @@ export class ChatbotService {
     return { message: 'Đã xóa phiên chatbot' };
   }
 
+  /**
+   * Xử lý logic nghiệp vụ (detect intent, tìm dịch vụ, resolve session, tạo booking draft)
+   * mà KHÔNG gọi AI. Trả về context + structured data để NextJS streaming route sử dụng.
+   */
+  async prepareContext(
+    userId: number | undefined,
+    input: ChatbotAskRequest,
+  ): Promise<{
+    needsAiStream: boolean;
+    systemPrompt: string;
+    serviceContext: string;
+    sessionId: string;
+    reply?: string;
+    services: ChatServiceResult[];
+    quickReplies: ChatbotQuickReply[];
+    action?: ChatbotAction;
+    confidence: number;
+    citations: ChatbotCitation[];
+  }> {
+    const message = (input.message || '').trim();
+    const session = await this.resolveSession(userId, input.sessionId, message);
+
+    const baseResult = {
+      sessionId: session.id,
+      services: [] as ChatServiceResult[],
+      quickReplies: [] as ChatbotQuickReply[],
+      confidence: 0.7,
+      citations: [] as ChatbotCitation[],
+      needsAiStream: false,
+      systemPrompt: '',
+      serviceContext: '',
+    };
+
+    // Xử lý confirmed action — không cần stream
+    if (input.confirmedActionId) {
+      const response = await this.executeConfirmedAction(userId, session, input.confirmedActionId);
+      await this.persistTurn(session, message, response);
+      return { ...baseResult, ...response, needsAiStream: false, reply: response.reply };
+    }
+
+    // Tin nhắn trống
+    if (!message) {
+      const reply = 'Bạn muốn tôi tìm dịch vụ, so sánh lựa chọn, tạo lịch đặt hay tra cứu đơn hàng?';
+      const quickReplies = this.defaultQuickReplies();
+      const response = this.withSession(session, { reply, services: [], quickReplies, confidence: 0.7, citations: [] });
+      await this.persistTurn(session, message, response);
+      return { ...baseResult, reply, quickReplies, needsAiStream: false };
+    }
+
+    // Hủy nháp
+    if (this.isCancelDraftMessage(message)) {
+      delete session.state.bookingDraft;
+      session.state.pendingActions = {};
+      const reply = 'Tôi đã hủy nháp và các thao tác đang chờ xác nhận trong phiên chat này.';
+      const quickReplies = this.defaultQuickReplies();
+      const response = this.withSession(session, { reply, services: [], quickReplies, confidence: 1, citations: [] });
+      await this.persistTurn(session, message, response);
+      return { ...baseResult, reply, quickReplies, confidence: 1, needsAiStream: false };
+    }
+
+    const intent = this.detectIntent(message);
+
+    // Các intent không cần AI stream — xử lý trực tiếp
+    if (intent.name !== 'search') {
+      const response = await this.handleIntent(userId, session, message, input.history || [], input.pageContext, intent);
+      await this.persistTurn(session, message, response);
+      return { ...baseResult, ...response, needsAiStream: false, reply: response.reply };
+    }
+
+    // Intent 'search' — cần AI stream
+    const services = await this.findRelevantServices(message, input.pageContext);
+    const serviceCards = services.map((s) => this.toServiceCard(s));
+
+    if (services.length === 0) {
+      const reply = 'Tôi chưa tìm thấy dịch vụ phù hợp trong hệ thống. Bạn có thể mô tả cụ thể hơn, ví dụ "máy lạnh chảy nước", "ổ điện bị chập" hoặc "dọn nhà cuối tuần".';
+      const quickReplies = this.defaultQuickReplies();
+      const response = this.withSession(session, { reply, services: [], quickReplies, confidence: 0.45, citations: [] });
+      await this.persistTurn(session, message, response);
+      return { ...baseResult, reply, quickReplies, confidence: 0.45, needsAiStream: false };
+    }
+
+    const context = this.buildServiceContext(services);
+    const systemPrompt =
+      'Bạn là trợ lý ảo của HomeService Marketplace. Trả lời tiếng Việt ngắn gọn, rõ ràng, không bịa dữ liệu. ' +
+      'Chỉ nhắc tới dịch vụ, giá, nhà cung cấp, trạng thái nếu có trong dữ liệu hệ thống bên dưới. ' +
+      'Hãy tư vấn dựa trên danh sách dịch vụ thật. Nếu phù hợp, hỏi thêm thời gian hoặc địa chỉ để tạo nháp đặt lịch.\n\n' +
+      `Dữ liệu hệ thống:\n${context}`;
+
+    return {
+      needsAiStream: true,
+      systemPrompt,
+      serviceContext: context,
+      sessionId: session.id,
+      services: serviceCards,
+      quickReplies: [
+        { label: 'So sánh các dịch vụ', message: 'So sánh các dịch vụ này giúp tôi' },
+        { label: 'Tạo lịch đặt', message: 'Tôi muốn đặt lịch dịch vụ này' },
+        { label: 'Chat với nhà cung cấp', message: 'Tôi muốn nhắn tin với nhà cung cấp' },
+      ],
+      confidence: intent.confidence,
+      citations: serviceCards.map((s) => ({ type: 'service' as const, id: s.id, label: s.name, href: `/services/${s.id}` })),
+    };
+  }
+
   private async handleIntent(
     userId: number | undefined,
     session: SessionContext,
