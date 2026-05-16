@@ -31,8 +31,8 @@ export class AiService {
     this.baseUrl =
       this.configService.get<string>('ai.baseUrl') ||
       'https://generativelanguage.googleapis.com/v1beta';
-    this.timeoutMs = this.configService.get<number>('ai.timeoutMs') || 5000;
-    this.retryCount = this.configService.get<number>('ai.retryCount') || 1;
+    this.timeoutMs = this.configService.get<number>('ai.timeoutMs') || 15000;
+    this.retryCount = this.configService.get<number>('ai.retryCount') || 3;
     this.chatModelName =
       this.configService.get<string>('ai.chatModel') || 'gemini-2.0-flash';
     this.embeddingModelName =
@@ -165,14 +165,31 @@ export class AiService {
     const prompt = `Phân tích khiếu nại sau của khách hàng trên hệ thống Service Marketplace.
 Khiếu nại: "${reason}"
 
-Trả về ĐÚNG JSON, không markdown:
-{
-  "category": "Chất lượng dịch vụ" | "Thái độ" | "Giá cả" | "Khác",
-  "severity": "Cao" | "Trung bình" | "Thấp",
-  "summary": "Tóm tắt ngắn gọn dưới 30 chữ"
-}`;
+Phân loại category vào 1 trong 4 nhóm: "Chất lượng dịch vụ", "Thái độ", "Giá cả", "Khác".
+Phân loại severity vào 1 trong 3 mức: "Cao", "Trung bình", "Thấp".
+Tóm tắt ngắn gọn dưới 30 chữ.`;
 
-    return this.generateJson(prompt, this.timeoutMs * 2);
+    const schema = {
+      type: 'OBJECT',
+      properties: {
+        category: { type: 'STRING', enum: ['Chất lượng dịch vụ', 'Thái độ', 'Giá cả', 'Khác'] },
+        severity: { type: 'STRING', enum: ['Cao', 'Trung bình', 'Thấp'] },
+        summary: { type: 'STRING' }
+      },
+      required: ['category', 'severity', 'summary']
+    };
+
+    try {
+      const result = await this.generateJson<{ category: string; severity: string; summary: string }>(
+        prompt, 
+        this.timeoutMs * 2,
+        schema
+      );
+      if (!result) return { category: 'Khác', severity: 'Trung bình', summary: 'Không thể phân tích tự động' };
+      return result;
+    } catch {
+      return { category: 'Khác', severity: 'Trung bình', summary: 'Không thể phân tích tự động' };
+    }
   }
 
   async suggestReplies(messages: string[]): Promise<string[]> {
@@ -180,14 +197,17 @@ Trả về ĐÚNG JSON, không markdown:
 
     const prompt = `Dựa vào đoạn hội thoại sau giữa Khách hàng và Thợ, hãy gợi ý 3 câu trả lời ngắn gọn dưới 10 chữ cho Thợ.
 Đoạn hội thoại:
-${messages.map((message) => `- ${message}`).join('\n')}
+${messages.map((message) => `- ${message}`).join('\n')}`;
 
-Trả về ĐÚNG JSON array:
-["câu 1", "câu 2", "câu 3"]`;
+    const schema = {
+      type: 'ARRAY',
+      items: { type: 'STRING' }
+    };
 
     const result = await this.generateJson<string[]>(
       prompt,
       this.timeoutMs * 2,
+      schema
     );
     return Array.isArray(result) ? result.slice(0, 3) : [];
   }
@@ -196,14 +216,20 @@ Trả về ĐÚNG JSON array:
     if (!this.apiKey || this.provider !== 'gemini') return false;
 
     const prompt = `Phân tích bình luận sau. Trả về true nếu bình luận chứa chửi thề, độc hại, lăng mạ, hoặc spam link. Trả về false nếu bình thường.
-Bình luận: "${comment}"
+Bình luận: "${comment}"`;
 
-Trả về ĐÚNG JSON:
-{ "isToxic": true | false }`;
+    const schema = {
+      type: 'OBJECT',
+      properties: {
+        isToxic: { type: 'BOOLEAN' }
+      },
+      required: ['isToxic']
+    };
 
     const result = await this.generateJson<{ isToxic?: boolean }>(
       prompt,
       this.timeoutMs * 2,
+      schema
     );
     return result?.isToxic === true;
   }
@@ -216,10 +242,15 @@ Trả về ĐÚNG JSON:
     if (!this.apiKey || this.provider !== 'gemini') return true;
 
     const prompt = `Đây là ảnh nghiệm thu cho dịch vụ "${serviceName}".
-Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che khuất hoàn toàn, hoặc không liên quan, trả về false. Nếu hợp lý hoặc có vẻ hợp lý, trả về true.
+Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che khuất hoàn toàn, hoặc không liên quan, trả về false. Nếu hợp lý hoặc có vẻ hợp lý, trả về true.`;
 
-Trả về ĐÚNG JSON:
-{ "isValid": true | false }`;
+    const schema = {
+      type: 'OBJECT',
+      properties: {
+        isValid: { type: 'BOOLEAN' }
+      },
+      required: ['isValid']
+    };
 
     const data = await this.postJson<GeminiResponse>(
       this.geminiUrl(this.chatModelName, 'generateContent'),
@@ -232,7 +263,10 @@ Trả về ĐÚNG JSON:
             ],
           },
         ],
-        generationConfig: { responseMimeType: 'application/json' },
+        generationConfig: { 
+          responseMimeType: 'application/json',
+          responseSchema: schema
+        },
       },
       this.timeoutMs * 3,
     );
@@ -247,11 +281,17 @@ Trả về ĐÚNG JSON:
   private async generateJson<T>(
     prompt: string,
     timeoutMs: number,
+    schema?: Record<string, unknown>,
   ): Promise<T | null> {
+    const generationConfig: Record<string, unknown> = { responseMimeType: 'application/json' };
+    if (schema) {
+      generationConfig.responseSchema = schema;
+    }
+
     const text = await this.generateText(
       [{ role: 'user', parts: [{ text: prompt }] }],
       undefined,
-      { responseMimeType: 'application/json' },
+      generationConfig,
       timeoutMs,
     );
     return text ? this.safeJsonParse<T>(text) : null;
@@ -339,7 +379,12 @@ Trả về ĐÚNG JSON:
           );
           return null;
         }
-        await this.sleep(250 * (attempt + 1));
+        
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 500, 8000);
+        this.logger.warn(
+          `AI request failed (attempt ${attempt + 1}/${retryCount + 1}), retrying in ${Math.round(backoffMs)}ms. Error: ${message}`,
+        );
+        await this.sleep(backoffMs);
       } finally {
         clearTimeout(timeoutId);
       }
@@ -358,27 +403,37 @@ Trả về ĐÚNG JSON:
 
   private safeJsonParse<T>(text: string): T | null {
     try {
+      // Dọn dẹp markdown block
       const cleaned = text
         .trim()
-        .replace(/^```json\s*/i, '')
-        .replace(/^```\s*/i, '')
-        .replace(/```$/i, '')
+        .replace(/^```(json)?/im, '')
+        .replace(/```$/im, '')
         .trim();
-      const objectStart = cleaned.indexOf('{');
-      const arrayStart = cleaned.indexOf('[');
-      const start =
-        objectStart === -1
-          ? arrayStart
-          : arrayStart === -1
-            ? objectStart
-            : Math.min(objectStart, arrayStart);
-      const end = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
-      const json =
-        start >= 0 && end >= start ? cleaned.slice(start, end + 1) : cleaned;
-      return JSON.parse(json) as T;
+
+      // Thử parse toàn bộ trước
+      try {
+        return JSON.parse(cleaned) as T;
+      } catch (e) {
+        // Nếu lỗi, cố gắng bóc tách mảng hoặc object
+        const objectStart = cleaned.indexOf('{');
+        const arrayStart = cleaned.indexOf('[');
+        const start =
+          objectStart === -1
+            ? arrayStart
+            : arrayStart === -1
+              ? objectStart
+              : Math.min(objectStart, arrayStart);
+        const end = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
+        
+        if (start >= 0 && end >= start) {
+          const json = cleaned.slice(start, end + 1);
+          return JSON.parse(json) as T;
+        }
+        throw e;
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`AI JSON parse failed: ${message}`);
+      this.logger.warn(`AI JSON parse failed: ${message}. Raw text: ${text.slice(0, 100)}...`);
       return null;
     }
   }
