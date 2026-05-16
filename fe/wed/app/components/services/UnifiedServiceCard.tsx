@@ -127,7 +127,7 @@ export function UnifiedServiceCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative aspect-[3/2] sm:aspect-[4/3] overflow-hidden bg-muted">
         <Link href={detailHref} onClick={handleDetailClick} className="block h-full w-full">
           {imageUrl ? (
             <Image
@@ -184,7 +184,7 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onToggleFavorite?.(service);
                 }}
-                className={`h-10 w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
+                className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
                   isFavorite ? 'bg-red-500 text-white' : 'bg-white/85 text-foreground hover:bg-white'
                 }`}
               >
@@ -244,8 +244,8 @@ export function UnifiedServiceCard({
         )}
       </div>
 
-      <CardContent className="flex flex-1 flex-col p-6">
-        <div className="flex-1 space-y-3">
+      <CardContent className="flex flex-1 flex-col p-3 sm:p-6">
+        <div className="flex-1 space-y-1.5 sm:space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5 rounded-full bg-amber-pop/15 px-2 py-1 text-xs font-bold text-midnight-indigo">
               <Star className="h-3.5 w-3.5 fill-yellow-400 border-0" />
@@ -258,13 +258,13 @@ export function UnifiedServiceCard({
 
           <Link href={detailHref} onClick={handleDetailClick} className="block">
             <h3
-              className="line-clamp-1 text-lg font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue"
+              className="line-clamp-1 text-sm sm:text-lg font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue"
               style={{ viewTransitionName: `service-title-${service.id}` } as any}
             >
               {service.name}
             </h3>
           </Link>
-          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+          <p className="line-clamp-2 text-xs sm:text-sm leading-relaxed text-muted-foreground text-pretty">
             {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
           </p>
           {showTrustBadges && (
@@ -281,7 +281,7 @@ export function UnifiedServiceCard({
           )}
         </div>
 
-        <div className="mt-6 flex items-center justify-between gap-4 border-t border-border/50 pt-5">
+        <div className="mt-3 sm:mt-6 flex items-center justify-between gap-2 sm:gap-4 border-t border-border/50 pt-3 sm:pt-5">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="relative shrink-0">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-action-blue text-[10px] font-bold text-white shadow-md">
@@ -289,7 +289,7 @@ export function UnifiedServiceCard({
               </div>
               <Shield className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-white text-green-500" />
             </div>
-            <span className="truncate text-xs font-bold text-foreground/80">
+            <span className="truncate text-[10px] sm:text-xs font-bold text-foreground/80">
               {service.provider?.fullName || 'Đối tác HomeService'}
             </span>
           </div>
@@ -303,7 +303,7 @@ export function UnifiedServiceCard({
                 </span>
               )}
             </div>
-            <div className={`${priceMode === 'estimate' ? 'text-base' : 'text-lg'} font-bold leading-none text-action-blue tabular-nums`}>
+            <div className={`${priceMode === 'estimate' ? 'text-xs sm:text-base' : 'text-sm sm:text-lg'} font-bold leading-none text-action-blue tabular-nums`}>
               {priceMode === 'estimate'
                 ? `${formatPrice(service.referencePrice).replace('₫', '').trim()} - ${formatPrice(Number(service.referencePrice || 0) * 1.5)}`
                 : formatPrice(service.referencePrice)}
@@ -311,7 +311,7 @@ export function UnifiedServiceCard({
           </div>
         </div>
         {showPrimaryAction && (
-          <Link href={detailHref} onClick={handleDetailClick} className="mt-5">
+          <Link href={detailHref} onClick={handleDetailClick} className="mt-3 sm:mt-5">
             <Button className="w-full rounded-lg bg-action-blue font-bold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,box-shadow,transform] hover:bg-glacier-blue active:scale-[0.98]">
               Đặt ngay
             </Button>
