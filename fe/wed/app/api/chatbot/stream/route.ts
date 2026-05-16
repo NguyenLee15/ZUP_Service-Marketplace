@@ -27,6 +27,7 @@ function createTextOnlyResponse(text: string) {
   return createUIMessageStreamResponse({
     stream: createUIMessageStream({
       execute: async ({ writer }) => {
+        writer.write({ type: "text-start", id: "fallback" });
         writer.write({ type: "text-delta", delta: text, id: "fallback" });
       },
     }),
