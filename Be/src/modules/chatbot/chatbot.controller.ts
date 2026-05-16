@@ -27,6 +27,16 @@ export class ChatbotController {
     return { data: result };
   }
 
+  @Post('prepare')
+  @UseGuards(OptionalJwtAuthGuard)
+  async prepareContext(
+    @CurrentUser('id') userId: number | undefined,
+    @Body() body: ChatbotAskRequest,
+  ) {
+    const result = await this.chatbotService.prepareContext(userId, body);
+    return { data: result };
+  }
+
   @Get('sessions')
   @UseGuards(JwtAuthGuard)
   async listSessions(@CurrentUser('id') userId: number) {
