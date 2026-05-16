@@ -122,18 +122,18 @@ export function ServiceDetailClient({ service }: { service: any }) {
                 onClick={() =>
                   setCurrentImage((p) => (p === 0 ? images.length - 1 : p - 1))
                 }
-                className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-midnight-indigo/55 hover:bg-midnight-indigo/75 rounded-full text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 p-2 sm:p-2 bg-midnight-indigo/55 hover:bg-midnight-indigo/75 rounded-full text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5 sm:w-5 sm:h-5" />
               </button>
               <button
                 aria-label="Xem ảnh tiếp theo"
                 onClick={() =>
                   setCurrentImage((p) => (p === images.length - 1 ? 0 : p + 1))
                 }
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-midnight-indigo/55 hover:bg-midnight-indigo/75 rounded-full text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-2 sm:p-2 bg-midnight-indigo/55 hover:bg-midnight-indigo/75 rounded-full text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-5 h-5 sm:w-5 sm:h-5" />
               </button>
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                 {images.map((_: any, i: number) => (
@@ -170,7 +170,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
               )}
             </div>
             <h1
-              className="text-2xl font-bold text-foreground"
+              className="text-xl sm:text-2xl font-bold text-foreground leading-tight"
               style={
                 { viewTransitionName: `service-title-${service.id}` } as any
               }
@@ -183,15 +183,18 @@ export function ServiceDetailClient({ service }: { service: any }) {
               Giá tham khảo
               <Scale className="w-3 h-3 text-emerald-500" />
             </p>
-            <div className="flex flex-col items-end">
-              <p className="text-2xl font-bold text-action-blue">
+            <div className="flex flex-col items-end mt-1">
+              <p className="text-xl sm:text-2xl font-bold text-action-blue">
                 {formatPrice(Number(service.referencePrice))}
               </p>
-              <div className="flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 shadow-sm">
-                <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">
+              <div className="flex items-center gap-1 mt-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 shadow-sm">
+                <span className="text-[8px] sm:text-[9px] font-bold text-emerald-700 uppercase tracking-widest hidden sm:inline">
                   Giá đề xuất
                 </span>
-                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[8px] font-bold text-emerald-700 uppercase tracking-widest sm:hidden">
+                  Đề xuất
+                </span>
+                <div className="w-1.5 h-1.5 sm:w-1 sm:h-1 rounded-full bg-emerald-500 animate-pulse" />
               </div>
             </div>
           </div>
@@ -224,49 +227,51 @@ export function ServiceDetailClient({ service }: { service: any }) {
 
         {/* Provider Card */}
         <Card className="surface-card rounded-[20px] py-0">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-action-blue flex items-center justify-center text-white text-xl font-bold shrink-0">
-              {service.provider?.fullName?.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-foreground text-lg">
-                  {service.provider?.fullName}
-                </h3>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest border border-green-200">
-                  <Shield className="w-3 h-3" />
-                  Đã xác minh
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-pale-gray text-muted-foreground text-[10px] font-bold uppercase tracking-widest border border-platinum-tint">
-                  <div className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  </div>
-                  Trực tuyến
-                </div>
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-action-blue flex items-center justify-center text-white text-xl font-bold shrink-0">
+                {service.provider?.fullName?.charAt(0)}
               </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                {service.provider?.phone && (
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    {isAuthenticated()
-                      ? service.provider.phone
-                      : service.provider.phone.slice(0, 4) +
-                        "****" +
-                        service.provider.phone.slice(-2)}
-                  </span>
-                )}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <h3 className="font-bold text-foreground text-base sm:text-lg">
+                    {service.provider?.fullName}
+                  </h3>
+                  <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-green-200">
+                    <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    Đã xác minh
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-1.5">
+                  <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-pale-gray text-muted-foreground text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-platinum-tint">
+                    <div className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-green-500"></span>
+                    </div>
+                    Trực tuyến
+                  </div>
+                  {service.provider?.phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {isAuthenticated()
+                        ? service.provider.phone
+                        : service.provider.phone.slice(0, 4) +
+                          "****" +
+                          service.provider.phone.slice(-2)}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="shrink-0"
+              className="w-full sm:w-auto sm:ml-auto shrink-0 mt-2 sm:mt-0"
               onClick={handleStartChat}
               disabled={chatLoading}
             >
-              <MessageSquare className="w-4 h-4 mr-1" />
-              {chatLoading ? "Đang mở..." : "Nhắn tin"}
+              <MessageSquare className="w-4 h-4 mr-1.5" />
+              {chatLoading ? "Đang mở..." : "Nhắn tin cho thợ"}
             </Button>
           </CardContent>
         </Card>
@@ -275,66 +280,66 @@ export function ServiceDetailClient({ service }: { service: any }) {
 
         {/* Thống kê hiệu suất nhà cung cấp — dữ liệu thật từ API */}
         <Card className="surface-card overflow-hidden rounded-[20px] mb-8 py-0">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-5">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4 sm:mb-5">
               <div className="p-1.5 rounded-lg bg-pale-gray text-action-blue">
                 <BarChart3 className="w-4 h-4" />
               </div>
-              <h3 className="text-lg font-bold text-midnight-indigo">
+              <h3 className="text-base sm:text-lg font-bold text-midnight-indigo">
                 Thống kê nhà cung cấp
               </h3>
             </div>
 
             {providerStats ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-pale-gray/50 border border-platinum-tint text-center">
-                  <div className="flex justify-center mb-2">
-                    <Clock className="w-5 h-5 text-action-blue" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                <div className="p-3 sm:p-4 rounded-xl bg-pale-gray/50 border border-platinum-tint text-center">
+                  <div className="flex justify-center mb-1 sm:mb-2">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-action-blue" />
                   </div>
-                  <p className="text-2xl font-bold text-action-blue">
+                  <p className="text-lg sm:text-2xl font-bold text-action-blue">
                     {providerStats.avgResponseHours !== null
                       ? `~${providerStats.avgResponseHours}h`
                       : "N/A"}
                   </p>
-                  <p className="text-xs text-slate-blue font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-slate-blue font-medium mt-1">
                     Phản hồi TB
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-green-50 border border-green-100 text-center">
-                  <div className="flex justify-center mb-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <div className="p-3 sm:p-4 rounded-xl bg-green-50 border border-green-100 text-center">
+                  <div className="flex justify-center mb-1 sm:mb-2">
+                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   </div>
-                  <p className="text-2xl font-bold text-green-700">
+                  <p className="text-lg sm:text-2xl font-bold text-green-700">
                     {providerStats.completionRate !== null
                       ? `${providerStats.completionRate}%`
                       : "N/A"}
                   </p>
-                  <p className="text-xs text-green-600/70 font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-green-600/70 font-medium mt-1">
                     Hoàn thành
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-pale-gray/50 border border-platinum-tint text-center">
-                  <div className="flex justify-center mb-2">
-                    <Award className="w-5 h-5 text-action-blue" />
+                <div className="p-3 sm:p-4 rounded-xl bg-pale-gray/50 border border-platinum-tint text-center">
+                  <div className="flex justify-center mb-1 sm:mb-2">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-action-blue" />
                   </div>
-                  <p className="text-2xl font-bold text-action-blue">
+                  <p className="text-lg sm:text-2xl font-bold text-action-blue">
                     {providerStats.totalCompleted}
                   </p>
-                  <p className="text-xs text-slate-blue font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-slate-blue font-medium mt-1">
                     Đơn hoàn thành
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-100 text-center">
-                  <div className="flex justify-center mb-2">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" />
+                <div className="p-3 sm:p-4 rounded-xl bg-yellow-50 border border-yellow-100 text-center">
+                  <div className="flex justify-center mb-1 sm:mb-2">
+                    <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-400" />
                   </div>
-                  <p className="text-2xl font-bold text-yellow-700">
+                  <p className="text-lg sm:text-2xl font-bold text-yellow-700">
                     {Number(service.avgRating || 0).toFixed(1)}
                   </p>
-                  <p className="text-xs text-yellow-600/70 font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-yellow-600/70 font-medium mt-1">
                     Đánh giá TB
                   </p>
                 </div>
@@ -402,11 +407,11 @@ export function ServiceDetailClient({ service }: { service: any }) {
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border p-4 z-30">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border p-3 sm:p-4 z-30">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <div className="flex-1">
-            <p className="text-sm text-muted-foreground">Giá tham khảo</p>
-            <p className="text-lg font-bold text-action-blue">
+            <p className="text-[10px] sm:text-sm text-muted-foreground leading-none mb-1">Giá tham khảo</p>
+            <p className="text-base sm:text-lg font-bold text-action-blue leading-none">
               {formatPrice(Number(service.referencePrice))}
             </p>
           </div>
@@ -418,9 +423,9 @@ export function ServiceDetailClient({ service }: { service: any }) {
               }
               router.push(`/bookings/create?serviceId=${service.id}`);
             }}
-            className="h-12 px-8 bg-action-blue hover:bg-glacier-blue text-white font-semibold rounded-xl shadow-[var(--brand-shadow-button)] transition-colors"
+            className="h-10 sm:h-12 px-5 sm:px-8 bg-action-blue hover:bg-glacier-blue text-white font-semibold text-sm sm:text-base rounded-xl shadow-[var(--brand-shadow-button)] transition-colors shrink-0"
           >
-            <Calendar className="w-5 h-5 mr-2" /> Đặt lịch ngay
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" /> Đặt lịch
           </Button>
         </div>
       </div>

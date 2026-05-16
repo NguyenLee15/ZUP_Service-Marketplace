@@ -7,9 +7,9 @@ import {
 
 export function CustomerFooter() {
   return (
-    <footer className="bg-white text-muted-foreground pt-16 pb-8 border-t border-platinum-tint transition-colors duration-300">
+    <footer className="bg-white text-muted-foreground pt-10 sm:pt-16 pb-6 sm:pb-8 border-t border-platinum-tint transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
           <div className="space-y-4">
             <Link
               href="/"
@@ -159,7 +159,7 @@ export function CustomerFooter() {
 
         <SocialFeedSection />
 
-        <div className="pt-8 border-t border-platinum-tint flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="pt-6 sm:pt-8 border-t border-platinum-tint flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-sm text-muted-foreground" suppressHydrationWarning>
             © {new Date().getFullYear()} HomeService Marketplace. Mọi quyền được
             bảo lưu.

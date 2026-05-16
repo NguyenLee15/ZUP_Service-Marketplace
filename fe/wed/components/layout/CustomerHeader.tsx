@@ -140,14 +140,14 @@ export function CustomerHeader() {
         className={`sticky top-0 z-50 transition-[background-color,border-color,box-shadow,padding] duration-300 ${
           scrolled
             ? 'bg-white/85 backdrop-blur-2xl border-b border-platinum-tint shadow-[var(--brand-shadow-sm)] py-2'
-            : 'bg-white/95 backdrop-blur-md border-b border-platinum-tint py-3'
+            : 'bg-white/95 backdrop-blur-md border-b border-platinum-tint py-2 sm:py-3'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center gap-4 h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center gap-2 sm:gap-4 h-14 sm:h-16">
             <div className="flex items-center gap-2 shrink-0">
               <Link href="/" className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl">
-                <div className="w-10 h-10 rounded-xl bg-action-blue flex items-center justify-center text-white font-bold text-xl shadow-[var(--brand-shadow-button)] group-hover:scale-105 transition-transform duration-300">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-action-blue flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-[var(--brand-shadow-button)] group-hover:scale-105 transition-transform duration-300">
                   H
                 </div>
                 <span className="font-bold text-2xl text-midnight-indigo tracking-tight hidden md:block">
@@ -170,15 +170,15 @@ export function CustomerHeader() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Hôm nay bạn cần giúp gì?…"
-                  className="w-full bg-cloud-mist border border-platinum-tint hover:border-steel-gray focus:bg-card focus:border-action-blue focus:ring-4 focus:ring-action-blue/10 rounded-full py-2.5 pl-5 pr-14 outline-none focus-visible:ring-2 focus-visible:ring-action-blue transition-colors duration-300 text-sm md:text-base text-foreground"
+                  className="w-full bg-cloud-mist border border-platinum-tint hover:border-steel-gray focus:bg-card focus:border-action-blue focus:ring-4 focus:ring-action-blue/10 rounded-full py-1.5 sm:py-2.5 pl-4 sm:pl-5 pr-10 sm:pr-14 outline-none focus-visible:ring-2 focus-visible:ring-action-blue transition-colors duration-300 text-xs sm:text-sm md:text-base text-foreground"
                 />
                 <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <button
                     type="submit"
                     aria-label="Tìm kiếm"
-                    className="p-2 bg-action-blue text-white hover:bg-glacier-blue rounded-full shadow-sm hover:shadow transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                    className="p-1.5 sm:p-2 bg-action-blue text-white hover:bg-glacier-blue rounded-full shadow-sm hover:shadow transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                   >
-                    <Search className="w-5 h-5" />
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </form>

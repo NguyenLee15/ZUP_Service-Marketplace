@@ -50,8 +50,8 @@ export default function BookingsPage() {
   const formatDate = (d: string) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Đơn hàng của tôi</h1>
+    <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">Đơn hàng của tôi</h1>
 
       <Tabs value={status} onValueChange={setStatus}>
         <TabsList className="w-full justify-start overflow-x-auto mb-4 bg-muted p-1 rounded-lg">
@@ -91,35 +91,38 @@ export default function BookingsPage() {
               return (
                 <Link key={booking.id} href={`/bookings/${booking.id}`}>
                   <Card className="surface-card rounded-[20px] py-0 hover:border-action-blue/30 hover:shadow-[var(--brand-shadow-card)] transition-[border-color,box-shadow,transform] cursor-pointer">
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-pale-gray flex items-center justify-center shrink-0 overflow-hidden">
-                        {booking.service?.images?.[0]?.imageUrl ? (
-                          <img src={booking.service.images[0].imageUrl} alt="" className="w-full h-full object-cover" />
-                        ) : <Package className="w-6 h-6 text-action-blue" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-muted-foreground font-mono">#{booking.bookingCode}</span>
-                          <Badge className={`text-[10px] ${sc.color} border-0`}>
-                            <StatusIcon className="w-3 h-3 mr-1" /> {sc.label}
-                          </Badge>
+                    <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                      <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-pale-gray flex items-center justify-center shrink-0 overflow-hidden">
+                          {booking.service?.images?.[0]?.imageUrl ? (
+                            <img src={booking.service.images[0].imageUrl} alt="" className="w-full h-full object-cover" />
+                          ) : <Package className="w-5 h-5 sm:w-6 sm:h-6 text-action-blue" />}
                         </div>
-                        <h3 className="font-medium text-foreground text-sm truncate">{booking.service?.name}</h3>
-                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
-                          <User className="w-3.5 h-3.5 shrink-0" />
-                          <span className="shrink-0">Người thực hiện:</span>
-                          <span className="font-medium text-foreground truncate">
-                            {booking.provider?.fullName || 'Chưa xác định'}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                            <span className="text-[10px] sm:text-xs text-muted-foreground font-mono">#{booking.bookingCode}</span>
+                            <Badge className={`text-[9px] sm:text-[10px] px-1.5 py-0 sm:px-2.5 sm:py-0.5 ${sc.color} border-0`}>
+                              <StatusIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" /> {sc.label}
+                            </Badge>
+                          </div>
+                          <h3 className="font-bold text-foreground text-xs sm:text-sm truncate">{booking.service?.name}</h3>
+                          <div className="mt-1 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-muted-foreground min-w-0">
+                            <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                            <span className="shrink-0 hidden sm:inline">Người thực hiện:</span>
+                            <span className="shrink-0 sm:hidden">Thợ:</span>
+                            <span className="font-medium text-foreground truncate">
+                              {booking.provider?.fullName || 'Chưa xác định'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{formatDate(booking.createdAt)}</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">{formatDate(booking.createdAt)}</p>
                       </div>
 
                       {['DONE', 'CANCELLED'].includes(booking.status) && (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-xs border-platinum-tint text-action-blue hover:bg-pale-gray shrink-0"
+                          className="text-[10px] sm:text-xs border-platinum-tint text-action-blue hover:bg-pale-gray shrink-0 w-full sm:w-auto h-8 sm:h-9"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();

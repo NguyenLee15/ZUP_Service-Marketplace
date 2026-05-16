@@ -103,10 +103,10 @@ function CreateBookingContent() {
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <p className="text-sm font-semibold text-action-blue">Bước 1/3</p>
-        <h1 className="text-3xl font-bold brand-heading mt-1">Đặt dịch vụ</h1>
+    <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="mb-4 sm:mb-6">
+        <p className="text-xs sm:text-sm font-semibold text-action-blue">Bước 1/3</p>
+        <h1 className="text-2xl sm:text-3xl font-bold brand-heading mt-1">Đặt dịch vụ</h1>
         <p className="text-sm text-muted-foreground mt-2">Mô tả nhu cầu, địa chỉ và khung giờ mong muốn để nhà cung cấp xác nhận lịch.</p>
       </div>
 
@@ -129,8 +129,8 @@ function CreateBookingContent() {
         </Card>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="surface-card space-y-2 p-6 rounded-[20px]">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+        <div className="surface-card space-y-2 p-4 sm:p-6 rounded-[20px]">
           <DynamicQuestionnaire 
             serviceName={service?.name || ''}
             description={description}
@@ -181,7 +181,7 @@ function CreateBookingContent() {
           )}
         </div>
 
-        <div className="surface-card grid gap-4 rounded-[20px] p-6 md:grid-cols-3">
+        <div className="surface-card grid gap-4 rounded-[20px] p-4 sm:p-6 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="booking-province">Tỉnh/Thành *</Label>
             <Input id="booking-province" name="province" autoComplete="address-level1" value={province} onChange={(e) => {
@@ -208,7 +208,7 @@ function CreateBookingContent() {
           </div>
         </div>
 
-        <div className="surface-card space-y-2 rounded-[20px] p-6">
+        <div className="surface-card space-y-2 rounded-[20px] p-4 sm:p-6">
           <Label htmlFor="booking-address-detail">Địa chỉ chi tiết *</Label>
           <Input id="booking-address-detail" name="addressDetail" autoComplete="street-address" value={addressDetail} onChange={(e) => {
             setAddressDetail(e.target.value);
@@ -218,7 +218,7 @@ function CreateBookingContent() {
           {fieldErrors.addressDetail && <p className="text-red-500 text-[10px]">{fieldErrors.addressDetail}</p>}
         </div>
 
-        <div className="surface-card space-y-2 rounded-[20px] p-6">
+        <div className="surface-card space-y-2 rounded-[20px] p-4 sm:p-6">
           <Label htmlFor="booking-desired-time">Thời gian mong muốn *</Label>
           <Input id="booking-desired-time" name="desiredTime" autoComplete="off" type="datetime-local" value={desiredTime} onChange={(e) => {
             setDesiredTime(e.target.value);
@@ -247,18 +247,18 @@ function CreateBookingContent() {
                   setDesiredTime(value);
                   validate('desiredTime', value);
                 }}
-                className="w-full text-left flex items-center justify-between gap-3 p-3 bg-white/80 hover:bg-white rounded-xl border border-white cursor-pointer transition-[background-color,box-shadow] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/80 hover:bg-white rounded-xl border border-white cursor-pointer transition-[background-color,box-shadow] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 bg-green-100 text-green-600 rounded-lg shrink-0">
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Sáng mai, 09:00</p>
-                    <p className="text-[10px] text-muted-foreground">Khung giờ vàng - Thợ đang trống lịch gần đây</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-foreground truncate">Sáng mai, 09:00</p>
+                    <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">Khung giờ vàng - Thợ đang trống lịch gần đây</p>
                   </div>
                 </div>
-                <Badge className="bg-green-500 text-white border-0 text-[10px] font-bold uppercase">-10% phí</Badge>
+                <Badge className="bg-green-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">-10% phí</Badge>
               </button>
 
               <button
@@ -270,18 +270,18 @@ function CreateBookingContent() {
                   setDesiredTime(value);
                   validate('desiredTime', value);
                 }}
-                className="w-full text-left flex items-center justify-between gap-3 p-3 bg-white/80 hover:bg-white rounded-xl border border-white cursor-pointer transition-[background-color,box-shadow] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/80 hover:bg-white rounded-xl border border-white cursor-pointer transition-[background-color,box-shadow] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-pale-gray text-action-blue rounded-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 bg-pale-gray text-action-blue rounded-lg shrink-0">
                     <Clock className="w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Hôm nay, trong 2 giờ tới</p>
-                    <p className="text-[10px] text-muted-foreground">Phản hồi siêu tốc - Ưu tiên nhận đơn</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-foreground truncate">Hôm nay, trong 2 giờ tới</p>
+                    <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">Phản hồi siêu tốc - Ưu tiên nhận đơn</p>
                   </div>
                 </div>
-                <Badge className="bg-action-blue text-white border-0 text-[10px] font-bold uppercase">Ưu tiên</Badge>
+                <Badge className="bg-action-blue text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">Ưu tiên</Badge>
               </button>
             </div>
           </div>
