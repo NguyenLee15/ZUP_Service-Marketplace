@@ -85,8 +85,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Cần AI stream → gọi Gemini qua Vercel AI SDK
+    const modelName = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
     const result = streamText({
-      model: google("gemini-2.0-flash"),
+      model: google(modelName),
       system: ctx.systemPrompt,
       messages: (messages || []).map((m: any) => ({
         role: m.role as "user" | "assistant",
