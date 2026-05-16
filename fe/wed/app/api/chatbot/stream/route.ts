@@ -7,6 +7,26 @@ export const maxDuration = 60;
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 
 export async function POST(req: NextRequest) {
+  // Helper tạo mock stream response cho Vercel AI SDK (protocol: 0:"text"\n)
+  const createMockStreamResponse = (reply: string, metadata: any) => {
+    const chunk = `0:${JSON.stringify(reply)}\n`;
+    return new Response(chunk, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Chat-SessionId": metadata.sessionId || "",
+        "X-Chat-Metadata": encodeURIComponent(
+          JSON.stringify({
+            services: metadata.services || [],
+            quickReplies: metadata.quickReplies || [],
+            action: metadata.action,
+            confidence: metadata.confidence,
+            citations: metadata.citations || [],
+          })
+        ),
+      },
+    });
+  };
+
   try {
     const body = await req.json();
     const { messages, ...extra } = body;
@@ -58,17 +78,11 @@ export async function POST(req: NextRequest) {
     if (!prepareRes.ok) {
       const errorText = await prepareRes.text().catch(() => "Unknown error");
       console.error(`[chatbot/stream] prepare failed: ${prepareRes.status} ${errorText}`);
-      return NextResponse.json(
+      return createMockStreamResponse(
+        "Hệ thống đang bận, bạn vui lòng thử lại sau giây lát.",
         {
-          data: {
-            reply: "Hệ thống đang bận, bạn vui lòng thử lại sau giây lát.",
-            services: [],
-            quickReplies: [
-              { label: "Thử lại", message: userText },
-            ],
-          },
-        },
-        { status: 200 },
+          quickReplies: [{ label: "Thử lại", message: userText }],
+        }
       );
     }
 
@@ -77,17 +91,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Nếu KHÔNG cần stream (intent đã xử lý xong ở BE) → trả JSON thường
     if (!ctx.needsAiStream) {
-      return NextResponse.json({
-        data: {
-          reply: ctx.reply || "",
-          sessionId: ctx.sessionId,
-          services: ctx.services || [],
-          quickReplies: ctx.quickReplies || [],
-          action: ctx.action,
-          confidence: ctx.confidence,
-          citations: ctx.citations || [],
-        },
-      });
+      return createMockStreamResponse(ctx.reply || "", ctx);
     }
 
     // 4. Cần AI stream → gọi Gemini qua Vercel AI SDK
@@ -121,16 +125,9 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("[chatbot/stream] error:", error);
-    return NextResponse.json(
-      {
-        data: {
-          reply:
-            "Tôi đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau giây lát.",
-          services: [],
-          quickReplies: [],
-        },
-      },
-      { status: 200 },
+    return createMockStreamResponse(
+      "Tôi đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau giây lát.",
+      {}
     );
   }
 }
