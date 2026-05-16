@@ -11,11 +11,25 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { messages, ...extra } = body;
 
+    // Helper: trích xuất text từ message (hỗ trợ cả v5 content và v6 parts)
+    const getText = (msg: any) => {
+      if (msg.content) return msg.content;
+      if (msg.parts && Array.isArray(msg.parts)) {
+        return msg.parts
+          .filter((p: any) => p.type === "text")
+          .map((p: any) => p.text)
+          .join("");
+      }
+      return "";
+    };
+
     // 1. Lấy tin nhắn cuối cùng của user
     const lastUserMessage =
       [...(messages || [])]
         .reverse()
-        .find((m: { role: string }) => m.role === "user")?.content || "";
+        .find((m: { role: string }) => m.role === "user");
+    
+    const userText = lastUserMessage ? getText(lastUserMessage) : "";
 
     // 2. Gọi NestJS Backend để xử lý logic nghiệp vụ
     const headers: Record<string, string> = {
@@ -28,15 +42,15 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers,
       body: JSON.stringify({
-        message: lastUserMessage,
+        message: userText,
         sessionId: extra.sessionId,
         pageContext: extra.pageContext,
         confirmedActionId: extra.confirmedActionId,
         history: (messages || [])
           .slice(-8)
-          .map((m: { role: string; content: string }) => ({
+          .map((m: any) => ({
             role: m.role,
-            content: m.content,
+            content: getText(m),
           })),
       }),
     });
@@ -50,7 +64,7 @@ export async function POST(req: NextRequest) {
             reply: "Hệ thống đang bận, bạn vui lòng thử lại sau giây lát.",
             services: [],
             quickReplies: [
-              { label: "Thử lại", message: lastUserMessage },
+              { label: "Thử lại", message: userText },
             ],
           },
         },
@@ -81,9 +95,9 @@ export async function POST(req: NextRequest) {
       model: google("gemini-2.0-flash"),
       system: ctx.systemPrompt,
       messages: (messages || []).map(
-        (m: { role: string; content: string }) => ({
+        (m: any) => ({
           role: m.role as "user" | "assistant",
-          content: m.content,
+          content: getText(m),
         }),
       ),
     });
