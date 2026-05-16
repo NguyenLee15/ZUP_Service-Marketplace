@@ -558,7 +558,7 @@ function ServicesSearchContent() {
             {viewMode === 'map' ? (
               <ServiceMap services={services} userLocation={userLocation} />
             ) : loading && !isFetchingMore ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6">
                 {[...Array(6)].map((_, i) => (
                   <div 
                     key={i} 
@@ -589,7 +589,7 @@ function ServicesSearchContent() {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6">
                 {services.map((service, index) => {
                   const isFavorite = favorites.includes(service.id);
                   const isComparing = comparisonList.some(s => s.id === service.id);
