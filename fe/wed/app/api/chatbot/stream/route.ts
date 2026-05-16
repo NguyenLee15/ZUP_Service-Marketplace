@@ -23,10 +23,21 @@ function getText(msg: any): string {
 }
 
 /** Tạo UIMessageStream response cho trường hợp không cần AI streaming */
-function createTextOnlyResponse(text: string) {
+function createTextOnlyResponse(text: string, ctx?: any) {
   return createUIMessageStreamResponse({
     stream: createUIMessageStream({
       execute: async ({ writer }) => {
+        if (ctx) {
+          writer.write({
+            type: "message-metadata",
+            messageMetadata: {
+              services: ctx.services || [],
+              quickReplies: ctx.quickReplies || [],
+              action: ctx.action,
+              sessionId: ctx.sessionId || "",
+            },
+          });
+        }
         writer.write({ type: "text-start", id: "fallback" });
         writer.write({ type: "text-delta", delta: text, id: "fallback" });
       },
@@ -82,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Nếu KHÔNG cần stream (intent đã xử lý xong ở BE) → trả UIMessageStream với text có sẵn
     if (!ctx.needsAiStream) {
-      return createTextOnlyResponse(ctx.reply || "");
+      return createTextOnlyResponse(ctx.reply || "", ctx);
     }
 
     // 4. Cần AI stream → gọi Gemini qua Vercel AI SDK
@@ -96,8 +107,36 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    // 5. Trả UIMessageStreamResponse (chuẩn v6 cho DefaultChatTransport)
-    return result.toUIMessageStreamResponse();
+    // 5. Trả UIMessageStreamResponse (chuẩn v6 cho DefaultChatTransport) có nhúng metadata
+    return createUIMessageStreamResponse({
+      stream: createUIMessageStream({
+        execute: async ({ writer }) => {
+          writer.write({
+            type: "message-metadata",
+            messageMetadata: {
+              services: ctx.services || [],
+              quickReplies: ctx.quickReplies || [],
+              action: ctx.action,
+              sessionId: ctx.sessionId || "",
+            },
+          });
+
+          const textId = "ai-stream";
+          writer.write({ type: "text-start", id: textId });
+
+          const reader = result.textStream.getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              writer.write({ type: "text-delta", delta: value, id: textId });
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        },
+      }),
+    });
   } catch (error) {
     console.error("[chatbot/stream] error:", error);
     return createTextOnlyResponse(

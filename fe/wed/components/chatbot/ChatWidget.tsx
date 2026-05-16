@@ -332,7 +332,9 @@ export function ChatWidget() {
 
           <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 px-3 py-4">
             {messages.map((message) => {
-              const meta = metaMap[message.id] || {};
+              const streamMeta = (message.metadata as MessageMeta) || {};
+              const mapMeta = metaMap[message.id] || {};
+              const meta = { ...streamMeta, ...mapMeta };
               const text = getMessageText(message);
               return (
                 <div
