@@ -1,8 +1,10 @@
 'use client';
 
 import type { FormEvent } from 'react';
+import { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const SEARCH_SUGGESTIONS = [
   "Sửa máy lạnh chảy nước…",
@@ -12,32 +14,42 @@ const SEARCH_SUGGESTIONS = [
   "Thợ điện nước gần nhất…"
 ];
 
-interface HeroSectionProps {
-  searchQuery: string;
-  setSearchQuery: (val: string) => void;
-  location: string;
-  setLocation: (val: string) => void;
-  onSearch: (e?: FormEvent) => void;
-  onQuickSearch: (keyword: string) => void;
-}
+export function HeroSection() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [location, setLocation] = useState('Hà Nội');
 
-export function HeroSection({
-  searchQuery,
-  setSearchQuery,
-  location,
-  setLocation,
-  onSearch,
-  onQuickSearch,
-}: HeroSectionProps) {
+  const buildServicesHref = (keyword?: string) => {
+    const params = new URLSearchParams();
+    const normalizedKeyword = keyword?.trim() || searchQuery.trim();
+    const normalizedLocation = location.trim();
+
+    if (normalizedKeyword) params.set('keyword', normalizedKeyword);
+    if (normalizedLocation) params.set('location', normalizedLocation);
+
+    const query = params.toString();
+    return query ? `/services?${query}` : '/services';
+  };
+
+  const handleSearch = (event?: FormEvent) => {
+    event?.preventDefault();
+    router.push(buildServicesHref());
+  };
+
+  const handleQuickSearch = (keyword: string) => {
+    router.push(buildServicesHref(keyword));
+  };
+
   return (
     <section className="relative min-h-[560px] sm:min-h-[600px] lg:min-h-[640px] flex items-center justify-center text-white overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/hero_bg.png"
+          src="/images/hero_bg.webp"
           alt="Không gian nhà ở sạch sẽ sau khi sử dụng dịch vụ tại nhà"
-          width={1920}
-          height={1080}
+          width={1024}
+          height={1024}
           priority
+          sizes="100vw"
           className="h-full w-full object-cover scale-105 animate-ken-burns"
         />
         <div className="absolute inset-0 bg-midnight-indigo/55"></div>
@@ -75,7 +87,7 @@ export function HeroSection({
         </p>
 
         <form
-          onSubmit={onSearch}
+          onSubmit={handleSearch}
           className="mobile-viewport-width surface-card-elevated bg-white/95 backdrop-blur-2xl rounded-[1.25rem] sm:rounded-3xl p-3.5 sm:p-5 md:p-6 max-w-5xl transition-[background-color,box-shadow] duration-300 group/form"
         >
           <div className="grid md:grid-cols-3 gap-3 sm:gap-4 mb-4">
@@ -115,7 +127,7 @@ export function HeroSection({
                 <button
                   key={tag}
                   type="button"
-                  onClick={() => onQuickSearch(tag)}
+                  onClick={() => handleQuickSearch(tag)}
                   className="inline-flex items-center justify-center px-3 sm:px-4 py-2 rounded-full bg-pale-gray hover:bg-action-blue border border-transparent text-glacier-blue hover:text-white text-xs sm:text-sm font-bold transition-[background-color,color,box-shadow,transform] hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   {tag}

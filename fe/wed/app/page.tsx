@@ -1,75 +1,69 @@
-'use client';
+import { Sparkles } from 'lucide-react';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { serviceApi } from '@/features/service/services/service.api';
-import { CustomerHeader } from '@/components/layout/CustomerHeader';
-import { CustomerFooter } from '@/components/layout/CustomerFooter';
-import { useServiceStore } from '@/store/service.store';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import Link from 'next/link';
-
-// Components
-import { HeroSection } from '@/app/components/home/HeroSection';
 import { CategoryGrid } from '@/app/components/home/CategoryGrid';
 import { FeaturedServices } from '@/app/components/home/FeaturedServices';
+import { HeroSection } from '@/app/components/home/HeroSection';
 import { HowItWorks } from '@/app/components/home/HowItWorks';
-import { UnifiedServiceCard } from '@/app/components/services/UnifiedServiceCard';
+import { RecentlyViewedServices } from '@/app/components/home/RecentlyViewedServices';
+import { CustomerFooter } from '@/components/layout/CustomerFooter';
+import { CustomerHeader } from '@/components/layout/CustomerHeader';
+import type { Service } from '@/types';
 
-export default function Home() {
-  const router = useRouter();
-  const [featuredServices, setFeaturedServices] = useState<any[]>([]);
-  const [sponsoredServices, setSponsoredServices] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [location, setLocation] = useState('Hà Nội');
-  const { recentlyViewed, favorites, toggleFavoriteService } = useServiceStore();
+export const revalidate = 60;
 
-  useEffect(() => {
-    // Lấy top rating (tuyển chọn)
-    serviceApi.search({ limit: 8, sortBy: 'rating' })
-      .then(res => setFeaturedServices(res.data.data || []))
-      .catch(err => {
-        if (err.code === 'ERR_NETWORK') {
-          console.warn('Backend is offline. Running in offline UI mode.');
-        }
-      });
-      
-    // Lấy featured listings (được tài trợ)
-    serviceApi.getFeatured()
-      .then(res => setSponsoredServices(res.data.data || []))
-      .catch(() => {});
-  }, []);
+type BackendResponse<T> = {
+  data?: T;
+  success?: boolean;
+};
 
-  const buildServicesHref = (keyword?: string) => {
-    const params = new URLSearchParams();
-    const normalizedKeyword = keyword?.trim() || searchQuery.trim();
-    const normalizedLocation = location.trim();
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
-    if (normalizedKeyword) params.set('keyword', normalizedKeyword);
-    if (normalizedLocation) params.set('location', normalizedLocation);
+function getBackendUrl(path: string, params?: Record<string, string | number>) {
+  const url = new URL(path, BACKEND_URL);
 
-    const query = params.toString();
-    return query ? `/services?${query}` : '/services';
-  };
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.set(key, String(value));
+    });
+  }
 
-  const handleHeroSearch = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    router.push(buildServicesHref());
-  };
+  return url;
+}
+
+async function fetchHomeServices(path: string, params?: Record<string, string | number>) {
+  try {
+    const response = await fetch(getBackendUrl(path, params), {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(4_000),
+    });
+
+    if (!response.ok) return [];
+
+    const payload = (await response.json()) as BackendResponse<Service[] | { data?: Service[] }>;
+    const data = payload.data;
+
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.data)) return data.data;
+
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function Home() {
+  const [featuredServices, sponsoredServices] = await Promise.all([
+    fetchHomeServices('/services/search', { limit: 8, sortBy: 'rating' }),
+    fetchHomeServices('/services/featured'),
+  ]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <CustomerHeader />
 
       <main id="main-content" className="flex-1">
-        <HeroSection 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          location={location}
-          setLocation={setLocation}
-          onSearch={handleHeroSearch}
-          onQuickSearch={(keyword) => router.push(buildServicesHref(keyword))}
-        />
+        <HeroSection />
 
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
           <CategoryGrid />
@@ -84,47 +78,16 @@ export default function Home() {
                       Dịch vụ nổi bật
                     </h2>
                   </div>
-                  <p className="text-sm md:text-base text-muted-foreground font-medium">Đối tác hàng đầu được tài trợ</p>
+                  <p className="text-sm md:text-base text-muted-foreground font-medium">
+                    Đối tác hàng đầu được tài trợ
+                  </p>
                 </div>
               </div>
               <FeaturedServices services={sponsoredServices} isSponsored />
             </section>
           )}
 
-
-
-          {recentlyViewed.length > 0 && (
-            <section className="space-y-7 animate-in fade-in slide-in-from-bottom-8 duration-700">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl md:text-[38px] font-bold brand-heading leading-tight text-balance">Gợi ý dành riêng cho bạn</h2>
-                  </div>
-                  <p className="text-sm md:text-base text-muted-foreground">Dựa trên các dịch vụ bạn đã quan tâm gần đây</p>
-                </div>
-                <Link href="/services" className="inline-flex text-sm font-bold text-action-blue hover:text-glacier-blue items-center gap-1 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-md">
-                  Xem tất cả thợ
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-              
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                {recentlyViewed.slice(0, 4).map((service) => (
-                  <UnifiedServiceCard
-                    key={service.id}
-                    service={service}
-                    isFavorite={favorites.includes(service.id)}
-                    showFavorite
-                    showTrustBadges
-                    showPrimaryAction
-                    useImageCarousel
-                    priceMode="estimate"
-                    onToggleFavorite={toggleFavoriteService}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+          <RecentlyViewedServices />
 
           <FeaturedServices services={featuredServices} />
 
@@ -133,8 +96,6 @@ export default function Home() {
       </main>
 
       <CustomerFooter />
-
-
     </div>
   );
 }

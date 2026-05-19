@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { 
   Wrench, Home as HomeIcon, Heart, Briefcase, Palette, 

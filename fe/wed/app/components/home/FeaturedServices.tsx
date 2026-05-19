@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { UnifiedServiceCard, UnifiedServiceCardSkeleton } from '@/app/components/services/UnifiedServiceCard';
@@ -13,6 +14,36 @@ interface FeaturedServicesProps {
 
 export function FeaturedServices({ services, isSponsored }: FeaturedServicesProps) {
   const { favorites, toggleFavoriteService } = useServiceStore();
+  const [visibleServices, setVisibleServices] = useState(services);
+
+  useEffect(() => {
+    setVisibleServices(services);
+  }, [services]);
+
+  useEffect(() => {
+    if (services.length > 0) return;
+
+    let cancelled = false;
+
+    async function loadFallbackServices() {
+      try {
+        const { serviceApi } = await import('@/features/service/services/service.api');
+        const response = isSponsored
+          ? await serviceApi.getFeatured()
+          : await serviceApi.search({ limit: 8, sortBy: 'rating' });
+
+        if (!cancelled) {
+          setVisibleServices(response.data.data || []);
+        }
+      } catch {}
+    }
+
+    void loadFallbackServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSponsored, services.length]);
 
   return (
     <section>
@@ -30,8 +61,8 @@ export function FeaturedServices({ services, isSponsored }: FeaturedServicesProp
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        {services.length > 0 ? (
-          services.map((service, index) => (
+        {visibleServices.length > 0 ? (
+          visibleServices.map((service, index) => (
             <UnifiedServiceCard
               key={service.id || index}
               service={service}
