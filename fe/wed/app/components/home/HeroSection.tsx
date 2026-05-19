@@ -61,9 +61,18 @@ export function HeroSection() {
       <div className="relative z-10 px-4 md:px-6 max-w-6xl w-full mx-auto flex flex-col items-center text-center pt-8 pb-12 lg:pt-12 lg:pb-16">
         <div className="mobile-safe-max flex items-center gap-2 mb-5 bg-white/12 backdrop-blur-md border border-white/25 px-3.5 py-1.5 rounded-full shadow-lg shadow-slate-950/20 animate-fade-in">
           <div className="flex -space-x-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="w-7 h-7 rounded-full border-2 border-action-blue bg-pale-gray overflow-hidden">
-                <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`} alt="" width={28} height={28} aria-hidden="true" />
+            {[
+              { text: 'T', bg: 'bg-gradient-to-tr from-orange-400 to-amber-500' },
+              { text: 'M', bg: 'bg-gradient-to-tr from-pink-500 to-rose-400' },
+              { text: 'K', bg: 'bg-gradient-to-tr from-emerald-400 to-teal-500' },
+              { text: 'A', bg: 'bg-gradient-to-tr from-blue-500 to-indigo-400' }
+            ].map((user, idx) => (
+              <div
+                key={idx}
+                className={`w-7 h-7 rounded-full border-2 border-action-blue ${user.bg} flex items-center justify-center text-[10px] font-black text-white select-none shadow-sm`}
+                aria-hidden="true"
+              >
+                {user.text}
               </div>
             ))}
           </div>
