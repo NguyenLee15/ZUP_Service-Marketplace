@@ -49,6 +49,7 @@ export function HeroSection() {
           width={1024}
           height={1024}
           priority
+          fetchPriority="high"
           sizes="100vw"
           className="h-full w-full object-cover scale-105 animate-ken-burns"
         />
