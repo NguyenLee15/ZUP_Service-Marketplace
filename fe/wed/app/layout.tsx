@@ -9,7 +9,7 @@ import { ClientWidgets } from '@/components/client-widgets'
 import { SocketProvider } from '@/components/socket-provider'
 
 const montserrat = Montserrat({
-  subsets: ['vietnamese', 'latin'],
+  subsets: ['vietnamese', 'latin', 'latin-ext'],
   variable: '--font-montserrat',
   display: 'swap',
 });
