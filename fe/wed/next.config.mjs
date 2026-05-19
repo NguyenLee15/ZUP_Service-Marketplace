@@ -1,4 +1,8 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import withPWAInit from "@ducanh2912/next-pwa";
+
+const appDir = dirname(fileURLToPath(import.meta.url));
 
 const withPWA = withPWAInit({
   dest: "public",
@@ -24,7 +28,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.pravatar.cc' },
     ],
   },
-  turbopack: {},
+  turbopack: {
+    root: appDir,
+  },
 }
 
 export default withPWA(nextConfig)

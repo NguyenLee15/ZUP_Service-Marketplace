@@ -8,7 +8,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
-import type { ChatbotAskRequest } from './chatbot.service';
+import type {
+  ChatbotAskRequest,
+  ChatbotStreamResultRequest,
+} from './chatbot.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -35,6 +38,15 @@ export class ChatbotController {
   ) {
     const result = await this.chatbotService.prepareContext(userId, body);
     return { data: result };
+  }
+
+  @Post('stream-result')
+  @UseGuards(OptionalJwtAuthGuard)
+  async persistStreamResult(
+    @CurrentUser('id') userId: number | undefined,
+    @Body() body: ChatbotStreamResultRequest,
+  ) {
+    return this.chatbotService.persistStreamResult(userId, body);
   }
 
   @Get('sessions')

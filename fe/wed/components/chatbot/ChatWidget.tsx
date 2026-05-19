@@ -5,9 +5,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   useChat,
-  type UIMessage,
 } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import {
   Bot,
   CalendarCheck,
@@ -24,50 +23,57 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import { z } from "zod/v4";
 import api from "@/lib/axios";
 
-interface ChatService {
-  id: number;
-  name: string;
-  description?: string;
-  referencePrice: number;
-  providerId: number;
-  providerName: string;
-  avgRating: number;
-  totalReviews: number;
-  categoryName: string;
-  imageUrl?: string;
-}
+const chatServiceSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string().optional(),
+  referencePrice: z.number(),
+  providerId: z.number(),
+  providerName: z.string(),
+  avgRating: z.number(),
+  totalReviews: z.number(),
+  categoryName: z.string(),
+  imageUrl: z.string().optional(),
+});
 
-interface QuickReply {
-  label: string;
-  message: string;
-}
+const quickReplySchema = z.object({
+  label: z.string(),
+  message: z.string(),
+});
 
-interface AssistantAction {
-  id: string;
-  type:
-    | "CREATE_BOOKING_DRAFT"
-    | "CONFIRM_CREATE_BOOKING"
-    | "OPEN_PROVIDER_CHAT"
-    | "VIEW_BOOKING"
-    | "REBOOK"
-    | "CANCEL_BOOKING_DRAFT";
-  label: string;
-  summary: string;
-  payload: Record<string, unknown>;
-  requiresConfirmation: boolean;
-  href?: string;
-}
+const assistantActionSchema = z.object({
+  id: z.string(),
+  type: z.enum([
+    "CREATE_BOOKING_DRAFT",
+    "CONFIRM_CREATE_BOOKING",
+    "OPEN_PROVIDER_CHAT",
+    "VIEW_BOOKING",
+    "REBOOK",
+    "CANCEL_BOOKING_DRAFT",
+  ]),
+  label: z.string(),
+  summary: z.string(),
+  payload: z.record(z.string(), z.unknown()),
+  requiresConfirmation: z.boolean(),
+  href: z.string().optional(),
+});
 
-interface MessageMeta {
-  services?: ChatService[];
-  quickReplies?: QuickReply[];
-  action?: AssistantAction;
-}
+const chatbotMessageMetaSchema = z.object({
+  sessionId: z.string().optional(),
+  services: z.array(chatServiceSchema).optional(),
+  quickReplies: z.array(quickReplySchema).optional(),
+  action: assistantActionSchema.optional(),
+});
+
+type AssistantAction = z.infer<typeof assistantActionSchema>;
+type ChatbotMessageMeta = z.infer<typeof chatbotMessageMetaSchema>;
+type ChatbotUIMessage = UIMessage<ChatbotMessageMeta>;
 
 /** Extract text content from a UIMessage (v6 parts-based) */
-function getMessageText(msg: UIMessage): string {
+function getMessageText(msg: ChatbotUIMessage): string {
   if (msg.parts && msg.parts.length > 0) {
     return msg.parts
       .filter((p): p is { type: "text"; text: string } => p.type === "text")
@@ -115,7 +121,9 @@ export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [metaMap, setMetaMap] = useState<Record<string, MessageMeta>>({});
+  const [metaMap, setMetaMap] = useState<Record<string, ChatbotMessageMeta>>(
+    {},
+  );
 
   const pageContext = useMemo(() => {
     const serviceMatch = pathname?.match(/\/services\/(\d+)/);
@@ -160,9 +168,9 @@ export function ChatWidget() {
     sendMessage,
     setMessages,
     status,
-    error,
-  } = useChat({
+  } = useChat<ChatbotUIMessage>({
     transport,
+    messageMetadataSchema: chatbotMessageMetaSchema,
     messages: [
       {
         id: "welcome",
@@ -173,10 +181,12 @@ export function ChatWidget() {
             text: "Xin chào, tôi là Customer AI Assistant. Tôi có thể tìm dịch vụ, so sánh lựa chọn, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
           },
         ],
-      } as UIMessage,
+      } as ChatbotUIMessage,
     ],
     onFinish: ({ message }) => {
-      console.log("[ChatWidget] onFinish:", message);
+      if (message.metadata?.sessionId) {
+        setSessionId(message.metadata.sessionId);
+      }
     },
     onError: (err) => {
       console.error("[ChatWidget] useChat error:", err);
@@ -209,6 +219,17 @@ export function ChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen, isLoading]);
+
+  useEffect(() => {
+    const latestSessionId = [...messages]
+      .reverse()
+      .map((message) => message.metadata?.sessionId)
+      .find((value): value is string => Boolean(value));
+
+    if (latestSessionId && latestSessionId !== sessionId) {
+      setSessionId(latestSessionId);
+    }
+  }, [messages, sessionId]);
 
   if (hiddenRoutes.includes(pathname)) return null;
 
@@ -258,14 +279,14 @@ export function ChatWidget() {
           id: `user-${Date.now()}`,
           role: "user",
           parts: [{ type: "text", text: action.label }],
-        } as UIMessage,
+        } as ChatbotUIMessage,
         {
           id: msgId,
           role: "assistant",
           parts: [
             { type: "text", text: data?.reply || "Đã xử lý thao tác." },
           ],
-        } as UIMessage,
+        } as ChatbotUIMessage,
       ]);
     } catch {
       setMessages((prev) => [
@@ -279,7 +300,7 @@ export function ChatWidget() {
               text: "Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.",
             },
           ],
-        } as UIMessage,
+        } as ChatbotUIMessage,
       ]);
     }
   };
@@ -332,7 +353,7 @@ export function ChatWidget() {
 
           <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 px-3 py-4">
             {messages.map((message) => {
-              const streamMeta = (message.metadata as MessageMeta) || {};
+              const streamMeta = message.metadata || {};
               const mapMeta = metaMap[message.id] || {};
               const meta = { ...streamMeta, ...mapMeta };
               const text = getMessageText(message);

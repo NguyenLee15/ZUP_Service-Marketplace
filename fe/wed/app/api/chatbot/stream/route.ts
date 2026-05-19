@@ -1,45 +1,132 @@
 import { NextRequest } from "next/server";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import {
-  streamText,
   createUIMessageStream,
   createUIMessageStreamResponse,
+  streamText,
 } from "ai";
 
 export const maxDuration = 60;
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
+const FALLBACK_REPLY =
+  "Tôi đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau giây lát.";
 
-/** Trích xuất text từ message (hỗ trợ cả v5 content và v6 parts) */
-function getText(msg: any): string {
+type ChatbotMeta = {
+  sessionId?: string;
+  services?: unknown[];
+  quickReplies?: unknown[];
+  action?: unknown;
+  citations?: unknown[];
+  confidence?: number;
+};
+
+type ChatbotPrepareContext = ChatbotMeta & {
+  needsAiStream?: boolean;
+  systemPrompt?: string;
+  reply?: string;
+};
+
+type ChatMessage = {
+  role?: string;
+  content?: unknown;
+  parts?: Array<{ type?: string; text?: unknown }>;
+};
+
+type PersistStreamInput = {
+  auth?: string | null;
+  ctx?: ChatbotPrepareContext;
+  userMessage: string;
+  assistantMessage: string;
+};
+
+function getText(msg: ChatMessage): string {
   if (typeof msg.content === "string") return msg.content;
-  if (msg.parts && Array.isArray(msg.parts)) {
+  if (Array.isArray(msg.parts)) {
     return msg.parts
-      .filter((p: any) => p.type === "text")
-      .map((p: any) => p.text)
+      .filter((part) => part.type === "text" && typeof part.text === "string")
+      .map((part) => part.text as string)
       .join("");
   }
   return "";
 }
 
-/** Tạo UIMessageStream response cho trường hợp không cần AI streaming */
-function createTextOnlyResponse(text: string, ctx?: any) {
+function buildMetadata(ctx?: ChatbotPrepareContext) {
+  return {
+    sessionId: ctx?.sessionId || "",
+    services: ctx?.services || [],
+    quickReplies: ctx?.quickReplies || [],
+    action: ctx?.action,
+  };
+}
+
+async function persistStreamResult({
+  auth,
+  ctx,
+  userMessage,
+  assistantMessage,
+}: PersistStreamInput) {
+  if (!auth || !ctx?.sessionId || !assistantMessage.trim()) return;
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/chatbot/stream-result`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: auth,
+      },
+      body: JSON.stringify({
+        sessionId: ctx.sessionId,
+        userMessage,
+        assistantMessage,
+        services: ctx.services || [],
+        quickReplies: ctx.quickReplies || [],
+        action: ctx.action,
+        citations: ctx.citations || [],
+        confidence: ctx.confidence,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      console.error(
+        `[chatbot/stream] persist failed: ${response.status} ${errorText}`,
+      );
+    }
+  } catch (error) {
+    console.error("[chatbot/stream] persist error:", error);
+  }
+}
+
+function createTextOnlyResponse(
+  text: string,
+  ctx?: ChatbotPrepareContext,
+  persist?: Omit<PersistStreamInput, "assistantMessage">,
+) {
+  const textId = "fallback";
+  const assistantMessage = text || FALLBACK_REPLY;
+
   return createUIMessageStreamResponse({
     stream: createUIMessageStream({
       execute: async ({ writer }) => {
-        if (ctx) {
-          writer.write({
-            type: "message-metadata",
-            messageMetadata: {
-              services: ctx.services || [],
-              quickReplies: ctx.quickReplies || [],
-              action: ctx.action,
-              sessionId: ctx.sessionId || "",
-            },
+        writer.write({
+          type: "message-metadata",
+          messageMetadata: buildMetadata(ctx),
+        });
+        writer.write({ type: "text-start", id: textId });
+        writer.write({
+          type: "text-delta",
+          delta: assistantMessage,
+          id: textId,
+        });
+        writer.write({ type: "text-end", id: textId });
+
+        if (persist) {
+          await persistStreamResult({
+            ...persist,
+            assistantMessage,
           });
         }
-        writer.write({ type: "text-start", id: "fallback" });
-        writer.write({ type: "text-delta", delta: text, id: "fallback" });
       },
     }),
   });
@@ -48,32 +135,33 @@ function createTextOnlyResponse(text: string, ctx?: any) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, ...extra } = body;
+    const messages = Array.isArray(body.messages)
+      ? (body.messages as ChatMessage[])
+      : [];
+    const { sessionId, pageContext, confirmedActionId } = body;
 
-    // 1. Lấy tin nhắn cuối cùng của user
-    const lastUserMessage = [...(messages || [])]
+    const lastUserMessage = [...messages]
       .reverse()
-      .find((m: any) => m.role === "user");
+      .find((message) => message.role === "user");
     const userText = lastUserMessage ? getText(lastUserMessage) : "";
 
-    // 2. Gọi NestJS Backend để xử lý logic nghiệp vụ
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
     const auth = req.headers.get("authorization");
-    if (auth) headers["Authorization"] = auth;
+    if (auth) headers.Authorization = auth;
 
     const prepareRes = await fetch(`${BACKEND_URL}/chatbot/prepare`, {
       method: "POST",
       headers,
       body: JSON.stringify({
         message: userText,
-        sessionId: extra.sessionId,
-        pageContext: extra.pageContext,
-        confirmedActionId: extra.confirmedActionId,
-        history: (messages || []).slice(-8).map((m: any) => ({
-          role: m.role,
-          content: getText(m),
+        sessionId,
+        pageContext,
+        confirmedActionId,
+        history: messages.slice(-8).map((message) => ({
+          role: message.role,
+          content: getText(message),
         })),
       }),
     });
@@ -89,39 +177,51 @@ export async function POST(req: NextRequest) {
     }
 
     const prepareData = await prepareRes.json();
-    const ctx = prepareData.data;
+    const ctx = prepareData.data as ChatbotPrepareContext;
 
-    // 3. Nếu KHÔNG cần stream (intent đã xử lý xong ở BE) → trả UIMessageStream với text có sẵn
     if (!ctx.needsAiStream) {
       return createTextOnlyResponse(ctx.reply || "", ctx);
     }
 
-    // 4. Cần AI stream → gọi Gemini qua Vercel AI SDK
+    const apiKey =
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      "";
+    if (!apiKey) {
+      return createTextOnlyResponse(FALLBACK_REPLY, ctx, {
+        auth,
+        ctx,
+        userMessage: userText,
+      });
+    }
+
+    const google = createGoogleGenerativeAI({ apiKey });
     const modelName = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
     const result = streamText({
       model: google(modelName),
       system: ctx.systemPrompt,
-      messages: (messages || []).map((m: any) => ({
-        role: m.role as "user" | "assistant",
-        content: getText(m),
-      })),
+      messages: messages
+        .filter(
+          (message) =>
+            message.role === "user" || message.role === "assistant",
+        )
+        .map((message) => ({
+          role: message.role as "user" | "assistant",
+          content: getText(message),
+        }))
+        .filter((message) => message.content.trim()),
     });
 
-    // 5. Trả UIMessageStreamResponse (chuẩn v6 cho DefaultChatTransport) có nhúng metadata
     return createUIMessageStreamResponse({
       stream: createUIMessageStream({
         execute: async ({ writer }) => {
+          const textId = "ai-stream";
+          let assistantMessage = "";
+
           writer.write({
             type: "message-metadata",
-            messageMetadata: {
-              services: ctx.services || [],
-              quickReplies: ctx.quickReplies || [],
-              action: ctx.action,
-              sessionId: ctx.sessionId || "",
-            },
+            messageMetadata: buildMetadata(ctx),
           });
-
-          const textId = "ai-stream";
           writer.write({ type: "text-start", id: textId });
 
           const reader = result.textStream.getReader();
@@ -129,18 +229,35 @@ export async function POST(req: NextRequest) {
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
+              assistantMessage += value;
               writer.write({ type: "text-delta", delta: value, id: textId });
+            }
+          } catch (error) {
+            console.error("[chatbot/stream] ai stream error:", error);
+            if (!assistantMessage.trim()) {
+              assistantMessage = FALLBACK_REPLY;
+              writer.write({
+                type: "text-delta",
+                delta: assistantMessage,
+                id: textId,
+              });
             }
           } finally {
             reader.releaseLock();
+            writer.write({ type: "text-end", id: textId });
           }
+
+          await persistStreamResult({
+            auth,
+            ctx,
+            userMessage: userText,
+            assistantMessage,
+          });
         },
       }),
     });
   } catch (error) {
     console.error("[chatbot/stream] error:", error);
-    return createTextOnlyResponse(
-      "Tôi đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau giây lát.",
-    );
+    return createTextOnlyResponse(FALLBACK_REPLY);
   }
 }

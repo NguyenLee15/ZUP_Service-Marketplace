@@ -118,6 +118,17 @@ export interface ChatbotAskRequest {
   confirmedActionId?: string;
 }
 
+export interface ChatbotStreamResultRequest {
+  sessionId?: string;
+  userMessage?: string;
+  assistantMessage?: string;
+  services?: ChatServiceResult[];
+  quickReplies?: ChatbotQuickReply[];
+  action?: ChatbotAction;
+  confidence?: number;
+  citations?: ChatbotCitation[];
+}
+
 export interface ChatResponse {
   reply: string;
   sessionId: string;
@@ -253,6 +264,53 @@ export class ChatbotService {
       where: { id: sessionId, userId },
     });
     return { message: 'Đã xóa phiên chatbot' };
+  }
+
+  async persistStreamResult(
+    userId: number | undefined,
+    input: ChatbotStreamResultRequest,
+  ) {
+    if (!userId) {
+      return { data: { persisted: false, reason: 'guest' } };
+    }
+
+    const sessionId = input.sessionId?.trim();
+    if (!sessionId) {
+      return { data: { persisted: false, reason: 'missing_session' } };
+    }
+
+    const assistantMessage = input.assistantMessage?.trim();
+    if (!assistantMessage) {
+      return { data: { persisted: false, reason: 'missing_assistant_message' } };
+    }
+
+    const existing = await this.prisma.chatbotSession.findFirst({
+      where: { id: sessionId, userId },
+      select: { id: true, state: true },
+    });
+
+    if (!existing) {
+      throw new ForbiddenException('Phiên chatbot không hợp lệ');
+    }
+
+    const session: SessionContext = {
+      id: existing.id,
+      state: this.deserializeState(existing.state),
+      isPersistent: true,
+    };
+
+    await this.persistTurn(session, input.userMessage?.trim() || '', {
+      reply: assistantMessage,
+      sessionId: existing.id,
+      services: input.services || [],
+      quickReplies: input.quickReplies || [],
+      action: input.action,
+      confidence:
+        typeof input.confidence === 'number' ? input.confidence : 0.7,
+      citations: input.citations || [],
+    });
+
+    return { data: { persisted: true, sessionId: existing.id } };
   }
 
   /**
