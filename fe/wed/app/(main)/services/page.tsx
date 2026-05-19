@@ -315,14 +315,14 @@ function ServicesSearchContent() {
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-white border-b border-platinum-tint">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-0 py-4 sm:px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4 flex-1">
               <div className="hidden xl:block min-w-[180px]">
                 <p className="text-xs font-bold text-muted-foreground">HomeService</p>
                 <h1 className="text-lg font-bold tracking-tight text-midnight-indigo">Tìm dịch vụ tại nhà</h1>
               </div>
-              <div className="relative flex-1 max-w-2xl group">
+              <div className="relative min-w-0 flex-1 max-w-2xl group">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <Search className={`w-5 h-5 transition-colors duration-300 ${loading ? 'text-action-blue' : 'text-muted-foreground group-focus-within:text-action-blue'}`} />
                 </div>
@@ -355,15 +355,15 @@ function ServicesSearchContent() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3 md:pl-4 md:border-l border-border">
-              <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
-                <SheetTrigger asChild>
+              <div className="flex w-full items-center gap-3 md:w-auto md:pl-4 md:border-l border-border">
+                <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
+                  <SheetTrigger asChild>
                   <Button variant="outline" className="lg:hidden rounded-xl h-12 gap-2 border-platinum-tint hover:bg-pale-gray hover:text-action-blue transition-colors font-bold">
                     <Filter className="w-5 h-5" />
                     Bộ lọc
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-[320px] p-0 border-0 bg-background">
+                  </SheetTrigger>
+                <SheetContent side="left" className="w-[min(22rem,calc(100vw_-_1rem))] p-0 border-0 bg-background">
                   <SheetHeader className="p-6 border-b border-platinum-tint bg-white">
                     <SheetTitle className="text-xl font-bold tracking-tight text-midnight-indigo">Bộ lọc tìm kiếm</SheetTitle>
                   </SheetHeader>
@@ -389,7 +389,7 @@ function ServicesSearchContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      <div className="max-w-7xl mx-auto px-0 py-6 sm:px-4 sm:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="hidden lg:block lg:col-span-3">
             <div className="sticky top-28 space-y-8">
@@ -403,9 +403,9 @@ function ServicesSearchContent() {
           </div>
 
           <div className="lg:col-span-9">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6">
-              <div className="space-y-1">
-                <h2 className="text-3xl font-bold brand-heading leading-tight flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 sm:gap-6 mb-6">
+              <div className="min-w-0 space-y-1">
+                <h2 className="text-2xl sm:text-3xl font-bold brand-heading leading-tight flex items-center gap-3 break-words text-balance">
                   {searchParams.get('keyword') ? (
                     <>Kết quả cho &quot;{searchParams.get('keyword')}&quot;</>
                   ) : activeCategories.length === 1 ? (
@@ -416,16 +416,16 @@ function ServicesSearchContent() {
                     <>Tất cả dịch vụ</>
                   )}
                 </h2>
-                <p className="text-muted-foreground font-medium">
+                <p className="text-sm sm:text-base text-muted-foreground font-medium text-pretty">
                   {searchParams.get('location')
                     ? `Tìm dịch vụ quanh ${searchParams.get('location')}`
                     : 'Lọc theo danh mục, giá, đánh giá hoặc chuyển sang bản đồ để so sánh nhanh.'}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto md:items-center">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[180px] rounded-xl border-platinum-tint bg-white shadow-sm h-10">
+                  <SelectTrigger className="w-full sm:w-[180px] rounded-xl border-platinum-tint bg-white shadow-sm h-10">
                     <SelectValue placeholder="Sắp xếp" />
                   </SelectTrigger>
                   <SelectContent>
@@ -436,7 +436,7 @@ function ServicesSearchContent() {
                   </SelectContent>
                 </Select>
 
-                <div className="flex items-center gap-1 bg-pale-gray p-1 rounded-xl border border-platinum-tint">
+                <div className="grid w-full grid-cols-2 gap-1 bg-pale-gray p-1 rounded-xl border border-platinum-tint sm:w-auto">
                   <Button 
                     variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
                     size="sm"
@@ -466,7 +466,7 @@ function ServicesSearchContent() {
                 </div>
                 <h4 className="text-[10px] font-bold text-action-blue uppercase tracking-widest">Gợi ý tìm nhanh</h4>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 sm:flex sm:flex-wrap">
                 {[
                   { label: 'Sửa khẩn cấp', icon: Wrench, color: 'text-glacier-blue', bg: 'bg-pale-gray', border: 'border-platinum-tint', updates: { keyword: 'sửa khẩn cấp' } },
                   { label: 'Giá thấp trước', icon: Sparkles, color: 'text-glacier-blue', bg: 'bg-pale-gray', border: 'border-platinum-tint', updates: { sortBy: 'price_asc' } },
@@ -482,7 +482,7 @@ function ServicesSearchContent() {
                       }
                       applyQuickFilter(chip.updates as Record<string, string>);
                     }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full ${chip.bg} ${chip.border} border ${chip.color} hover:-translate-y-0.5 active:scale-95 transition-transform shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue`}
+                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-full ${chip.bg} ${chip.border} border ${chip.color} hover:-translate-y-0.5 active:scale-95 transition-transform shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue`}
                   >
                     <chip.icon className="w-3.5 h-3.5" />
                     <span className="text-xs font-bold">{chip.label}</span>
@@ -569,14 +569,14 @@ function ServicesSearchContent() {
                 ))}
               </div>
             ) : services.length === 0 ? (
-              <div className="surface-card flex flex-col items-center justify-center py-32 text-center rounded-[20px] border-dashed transition-colors animate-in fade-in zoom-in-95 duration-500">
+              <div className="surface-card flex flex-col items-center justify-center py-20 sm:py-32 text-center rounded-[20px] border-dashed transition-colors animate-in fade-in zoom-in-95 duration-500">
                 <div className="w-24 h-24 bg-pale-gray rounded-full flex items-center justify-center mb-8 relative">
                   <Search className="w-10 h-10 text-muted-foreground/30" />
                   <div className="absolute -top-1 -right-1 w-6 h-6 bg-action-blue rounded-full flex items-center justify-center border-4 border-background">
                     <X className="w-3 h-3 text-white" />
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold brand-heading mb-3 text-balance">Không tìm thấy kết quả nào</h3>
+                <h3 className="max-w-sm px-4 text-xl sm:text-2xl font-bold brand-heading mb-3 text-balance">Không tìm thấy kết quả nào</h3>
                 <p className="text-muted-foreground max-w-sm px-4 text-pretty leading-relaxed">
                   Chúng tôi không tìm thấy dịch vụ nào khớp với tiêu chí bạn chọn. Thử mở rộng bộ lọc hoặc tìm kiếm lại nhé!
                 </p>
@@ -756,7 +756,7 @@ function ServicesSearchContent() {
                       Gợi ý thợ tương tự
                     </h4>
                     <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 scrollbar-hide">
-                      {services.filter(s => s.id !== selectedService.id).slice(0, 3).map((s, i) => (
+                      {services.filter(s => s.id !== selectedService.id).slice(0, 3).map((s) => (
                         <div 
                           key={s.id} 
                           className="shrink-0 w-48 group/similar cursor-pointer"

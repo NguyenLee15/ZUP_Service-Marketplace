@@ -165,11 +165,26 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
+
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -192,11 +207,34 @@
 
   .brand-heading {
     color: var(--color-midnight-indigo);
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
 
   .brand-link {
     color: var(--color-action-blue);
+  }
+
+  .mobile-header-width {
+    width: calc(100vw - 1.5rem);
+  }
+
+  .mobile-viewport-width {
+    width: min(100%, calc(100vw - 2rem));
+  }
+
+  .mobile-safe-max {
+    max-width: calc(100vw - 2rem);
+  }
+
+  @media (min-width: 640px) {
+    .mobile-header-width,
+    .mobile-viewport-width {
+      width: 100%;
+    }
+
+    .mobile-safe-max {
+      max-width: 100%;
+    }
   }
 
   .themed-shell {

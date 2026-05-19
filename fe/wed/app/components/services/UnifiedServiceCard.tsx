@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   CheckCircle2,
-  Clock,
   Diamond,
   Eye,
   GitCompare,
@@ -103,6 +102,9 @@ export function UnifiedServiceCard({
   const totalReviews = service.totalReviews || 0;
   const providerInitial = service.provider?.fullName?.charAt(0) || '?';
   const showElite = Number(service.avgRating || 0) >= 4.8;
+  const basePrice = Number(service.referencePrice || 0);
+  const fullEstimatePrice = `${formatPrice(basePrice).replace('₫', '').trim()} - ${formatPrice(basePrice * 1.5)}`;
+  const compactEstimatePrice = `${formatPrice(basePrice)}+`;
 
   const handleDetailClick = () => {
     onRecentlyViewed?.(service);
@@ -184,7 +186,7 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onToggleFavorite?.(service);
                 }}
-                className={`h-7 w-7 sm:h-10 sm:w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
+                className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
                   isFavorite ? 'bg-red-500 text-white' : 'bg-white/85 text-foreground hover:bg-white'
                 }`}
               >
@@ -202,7 +204,7 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onAddToComparison?.(service);
                 }}
-                className={`h-7 w-7 sm:h-10 sm:w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
+                className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
                   isComparing ? 'bg-action-blue text-white' : 'bg-white/85 text-foreground hover:bg-white'
                 }`}
               >
@@ -300,10 +302,15 @@ export function UnifiedServiceCard({
                 </span>
               )}
             </div>
-            <div className={`${priceMode === 'estimate' ? 'text-sm' : 'text-sm sm:text-lg'} font-bold leading-none text-action-blue tabular-nums`}>
-              {priceMode === 'estimate'
-                ? `${formatPrice(service.referencePrice).replace('₫', '').trim()} - ${formatPrice(Number(service.referencePrice || 0) * 1.5)}`
-                : formatPrice(service.referencePrice)}
+            <div className={`${priceMode === 'estimate' ? 'text-[11px] sm:text-sm' : 'text-sm sm:text-lg'} max-w-full font-bold leading-tight text-action-blue tabular-nums`}>
+              {priceMode === 'estimate' ? (
+                <>
+                  <span className="hidden sm:inline">{fullEstimatePrice}</span>
+                  <span className="sm:hidden">{compactEstimatePrice}</span>
+                </>
+              ) : (
+                formatPrice(service.referencePrice)
+              )}
             </div>
           </div>
         </div>

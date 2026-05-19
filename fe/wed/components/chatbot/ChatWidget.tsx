@@ -312,7 +312,7 @@ export function ChatWidget() {
           id="chat-widget-btn"
           onClick={() => setIsOpen(true)}
           aria-label="Mở trợ lý AI"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/25 transition hover:-translate-y-0.5 hover:bg-blue-700"
+          className="fixed bottom-[calc(1rem_+_env(safe-area-inset-bottom))] right-[calc(1rem_+_env(safe-area-inset-right))] z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/25 transition-[background-color,box-shadow,transform] hover:-translate-y-0.5 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:bottom-6 sm:right-6"
         >
           <MessageSquare className="h-6 w-6" />
         </button>
@@ -321,7 +321,7 @@ export function ChatWidget() {
       {isOpen && (
         <div
           id="chat-widget-modal"
-          className="fixed bottom-6 right-6 z-50 flex h-[620px] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15"
+          className="fixed inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-50 flex h-[min(620px,calc(100dvh_-_1.5rem_-_env(safe-area-inset-bottom)))] w-auto flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[min(420px,calc(100vw_-_2rem))]"
         >
           <div className="border-b border-slate-200 bg-white px-4 py-3">
             <div className="flex items-center justify-between gap-3">
@@ -336,7 +336,7 @@ export function ChatWidget() {
                   <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                     {isLoading
-                      ? "Đang suy nghĩ..."
+                      ? "Đang suy nghĩ…"
                       : "Tìm dịch vụ, đặt lịch, tra cứu đơn"}
                   </div>
                 </div>
@@ -344,14 +344,14 @@ export function ChatWidget() {
               <button
                 onClick={() => setIsOpen(false)}
                 aria-label="Đóng trợ lý AI"
-                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                className="rounded-lg p-2 text-slate-500 transition-[background-color,color] hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 px-3 py-4">
+          <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4" aria-live="polite">
             {messages.map((message) => {
               const streamMeta = message.metadata || {};
               const mapMeta = metaMap[message.id] || {};
@@ -389,14 +389,15 @@ export function ChatWidget() {
                           <Link
                             key={service.id}
                             href={`/services/${service.id}`}
-                            className="group block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+                            className="group block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-[border-color,box-shadow] hover:border-blue-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                           >
                             <div className="flex gap-3">
                               <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 text-slate-500">
                                 {service.imageUrl ? (
                                   <img
                                     src={service.imageUrl}
-                                    alt=""
+                                    alt={service.name}
+                                    loading="lazy"
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
@@ -453,7 +454,7 @@ export function ChatWidget() {
                                 type="button"
                                 onClick={() => confirmAction(meta.action!)}
                                 disabled={isLoading}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
                               >
                                 <Check className="h-3.5 w-3.5" />
                                 Xác nhận
@@ -464,7 +465,7 @@ export function ChatWidget() {
                                   handleSendMessage("Hủy nháp đặt lịch")
                                 }
                                 disabled={isLoading}
-                                className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-50"
+                                className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
                               >
                                 Hủy
                               </button>
@@ -472,7 +473,7 @@ export function ChatWidget() {
                           ) : meta.action.href ? (
                             <Link
                               href={meta.action.href}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                             >
                               Mở ngay
                               <ChevronRight className="h-3.5 w-3.5" />
@@ -490,7 +491,7 @@ export function ChatWidget() {
                             type="button"
                             onClick={() => handleSendMessage(reply.message)}
                             disabled={isLoading}
-                            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-50"
+                            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-[border-color,color] hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
                           >
                             {reply.label}
                           </button>
@@ -515,7 +516,7 @@ export function ChatWidget() {
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl rounded-tl-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-600 shadow-sm">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                  Đang phân tích dữ liệu thật
+                  Đang phân tích dữ liệu thật…
                 </div>
               </div>
             )}
@@ -529,7 +530,7 @@ export function ChatWidget() {
                 onClick={() =>
                   handleSendMessage("Tìm dịch vụ phù hợp cho tôi")
                 }
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 Tìm
@@ -541,7 +542,7 @@ export function ChatWidget() {
                     "Tôi muốn đặt lịch dịch vụ này ngày mai lúc 9h",
                   )
                 }
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <CalendarCheck className="h-3.5 w-3.5" />
                 Đặt
@@ -551,7 +552,7 @@ export function ChatWidget() {
                 onClick={() =>
                   handleSendMessage("Đơn của tôi tới đâu rồi?")
                 }
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-200"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <Clock className="h-3.5 w-3.5" />
                 Đơn
@@ -560,12 +561,14 @@ export function ChatWidget() {
             <div className="relative">
               <input
                 type="text"
+                name="chatbot-message"
+                aria-label="Nhập tin nhắn cho trợ lý AI"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") handleSendMessage(input);
                 }}
-                placeholder="Nhập nhu cầu, ví dụ: máy lạnh chảy nước..."
+                placeholder="Nhập nhu cầu, ví dụ: máy lạnh chảy nước…"
                 disabled={isLoading}
                 className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-3.5 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:opacity-60"
               />
@@ -574,7 +577,7 @@ export function ChatWidget() {
                 onClick={() => handleSendMessage(input)}
                 disabled={!input.trim() || isLoading}
                 aria-label="Gửi tin nhắn"
-                className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

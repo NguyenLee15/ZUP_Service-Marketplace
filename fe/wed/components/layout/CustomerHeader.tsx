@@ -143,7 +143,7 @@ export function CustomerHeader() {
             : 'bg-white/95 backdrop-blur-md border-b border-platinum-tint py-2 sm:py-3'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="mobile-header-width mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex justify-between items-center gap-2 sm:gap-4 h-14 sm:h-16">
             <div className="flex items-center gap-2 shrink-0">
               <Link href="/" className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl">
@@ -156,7 +156,7 @@ export function CustomerHeader() {
               </Link>
             </div>
 
-            <div className={`flex-1 max-w-2xl px-2 transition-[opacity,transform] duration-300 ${
+            <div className={`hidden min-w-0 flex-1 max-w-2xl px-1 pr-12 transition-[opacity,transform] duration-300 sm:block sm:px-2 sm:pr-12 md:pr-0 ${
               isHomePage && !scrolled 
                 ? 'opacity-0 pointer-events-none -translate-y-2' 
                 : 'opacity-100 translate-y-0'
@@ -254,7 +254,7 @@ export function CustomerHeader() {
                   </DropdownMenu>
                 </>
               ) : mounted ? (
-                <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2">
                   <Link href="/register">
                     <Button variant="outline" className="border-action-blue text-action-blue hover:bg-pale-gray rounded-lg px-4 h-9 text-sm transition-colors">
                       Đăng ký
@@ -267,12 +267,12 @@ export function CustomerHeader() {
                   </Link>
                 </div>
               ) : (
-                <div className="w-20 h-9 bg-pale-gray animate-pulse rounded-full" />
+                <div className="hidden md:block w-20 h-9 bg-pale-gray animate-pulse rounded-full" />
               )}
 
               <button
                 type="button"
-                className="md:hidden p-2 text-muted-foreground hover:bg-pale-gray rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="absolute right-3 top-1/2 -translate-y-1/2 md:static md:hidden md:translate-y-0 p-2 text-muted-foreground hover:bg-pale-gray rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label={mobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
                 aria-expanded={mobileMenuOpen}
@@ -289,7 +289,7 @@ export function CustomerHeader() {
         <div className="md:hidden fixed inset-0 z-40 bg-midnight-indigo/20 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
           <div
             id="customer-mobile-menu"
-            className="absolute top-[80px] left-0 right-0 bg-card border-b border-platinum-tint px-4 py-4 space-y-2 shadow-[var(--brand-shadow-card)] animate-in slide-in-from-top-4"
+            className="absolute top-[72px] left-0 right-0 max-h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain bg-card border-b border-platinum-tint px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2 shadow-[var(--brand-shadow-card)] animate-in slide-in-from-top-4"
             onClick={(event) => event.stopPropagation()}
           >
             <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-foreground/80 hover:bg-pale-gray rounded-xl font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">

@@ -115,14 +115,6 @@ export function CustomerFooter() {
                   Dịch vụ của chúng tôi
                 </Link>
               </li>
-              <li>
-                <span className="text-muted-foreground/60 cursor-default flex items-center gap-1">
-                  Chính sách bảo mật{" "}
-                  <span className="text-[9px] uppercase tracking-wider font-bold text-action-blue/70">
-                    Sắp ra mắt
-                  </span>
-                </span>
-              </li>
             </ul>
           </div>
 
@@ -164,8 +156,20 @@ export function CustomerFooter() {
             © {new Date().getFullYear()} HomeService Marketplace. Mọi quyền được
             bảo lưu.
           </p>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <span>Quốc gia & Khu vực: Việt Nam</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            <Link
+              href="/privacy"
+              className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+            >
+              Chính sách bảo mật
+            </Link>
+            <Link
+              href="/terms"
+              className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+            >
+              Điều khoản sử dụng
+            </Link>
+            <span>Việt Nam</span>
           </div>
         </div>
       </div>

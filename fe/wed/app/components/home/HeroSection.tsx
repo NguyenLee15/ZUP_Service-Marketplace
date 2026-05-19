@@ -45,7 +45,7 @@ export function HeroSection({
       </div>
 
       <div className="relative z-10 px-4 md:px-6 max-w-6xl w-full mx-auto flex flex-col items-center text-center pt-8 pb-12 lg:pt-12 lg:pb-16">
-        <div className="flex max-w-full items-center gap-2 mb-5 bg-white/12 backdrop-blur-md border border-white/25 px-3.5 py-1.5 rounded-full shadow-lg shadow-slate-950/20 animate-fade-in">
+        <div className="mobile-safe-max flex items-center gap-2 mb-5 bg-white/12 backdrop-blur-md border border-white/25 px-3.5 py-1.5 rounded-full shadow-lg shadow-slate-950/20 animate-fade-in">
           <div className="flex -space-x-2">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="w-7 h-7 rounded-full border-2 border-action-blue bg-pale-gray overflow-hidden">
@@ -54,13 +54,21 @@ export function HeroSection({
             ))}
           </div>
           <span className="text-xs sm:text-sm font-semibold text-white/90 ml-1 truncate">
-            <span className="text-white font-bold">10,000+</span> hộ gia đình đã tin dùng
+            <span className="hidden sm:inline">
+              <span className="text-white font-bold">10,000+</span> hộ gia đình đã tin dùng
+            </span>
+            <span className="sm:hidden">
+              <span className="text-white font-bold">10,000+</span> gia đình tin dùng
+            </span>
           </span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-[80px] font-bold mb-5 sm:mb-6 text-white drop-shadow-2xl tracking-tight leading-[1] text-balance">
+        <h1 className="mx-auto max-w-[360px] sm:max-w-none text-[2rem] min-[420px]:text-4xl sm:text-5xl md:text-7xl lg:text-[80px] font-bold mb-5 sm:mb-6 text-white drop-shadow-2xl tracking-normal leading-[1.05] sm:leading-[1] text-balance">
           Dịch vụ tại nhà <br className="hidden md:block" />
-          <span className="text-pale-gray">trong tầm tay bạn</span>
+          <span className="text-pale-gray">
+            trong tầm tay <br className="md:hidden" />
+            bạn
+          </span>
         </h1>
         <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
           Nhập nhu cầu và khu vực, chúng tôi sẽ đưa bạn tới danh sách dịch vụ phù hợp để lọc, so sánh và đặt lịch.
@@ -68,7 +76,7 @@ export function HeroSection({
 
         <form
           onSubmit={onSearch}
-          className="surface-card-elevated bg-white/95 backdrop-blur-2xl rounded-3xl p-3.5 sm:p-5 md:p-6 w-full max-w-5xl transition-[background-color,box-shadow] duration-300 group/form"
+          className="mobile-viewport-width surface-card-elevated bg-white/95 backdrop-blur-2xl rounded-[1.25rem] sm:rounded-3xl p-3.5 sm:p-5 md:p-6 max-w-5xl transition-[background-color,box-shadow] duration-300 group/form"
         >
           <div className="grid md:grid-cols-3 gap-3 sm:gap-4 mb-4">
             <div className="md:col-span-2 flex items-center gap-3 sm:gap-4 bg-cloud-mist rounded-2xl px-4 sm:px-5 py-4 sm:py-5 border border-platinum-tint group focus-within:ring-4 focus-within:ring-action-blue/15 focus-within:border-action-blue transition-[box-shadow,border-color]">
@@ -101,14 +109,14 @@ export function HeroSection({
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-5 w-full">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-              <span className="text-xs font-bold text-slate-blue uppercase tracking-[0.16em]">Gợi ý:</span>
+            <div className="grid w-full grid-cols-1 items-center gap-2 min-[480px]:grid-cols-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-center md:justify-start">
+              <span className="text-center text-xs font-bold text-slate-blue uppercase tracking-[0.16em] min-[480px]:col-span-2 sm:col-span-1 sm:text-left">Gợi ý:</span>
               {['Vệ sinh máy lạnh', 'Sửa điện nước', 'Dọn dẹp nhà'].map((tag) => (
                 <button
                   key={tag}
                   type="button"
                   onClick={() => onQuickSearch(tag)}
-                  className="px-4 py-2 rounded-full bg-pale-gray hover:bg-action-blue border border-transparent text-glacier-blue hover:text-white text-xs sm:text-sm font-bold transition-[background-color,color,box-shadow,transform] hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                  className="inline-flex items-center justify-center px-3 sm:px-4 py-2 rounded-full bg-pale-gray hover:bg-action-blue border border-transparent text-glacier-blue hover:text-white text-xs sm:text-sm font-bold transition-[background-color,color,box-shadow,transform] hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   {tag}
                 </button>
