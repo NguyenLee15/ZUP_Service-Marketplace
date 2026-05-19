@@ -1,13 +1,35 @@
 import { Sparkles } from 'lucide-react';
 
 import { CategoryGrid } from '@/app/components/home/CategoryGrid';
-import { FeaturedServices } from '@/app/components/home/FeaturedServices';
 import { HeroSection } from '@/app/components/home/HeroSection';
 import { HowItWorks } from '@/app/components/home/HowItWorks';
-import { RecentlyViewedServices } from '@/app/components/home/RecentlyViewedServices';
-import { CustomerFooter } from '@/components/layout/CustomerFooter';
 import { CustomerHeader } from '@/components/layout/CustomerHeader';
 import type { Service } from '@/types';
+import dynamic from 'next/dynamic';
+
+const RecentlyViewedServices = dynamic(
+  () => import('@/app/components/home/RecentlyViewedServices').then((mod) => mod.RecentlyViewedServices),
+  { ssr: true }
+);
+
+const FeaturedServices = dynamic(
+  () => import('@/app/components/home/FeaturedServices').then((mod) => mod.FeaturedServices),
+  {
+    loading: () => (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="aspect-[4/3] w-full shimmer rounded-[20px]" />
+        ))}
+      </div>
+    ),
+    ssr: true,
+  }
+);
+
+const CustomerFooter = dynamic(
+  () => import('@/components/layout/CustomerFooter').then((mod) => mod.CustomerFooter),
+  { ssr: true }
+);
 
 export const revalidate = 60;
 

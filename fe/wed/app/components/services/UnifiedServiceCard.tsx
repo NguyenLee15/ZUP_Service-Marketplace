@@ -317,7 +317,12 @@ export function UnifiedServiceCard({
           </div>
         </div>
         {showPrimaryAction && (
-          <Link href={detailHref} onClick={handleDetailClick} className="mt-3 sm:mt-5">
+          <Link 
+            href={detailHref} 
+            onClick={handleDetailClick} 
+            className="mt-3 sm:mt-5"
+            aria-label={`Đặt ngay dịch vụ ${service.name}`}
+          >
             <Button size="sm" className="w-full rounded-lg bg-action-blue font-bold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,box-shadow,transform] hover:bg-glacier-blue active:scale-[0.98] h-8 sm:h-10 text-xs sm:text-sm">
               Đặt ngay
             </Button>

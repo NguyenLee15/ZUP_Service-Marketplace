@@ -133,7 +133,7 @@ export function SocialFeedSection() {
   return (
     <section className="mt-10 rounded-2xl border border-platinum-tint bg-cloud-mist/60 p-5">
       <div className="mb-4 flex flex-col gap-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-action-blue">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-glacier-blue">
           Kết nối cộng đồng
         </p>
         <h3 className="text-lg font-semibold text-midnight-indigo">

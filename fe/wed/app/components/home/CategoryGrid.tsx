@@ -29,7 +29,7 @@ export function CategoryGrid() {
               Chọn nhanh nhóm dịch vụ phổ biến để xem thợ phù hợp, giá tham khảo và đánh giá từ khách hàng.
             </p>
           </div>
-          <Link href="/services" className="text-action-blue font-bold text-sm md:text-base inline-flex items-center justify-center gap-2 group px-5 py-3 bg-pale-gray rounded-xl hover:bg-action-blue hover:text-white transition-[background-color,color,box-shadow] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+          <Link href="/services" className="text-glacier-blue font-bold text-sm md:text-base inline-flex items-center justify-center gap-2 group px-5 py-3 bg-pale-gray rounded-xl hover:bg-action-blue hover:text-white transition-[background-color,color,box-shadow] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
             Xem tất cả
             <span className="group-hover:translate-x-1 transition-transform">→</span>
           </Link>

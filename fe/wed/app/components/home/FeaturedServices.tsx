@@ -53,7 +53,7 @@ export function FeaturedServices({ services, isSponsored }: FeaturedServicesProp
             <h2 className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance">Dịch vụ tuyển chọn</h2>
             <p className="text-muted-foreground text-base md:text-lg max-w-2xl">Những dịch vụ được đánh giá cao nhất từ cộng đồng người dùng</p>
           </div>
-          <Link href="/services" className="text-action-blue hover:text-glacier-blue font-bold inline-flex items-center justify-center gap-2 bg-pale-gray px-5 py-3 rounded-xl hover:bg-platinum-tint/60 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+          <Link href="/services" className="text-glacier-blue hover:text-glacier-blue font-bold inline-flex items-center justify-center gap-2 bg-pale-gray px-5 py-3 rounded-xl hover:bg-platinum-tint/60 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
             Khám phá tất cả
             <ChevronRight className="w-5 h-5" />
           </Link>
