@@ -97,21 +97,26 @@ export default function LoginPage() {
       return;
     }
 
-    try {
-      google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleResponse,
-      });
-      google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: 'outline',
-        size: 'large',
-        width: googleBtnRef.current.offsetWidth || 360,
-        text: 'signin_with',
-        shape: 'rectangular',
-      });
-    } catch {
-      setError('Không thể tải đăng nhập Google. Vui lòng thử email và mật khẩu.');
-    }
+    const timer = setTimeout(() => {
+      if (!googleBtnRef.current) return;
+      try {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleResponse,
+        });
+        google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: googleBtnRef.current.offsetWidth || 360,
+          text: 'signin_with',
+          shape: 'rectangular',
+        });
+      } catch {
+        setError('Không thể tải đăng nhập Google. Vui lòng thử email và mật khẩu.');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [gsiReady, handleGoogleResponse]);
 
   const validate = (name: string, value: string) => {

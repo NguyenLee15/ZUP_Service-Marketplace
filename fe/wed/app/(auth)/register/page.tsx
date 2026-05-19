@@ -240,21 +240,26 @@ export default function RegisterPage() {
       return;
     }
 
-    try {
-      google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleResponse,
-      });
-      google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: 'outline',
-        size: 'large',
-        width: googleBtnRef.current.offsetWidth || 360,
-        text: 'signup_with',
-        shape: 'rectangular',
-      });
-    } catch {
-      setError('Không thể tải đăng nhập Google. Vui lòng đăng ký bằng email.');
-    }
+    const timer = setTimeout(() => {
+      if (!googleBtnRef.current) return;
+      try {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleResponse,
+        });
+        google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: googleBtnRef.current.offsetWidth || 360,
+          text: 'signup_with',
+          shape: 'rectangular',
+        });
+      } catch {
+        setError('Không thể tải đăng nhập Google. Vui lòng đăng ký bằng email.');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [gsiReady, handleGoogleResponse]);
 
   const isFormValid =
