@@ -1,5 +1,3 @@
-'use client';
-
 import { Search, ShieldCheck, ThumbsUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 

@@ -1,32 +1,36 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
-import { authApi } from '@/features/auth/services/auth.api';
-import { notificationsApi } from '@/features/auth/services/api';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+
+type NotificationPayload = {
+  title?: string;
+  content?: string;
+};
+
+function isUnauthorizedError(error: unknown) {
+  const candidate = error as {
+    response?: { status?: number };
+    status?: number;
+  };
+
+  return candidate?.response?.status === 401 || candidate?.status === 401;
+}
 
 export function CustomerHeader() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
   const { user, isAuthenticated, logout: storeLogout, setUser } = useAuthStore();
   const { favorites } = useServiceStore();
@@ -60,27 +64,38 @@ export function CustomerHeader() {
       }
     };
 
-    if (!user) {
-      authApi.getProfile()
+    async function loadAccountData() {
+      const [{ authApi }, { notificationsApi }] = await Promise.all([
+        import('@/features/auth/services/auth.api'),
+        import('@/features/auth/services/api'),
+      ]);
+
+      if (cancelled) return;
+
+      if (!user) {
+        authApi.getProfile()
+          .then((res) => {
+            if (!cancelled) setUser(res.data.data);
+          })
+          .catch((err: unknown) => {
+            if (isUnauthorizedError(err)) {
+              handleUnauthorized();
+            }
+          });
+      }
+
+      notificationsApi.getUnreadCount()
         .then((res) => {
-          if (!cancelled) setUser(res.data.data);
+          if (!cancelled) setUnreadCount(Number(res.data.data?.count || 0));
         })
-        .catch((err: any) => {
-          if (err?.response?.status === 401 || err?.status === 401) {
+        .catch((err: unknown) => {
+          if (isUnauthorizedError(err)) {
             handleUnauthorized();
           }
         });
     }
 
-    notificationsApi.getUnreadCount()
-      .then((res) => {
-        if (!cancelled) setUnreadCount(Number(res.data.data?.count || 0));
-      })
-      .catch((err: any) => {
-        if (err?.response?.status === 401 || err?.status === 401) {
-          handleUnauthorized();
-        }
-      });
+    void loadAccountData();
 
     return () => {
       cancelled = true;
@@ -88,19 +103,33 @@ export function CustomerHeader() {
   }, [isAuthenticated, mounted, router, setUser, storeLogout, user]);
 
   useEffect(() => {
-    if (!mobileMenuOpen) return;
+    if (!mobileMenuOpen && !accountMenuOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMobileMenuOpen(false);
+        setAccountMenuOpen(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mobileMenuOpen]);
+  }, [accountMenuOpen, mobileMenuOpen]);
 
-  const handleNotificationReceived = useCallback((data: any) => {
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    return () => window.removeEventListener('pointerdown', handlePointerDown);
+  }, [accountMenuOpen]);
+
+  const handleNotificationReceived = useCallback((data: NotificationPayload) => {
     setUnreadCount((prev) => prev + 1);
     toast.info('Thông báo mới', {
       description: data?.title || data?.content || 'Bạn vừa có một cập nhật mới từ hệ thống.',
@@ -125,6 +154,7 @@ export function CustomerHeader() {
 
   const handleLogout = async () => {
     try {
+      const { authApi } = await import('@/features/auth/services/auth.api');
       await authApi.logout();
     } catch {}
     storeLogout();
@@ -209,61 +239,75 @@ export function CustomerHeader() {
                       </span>
                     )}
                   </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Mở menu tài khoản"
-                        className="hidden lg:flex items-center gap-2 pl-1 pr-3 py-1.5 rounded-full border border-platinum-tint bg-white/90 hover:bg-pale-gray transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                  <div ref={accountMenuRef} className="relative hidden lg:block">
+                    <button
+                      type="button"
+                      aria-label="Mở menu tài khoản"
+                      aria-haspopup="menu"
+                      aria-expanded={accountMenuOpen}
+                      onClick={() => setAccountMenuOpen((open) => !open)}
+                      className="flex items-center gap-2 pl-1 pr-3 py-1.5 rounded-full border border-platinum-tint bg-white/90 hover:bg-pale-gray transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                    >
+                      <span className="flex size-8 items-center justify-center rounded-full bg-action-blue text-sm font-semibold text-white">
+                        {userInitial}
+                      </span>
+                      <span className="max-w-28 xl:max-w-36 truncate text-sm font-medium text-foreground">
+                        {displayName}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {accountMenuOpen && (
+                      <div
+                        role="menu"
+                        className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-xl border border-platinum-tint bg-white p-1.5 shadow-[var(--brand-shadow-card)]"
                       >
-                        <Avatar className="size-8">
-                          <AvatarFallback className="bg-action-blue text-white text-sm font-semibold">
-                            {userInitial}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="max-w-28 xl:max-w-36 truncate text-sm font-medium text-foreground">
-                          {displayName}
-                        </span>
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-64">
-                      <DropdownMenuLabel className="space-y-1">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Đang đăng nhập</p>
-                        <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-                        {user?.email && user?.fullName && (
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                        )}
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="cursor-pointer">
+                        <div className="space-y-1 px-3 py-2">
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Đang đăng nhập</p>
+                          <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                          {user?.email && user?.fullName && (
+                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                          )}
+                        </div>
+                        <div className="my-1 h-px bg-platinum-tint" />
+                        <Link
+                          href="/profile"
+                          role="menuitem"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                        >
                           <User className="w-4 h-4" />
                           Hồ sơ
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={handleLogout}
-                        className="cursor-pointer"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Đăng xuất
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setAccountMenuOpen(false);
+                            void handleLogout();
+                          }}
+                          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Đăng xuất
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : mounted ? (
                 <div className="hidden md:flex items-center gap-2">
-                  <Link href="/register">
-                    <Button variant="outline" className="border-action-blue text-action-blue hover:bg-pale-gray rounded-lg px-4 h-9 text-sm transition-colors">
-                      Đăng ký
-                    </Button>
+                  <Link
+                    href="/register"
+                    className="inline-flex h-9 items-center justify-center rounded-lg border border-action-blue px-4 text-sm font-medium text-action-blue transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                  >
+                    Đăng ký
                   </Link>
-                  <Link href="/login">
-                    <Button variant="default" className="bg-action-blue hover:bg-glacier-blue text-white rounded-lg px-4 h-9 text-sm shadow-[var(--brand-shadow-button)] transition-colors">
-                      Đăng nhập
-                    </Button>
+                  <Link
+                    href="/login"
+                    className="inline-flex h-9 items-center justify-center rounded-lg bg-action-blue px-4 text-sm font-medium text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                  >
+                    Đăng nhập
                   </Link>
                 </div>
               ) : (
