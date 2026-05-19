@@ -29,11 +29,38 @@ Thread group `TG01 Anonymous Browse` da bat san:
 Mac dinh `TG01 Anonymous Browse` chay 100 users, ramp-up 120 giay, 5 loops.
 Co the override bang `-Jusers`, `-Jrampup`, `-Jloops` khi chay CLI.
 
-Thread group `TG02 Authenticated Flow` dang tat mac dinh. De test login:
+Thread group `TG02 Authenticated Customer Flow` dang tat mac dinh. Luong nay bo sung
+test nghiep vu co dang nhap:
+
+- `POST /api/auth/login`
+- `GET /api/auth/profile`
+- `GET /api/bookings`
+- `GET /api/notifications/unread-count`
+
+De test authenticated flow:
 
 1. Sua `users.sample.csv` thanh tai khoan test that.
-2. Trong JMeter, enable `TG02 Authenticated Flow`.
-3. Kiem tra JSON Extractor `accessToken` co dung path response login khong: `$.data.accessToken`.
+2. Nen disable `TG01 Anonymous Browse` de bao cao rieng luong authenticated.
+3. Enable `TG02 Authenticated Customer Flow`.
+4. Chay smoke voi 1-2 users truoc, sau do moi tang len 10-20 users.
+5. Neu login loi, kiem tra JSON Extractor `accessToken`: `$.data.accessToken`.
+
+Mac dinh `TG02` chay 20 users, ramp-up 60 giay, 3 loops. Co the override:
+
+```powershell
+.\jmeter.bat -n `
+  -t "D:\Do an tot nghiep\service-marketplace\docs\jmeter\homeservice-load-test.jmx" `
+  -JbaseProtocol=https `
+  -JbaseHost=service-marketplace-gold.vercel.app `
+  -JbasePort= `
+  -JauthUsers=20 `
+  -JauthRampup=60 `
+  -JauthLoops=3 `
+  -JusersCsv="D:\Do an tot nghiep\service-marketplace\docs\jmeter\users.sample.csv" `
+  -l "D:\Do an tot nghiep\service-marketplace\reports\jmeter\run_auth_20users.jtl" `
+  -e `
+  -o "D:\Do an tot nghiep\service-marketplace\reports\jmeter\run_auth_20users"
+```
 
 Chay GUI de kiem tra nhanh 1-2 users. Chay load test that bang command line:
 

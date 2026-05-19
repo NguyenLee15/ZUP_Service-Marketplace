@@ -197,9 +197,9 @@
           </hashTree>
         </hashTree>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG02 Authenticated Flow (enable after editing users CSV)" enabled="false">
-        <stringProp name="ThreadGroup.num_threads">${__P(authUsers,5)}</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">${__P(authRampup,20)}</stringProp>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG02 Authenticated Customer Flow (enable after editing users CSV)" enabled="false">
+        <stringProp name="ThreadGroup.num_threads">${__P(authUsers,20)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(authRampup,60)}</stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
@@ -225,8 +225,8 @@
           <stringProp name="RandomTimer.range">2000</stringProp>
         </UniformRandomTimer>
         <hashTree/>
-        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="TRX_Login_Profile" enabled="true">
-          <boolProp name="TransactionController.parent">true</boolProp>
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="TRX_Authenticated_Customer_Browse" enabled="true">
+          <boolProp name="TransactionController.parent">false</boolProp>
           <boolProp name="TransactionController.includeTimers">false</boolProp>
         </TransactionController>
         <hashTree>
@@ -286,6 +286,83 @@
             </HeaderManager>
             <hashTree/>
             <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert Profile 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="49586">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+              <stringProp name="Assertion.custom_message"></stringProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="TC06 GET My Bookings" enabled="true">
+            <stringProp name="HTTPSampler.path">/api/bookings</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="page" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.name">page</stringProp>
+                  <stringProp name="Argument.value">1</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                </elementProp>
+                <elementProp name="limit" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.name">limit</stringProp>
+                  <stringProp name="Argument.value">10</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Authorization Header" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${accessToken}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert Bookings 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="49586">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+              <stringProp name="Assertion.custom_message"></stringProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="TC07 GET Notification Unread Count" enabled="true">
+            <stringProp name="HTTPSampler.path">/api/notifications/unread-count</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Authorization Header" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${accessToken}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert Notifications 200" enabled="true">
               <collectionProp name="Asserion.test_strings">
                 <stringProp name="49586">200</stringProp>
               </collectionProp>
