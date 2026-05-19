@@ -207,6 +207,7 @@ model KycProfile {
   reviewer       User?     @relation("ReviewerKyc", fields: [reviewedBy], references: [id])
 
   @@map("kyc_profiles")
+  @@index([providerId])
 }
 
 /// Bảng user_addresses — có field label ("Nhà riêng", "Văn phòng")
@@ -266,6 +267,8 @@ model Service {
   @@map("services")
   @@index([categoryId, status])
   @@index([providerId])
+  @@index([status, isDeleted, avgRating])
+  @@index([status, isDeleted, referencePrice])
 }
 
 /// Bảng service_images — display_order = 0 là ảnh bìa
@@ -278,6 +281,7 @@ model ServiceImage {
   service      Service @relation(fields: [serviceId], references: [id])
 
   @@map("service_images")
+  @@index([serviceId])
 }
 
 /// Bảng bookings — KHÔNG có lat/lng
@@ -339,6 +343,7 @@ model BookingAttachment {
   booking   Booking               @relation(fields: [bookingId], references: [id])
 
   @@map("booking_attachments")
+  @@index([bookingId])
 }
 
 /// Bảng booking_status_histories — audit trail đầy đủ
@@ -353,6 +358,7 @@ model BookingStatusHistory {
   booking    Booking  @relation(fields: [bookingId], references: [id])
 
   @@map("booking_status_histories")
+  @@index([bookingId])
 }
 
 /// Bảng provider_wallets — is_restricted = true khi balance âm
@@ -384,6 +390,8 @@ model WalletTransaction {
   dispute     Dispute?                @relation(fields: [disputeId], references: [id])
 
   @@map("wallet_transactions")
+  @@index([walletId])
+  @@index([bookingId])
 }
 
 /// Bảng commission_configs — mỗi lần thay đổi tạo record mới (audit trail)
@@ -449,6 +457,7 @@ model Message {
   sender         User?        @relation(fields: [senderId], references: [id])
 
   @@map("messages")
+  @@index([conversationId, createdAt])
 }
 
 /// Server-side memory cho Customer AI Assistant

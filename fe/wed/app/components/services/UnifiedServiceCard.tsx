@@ -137,6 +137,7 @@ export function UnifiedServiceCard({
               alt={service.name}
               width={500}
               height={375}
+              sizes="(max-width: 1024px) 50vw, 25vw"
               priority={priority}
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               style={{ viewTransitionName: `service-image-${service.id}` } as any}

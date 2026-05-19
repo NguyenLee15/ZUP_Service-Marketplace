@@ -7,6 +7,7 @@ import {
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class FeaturedListingsService {
@@ -15,7 +16,25 @@ export class FeaturedListingsService {
   // Giá mặc định 50.000đ/ngày, có thể override bằng system_settings
   private readonly DEFAULT_DAILY_RATE = 50000;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private redisService: RedisService,
+  ) {}
+
+  /**
+   * Xóa cache của danh sách dịch vụ nổi bật khi có thay đổi.
+   */
+  private async clearFeaturedCache() {
+    try {
+      await this.redisService.del('services:featured:8');
+      await this.redisService.del('services:featured:4');
+      await this.redisService.del('services:featured:10');
+      await this.redisService.del('services:featured:20');
+      this.logger.log('Cleared featured listings Redis cache');
+    } catch (err) {
+      this.logger.warn(`Failed to clear featured cache: ${err.message}`);
+    }
+  }
 
   /**
    * NCC mua featured listing cho dịch vụ.
@@ -87,7 +106,7 @@ export class FeaturedListingsService {
       });
     }
 
-    // Transaction: trừ ví + tạo wallet_transaction + tạo featured_listing
+    // Transaction: trừ ví + tạo wallet_transaction + tạo featured_listing + audit log
     const now = new Date();
     const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -101,7 +120,7 @@ export class FeaturedListingsService {
       });
 
       // Tạo giao dịch ví
-      await tx.walletTransaction.create({
+      const txn = await tx.walletTransaction.create({
         data: {
           walletId: wallet.id,
           type: 'FEATURED_FEE',
@@ -128,8 +147,23 @@ export class FeaturedListingsService {
         },
       });
 
+      // Tạo audit log
+      await tx.auditLog.create({
+        data: {
+          actorId: providerId,
+          action: 'PURCHASE_FEATURED',
+          targetType: 'WALLET',
+          targetId: txn.id,
+          description: `Thanh toán phí đẩy Top dịch vụ #${serviceId} trong ${days} ngày. Phí: ${totalCost.toLocaleString('vi-VN')}đ`,
+          ipAddress: 'System',
+        },
+      });
+
       return featured;
     });
+
+    // Xóa cache danh sách dịch vụ nổi bật
+    await this.clearFeaturedCache();
 
     this.logger.log(
       `Provider #${providerId} purchased featured listing for service #${serviceId} (${days} days, ${totalCost}đ)`,
@@ -144,8 +178,19 @@ export class FeaturedListingsService {
   /**
    * Lấy danh sách dịch vụ featured đang active (cho trang chủ / search).
    * Luôn filter endDate > now() để đảm bảo chính xác dù cron chưa chạy.
+   * Áp dụng Redis Caching để tối ưu hóa hiệu năng.
    */
   async getActiveFeatured(limit: number = 8) {
+    const cacheKey = `services:featured:${limit}`;
+    try {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to read featured listings from Redis: ${err.message}`);
+    }
+
     const featured = await this.prisma.featuredListing.findMany({
       where: {
         status: 'ACTIVE',
@@ -173,7 +218,15 @@ export class FeaturedListingsService {
         featuredUntil: f.endDate,
       }));
 
-    return { data: activeServices };
+    const result = { data: activeServices };
+
+    try {
+      await this.redisService.set(cacheKey, JSON.stringify(result), 600); // Cache TTL: 10 mins
+    } catch (err) {
+      this.logger.warn(`Failed to write featured listings to Redis: ${err.message}`);
+    }
+
+    return result;
   }
 
   /**
@@ -206,6 +259,7 @@ export class FeaturedListingsService {
 
     if (result.count > 0) {
       this.logger.log(`Expired ${result.count} featured listing(s)`);
+      await this.clearFeaturedCache();
     }
   }
 
