@@ -26,6 +26,7 @@ export function RecentlyViewedServices() {
         </div>
         <Link
           href="/services"
+          prefetch={false}
           className="inline-flex text-sm font-bold text-action-blue hover:text-glacier-blue items-center gap-1 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-md"
         >
           Xem tất cả thợ

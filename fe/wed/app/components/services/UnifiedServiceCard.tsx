@@ -130,7 +130,7 @@ export function UnifiedServiceCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        <Link href={detailHref} onClick={handleDetailClick} className="block h-full w-full">
+        <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block h-full w-full">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -261,7 +261,7 @@ export function UnifiedServiceCard({
             </div>
           </div>
 
-          <Link href={detailHref} onClick={handleDetailClick} className="block">
+          <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block">
             <h3
               className="line-clamp-2 sm:line-clamp-1 text-sm sm:text-lg font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight"
               style={{ viewTransitionName: `service-title-${service.id}` } as any}
@@ -319,6 +319,7 @@ export function UnifiedServiceCard({
         {showPrimaryAction && (
           <Link 
             href={detailHref} 
+            prefetch={false}
             onClick={handleDetailClick} 
             className="mt-3 sm:mt-5"
             aria-label={`Đặt ngay dịch vụ ${service.name}`}

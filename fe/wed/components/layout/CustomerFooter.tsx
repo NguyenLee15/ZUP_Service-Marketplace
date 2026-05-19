@@ -13,6 +13,7 @@ export function CustomerFooter() {
           <div className="space-y-4">
             <Link
               href="/"
+              prefetch={false}
               className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
             >
               <div className="w-8 h-8 rounded-lg bg-action-blue flex items-center justify-center text-white font-bold text-lg">
@@ -38,6 +39,7 @@ export function CustomerFooter() {
               <li>
                 <Link
                   href="/services?categoryIds=1"
+                  prefetch={false}
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   Vệ sinh nhà cửa
@@ -46,6 +48,7 @@ export function CustomerFooter() {
               <li>
                 <Link
                   href="/services?categoryIds=2"
+                  prefetch={false}
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   Vệ sinh máy lạnh
@@ -54,6 +57,7 @@ export function CustomerFooter() {
               <li>
                 <Link
                   href="/services?categoryIds=3"
+                  prefetch={false}
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   Sửa chữa điện nước
@@ -62,6 +66,7 @@ export function CustomerFooter() {
               <li>
                 <Link
                   href="/services?categoryIds=4"
+                  prefetch={false}
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   Sửa chữa điện lạnh
@@ -70,6 +75,7 @@ export function CustomerFooter() {
               <li>
                 <Link
                   href="/services?categoryIds=5"
+                  prefetch={false}
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   Thông tắc bồn cầu, cống
@@ -110,6 +116,7 @@ export function CustomerFooter() {
               <li>
                 <Link
                   href="/services"
+                  prefetch={false}
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
                   Dịch vụ của chúng tôi
@@ -159,12 +166,14 @@ export function CustomerFooter() {
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <Link
               href="/privacy"
+              prefetch={false}
               className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
             >
               Chính sách bảo mật
             </Link>
             <Link
               href="/terms"
+              prefetch={false}
               className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
             >
               Điều khoản sử dụng

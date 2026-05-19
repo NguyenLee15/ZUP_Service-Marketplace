@@ -176,7 +176,7 @@ export function CustomerHeader() {
         <div className="mobile-header-width mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex justify-between items-center gap-2 sm:gap-4 h-14 sm:h-16">
             <div className="flex items-center gap-2 shrink-0">
-              <Link href="/" className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl">
+              <Link href="/" prefetch={false} className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-action-blue flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-[var(--brand-shadow-button)] group-hover:scale-105 transition-transform duration-300">
                   H
                 </div>
@@ -217,13 +217,13 @@ export function CustomerHeader() {
             <div className="flex items-center gap-1 sm:gap-3 shrink-0">
               {mounted && isAuthenticated() ? (
                 <>
-                  <Link href="/bookings" aria-label="Đơn hàng" className="hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/bookings" prefetch={false} aria-label="Đơn hàng" className="hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
                     <Package className="w-5 h-5" />
                   </Link>
-                  <Link href="/chat" aria-label="Tin nhắn" className="hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/chat" prefetch={false} aria-label="Tin nhắn" className="hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
                     <MessageSquare className="w-5 h-5" />
                   </Link>
-                  <Link href="/favorites" aria-label="Dịch vụ yêu thích" className="relative hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/favorites" prefetch={false} aria-label="Dịch vụ yêu thích" className="relative hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
                     <Heart className="w-5 h-5" />
                     {favorites.length > 0 && (
                       <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-4 h-4 px-1 bg-red-500 text-[10px] font-bold text-white rounded-full border-2 border-white">
@@ -231,7 +231,7 @@ export function CustomerHeader() {
                       </span>
                     )}
                   </Link>
-                  <Link href="/notifications" aria-label="Thông báo" className="relative flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/notifications" prefetch={false} aria-label="Thông báo" className="relative flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
                       <span className="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 bg-red-500 text-[10px] font-bold text-white rounded-full border-2 border-white">
@@ -272,6 +272,7 @@ export function CustomerHeader() {
                         <div className="my-1 h-px bg-platinum-tint" />
                         <Link
                           href="/profile"
+                          prefetch={false}
                           role="menuitem"
                           onClick={() => setAccountMenuOpen(false)}
                           className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
@@ -299,12 +300,14 @@ export function CustomerHeader() {
                 <div className="hidden md:flex items-center gap-2">
                   <Link
                     href="/register"
+                    prefetch={false}
                     className="inline-flex h-9 items-center justify-center rounded-lg border border-action-blue px-4 text-sm font-medium text-action-blue transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                   >
                     Đăng ký
                   </Link>
                   <Link
                     href="/login"
+                    prefetch={false}
                     className="inline-flex h-9 items-center justify-center rounded-lg bg-action-blue px-4 text-sm font-medium text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                   >
                     Đăng nhập
