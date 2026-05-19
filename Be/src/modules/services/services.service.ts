@@ -18,9 +18,25 @@ import {
   SearchServiceDto,
 } from './dto/services.dto';
 
+type SearchServicesResult = {
+  data: any[];
+  meta: {
+    limit: number;
+    page: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
 @Injectable()
 export class ServicesService {
   private readonly logger = new Logger('ServicesService');
+  private readonly searchCache = new Map<
+    string,
+    { expiresAt: number; result: unknown }
+  >();
+  private readonly searchCacheTtlMs = 30_000;
+  private readonly searchCacheMaxEntries = 100;
 
   constructor(
     private prisma: PrismaService,
@@ -465,9 +481,64 @@ export class ServicesService {
 
   // ===== PUBLIC =====
 
-  async search(dto: SearchServiceDto) {
-    const page = dto.page || 1;
-    const limit = dto.limit || 20;
+  private buildSearchCacheKey(
+    dto: SearchServiceDto,
+    page: number,
+    limit: number,
+  ) {
+    return JSON.stringify({
+      categoryId: dto.categoryId ?? null,
+      keyword: dto.keyword?.trim().toLowerCase().replace(/\s+/g, ' ') ?? '',
+      limit,
+      maxPrice: dto.maxPrice ?? null,
+      minPrice: dto.minPrice ?? null,
+      minRating: dto.minRating ?? null,
+      page,
+      province: dto.province?.trim().toLowerCase() ?? '',
+      sortBy: dto.sortBy ?? 'newest',
+    });
+  }
+
+  private getCachedSearchResult<T>(cacheKey: string): T | null {
+    const cached = this.searchCache.get(cacheKey);
+    if (!cached) return null;
+
+    if (cached.expiresAt <= Date.now()) {
+      this.searchCache.delete(cacheKey);
+      return null;
+    }
+
+    return cached.result as T;
+  }
+
+  private setCachedSearchResult(cacheKey: string, result: unknown) {
+    const now = Date.now();
+    if (this.searchCache.size >= this.searchCacheMaxEntries) {
+      for (const [key, value] of this.searchCache) {
+        if (
+          value.expiresAt <= now ||
+          this.searchCache.size > this.searchCacheMaxEntries / 2
+        ) {
+          this.searchCache.delete(key);
+        }
+      }
+    }
+
+    this.searchCache.set(cacheKey, {
+      expiresAt: now + this.searchCacheTtlMs,
+      result,
+    });
+  }
+
+  async search(dto: SearchServiceDto): Promise<SearchServicesResult> {
+    const page = Math.max(1, dto.page || 1);
+    const limit = Math.min(Math.max(1, dto.limit || 20), 50);
+    const cacheKey = this.buildSearchCacheKey(dto, page, limit);
+    const cached = this.getCachedSearchResult<SearchServicesResult>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
 
     const where: any = {
       status: ServiceStatus.ACTIVE,
@@ -544,10 +615,13 @@ export class ServicesService {
       isFeatured: s.featuredListings?.length > 0,
     }));
 
-    return {
+    const result = {
       data: mappedData,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
+
+    this.setCachedSearchResult(cacheKey, result);
+    return result;
   }
 
   async aiSearch(query: string) {
