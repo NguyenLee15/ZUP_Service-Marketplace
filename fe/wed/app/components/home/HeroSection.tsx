@@ -51,7 +51,7 @@ export function HeroSection() {
           priority
           fetchPriority="high"
           sizes="100vw"
-          className="h-full w-full object-cover scale-105 animate-ken-burns"
+          className="h-full w-full object-cover md:scale-105 md:animate-ken-burns"
         />
         <div className="absolute inset-0 bg-midnight-indigo/55"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-midnight-indigo/35 to-midnight-indigo/75"></div>
