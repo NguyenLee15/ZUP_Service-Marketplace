@@ -16,6 +16,7 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'recharts'],
+    optimizeCss: true,
   },
   typescript: {
     ignoreBuildErrors: false,
