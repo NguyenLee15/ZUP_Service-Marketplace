@@ -27,6 +27,7 @@ interface UnifiedServiceCardProps {
   showFavorite?: boolean;
   showCompare?: boolean;
   showQuickView?: boolean;
+  showDescription?: boolean;
   showSponsoredBadge?: boolean;
   showTrustBadges?: boolean;
   showPrimaryAction?: boolean;
@@ -82,6 +83,7 @@ export function UnifiedServiceCard({
   showFavorite = true,
   showCompare = false,
   showQuickView = false,
+  showDescription = true,
   showSponsoredBadge = false,
   showTrustBadges = false,
   showPrimaryAction = false,
@@ -248,8 +250,8 @@ export function UnifiedServiceCard({
         )}
       </div>
 
-      <CardContent className="flex flex-1 flex-col p-3 sm:p-5 md:p-6">
-        <div className="flex-1 space-y-3">
+      <CardContent className="flex flex-1 flex-col p-3 sm:p-4 md:p-5">
+        <div className="flex-1 space-y-2.5 sm:space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-amber-pop/15 px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-bold text-midnight-indigo">
               <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 fill-yellow-400 border-0" />
@@ -268,9 +270,11 @@ export function UnifiedServiceCard({
               {service.name}
             </h3>
           </Link>
-          <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground text-pretty break-words [overflow-wrap:anywhere]">
-            {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
-          </p>
+          {showDescription && (
+            <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground text-pretty break-words [overflow-wrap:anywhere]">
+              {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
+            </p>
+          )}
           {showTrustBadges && (
             <div className="flex flex-wrap gap-1 sm:gap-2">
               <div className="flex items-center gap-1 rounded-full bg-pale-gray px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-glacier-blue">
@@ -281,7 +285,7 @@ export function UnifiedServiceCard({
           )}
         </div>
 
-        <div className="mt-4 sm:mt-5 flex flex-col gap-3 border-t border-border/50 pt-3 sm:pt-5">
+        <div className="mt-3 sm:mt-4 flex flex-col gap-2.5 sm:gap-3 border-t border-border/50 pt-3 sm:pt-4">
           <div className="flex min-w-0 items-start gap-2.5">
             <div className="relative shrink-0 hidden sm:block">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-action-blue text-[10px] font-bold text-white shadow-md">

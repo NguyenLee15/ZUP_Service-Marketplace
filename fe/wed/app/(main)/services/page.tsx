@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { 
   Search, 
@@ -26,12 +24,6 @@ import { Service, Category } from '@/types';
 import { ServiceFilterSidebar } from '@/app/components/services/ServiceFilterSidebar';
 import { UnifiedServiceCard } from '@/app/components/services/UnifiedServiceCard';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useServiceStore } from '@/store/service.store';
 const ServiceMap = dynamic(() => import('@/app/components/services/ServiceMap').then(mod => mod.ServiceMap), { 
   ssr: false,
@@ -56,19 +48,13 @@ function ServicesSearchContent() {
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 0 });
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
   const [isListening, setIsListening] = useState(false);
   const observerTarget = useRef(null);
 
-  const { favorites, toggleFavoriteService, comparisonList, addToComparison, addRecentlyViewed } = useServiceStore();
-  
-  const handleOpenQuickView = (service: Service) => {
-    setSelectedService(service);
-    addRecentlyViewed(service);
-  };
+  const { favorites, toggleFavoriteService, addRecentlyViewed } = useServiceStore();
 
   // Filters State
   const [categoryIds, setCategoryIds] = useState<string[]>(searchParams.get('categoryIds')?.split(',') || []);
@@ -592,7 +578,6 @@ function ServicesSearchContent() {
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6">
                 {services.map((service, index) => {
                   const isFavorite = favorites.includes(service.id);
-                  const isComparing = comparisonList.some(s => s.id === service.id);
 
                   return (
                     <div 
@@ -604,17 +589,13 @@ function ServicesSearchContent() {
                         service={service}
                         priority={index < 3}
                         isFavorite={isFavorite}
-                        isComparing={isComparing}
                         showFavorite
-                        showCompare
-                        showQuickView
+                        showDescription={false}
                         showTrustBadges
                         showPrimaryAction
                         useImageCarousel
                         priceMode="estimate"
                         onToggleFavorite={toggleFavoriteService}
-                        onAddToComparison={addToComparison}
-                        onQuickView={handleOpenQuickView}
                         onRecentlyViewed={addRecentlyViewed}
                       />
                     </div>
@@ -641,168 +622,6 @@ function ServicesSearchContent() {
           </div>
         </div>
       </div>
-
-      {/* Quick View Dialog */}
-      <Dialog open={!!selectedService} onOpenChange={(open) => !open && setSelectedService(null)}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-[20px] border border-platinum-tint shadow-[var(--brand-shadow-card)] bg-background/95 backdrop-blur-xl">
-          {selectedService && (
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="aspect-square md:aspect-auto relative bg-muted overflow-hidden">
-                {selectedService.images?.[0]?.imageUrl ? (
-                  <Image 
-                    src={selectedService.images[0].imageUrl} 
-                    alt={selectedService.name}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted">
-                    <Wrench className="w-12 h-12 text-muted-foreground/30" />
-                  </div>
-                )}
-                <Badge className="absolute left-4 top-4 max-w-[calc(100%-2rem)] whitespace-normal break-words border-0 bg-midnight-indigo/80 px-3 py-1.5 font-bold text-white shadow-lg backdrop-blur-md sm:left-6 sm:top-6 sm:max-w-[calc(100%-3rem)] sm:px-4">
-                  {selectedService.category?.name}
-                </Badge>
-              </div>
-              
-              <div className="flex h-full max-h-[90vh] flex-col overflow-y-auto p-5 sm:p-8">
-                <DialogHeader className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-400/10 text-yellow-600 text-xs font-bold">
-                      <Star className="w-3.5 h-3.5 fill-yellow-400 border-0" />
-                      {Number(selectedService.avgRating || 0).toFixed(1)}
-                    </div>
-                    <span className="text-xs text-muted-foreground font-bold tracking-tight uppercase">
-                      {selectedService.totalReviews || 0} Đánh giá
-                    </span>
-                  </div>
-                  <DialogTitle className="mb-2 text-2xl font-bold leading-tight brand-heading break-words [overflow-wrap:anywhere] sm:text-3xl">
-                    {selectedService.name}
-                  </DialogTitle>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-action-blue flex items-center justify-center text-white text-xs font-bold border-2 border-background shadow-lg">
-                        {selectedService.provider?.fullName?.charAt(0)}
-                      </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-foreground break-words [overflow-wrap:anywhere]">{selectedService.provider?.fullName}</p>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">Nhà cung cấp dịch vụ</p>
-                    </div>
-                  </div>
-                </DialogHeader>
-                
-                <div className="flex-1 space-y-8">
-                  {/* Thông tin tổng quan từ đánh giá thực */}
-                  {(selectedService.totalReviews || 0) > 0 && (
-                    <div className="p-5 rounded-[20px] bg-pale-gray/40 border border-platinum-tint shadow-sm">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-xl bg-action-blue flex items-center justify-center shadow-[var(--brand-shadow-sm)]">
-                          <Star className="w-5 h-5 text-white" />
-                        </div>
-                        <h4 className="text-sm font-bold text-glacier-blue uppercase tracking-widest">Tổng quan đánh giá</h4>
-                      </div>
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-                        <div className="text-center p-3 rounded-2xl bg-card/50 border border-border/50">
-                          <p className="text-2xl font-bold text-foreground">{Number(selectedService.avgRating || 0).toFixed(1)}</p>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Điểm TB</p>
-                        </div>
-                        <div className="text-center p-3 rounded-2xl bg-card/50 border border-border/50">
-                          <p className="text-2xl font-bold text-foreground">{selectedService.totalReviews}</p>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Đánh giá</p>
-                        </div>
-                        <div className="text-center p-3 rounded-2xl bg-card/50 border border-border/50">
-                          <p className="text-sm font-bold text-foreground break-words [overflow-wrap:anywhere]">{selectedService.category?.name || '—'}</p>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Danh mục</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Mô tả dịch vụ</h4>
-                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line break-words [overflow-wrap:anywhere]">
-                      {selectedService.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
-                    </p>
-                  </div>
-                  
-                  <div className="p-6 rounded-[20px] bg-pale-gray/45 border border-platinum-tint">
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Giá tham khảo</p>
-                    </div>
-                    <p className="mb-5 text-3xl font-bold leading-tight text-action-blue break-words [overflow-wrap:anywhere] sm:text-4xl">
-                      {formatPrice(Number(selectedService.referencePrice))}
-                    </p>
-                    {/* Price Benchmark Meter */}
-                    <div className="h-2 w-full bg-border rounded-full overflow-hidden flex">
-                      <div className="h-full w-[35%] bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]" />
-                      <div className="h-full w-[40%] bg-yellow-400" />
-                      <div className="h-full w-[25%] bg-red-400" />
-                    </div>
-                    <div className="flex justify-between mt-2.5">
-                      <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest">Tiết kiệm</span>
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Trung bình</span>
-                      <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">Cao cấp</span>
-                    </div>
-                  </div>
-
-                  {/* Similar Services Section */}
-                  <div className="space-y-4 pt-4 border-t border-border/50">
-                    <h4 className="text-xs font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-action-blue" />
-                      Gợi ý thợ tương tự
-                    </h4>
-                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 scrollbar-hide">
-                      {services.filter(s => s.id !== selectedService.id).slice(0, 3).map((s) => (
-                        <div 
-                          key={s.id} 
-                          className="shrink-0 w-48 group/similar cursor-pointer"
-                          onClick={() => setSelectedService(s)}
-                        >
-                          <div className="aspect-video relative rounded-xl overflow-hidden mb-2">
-                            {s.images?.[0]?.imageUrl ? (
-                              <Image src={s.images[0].imageUrl} alt={s.name} fill className="object-cover transition-transform duration-500 group-hover/similar:scale-110" />
-                            ) : (
-                              <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <Wrench className="w-5 h-5 text-muted-foreground/30" />
-                              </div>
-                            )}
-                            <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-md text-white text-[8px] font-bold">
-                              {Number(s.avgRating || 0).toFixed(1)} ★
-                            </div>
-                          </div>
-                          <h5 className="text-[10px] font-bold leading-snug text-foreground break-words [overflow-wrap:anywhere] transition-colors group-hover/similar:text-action-blue">{s.name}</h5>
-                          <p className="text-[10px] font-bold text-action-blue">{formatPrice(Number(s.referencePrice))}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mt-10">
-                  <Button 
-                    variant="outline" 
-                    className="h-14 rounded-xl font-bold border-platinum-tint hover:bg-pale-gray"
-                    onClick={() => setSelectedService(null)}
-                  >
-                    Đóng
-                  </Button>
-                  <Link href={`/services/${selectedService.id}`} className="w-full">
-                    <Button className="w-full h-14 rounded-xl bg-action-blue hover:bg-glacier-blue text-white font-bold shadow-[var(--brand-shadow-button)]">
-                      Xem chi tiết đầy đủ
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-
 
       {/* Floating Filter Button (Mobile) */}
       <div 
