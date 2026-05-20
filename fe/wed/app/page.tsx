@@ -223,8 +223,6 @@ export default async function Home() {
             />
           ))}
 
-          <FeaturedServices services={featuredServices} />
-
           <HowItWorks />
         </div>
       </main>
