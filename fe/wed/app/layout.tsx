@@ -4,8 +4,8 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
-import NextTopLoader from 'nextjs-toploader'
 import { ClientWidgets } from '@/components/client-widgets'
+import { DeferredTopLoader } from '@/components/navigation/DeferredTopLoader'
 
 const montserrat = Montserrat({
   subsets: ['vietnamese', 'latin', 'latin-ext'],
@@ -75,18 +75,7 @@ export default function RootLayout({
           >
             Bỏ qua đến nội dung chính
           </a>
-          <NextTopLoader
-            color="#2563eb"
-            initialPosition={0.08}
-            crawlSpeed={200}
-            height={3}
-            crawl={true}
-            showSpinner={false}
-            easing="ease"
-            speed={200}
-            shadow="0 0 10px #2563eb,0 0 5px #2563eb"
-            zIndex={1600}
-          />
+          <DeferredTopLoader />
           {children}
           <ClientWidgets />
           {process.env.NODE_ENV === 'production' && <Analytics />}
