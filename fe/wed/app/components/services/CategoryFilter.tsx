@@ -29,59 +29,57 @@ export function CategoryFilter({ categories, selectedIds, onToggle }: CategoryFi
   const mainCategories = categories.filter(c => !c.parentId || c.level === 1);
   const getSubCategories = (parentId: number) => categories.filter(c => c.parentId === parentId);
 
+  const renderCategorySelect = (category: Category, depth = 0, labelPrefix = '') => {
+    const isSelected = selectedIds.includes(category.id.toString());
+
+    return (
+      <button
+        type="button"
+        key={`select-${category.id}`}
+        onClick={() => onToggle(category.id.toString())}
+        aria-pressed={isSelected}
+        className={`w-full text-left text-sm p-2 rounded-md cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${isSelected ? 'bg-pale-gray text-action-blue font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+        style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
+      >
+        {labelPrefix}{category.name}
+      </button>
+    );
+  };
+
+  const renderCategoryNode = (category: Category, depth = 0) => {
+    const subs = getSubCategories(category.id);
+    const isSelected = selectedIds.includes(category.id.toString());
+
+    if (subs.length === 0) {
+      return renderCategorySelect(category, depth);
+    }
+
+    return (
+      <Accordion type="multiple" className="w-full" key={category.id}>
+        <AccordionItem value={`cat-${category.id}`} className="border-none">
+          <AccordionTrigger className={`hover:no-underline py-2 group/trigger ${isSelected ? 'text-action-blue' : ''}`}>
+            <div className="flex min-w-0 items-center space-x-3">
+              <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center transition-[background-color,color,box-shadow] ${isSelected ? 'bg-action-blue text-white shadow-[var(--brand-shadow-sm)]' : 'bg-muted group-hover/trigger:bg-pale-gray text-muted-foreground group-hover/trigger:text-action-blue'}`}>
+                {category.iconUrl ? <Image src={category.iconUrl} alt={category.name} width={16} height={16} className="w-4 h-4 object-contain" /> : getCategoryIcon(category.name)}
+              </div>
+              <span className="truncate text-sm font-bold">{category.name}</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pt-1 pb-2 pl-6 space-y-1">
+            {renderCategorySelect(category, depth, 'Tất cả ')}
+            {subs.map(sub => renderCategoryNode(sub, depth + 1))}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    );
+  };
+
   return (
     <div className="space-y-4 mb-8">
       <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-widest">Loại dịch vụ</h3>
-      <Accordion type="multiple" className="w-full">
-        {mainCategories.map((cat) => {
-          const subs = getSubCategories(cat.id);
-          if (subs.length === 0) {
-            const isSelected = selectedIds.includes(cat.id.toString());
-            return (
-              <button
-                type="button"
-                key={cat.id} 
-                aria-pressed={isSelected}
-                className={`w-full flex items-center justify-between p-2 py-3 rounded-lg cursor-pointer transition-colors group/cat focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${isSelected ? 'bg-pale-gray text-action-blue' : 'hover:bg-muted text-muted-foreground'}`}
-                onClick={() => onToggle(cat.id.toString())}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-[background-color,color,box-shadow] ${isSelected ? 'bg-action-blue text-white shadow-[var(--brand-shadow-sm)]' : 'bg-muted group-hover/cat:bg-pale-gray text-muted-foreground group-hover/cat:text-action-blue'}`}>
-                    {cat.iconUrl ? <Image src={cat.iconUrl} alt={cat.name} width={16} height={16} className="w-4 h-4 object-contain" /> : getCategoryIcon(cat.name)}
-                  </div>
-                  <span className={`text-sm font-medium ${isSelected ? 'font-bold' : ''}`}>{cat.name}</span>
-                </div>
-              </button>
-            );
-          }
-
-          return (
-            <AccordionItem key={cat.id} value={`cat-${cat.id}`} className="border-none">
-              <AccordionTrigger className="hover:no-underline py-2 group/trigger">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-[background-color,color] bg-muted group-hover/trigger:bg-pale-gray text-muted-foreground group-hover/trigger:text-action-blue">
-                    {cat.iconUrl ? <Image src={cat.iconUrl} alt={cat.name} width={16} height={16} className="w-4 h-4 object-contain" /> : getCategoryIcon(cat.name)}
-                  </div>
-                  <span className="text-sm font-bold">{cat.name}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pt-1 pb-2 pl-11 space-y-1">
-                {subs.map(sub => (
-                  <button
-                    type="button"
-                    key={sub.id}
-                    onClick={() => onToggle(sub.id.toString())}
-                    aria-pressed={selectedIds.includes(sub.id.toString())}
-                    className={`w-full text-left text-sm p-2 rounded-md cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${selectedIds.includes(sub.id.toString()) ? 'bg-pale-gray text-action-blue font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
-                  >
-                    {sub.name}
-                  </button>
-                ))}
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+      <div className="space-y-1">
+        {mainCategories.map((cat) => renderCategoryNode(cat))}
+      </div>
     </div>
   );
 }

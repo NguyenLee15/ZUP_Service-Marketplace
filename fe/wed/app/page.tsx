@@ -23,6 +23,7 @@ type CategoryServiceSection = {
 };
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const HOME_MAIN_CATEGORY_IDS = [3, 1, 4, 8, 9, 10, 11, 12];
 
 function getBackendUrl(path: string, params?: Record<string, string | number>) {
   const url = new URL(path, BACKEND_URL);
@@ -76,24 +77,45 @@ async function fetchHomeCategories() {
 }
 
 function sortHomeCategories(categories: Category[]) {
-  const priorityPatterns = [
-    /vệ sinh|don dep|dọn/i,
-    /sửa điện|điện nước|sửa chữa/i,
-    /thông tắc|thiết bị|máy tính|camera/i,
-  ];
+  const priority = new Map(
+    HOME_MAIN_CATEGORY_IDS.map((categoryId, index) => [categoryId, index]),
+  );
 
   return [...categories]
-    .filter((category) => category.parentId)
+    .filter((category) => !category.parentId || category.level === 1)
     .sort((a, b) => {
-      const score = (category: Category) => {
-        const index = priorityPatterns.findIndex((pattern) =>
-          pattern.test(category.name),
-        );
-        return index === -1 ? priorityPatterns.length : index;
-      };
-
-      return score(a) - score(b) || a.id - b.id;
+      const aPriority = priority.get(a.id) ?? HOME_MAIN_CATEGORY_IDS.length;
+      const bPriority = priority.get(b.id) ?? HOME_MAIN_CATEGORY_IDS.length;
+      return aPriority - bPriority || a.id - b.id;
     });
+}
+
+function getCategoryTreeIds(rootCategoryId: number, categories: Category[]) {
+  const childrenByParent = new Map<number, Category[]>();
+
+  categories.forEach((category) => {
+    if (!category.parentId) return;
+    const siblings = childrenByParent.get(category.parentId) ?? [];
+    siblings.push(category);
+    childrenByParent.set(category.parentId, siblings);
+  });
+
+  const ids = new Set<number>([rootCategoryId]);
+  const queue = [rootCategoryId];
+
+  while (queue.length > 0) {
+    const parentId = queue.shift();
+    if (!parentId) continue;
+
+    const children = childrenByParent.get(parentId) ?? [];
+    children.forEach((child) => {
+      if (ids.has(child.id)) return;
+      ids.add(child.id);
+      queue.push(child.id);
+    });
+  }
+
+  return [...ids];
 }
 
 function getCategorySectionDescription(categoryName: string) {
@@ -104,14 +126,18 @@ function getCategorySectionDescription(categoryName: string) {
   }
 
   if (normalizedName.includes('sửa') || normalizedName.includes('điện')) {
-    return 'Nhóm thợ sửa chữa phản hồi nhanh, phù hợp khi cần xử lý sự cố tại nhà.';
+    return 'Nhóm sửa chữa tổng hợp từ các danh mục con, phù hợp khi cần xử lý sự cố tại nhà.';
   }
 
-  if (normalizedName.includes('thông tắc') || normalizedName.includes('camera') || normalizedName.includes('máy tính')) {
-    return 'Dịch vụ kỹ thuật có mô tả, đánh giá và mức giá để bạn so sánh trước khi đặt.';
+  if (normalizedName.includes('làm đẹp')) {
+    return 'Các dịch vụ chăm sóc cá nhân tại nhà, có thông tin thợ, giá và đánh giá để so sánh.';
   }
 
-  return 'Một số dịch vụ đang hoạt động trong danh mục này để bạn chọn nhanh.';
+  if (normalizedName.includes('công nghệ') || normalizedName.includes('thiết kế')) {
+    return 'Dịch vụ kỹ thuật và sáng tạo được gom từ các nhóm con để bạn chọn nhanh.';
+  }
+
+  return 'Một số dịch vụ đang hoạt động trong nhóm danh mục này để bạn chọn nhanh.';
 }
 
 async function fetchCategoryServiceSections(categories: Category[]) {
@@ -120,7 +146,7 @@ async function fetchCategoryServiceSections(categories: Category[]) {
   const sections = await Promise.all(
     candidates.map(async (category) => {
       const services = await fetchHomeServices('/services/search', {
-        categoryId: category.id,
+        categoryIds: getCategoryTreeIds(category.id, categories).join(','),
         limit: 4,
         sortBy: 'rating',
       });
@@ -141,14 +167,29 @@ async function fetchCategoryServiceSections(categories: Category[]) {
 function buildFallbackCategorySections(
   services: Service[],
   existingSections: CategoryServiceSection[],
+  categories: Category[],
 ) {
+  const categoryById = new Map(categories.map((category) => [category.id, category]));
   const existingCategoryIds = new Set(
     existingSections.map((section) => section.category.id),
   );
   const grouped = new Map<number, CategoryServiceSection>();
+  const getRootCategory = (category: Category) => {
+    let current = categoryById.get(category.id) ?? category;
+    const seen = new Set<number>();
+
+    while (current.parentId && !seen.has(current.parentId)) {
+      seen.add(current.id);
+      const parent = categoryById.get(current.parentId);
+      if (!parent) break;
+      current = parent;
+    }
+
+    return current;
+  };
 
   services.forEach((service) => {
-    const category = service.category;
+    const category = service.category ? getRootCategory(service.category) : null;
     if (!category || existingCategoryIds.has(category.id)) return;
 
     const current = grouped.get(category.id);
@@ -179,7 +220,7 @@ export default async function Home() {
   const categorySections =
     fetchedCategorySections.length >= 2
       ? fetchedCategorySections
-      : buildFallbackCategorySections(featuredServices, fetchedCategorySections);
+      : buildFallbackCategorySections(featuredServices, fetchedCategorySections, categories);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

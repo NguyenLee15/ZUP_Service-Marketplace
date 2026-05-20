@@ -55,6 +55,10 @@ export class SearchServiceDto {
 
   @IsString()
   @IsOptional()
+  categoryIds?: string;
+
+  @IsString()
+  @IsOptional()
   province?: string;
 
   @IsNumber()

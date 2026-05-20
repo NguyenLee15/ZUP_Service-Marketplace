@@ -486,8 +486,11 @@ export class ServicesService {
     page: number,
     limit: number,
   ) {
+    const categoryIds = this.getRequestedCategoryIds(dto);
+
     return JSON.stringify({
       categoryId: dto.categoryId ?? null,
+      categoryIds: categoryIds.length > 0 ? categoryIds.join(',') : null,
       keyword: dto.keyword?.trim().toLowerCase().replace(/\s+/g, ' ') ?? '',
       limit,
       maxPrice: dto.maxPrice ?? null,
@@ -497,6 +500,48 @@ export class ServicesService {
       province: dto.province?.trim().toLowerCase() ?? '',
       sortBy: dto.sortBy ?? 'newest',
     });
+  }
+
+  private parseCategoryIds(categoryIds?: string) {
+    if (!categoryIds) return [];
+
+    return categoryIds
+      .split(',')
+      .map((categoryId) => Number.parseInt(categoryId.trim(), 10))
+      .filter((categoryId) => Number.isInteger(categoryId) && categoryId > 0);
+  }
+
+  private getRequestedCategoryIds(dto: SearchServiceDto) {
+    const categoryIds = new Set<number>(this.parseCategoryIds(dto.categoryIds));
+
+    if (dto.categoryId) {
+      categoryIds.add(dto.categoryId);
+    }
+
+    return [...categoryIds].sort((a, b) => a - b);
+  }
+
+  private async getCategoryIdsWithDescendants(categoryIds: number[]) {
+    const ids = new Set(categoryIds);
+    let parentIds = [...ids];
+
+    while (parentIds.length > 0) {
+      const children = await this.prisma.serviceCategory.findMany({
+        where: {
+          parentId: { in: parentIds },
+          isDeleted: false,
+        },
+        select: { id: true },
+      });
+
+      parentIds = children
+        .map((category) => category.id)
+        .filter((categoryId) => !ids.has(categoryId));
+
+      parentIds.forEach((categoryId) => ids.add(categoryId));
+    }
+
+    return [...ids];
   }
 
   private getCachedSearchResult<T>(cacheKey: string): T | null {
@@ -569,7 +614,13 @@ export class ServicesService {
       }
     }
 
-    if (dto.categoryId) where.categoryId = dto.categoryId;
+    const requestedCategoryIds = this.getRequestedCategoryIds(dto);
+    if (requestedCategoryIds.length > 0) {
+      where.categoryId = {
+        in: await this.getCategoryIdsWithDescendants(requestedCategoryIds),
+      };
+    }
+
     if (dto.minPrice || dto.maxPrice) {
       where.referencePrice = {};
       if (dto.minPrice) where.referencePrice.gte = dto.minPrice;
@@ -592,7 +643,9 @@ export class ServicesService {
       this.prisma.service.findMany({
         where,
         include: {
-          category: { select: { id: true, name: true } },
+          category: {
+            select: { id: true, name: true, parentId: true, level: true },
+          },
           provider: { select: { id: true, fullName: true, avatarUrl: true } },
           images: { orderBy: { displayOrder: 'asc' }, take: 1 },
           featuredListings: {
