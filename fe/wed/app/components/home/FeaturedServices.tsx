@@ -8,10 +8,21 @@ import { Service } from '@/types';
 
 interface FeaturedServicesProps {
   services: Service[];
+  title?: string;
+  description?: string;
+  href?: string;
+  actionLabel?: string;
   isSponsored?: boolean;
 }
 
-export function FeaturedServices({ services, isSponsored }: FeaturedServicesProps) {
+export function FeaturedServices({
+  services,
+  title = 'Dịch vụ tuyển chọn',
+  description = 'Những dịch vụ được đánh giá cao nhất từ cộng đồng người dùng',
+  href = '/services',
+  actionLabel = 'Khám phá tất cả',
+  isSponsored,
+}: FeaturedServicesProps) {
   const { favorites, toggleFavoriteService } = useServiceStore();
 
   if (services.length === 0) return null;
@@ -21,11 +32,11 @@ export function FeaturedServices({ services, isSponsored }: FeaturedServicesProp
       {!isSponsored && (
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-5">
           <div>
-            <h2 className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance">Dịch vụ tuyển chọn</h2>
-            <p className="text-muted-foreground text-base md:text-lg max-w-2xl">Những dịch vụ được đánh giá cao nhất từ cộng đồng người dùng</p>
+            <h2 className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance">{title}</h2>
+            <p className="text-muted-foreground text-base md:text-lg max-w-2xl">{description}</p>
           </div>
-          <Link href="/services" prefetch={false} className="text-glacier-blue hover:text-glacier-blue font-bold inline-flex items-center justify-center gap-2 bg-pale-gray px-5 py-3 rounded-xl hover:bg-platinum-tint/60 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
-            Khám phá tất cả
+          <Link href={href} prefetch={false} className="text-glacier-blue hover:text-glacier-blue font-bold inline-flex items-center justify-center gap-2 bg-pale-gray px-5 py-3 rounded-xl hover:bg-platinum-tint/60 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+            {actionLabel}
             <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
