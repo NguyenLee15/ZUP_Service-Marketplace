@@ -660,12 +660,12 @@ function ServicesSearchContent() {
                     <Wrench className="w-12 h-12 text-muted-foreground/30" />
                   </div>
                 )}
-                <Badge className="absolute top-6 left-6 bg-midnight-indigo/80 backdrop-blur-md text-white border-0 px-4 py-1.5 font-bold shadow-lg">
+                <Badge className="absolute left-4 top-4 max-w-[calc(100%-2rem)] whitespace-normal break-words border-0 bg-midnight-indigo/80 px-3 py-1.5 font-bold text-white shadow-lg backdrop-blur-md sm:left-6 sm:top-6 sm:max-w-[calc(100%-3rem)] sm:px-4">
                   {selectedService.category?.name}
                 </Badge>
               </div>
               
-              <div className="p-8 flex flex-col h-full max-h-[90vh] overflow-y-auto">
+              <div className="flex h-full max-h-[90vh] flex-col overflow-y-auto p-5 sm:p-8">
                 <DialogHeader className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-400/10 text-yellow-600 text-xs font-bold">
@@ -676,7 +676,7 @@ function ServicesSearchContent() {
                       {selectedService.totalReviews || 0} Đánh giá
                     </span>
                   </div>
-                  <DialogTitle className="text-3xl font-bold brand-heading mb-2">
+                  <DialogTitle className="mb-2 text-2xl font-bold leading-tight brand-heading break-words [overflow-wrap:anywhere] sm:text-3xl">
                     {selectedService.name}
                   </DialogTitle>
                   <div className="flex items-center gap-3">
@@ -686,9 +686,9 @@ function ServicesSearchContent() {
                       </div>
                       <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-foreground">{selectedService.provider?.fullName}</p>
+                        <p className="text-sm font-bold text-foreground break-words [overflow-wrap:anywhere]">{selectedService.provider?.fullName}</p>
                       </div>
                       <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-1">Nhà cung cấp dịch vụ</p>
                     </div>
@@ -705,7 +705,7 @@ function ServicesSearchContent() {
                         </div>
                         <h4 className="text-sm font-bold text-glacier-blue uppercase tracking-widest">Tổng quan đánh giá</h4>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                         <div className="text-center p-3 rounded-2xl bg-card/50 border border-border/50">
                           <p className="text-2xl font-bold text-foreground">{Number(selectedService.avgRating || 0).toFixed(1)}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Điểm TB</p>
@@ -715,7 +715,7 @@ function ServicesSearchContent() {
                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Đánh giá</p>
                         </div>
                         <div className="text-center p-3 rounded-2xl bg-card/50 border border-border/50">
-                          <p className="text-sm font-bold text-foreground truncate">{selectedService.category?.name || '—'}</p>
+                          <p className="text-sm font-bold text-foreground break-words [overflow-wrap:anywhere]">{selectedService.category?.name || '—'}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Danh mục</p>
                         </div>
                       </div>
@@ -724,8 +724,8 @@ function ServicesSearchContent() {
 
                   <div>
                     <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Mô tả dịch vụ</h4>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {selectedService.description}
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line break-words [overflow-wrap:anywhere]">
+                      {selectedService.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
                     </p>
                   </div>
                   
@@ -733,7 +733,7 @@ function ServicesSearchContent() {
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Giá tham khảo</p>
                     </div>
-                    <p className="text-4xl font-bold text-action-blue tracking-tight mb-5">
+                    <p className="mb-5 text-3xl font-bold leading-tight text-action-blue break-words [overflow-wrap:anywhere] sm:text-4xl">
                       {formatPrice(Number(selectedService.referencePrice))}
                     </p>
                     {/* Price Benchmark Meter */}
@@ -774,7 +774,7 @@ function ServicesSearchContent() {
                               {Number(s.avgRating || 0).toFixed(1)} ★
                             </div>
                           </div>
-                          <h5 className="text-[10px] font-bold text-foreground line-clamp-1 group-hover/similar:text-action-blue transition-colors">{s.name}</h5>
+                          <h5 className="text-[10px] font-bold leading-snug text-foreground break-words [overflow-wrap:anywhere] transition-colors group-hover/similar:text-action-blue">{s.name}</h5>
                           <p className="text-[10px] font-bold text-action-blue">{formatPrice(Number(s.referencePrice))}</p>
                         </div>
                       ))}

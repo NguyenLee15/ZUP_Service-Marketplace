@@ -20,15 +20,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BackButton } from "@/components/navigation/BackButton";
-import { useToast } from "@/components/ui/use-toast";
 import { chatApi } from "@/features/chat/services/chat.api";
+import { authApi } from "@/features/auth/services/auth.api";
 import { Scale, CheckCircle2, Award, Clock, BarChart3 } from "lucide-react";
 import axios from "axios";
+import { toast } from "sonner";
 
 export function ServiceDetailClient({ service }: { service: any }) {
   const router = useRouter();
-  const { toast } = useToast();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, setUser } = useAuthStore();
   const [currentImage, setCurrentImage] = useState(0);
   const [chatLoading, setChatLoading] = useState(false);
   const [providerStats, setProviderStats] = useState<{
@@ -59,35 +59,39 @@ export function ServiceDetailClient({ service }: { service: any }) {
 
   const handleStartChat = async () => {
     if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
-
-    if (user?.role !== Role.CUSTOMER) {
-      toast({
-        title: "Không thể bắt đầu chat",
-        description: "Tính năng này dành cho tài khoản khách hàng.",
-        variant: "destructive",
-      });
+      router.push(`/login?redirect=/services/${service.id}`);
       return;
     }
 
     setChatLoading(true);
     try {
+      let activeUser = user;
+      if (!activeUser) {
+        const profileRes = await authApi.getProfile();
+        activeUser = profileRes.data?.data;
+        if (activeUser) setUser(activeUser);
+      }
+
+      if (activeUser?.role !== Role.CUSTOMER) {
+        toast.error("Không thể bắt đầu chat", {
+          description: "Tính năng này dành cho tài khoản khách hàng.",
+        });
+        return;
+      }
+
       const res = await chatApi.getOrCreateConversation({
         serviceId: service.id,
       });
-      const conversationId = res.data?.data?.id;
+      const conversation = res.data?.data?.data || res.data?.data;
+      const conversationId = Number(conversation?.id);
       if (!conversationId) throw new Error("Missing conversation id");
       router.push(`/chat?conversationId=${conversationId}`);
     } catch (err: unknown) {
       const message = axios.isAxiosError<{ error?: { message?: string } }>(err)
         ? err.response?.data?.error?.message
         : undefined;
-      toast({
-        title: "Không thể mở tin nhắn",
+      toast.error("Không thể mở tin nhắn", {
         description: message || "Vui lòng thử lại sau.",
-        variant: "destructive",
       });
     } finally {
       setChatLoading(false);

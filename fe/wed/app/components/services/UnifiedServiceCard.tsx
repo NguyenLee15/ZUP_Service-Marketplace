@@ -104,7 +104,6 @@ export function UnifiedServiceCard({
   const showElite = Number(service.avgRating || 0) >= 4.8;
   const basePrice = Number(service.referencePrice || 0);
   const fullEstimatePrice = `${formatPrice(basePrice).replace('₫', '').trim()} - ${formatPrice(basePrice * 1.5)}`;
-  const compactEstimatePrice = `${formatPrice(basePrice)}+`;
 
   const handleDetailClick = () => {
     onRecentlyViewed?.(service);
@@ -250,26 +249,26 @@ export function UnifiedServiceCard({
       </div>
 
       <CardContent className="flex flex-1 flex-col p-3 sm:p-5 md:p-6">
-        <div className="flex-1 space-y-1.5 sm:space-y-3">
-          <div className="flex items-center justify-between gap-1 sm:gap-3">
+        <div className="flex-1 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-amber-pop/15 px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-bold text-midnight-indigo">
               <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 fill-yellow-400 border-0" />
               {rating}
             </div>
-            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-normal text-muted-foreground truncate">
-              {totalReviews} <span className="hidden sm:inline">đánh giá</span><span className="sm:hidden">ĐG</span>
+            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-normal text-muted-foreground">
+              {totalReviews} đánh giá
             </div>
           </div>
 
           <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block">
             <h3
-              className="line-clamp-2 sm:line-clamp-1 text-sm sm:text-lg font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight"
+              className="text-sm sm:text-lg font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
               style={{ viewTransitionName: `service-title-${service.id}` } as any}
             >
               {service.name}
             </h3>
           </Link>
-          <p className="hidden sm:-webkit-box line-clamp-2 text-sm leading-relaxed text-muted-foreground text-pretty">
+          <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground text-pretty break-words [overflow-wrap:anywhere]">
             {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
           </p>
           {showTrustBadges && (
@@ -282,20 +281,25 @@ export function UnifiedServiceCard({
           )}
         </div>
 
-        <div className="mt-3 sm:mt-5 md:mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 border-t border-border/50 pt-3 sm:pt-5">
-          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+        <div className="mt-4 sm:mt-5 flex flex-col gap-3 border-t border-border/50 pt-3 sm:pt-5">
+          <div className="flex min-w-0 items-start gap-2.5">
             <div className="relative shrink-0 hidden sm:block">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-action-blue text-[10px] font-bold text-white shadow-md">
                 {providerInitial}
               </div>
               <Shield className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-white text-green-500" />
             </div>
-            <span className="truncate text-[10px] sm:text-xs font-bold text-foreground/80">
-              {service.provider?.fullName || 'Đối tác HomeService'}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Nhà cung cấp
+              </p>
+              <span className="block text-[11px] sm:text-sm font-bold leading-snug text-foreground/85 break-words [overflow-wrap:anywhere]">
+                {service.provider?.fullName || 'Đối tác HomeService'}
+              </span>
+            </div>
           </div>
-          <div className="shrink-0 sm:text-right">
-            <div className="mb-0.5 sm:mb-1 flex items-center justify-start sm:justify-end gap-1 text-[8px] sm:text-[10px] font-bold uppercase leading-none tracking-widest text-muted-foreground">
+          <div className="rounded-xl border border-platinum-tint bg-pale-gray/45 p-2.5 sm:p-3">
+            <div className="mb-1.5 flex flex-wrap items-center gap-1.5 text-[8px] sm:text-[10px] font-bold uppercase leading-none tracking-widest text-muted-foreground">
               {priceMode === 'estimate' ? 'Khoảng' : 'Từ'}
               {showElite && showTrustBadges && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-action-blue px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-white tracking-normal">
@@ -304,15 +308,10 @@ export function UnifiedServiceCard({
                 </span>
               )}
             </div>
-            <div className={`${priceMode === 'estimate' ? 'text-[11px] sm:text-sm' : 'text-sm sm:text-lg'} max-w-full font-bold leading-tight text-action-blue tabular-nums`}>
-              {priceMode === 'estimate' ? (
-                <>
-                  <span className="hidden sm:inline">{fullEstimatePrice}</span>
-                  <span className="sm:hidden">{compactEstimatePrice}</span>
-                </>
-              ) : (
-                formatPrice(service.referencePrice)
-              )}
+            <div className={`${priceMode === 'estimate' ? 'text-[12px] sm:text-sm' : 'text-sm sm:text-lg'} max-w-full font-bold leading-tight text-action-blue tabular-nums break-words [overflow-wrap:anywhere]`}>
+              {priceMode === 'estimate'
+                ? fullEstimatePrice
+                : formatPrice(service.referencePrice)}
             </div>
           </div>
         </div>

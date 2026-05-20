@@ -22,7 +22,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E40AF"
       },
-      "package": "com.homeservice.provider"
+      "package": "com.homeservice.provider",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -44,6 +47,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "013116d2-2587-4c19-b4c7-dbc58b652ccf"
+      }
+    },
+    "owner": "nguyenlee"
   }
 }

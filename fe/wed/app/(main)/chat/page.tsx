@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Send, Search, Bot } from "lucide-react";
+import { ArrowLeft, Bot, Send, Search } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { getChatSocket } from "@/lib/socket";
 import { useAuthStore } from "@/store/auth.store";
@@ -37,11 +38,27 @@ interface IncomingMessage extends Message {
 
 interface TypingPayload {
   userId: number;
-  conversationId: number;
+  conversationId?: number;
 }
 
 export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-[calc(100dvh-9rem)] min-h-[620px] items-center justify-center rounded-[20px] border border-platinum-tint bg-card text-sm font-semibold text-muted-foreground shadow-[var(--brand-shadow-card)]">
+          Đang tải tin nhắn...
+        </div>
+      }
+    >
+      <ChatPageContent />
+    </Suspense>
+  );
+}
+
+function ChatPageContent() {
   const { user } = useAuthStore();
+  const searchParams = useSearchParams();
+  const requestedConversationId = Number(searchParams.get("conversationId") || 0);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<
     number | null
@@ -56,23 +73,22 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch conversations on load
+  // Fetch conversations on load and select the conversation requested by URL.
   useEffect(() => {
     chatApi
       .getConversations()
       .then((res) => {
-        const data = res.data?.data || [];
-        const requestedConversationId = Number(
-          new URLSearchParams(window.location.search).get("conversationId") ||
-            0,
-        );
+        const data: Conversation[] = Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
         setConversations(data);
-        if (
-          requestedConversationId &&
-          data.some((c: Conversation) => c.id === requestedConversationId)
-        ) {
-          setSelectedConversation(requestedConversationId);
-        }
+        setSelectedConversation((current) => {
+          if (requestedConversationId > 0) return requestedConversationId;
+          if (current && data.some((conversation) => conversation.id === current)) {
+            return current;
+          }
+          return data[0]?.id ?? null;
+        });
         setConversationError("");
       })
       .catch(() => {
@@ -80,7 +96,7 @@ export default function ChatPage() {
           "Không thể tải danh sách trò chuyện. Vui lòng thử lại sau.",
         );
       });
-  }, []);
+  }, [requestedConversationId]);
 
   // Socket setup
   useEffect(() => {
@@ -115,7 +131,8 @@ export default function ChatPage() {
     const handleTyping = (data: TypingPayload) => {
       if (
         data.userId !== user?.id &&
-        data.conversationId === selectedConversation
+        (data.conversationId === undefined ||
+          data.conversationId === selectedConversation)
       ) {
         setIsTyping(true);
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -148,8 +165,10 @@ export default function ChatPage() {
       .finally(() => setIsLoading(false));
 
     const socket = getChatSocket();
-    if (socket)
+    if (socket) {
+      if (!socket.connected) socket.connect();
       socket.emit("joinConversation", { conversationId: selectedConversation });
+    }
   }, [selectedConversation]);
 
   // Scroll to bottom
@@ -163,6 +182,7 @@ export default function ChatPage() {
 
     const socket = getChatSocket();
     if (socket) {
+      if (!socket.connected) socket.connect();
       socket.emit("sendMessage", {
         conversationId: selectedConversation,
         content: inputValue.trim(),
@@ -184,6 +204,12 @@ export default function ChatPage() {
       ? selectedChat.customer
       : selectedChat.provider
     : null;
+  const partnerName =
+    partner?.fullName || (user?.role === "PROVIDER" ? "Khách hàng" : "Thợ dịch vụ");
+  const partnerAvatar =
+    partner?.avatarUrl ||
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=" +
+      (partner?.id || selectedConversation || "chat");
   const selectedContext =
     selectedChat?.service?.name ||
     selectedChat?.booking?.service?.name ||
@@ -194,7 +220,9 @@ export default function ChatPage() {
   return (
     <div className="h-[calc(100dvh-9rem)] min-h-[620px] flex bg-card overflow-hidden rounded-[20px] border border-platinum-tint shadow-[var(--brand-shadow-card)]">
       {/* Sidebar */}
-      <div className="hidden md:flex md:w-80 bg-white border-r border-platinum-tint flex-col">
+      <div
+        className={`${selectedConversation ? "hidden" : "flex"} w-full flex-col bg-white md:flex md:w-80 md:border-r md:border-platinum-tint`}
+      >
         <div className="p-4 border-b border-platinum-tint">
           <h1 className="text-xl font-bold text-foreground mb-4">Tin nhắn</h1>
           <div className="flex items-center gap-2 bg-cloud-mist rounded-lg px-3 py-2 border border-platinum-tint">
@@ -281,23 +309,29 @@ export default function ChatPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div
+        className={`${selectedConversation ? "flex" : "hidden"} flex-1 flex-col overflow-hidden md:flex`}
+      >
         {selectedConversation ? (
           <>
             <div className="bg-white border-b border-platinum-tint px-4 md:px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  aria-label="Quay lại danh sách trò chuyện"
+                  onClick={() => setSelectedConversation(null)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-platinum-tint text-muted-foreground transition-colors hover:bg-pale-gray hover:text-action-blue md:hidden"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
                 <img
-                  src={
-                    partner?.avatarUrl ||
-                    "https://api.dicebear.com/7.x/avataaars/svg?seed=" +
-                      partner?.id
-                  }
-                  alt={partner?.fullName}
+                  src={partnerAvatar}
+                  alt={partnerName}
                   className="w-10 h-10 rounded-full"
                 />
                 <div>
                   <p className="font-medium text-foreground">
-                    {partner?.fullName}
+                    {partnerName}
                   </p>
                   {isTyping ? (
                     <p className="text-green-600 text-xs italic">Đang gõ…</p>
@@ -319,6 +353,16 @@ export default function ChatPage() {
                 <div className="text-center text-red-600" aria-live="polite">
                   {messagesError}
                 </div>
+              ) : messages.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-platinum-tint bg-white/70 px-6 text-center text-muted-foreground">
+                  <Bot className="mb-3 h-10 w-10 text-steel-gray" />
+                  <p className="font-semibold text-foreground">
+                    Chưa có tin nhắn trong cuộc trò chuyện này
+                  </p>
+                  <p className="mt-1 text-sm">
+                    Gửi lời nhắn đầu tiên để trao đổi trực tiếp với thợ.
+                  </p>
+                </div>
               ) : (
                 messages.map((message) => {
                   const isMe = message.senderId === user?.id;
@@ -332,11 +376,7 @@ export default function ChatPage() {
                     >
                       {!isMe && (
                         <img
-                          src={
-                            partner?.avatarUrl ||
-                            "https://api.dicebear.com/7.x/avataaars/svg?seed=" +
-                              partner?.id
-                          }
+                          src={partnerAvatar}
                           alt="Avatar"
                           className="w-8 h-8 rounded-full flex-shrink-0"
                         />
