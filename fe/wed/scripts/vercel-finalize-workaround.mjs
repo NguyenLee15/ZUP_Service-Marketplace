@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,6 +23,15 @@ function copyDirectFiles(sourceDir, targetDir) {
   }
 }
 
+function copyDirectoryIfExists(sourceDir, targetDir) {
+  if (!existsSync(sourceDir)) {
+    return;
+  }
+
+  mkdirSync(dirname(targetDir), { recursive: true });
+  cpSync(sourceDir, targetDir, { recursive: true, force: true });
+}
+
 if (!existsSync(routesManifest)) {
   console.warn('[vercel-finalize-workaround] .next/routes-manifest.json not found; skipping.');
   process.exit(0);
@@ -37,5 +46,6 @@ if (process.env.VERCEL === '1') {
   const rootNextDir = resolve(repoRoot, '.next');
 
   copyDirectFiles(appNextDir, rootNextDir);
-  copyDirectFiles(resolve(appNextDir, 'server'), resolve(rootNextDir, 'server'));
+  copyDirectoryIfExists(resolve(appNextDir, 'server'), resolve(rootNextDir, 'server'));
+  copyDirectoryIfExists(resolve(appNextDir, 'static'), resolve(rootNextDir, 'static'));
 }
