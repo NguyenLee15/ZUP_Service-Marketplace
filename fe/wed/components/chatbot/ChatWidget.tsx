@@ -109,7 +109,7 @@ function getAuthToken(): string {
   }
 }
 
-export function ChatWidget() {
+export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const pathname = usePathname();
   const hiddenRoutes = [
     "/login",
@@ -118,7 +118,7 @@ export function ChatWidget() {
     "/reset-password",
   ];
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [metaMap, setMetaMap] = useState<Record<string, ChatbotMessageMeta>>(

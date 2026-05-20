@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Mail, Phone, MapPin } from "lucide-react";
 import {
-  FooterSocialLinks,
-  SocialFeedSection,
-} from "@/components/social/SocialWidgets";
+  DeferredFooterSocialLinks,
+  DeferredSocialFeedSection,
+} from "@/components/social/DeferredSocialWidgets";
 
 export function CustomerFooter() {
   return (
@@ -28,7 +28,7 @@ export function CustomerFooter() {
               đến giải pháp nhanh chóng, an toàn và tiện lợi cho mọi nhu cầu sửa
               chữa, dọn dẹp của gia đình bạn.
             </p>
-            <FooterSocialLinks />
+            <DeferredFooterSocialLinks />
           </div>
 
           <div>
@@ -156,7 +156,7 @@ export function CustomerFooter() {
           </div>
         </div>
 
-        <SocialFeedSection />
+        <DeferredSocialFeedSection />
 
         <div className="pt-6 sm:pt-8 border-t border-platinum-tint flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-sm text-muted-foreground" suppressHydrationWarning>

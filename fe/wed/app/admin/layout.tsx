@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/features/auth/services/auth.api';
+import { Toaster } from '@/components/ui/sonner';
 
 interface NavItem {
   label: string;
@@ -54,6 +55,7 @@ export default function AdminLayout({
   const { logout: clearStore, user } = useAuthStore();
 
   return (
+    <>
     <div className="themed-shell flex h-screen bg-background text-foreground">
       <aside
         className={`fixed left-0 top-0 z-40 h-screen border-r border-border bg-card shadow-[var(--brand-shadow-sm)] transition-[width] duration-300 ${
@@ -141,5 +143,7 @@ export default function AdminLayout({
         </div>
       </main>
     </div>
+    <Toaster position="bottom-right" richColors />
+    </>
   );
 }

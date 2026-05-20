@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { CustomerHeader } from '@/components/layout/CustomerHeader';
 import { CustomerFooter } from '@/components/layout/CustomerFooter';
 import { BackButton } from '@/components/navigation/BackButton';
+import { SocketProvider } from '@/components/socket-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -17,18 +19,21 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const showBackButton = Boolean(fallbackHref);
 
   return (
-    <div className="themed-shell min-h-screen bg-background flex flex-col">
-      <CustomerHeader />
+    <SocketProvider>
+      <div className="themed-shell min-h-screen bg-background flex flex-col">
+        <CustomerHeader />
 
-      {/* Main Content */}
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        {showBackButton && (
-          <BackButton fallbackHref={fallbackHref} className="mb-4" />
-        )}
-        {children}
-      </main>
+        {/* Main Content */}
+        <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          {showBackButton && (
+            <BackButton fallbackHref={fallbackHref} className="mb-4" />
+          )}
+          {children}
+        </main>
 
-      <CustomerFooter />
-    </div>
+        <CustomerFooter />
+        <Toaster position="bottom-right" richColors />
+      </div>
+    </SocketProvider>
   );
 }

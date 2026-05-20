@@ -7,7 +7,6 @@ import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDow
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
-import { toast } from 'sonner';
 
 type NotificationPayload = {
   title?: string;
@@ -131,13 +130,15 @@ export function CustomerHeader() {
 
   const handleNotificationReceived = useCallback((data: NotificationPayload) => {
     setUnreadCount((prev) => prev + 1);
-    toast.info('Thông báo mới', {
-      description: data?.title || data?.content || 'Bạn vừa có một cập nhật mới từ hệ thống.',
-      duration: 5000,
-      action: {
-        label: 'Xem',
-        onClick: () => router.push('/notifications'),
-      },
+    void import('sonner').then(({ toast }) => {
+      toast.info('Thông báo mới', {
+        description: data?.title || data?.content || 'Bạn vừa có một cập nhật mới từ hệ thống.',
+        duration: 5000,
+        action: {
+          label: 'Xem',
+          onClick: () => router.push('/notifications'),
+        },
+      });
     });
   }, [router]);
 

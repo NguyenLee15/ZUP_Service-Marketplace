@@ -4,9 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import NextTopLoader from 'nextjs-toploader'
-import { Toaster } from '@/components/ui/sonner'
 import { ClientWidgets } from '@/components/client-widgets'
-import { SocketProvider } from '@/components/socket-provider'
 
 const montserrat = Montserrat({
   subsets: ['vietnamese', 'latin', 'latin-ext'],
@@ -88,11 +86,8 @@ export default function RootLayout({
             shadow="0 0 10px #2563eb,0 0 5px #2563eb"
             zIndex={1600}
           />
-          <SocketProvider>
-            {children}
-            <ClientWidgets />
-            <Toaster position="bottom-right" richColors />
-          </SocketProvider>
+          {children}
+          <ClientWidgets />
           {process.env.NODE_ENV === 'production' && <Analytics />}
         </ThemeProvider>
       </body>
