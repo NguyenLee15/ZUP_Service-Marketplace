@@ -2,9 +2,6 @@
   "name": "my-project",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": "20.x"
-  },
   "browserslist": [
     "last 2 Chrome versions",
     "last 2 Edge versions",
@@ -15,7 +12,7 @@
   ],
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/vercel-finalize-workaround.mjs",
     "start": "next start",
     "lint": "eslint ."
   },
