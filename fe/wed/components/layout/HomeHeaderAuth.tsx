@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Bell, Heart, User } from 'lucide-react';
+import { Bell, Heart, MessageSquare, Package, User } from 'lucide-react';
 
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
@@ -100,6 +100,20 @@ export function HomeHeaderAuth() {
 
   return (
     <div className="flex items-center gap-1 sm:gap-2">
+      <Link
+        href="/bookings"
+        aria-label="Đơn hàng của tôi"
+        className="hidden h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-pale-gray hover:text-action-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue sm:flex"
+      >
+        <Package className="h-5 w-5" />
+      </Link>
+      <Link
+        href="/chat"
+        aria-label="Tin nhắn"
+        className="hidden h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-pale-gray hover:text-action-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue sm:flex"
+      >
+        <MessageSquare className="h-5 w-5" />
+      </Link>
       <Link
         href="/favorites"
         aria-label="Dịch vụ yêu thích"

@@ -36,7 +36,7 @@ export function BackToTop() {
     <Button
       id="back-to-top"
       onClick={scrollToTop}
-      className="fixed bottom-6 right-32 sm:bottom-8 sm:right-36 z-50 rounded-full w-12 h-12 p-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-card text-blue-600 hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700 transition-[background-color,color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(59,130,246,0.3)] animate-in fade-in slide-in-from-bottom-4"
+      className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] right-[calc(1.25rem_+_env(safe-area-inset-right))] z-50 h-12 w-12 rounded-full border border-gray-100 bg-card p-0 text-blue-600 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-[background-color,color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:bg-blue-50 hover:shadow-[0_8px_30px_rgb(59,130,246,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700 sm:bottom-24 sm:right-7"
       aria-label="Cuộn lên đầu trang"
       title="Cuộn lên đầu trang"
     >
