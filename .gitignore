@@ -15,6 +15,9 @@ __v0_runtime_loader.js
 __v0_devtools.tsx
 __v0_jsx-dev-runtime.ts
 
+# Local agent skill checkout. Keep out of deploy clones to avoid broken submodule fetches.
+.agents/skills/ui-ux/taste-skill/
+
 # Environment variables
 .env*.local
 **/deploy/*-env-vars.txt
