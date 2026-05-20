@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -7,32 +7,20 @@ const appNextDir = resolve(appDir, '.next');
 const routesManifest = resolve(appNextDir, 'routes-manifest.json');
 const deterministicRoutesManifest = resolve(appNextDir, 'routes-manifest-deterministic.json');
 
-const manifestFiles = [
-  'routes-manifest.json',
-  'routes-manifest-deterministic.json',
-  'app-path-routes-manifest.json',
-  'build-manifest.json',
-  'fallback-build-manifest.json',
-  'images-manifest.json',
-  'prerender-manifest.json',
-  'required-server-files.json',
-  'server/app-paths-manifest.json',
-  'server/functions-config-manifest.json',
-  'server/middleware-manifest.json',
-  'server/next-font-manifest.json',
-  'server/pages-manifest.json',
-  'server/server-reference-manifest.json',
-];
-
-function copyManifestIfExists(relativePath, targetNextDir) {
-  const source = resolve(appNextDir, relativePath);
-  if (!existsSync(source)) {
+function copyDirectFiles(sourceDir, targetDir) {
+  if (!existsSync(sourceDir)) {
     return;
   }
 
-  const target = resolve(targetNextDir, relativePath);
-  mkdirSync(dirname(target), { recursive: true });
-  copyFileSync(source, target);
+  mkdirSync(targetDir, { recursive: true });
+
+  for (const entry of readdirSync(sourceDir, { withFileTypes: true })) {
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    copyFileSync(resolve(sourceDir, entry.name), resolve(targetDir, entry.name));
+  }
 }
 
 if (!existsSync(routesManifest)) {
@@ -48,8 +36,6 @@ if (process.env.VERCEL === '1') {
   const repoRoot = resolve(appDir, '..', '..');
   const rootNextDir = resolve(repoRoot, '.next');
 
-  mkdirSync(rootNextDir, { recursive: true });
-  for (const manifestFile of manifestFiles) {
-    copyManifestIfExists(manifestFile, rootNextDir);
-  }
+  copyDirectFiles(appNextDir, rootNextDir);
+  copyDirectFiles(resolve(appNextDir, 'server'), resolve(rootNextDir, 'server'));
 }
