@@ -9,7 +9,6 @@ import {
   Eye,
   GitCompare,
   Heart,
-  Shield,
   Sparkles,
   Star,
   Wrench,
@@ -56,19 +55,17 @@ const HOME_FALLBACK_IMAGES = [
 
 export function UnifiedServiceCardSkeleton() {
   return (
-    <Card className="surface-card h-full gap-0 overflow-hidden rounded-[20px] py-0">
-      <div className="aspect-[4/3] w-full shimmer" />
-      <CardContent className="flex flex-1 flex-col p-3 sm:p-5 md:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="h-6 w-20 rounded-full shimmer" />
-          <div className="h-4 w-16 rounded shimmer" />
+    <Card className="surface-card h-full gap-0 overflow-hidden rounded-2xl py-0">
+      <div className="aspect-[16/9] w-full shimmer" />
+      <CardContent className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="h-5 w-16 rounded-full shimmer" />
+          <div className="h-4 w-14 rounded shimmer" />
         </div>
-        <div className="mb-3 h-6 w-4/5 rounded shimmer" />
-        <div className="mb-2 h-4 w-full rounded shimmer" />
-        <div className="mb-6 h-4 w-5/6 rounded shimmer" />
-        <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-5">
-          <div className="h-8 w-28 rounded shimmer" />
-          <div className="h-8 w-24 rounded shimmer" />
+        <div className="mb-2 h-5 w-4/5 rounded shimmer" />
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/50 pt-2">
+          <div className="h-7 flex-1 rounded shimmer" />
+          <div className="h-9 w-24 rounded-lg shimmer" />
         </div>
       </CardContent>
     </Card>
@@ -102,7 +99,6 @@ export function UnifiedServiceCard({
   const detailHref = `/services/${service.id}`;
   const rating = Number(service.avgRating || 0).toFixed(1);
   const totalReviews = service.totalReviews || 0;
-  const providerInitial = service.provider?.fullName?.charAt(0) || '?';
   const showElite = Number(service.avgRating || 0) >= 4.8;
   const basePrice = Number(service.referencePrice || 0);
   const fullEstimatePrice = `${formatPrice(basePrice).replace('₫', '').trim()} - ${formatPrice(basePrice * 1.5)}`;
@@ -126,11 +122,11 @@ export function UnifiedServiceCard({
 
   return (
     <Card
-      className="surface-card group relative flex h-full cursor-pointer flex-col gap-0 overflow-hidden rounded-[20px] py-0 transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-action-blue/30 hover:shadow-[var(--brand-shadow-card)]"
+      className="surface-card group relative flex h-full cursor-pointer flex-col gap-0 overflow-hidden rounded-2xl py-0 transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-action-blue/30 hover:shadow-[var(--brand-shadow-card)]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative aspect-[16/9] overflow-hidden bg-muted">
         <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block h-full w-full">
           {imageUrl ? (
             <Image
@@ -152,11 +148,11 @@ export function UnifiedServiceCard({
         </Link>
 
         {useImageCarousel && images.length > 1 && (
-          <div className="absolute bottom-4 left-0 right-0 z-10 flex justify-center gap-1.5">
+          <div className="absolute bottom-2 left-0 right-0 z-10 flex justify-center gap-1">
             {images.map((_, index) => (
               <span
                 key={index}
-                className={`h-1.5 w-1.5 rounded-full transition-[background-color,transform] duration-300 ${
+                className={`h-1 w-1 rounded-full transition-[background-color,transform] duration-300 ${
                   index === activeImageIndex % images.length ? 'scale-125 bg-white' : 'bg-white/45'
                 }`}
               />
@@ -164,20 +160,20 @@ export function UnifiedServiceCard({
           </div>
         )}
 
-        <div className="absolute left-3 top-3 sm:left-4 sm:top-4 flex max-w-[calc(100%-4rem)] flex-col items-start gap-1.5 sm:gap-2">
+        <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex max-w-[calc(100%-3.5rem)] flex-col items-start gap-1">
           {showSponsoredBadge && (
-            <Badge className="border-0 bg-amber-pop text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-midnight-indigo shadow-md px-1.5 sm:px-2.5 py-0.5 sm:py-1">
-              <Sparkles className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
+            <Badge className="border-0 bg-amber-pop text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-midnight-indigo shadow-md px-1.5 sm:px-2 py-0.5">
+              <Sparkles className="mr-1 h-2.5 w-2.5" />
               Tài trợ
             </Badge>
           )}
-          <Badge className="max-w-full truncate border-0 bg-midnight-indigo/70 px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white backdrop-blur-md">
+          <Badge className="max-w-full truncate border-0 bg-midnight-indigo/70 px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
             {service.category?.name || 'Dịch vụ'}
           </Badge>
         </div>
 
         {(showFavorite || showCompare) && (
-          <div className="absolute right-3 top-3 sm:right-4 sm:top-4 z-10 flex flex-col gap-1.5 sm:gap-2">
+          <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 flex flex-col gap-1">
             {showFavorite && (
               <Button
                 type="button"
@@ -189,11 +185,11 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onToggleFavorite?.(service);
                 }}
-                className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
+                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
                   isFavorite ? 'bg-red-500 text-white' : 'bg-white/85 text-foreground hover:bg-white'
                 }`}
               >
-                <Heart className={`h-3 w-3 sm:h-4 sm:w-4 ${isFavorite ? 'fill-white' : ''}`} />
+                <Heart className={`h-3 w-3 ${isFavorite ? 'fill-white' : ''}`} />
               </Button>
             )}
             {showCompare && (
@@ -207,27 +203,26 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onAddToComparison?.(service);
                 }}
-                className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
+                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
                   isComparing ? 'bg-action-blue text-white' : 'bg-white/85 text-foreground hover:bg-white'
                 }`}
               >
-                <GitCompare className="h-3 w-3 sm:h-4 sm:w-4" />
+                <GitCompare className="h-3 w-3" />
               </Button>
             )}
           </div>
         )}
 
         {service.distance && (
-          <Badge className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 border-0 bg-midnight-indigo/70 px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white backdrop-blur-md">
+          <Badge className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 border-0 bg-midnight-indigo/70 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
             {service.distance.toFixed(1)} km
           </Badge>
         )}
 
         {showTrustBadges && (
-          <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 flex items-center gap-1.5 sm:gap-2 rounded-full border border-white/20 bg-midnight-indigo/65 px-1.5 py-0.5 sm:px-2 sm:py-1 text-white backdrop-blur-md">
-            <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-green-500" />
-            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Đang hoạt động</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest sm:hidden">Online</span>
+          <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex items-center gap-1 rounded-full border border-white/20 bg-midnight-indigo/65 px-1.5 py-0.5 text-white backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest">Online</span>
           </div>
         )}
 
@@ -250,21 +245,28 @@ export function UnifiedServiceCard({
         )}
       </div>
 
-      <CardContent className="flex flex-1 flex-col p-3 sm:p-4 md:p-5">
-        <div className="flex-1 space-y-2.5 sm:space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-amber-pop/15 px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-bold text-midnight-indigo">
-              <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 fill-yellow-400 border-0" />
+      <CardContent className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex items-center gap-1 rounded-full bg-amber-pop/15 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-midnight-indigo">
+              <Star className="h-2.5 w-2.5 fill-yellow-400 border-0" />
               {rating}
             </div>
             <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-normal text-muted-foreground">
               {totalReviews} đánh giá
             </div>
+            {showTrustBadges && (
+              <div className="flex items-center gap-1 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
+                <CheckCircle2 className="h-2.5 w-2.5" />
+                Uy tín
+              </div>
+            )}
           </div>
 
           <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block">
             <h3
-              className="text-sm sm:text-lg font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
+              title={service.name}
+              className="line-clamp-2 text-sm sm:text-base font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
               style={{ viewTransitionName: `service-title-${service.id}` } as any}
             >
               {service.name}
@@ -275,44 +277,31 @@ export function UnifiedServiceCard({
               {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
             </p>
           )}
-          {showTrustBadges && (
-            <div className="flex flex-wrap gap-1 sm:gap-2">
-              <div className="flex items-center gap-1 rounded-full bg-pale-gray px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-glacier-blue">
-                <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                <span className="hidden sm:inline">Đã xác minh</span><span className="sm:hidden">Uy tín</span>
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="mt-3 sm:mt-4 flex flex-col gap-2.5 sm:gap-3 border-t border-border/50 pt-3 sm:pt-4">
-          <div className="flex min-w-0 items-start gap-2.5">
-            <div className="relative shrink-0 hidden sm:block">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-action-blue text-[10px] font-bold text-white shadow-md">
-                {providerInitial}
-              </div>
-              <Shield className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-white text-green-500" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Nhà cung cấp
-              </p>
-              <span className="block text-[11px] sm:text-sm font-bold leading-snug text-foreground/85 break-words [overflow-wrap:anywhere]">
-                {service.provider?.fullName || 'Đối tác HomeService'}
-              </span>
-            </div>
+        <div className="mt-2 flex min-w-0 items-end justify-between gap-2 border-t border-border/50 pt-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+              Nhà cung cấp
+            </p>
+            <span
+              title={service.provider?.fullName || 'Đối tác HomeService'}
+              className="block truncate text-[11px] sm:text-xs font-bold leading-snug text-foreground/85"
+            >
+              {service.provider?.fullName || 'Đối tác HomeService'}
+            </span>
           </div>
-          <div className="rounded-xl border border-platinum-tint bg-pale-gray/45 p-2.5 sm:p-3">
-            <div className="mb-1.5 flex flex-wrap items-center gap-1.5 text-[8px] sm:text-[10px] font-bold uppercase leading-none tracking-widest text-muted-foreground">
+          <div className="min-w-[96px] max-w-[58%] rounded-lg border border-platinum-tint bg-pale-gray/45 px-2 py-1.5 text-right">
+            <div className="mb-1 flex flex-wrap items-center justify-end gap-1 text-[8px] sm:text-[9px] font-bold uppercase leading-none tracking-widest text-muted-foreground">
               {priceMode === 'estimate' ? 'Khoảng' : 'Từ'}
               {showElite && showTrustBadges && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-action-blue px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-white tracking-normal">
-                  <Diamond className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                <span className="inline-flex items-center gap-1 rounded-full bg-action-blue px-1 py-0.5 text-[8px] font-bold text-white tracking-normal">
+                  <Diamond className="h-2 w-2" />
                   Elite
                 </span>
               )}
             </div>
-            <div className={`${priceMode === 'estimate' ? 'text-[12px] sm:text-sm' : 'text-sm sm:text-lg'} max-w-full font-bold leading-tight text-action-blue tabular-nums break-words [overflow-wrap:anywhere]`}>
+            <div className={`${priceMode === 'estimate' ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm'} max-w-full font-bold leading-tight text-action-blue tabular-nums break-words [overflow-wrap:anywhere]`}>
               {priceMode === 'estimate'
                 ? fullEstimatePrice
                 : formatPrice(service.referencePrice)}
@@ -324,10 +313,10 @@ export function UnifiedServiceCard({
             href={detailHref} 
             prefetch={false}
             onClick={handleDetailClick} 
-            className="mt-3 sm:mt-5"
+            className="mt-2 sm:mt-3"
             aria-label={`Đặt ngay dịch vụ ${service.name}`}
           >
-            <Button size="sm" className="w-full rounded-lg bg-action-blue font-bold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,box-shadow,transform] hover:bg-glacier-blue active:scale-[0.98] h-8 sm:h-10 text-xs sm:text-sm">
+            <Button size="sm" className="h-8 w-full rounded-lg bg-action-blue text-xs sm:text-sm font-bold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,box-shadow,transform] hover:bg-glacier-blue active:scale-[0.98]">
               Đặt ngay
             </Button>
           </Link>
