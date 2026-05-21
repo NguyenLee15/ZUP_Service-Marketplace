@@ -13,6 +13,19 @@ import { Sparkles, Clock, TrendingUp, MapPin, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DynamicQuestionnaire } from '@/app/components/bookings/DynamicQuestionnaire';
 import { userApi } from '@/features/user/services/user.api';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  getDistrictOptions,
+  getProvinceOptions,
+  getWardOptions,
+  withCurrentOption,
+} from '@/lib/address-options';
 
 type AddressMode = 'default' | 'custom';
 
@@ -62,6 +75,9 @@ function CreateBookingContent() {
   const [desiredTime, setDesiredTime] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const defaultAddress = addresses.find((address) => address.isDefault);
+  const provinceOptions = withCurrentOption(getProvinceOptions(), province);
+  const districtOptions = withCurrentOption(getDistrictOptions(province), district);
+  const wardOptions = withCurrentOption(getWardOptions(province, district), ward);
 
   const clearAddressErrors = () => {
     setFieldErrors((prev) => {
@@ -93,23 +109,46 @@ function CreateBookingContent() {
   };
 
   const validate = (name: string, value: string) => {
-    const newErrors = { ...fieldErrors };
-    if (name === 'description') {
-      if (!value) newErrors.description = 'Vui lòng mô tả yêu cầu';
-      else if (value.length < 10) newErrors.description = 'Mô tả quá ngắn (tối thiểu 10 ký tự)';
-      else delete newErrors.description;
-    }
-    if (['province', 'district', 'ward', 'addressDetail'].includes(name)) {
-      if (!value) newErrors[name] = 'Bắt buộc';
-      else delete newErrors[name];
-    }
-    if (name === 'desiredTime') {
-      const selectedDate = new Date(value);
-      if (isNaN(selectedDate.getTime())) newErrors.desiredTime = 'Thời gian không hợp lệ';
-      else if (selectedDate < new Date()) newErrors.desiredTime = 'Thời gian phải ở tương lai';
-      else delete newErrors.desiredTime;
-    }
-    setFieldErrors(newErrors);
+    setFieldErrors((prev) => {
+      const newErrors = { ...prev };
+      if (name === 'description') {
+        if (!value) newErrors.description = 'Vui lòng mô tả yêu cầu';
+        else if (value.length < 10) newErrors.description = 'Mô tả quá ngắn (tối thiểu 10 ký tự)';
+        else delete newErrors.description;
+      }
+      if (['province', 'district', 'ward', 'addressDetail'].includes(name)) {
+        if (!value) newErrors[name] = 'Bắt buộc';
+        else delete newErrors[name];
+      }
+      if (name === 'desiredTime') {
+        const selectedDate = new Date(value);
+        if (isNaN(selectedDate.getTime())) newErrors.desiredTime = 'Thời gian không hợp lệ';
+        else if (selectedDate < new Date()) newErrors.desiredTime = 'Thời gian phải ở tương lai';
+        else delete newErrors.desiredTime;
+      }
+      return newErrors;
+    });
+  };
+
+  const handleProvinceChange = (value: string) => {
+    setProvince(value);
+    setDistrict('');
+    setWard('');
+    validate('province', value);
+    validate('district', '');
+    validate('ward', '');
+  };
+
+  const handleDistrictChange = (value: string) => {
+    setDistrict(value);
+    setWard('');
+    validate('district', value);
+    validate('ward', '');
+  };
+
+  const handleWardChange = (value: string) => {
+    setWard(value);
+    validate('ward', value);
   };
 
   useEffect(() => {
@@ -303,26 +342,72 @@ function CreateBookingContent() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="booking-province">Tỉnh/Thành *</Label>
-                  <Input id="booking-province" name="province" autoComplete="address-level1" value={province} onChange={(e) => {
-                    setProvince(e.target.value);
-                    validate('province', e.target.value);
-                  }} placeholder="TP. Hồ Chí Minh" className={fieldErrors.province ? 'border-red-500' : ''} />
+                  <Select name="province" value={province} onValueChange={handleProvinceChange}>
+                    <SelectTrigger
+                      id="booking-province"
+                      className={`h-11 w-full rounded-xl bg-white text-base shadow-sm ${fieldErrors.province ? 'border-red-500' : 'border-platinum-tint'}`}
+                      aria-invalid={!!fieldErrors.province}
+                    >
+                      <SelectValue placeholder="Chọn tỉnh/thành" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {provinceOptions.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {fieldErrors.province && <p className="text-red-500 text-[10px]">{fieldErrors.province}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="booking-district">Quận/Huyện *</Label>
-                  <Input id="booking-district" name="district" autoComplete="address-level2" value={district} onChange={(e) => {
-                    setDistrict(e.target.value);
-                    validate('district', e.target.value);
-                  }} placeholder="Quận 1" className={fieldErrors.district ? 'border-red-500' : ''} />
+                  <Select
+                    name="district"
+                    value={district}
+                    onValueChange={handleDistrictChange}
+                    disabled={!province}
+                  >
+                    <SelectTrigger
+                      id="booking-district"
+                      className={`h-11 w-full rounded-xl bg-white text-base shadow-sm ${fieldErrors.district ? 'border-red-500' : 'border-platinum-tint'}`}
+                      aria-invalid={!!fieldErrors.district}
+                    >
+                      <SelectValue placeholder={province ? 'Chọn quận/huyện' : 'Chọn tỉnh trước'} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {districtOptions.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {fieldErrors.district && <p className="text-red-500 text-[10px]">{fieldErrors.district}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="booking-ward">Phường/Xã *</Label>
-                  <Input id="booking-ward" name="ward" autoComplete="address-level3" value={ward} onChange={(e) => {
-                    setWard(e.target.value);
-                    validate('ward', e.target.value);
-                  }} placeholder="Phường Bến Thành" className={fieldErrors.ward ? 'border-red-500' : ''} />
+                  <Select
+                    name="ward"
+                    value={ward}
+                    onValueChange={handleWardChange}
+                    disabled={!district}
+                  >
+                    <SelectTrigger
+                      id="booking-ward"
+                      className={`h-11 w-full rounded-xl bg-white text-base shadow-sm ${fieldErrors.ward ? 'border-red-500' : 'border-platinum-tint'}`}
+                      aria-invalid={!!fieldErrors.ward}
+                    >
+                      <SelectValue placeholder={district ? 'Chọn phường/xã' : 'Chọn quận trước'} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {wardOptions.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {fieldErrors.ward && <p className="text-red-500 text-[10px]">{fieldErrors.ward}</p>}
                 </div>
               </div>

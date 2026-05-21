@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { AlertCircle, Check, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react'
 import { userApi } from '@/features/user/services/user.api'
+import {
+  getDistrictOptions,
+  getProvinceOptions,
+  getWardOptions,
+  withCurrentOption,
+} from '@/lib/address-options'
 
 const DEFAULT_COORDINATES = {
   latitude: 10.7769,
@@ -81,6 +87,26 @@ export default function AddressesPage() {
     mode: 'onChange',
     defaultValues: emptyAddressValues,
   })
+  const selectedProvince = form.watch('province') || ''
+  const selectedDistrict = form.watch('district') || ''
+  const selectedWard = form.watch('ward') || ''
+  const provinceOptions = withCurrentOption(getProvinceOptions(), selectedProvince)
+  const districtOptions = withCurrentOption(getDistrictOptions(selectedProvince), selectedDistrict)
+  const wardOptions = withCurrentOption(getWardOptions(selectedProvince, selectedDistrict), selectedWard)
+  const provinceField = form.register('province')
+  const districtField = form.register('district')
+  const wardField = form.register('ward')
+
+  const handleProvinceSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+    void provinceField.onChange(event)
+    form.setValue('district', '', { shouldDirty: true, shouldValidate: true })
+    form.setValue('ward', '', { shouldDirty: true, shouldValidate: true })
+  }
+
+  const handleDistrictSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+    void districtField.onChange(event)
+    form.setValue('ward', '', { shouldDirty: true, shouldValidate: true })
+  }
 
   const showSuccess = (message: string) => {
     setSuccessMessage(message)
@@ -329,13 +355,17 @@ export default function AddressesPage() {
                     <select
                       id="address-province"
                       autoComplete="address-level1"
-                      {...form.register('province')}
+                      {...provinceField}
+                      value={selectedProvince}
+                      onChange={handleProvinceSelect}
                       className="w-full rounded-lg border border-platinum-tint bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-action-blue"
                     >
-                      <option value="">Chọn tỉnh</option>
-                      <option value="Hà Nội">Hà Nội</option>
-                      <option value="TP Hồ Chí Minh">TP Hồ Chí Minh</option>
-                      <option value="Đà Nẵng">Đà Nẵng</option>
+                      <option value="">Chọn tỉnh/thành</option>
+                      {provinceOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
                     </select>
                     {form.formState.errors.province && (
                       <p className="mt-1 text-sm text-red-600">{form.formState.errors.province.message}</p>
@@ -347,13 +377,18 @@ export default function AddressesPage() {
                     <select
                       id="address-district"
                       autoComplete="address-level2"
-                      {...form.register('district')}
+                      {...districtField}
+                      value={selectedDistrict}
+                      onChange={handleDistrictSelect}
+                      disabled={!selectedProvince}
                       className="w-full rounded-lg border border-platinum-tint bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-action-blue"
                     >
-                      <option value="">Chọn quận</option>
-                      <option value="Hoàn Kiếm">Hoàn Kiếm</option>
-                      <option value="Ba Đình">Ba Đình</option>
-                      <option value="Quận 1">Quận 1</option>
+                      <option value="">{selectedProvince ? 'Chọn quận/huyện' : 'Chọn tỉnh trước'}</option>
+                      {districtOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
                     </select>
                     {form.formState.errors.district && (
                       <p className="mt-1 text-sm text-red-600">{form.formState.errors.district.message}</p>
@@ -365,12 +400,18 @@ export default function AddressesPage() {
                     <select
                       id="address-ward"
                       autoComplete="address-level3"
-                      {...form.register('ward')}
+                      {...wardField}
+                      value={selectedWard}
+                      onChange={wardField.onChange}
+                      disabled={!selectedDistrict}
                       className="w-full rounded-lg border border-platinum-tint bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-action-blue"
                     >
-                      <option value="">Chọn phường</option>
-                      <option value="Hàng Đồng">Hàng Đồng</option>
-                      <option value="Bến Nghé">Bến Nghé</option>
+                      <option value="">{selectedDistrict ? 'Chọn phường/xã' : 'Chọn quận trước'}</option>
+                      {wardOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
                     </select>
                     {form.formState.errors.ward && (
                       <p className="mt-1 text-sm text-red-600">{form.formState.errors.ward.message}</p>
