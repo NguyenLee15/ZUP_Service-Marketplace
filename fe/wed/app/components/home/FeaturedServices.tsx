@@ -42,13 +42,14 @@ export function FeaturedServices({
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6">
         {services.map((service, index) => (
           <UnifiedServiceCard
             key={service.id || index}
             service={service}
             isFavorite={favorites.includes(service.id)}
             showFavorite
+            showDescription={false}
             showSponsoredBadge={isSponsored}
             showTrustBadges
             showPrimaryAction

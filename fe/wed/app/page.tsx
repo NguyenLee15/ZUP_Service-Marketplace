@@ -147,7 +147,7 @@ async function fetchCategoryServiceSections(categories: Category[]) {
     candidates.map(async (category) => {
       const services = await fetchHomeServices('/services/search', {
         categoryIds: getCategoryTreeIds(category.id, categories).join(','),
-        limit: 4,
+        limit: 3,
         sortBy: 'rating',
       });
 
@@ -194,7 +194,7 @@ function buildFallbackCategorySections(
 
     const current = grouped.get(category.id);
     if (current) {
-      if (current.services.length < 4) current.services.push(service);
+      if (current.services.length < 3) current.services.push(service);
       return;
     }
 

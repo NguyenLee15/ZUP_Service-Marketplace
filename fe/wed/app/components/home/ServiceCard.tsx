@@ -16,6 +16,7 @@ export function ServiceCard({ service, priority = false }: { service: Service; p
       service={service}
       priority={priority}
       showFavorite
+      showDescription={false}
       showTrustBadges
       showPrimaryAction
       useImageCarousel
