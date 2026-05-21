@@ -26,6 +26,7 @@ import {
   getWardOptions,
   withCurrentOption,
 } from '@/lib/address-options';
+import { useAddressOptions } from '@/hooks/use-address-options';
 
 type AddressMode = 'default' | 'custom';
 
@@ -57,6 +58,7 @@ function CreateBookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { addressOptions, loading: addressOptionsLoading, fallback: addressOptionsFallback } = useAddressOptions();
   const serviceId = searchParams.get('serviceId');
   const reorderId = searchParams.get('reorderId');
 
@@ -75,9 +77,9 @@ function CreateBookingContent() {
   const [desiredTime, setDesiredTime] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const defaultAddress = addresses.find((address) => address.isDefault);
-  const provinceOptions = withCurrentOption(getProvinceOptions(), province);
-  const districtOptions = withCurrentOption(getDistrictOptions(province), district);
-  const wardOptions = withCurrentOption(getWardOptions(province, district), ward);
+  const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), province);
+  const districtOptions = withCurrentOption(getDistrictOptions(province, addressOptions), district);
+  const wardOptions = withCurrentOption(getWardOptions(province, district, addressOptions), ward);
 
   const clearAddressErrors = () => {
     setFieldErrors((prev) => {
@@ -275,6 +277,16 @@ function CreateBookingContent() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Mặc định lấy từ Quản lý địa chỉ, hoặc nhập địa chỉ khác cho lần đặt này.
               </p>
+              {addressOptionsLoading && (
+                <p className="mt-1 text-[11px] font-medium text-action-blue">
+                  Đang tải danh sách tỉnh/quận/phường đầy đủ…
+                </p>
+              )}
+              {addressOptionsFallback && !addressOptionsLoading && (
+                <p className="mt-1 text-[11px] font-medium text-amber-600">
+                  Tạm dùng danh sách rút gọn do chưa tải được dữ liệu địa giới.
+                </p>
+              )}
             </div>
             {selectedAddressId && addressMode === 'default' && (
               <Badge className="w-fit border-0 bg-green-100 text-green-700">Đang dùng mặc định</Badge>

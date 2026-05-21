@@ -15,6 +15,7 @@ import {
   getWardOptions,
   withCurrentOption,
 } from '@/lib/address-options'
+import { useAddressOptions } from '@/hooks/use-address-options'
 
 const DEFAULT_COORDINATES = {
   latitude: 10.7769,
@@ -81,6 +82,7 @@ export default function AddressesPage() {
   const [selectedMap, setSelectedMap] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const { addressOptions, loading: addressOptionsLoading, fallback: addressOptionsFallback } = useAddressOptions()
 
   const form = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
@@ -90,9 +92,9 @@ export default function AddressesPage() {
   const selectedProvince = form.watch('province') || ''
   const selectedDistrict = form.watch('district') || ''
   const selectedWard = form.watch('ward') || ''
-  const provinceOptions = withCurrentOption(getProvinceOptions(), selectedProvince)
-  const districtOptions = withCurrentOption(getDistrictOptions(selectedProvince), selectedDistrict)
-  const wardOptions = withCurrentOption(getWardOptions(selectedProvince, selectedDistrict), selectedWard)
+  const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), selectedProvince)
+  const districtOptions = withCurrentOption(getDistrictOptions(selectedProvince, addressOptions), selectedDistrict)
+  const wardOptions = withCurrentOption(getWardOptions(selectedProvince, selectedDistrict, addressOptions), selectedWard)
   const provinceField = form.register('province')
   const districtField = form.register('district')
   const wardField = form.register('ward')
@@ -332,6 +334,16 @@ export default function AddressesPage() {
                       Bỏ chọn vị trí
                     </Button>
                   </div>
+                )}
+              </div>
+
+              <div className="mb-4 rounded-xl border border-platinum-tint bg-pale-gray/45 px-4 py-3 text-xs text-muted-foreground">
+                {addressOptionsLoading ? (
+                  <span className="font-medium text-action-blue">Đang tải danh sách tỉnh/quận/phường đầy đủ…</span>
+                ) : addressOptionsFallback ? (
+                  <span className="font-medium text-amber-600">Tạm dùng danh sách rút gọn do chưa tải được dữ liệu địa giới.</span>
+                ) : (
+                  <span>Danh sách tỉnh/quận/phường đã được tải theo dữ liệu địa giới đầy đủ.</span>
                 )}
               </div>
 

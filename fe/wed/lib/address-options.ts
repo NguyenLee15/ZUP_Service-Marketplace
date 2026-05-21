@@ -8,33 +8,47 @@ export interface ProvinceOption {
   districts: DistrictOption[];
 }
 
-export const ADDRESS_OPTIONS: ProvinceOption[] = [
+interface RawWard {
+  name?: unknown;
+}
+
+interface RawDistrict {
+  name?: unknown;
+  wards?: unknown;
+}
+
+interface RawProvince {
+  name?: unknown;
+  districts?: unknown;
+}
+
+export const FALLBACK_ADDRESS_OPTIONS: ProvinceOption[] = [
   {
     name: 'Hà Nội',
     districts: [
       {
-        name: 'Hoàn Kiếm',
-        wards: ['Hàng Bạc', 'Hàng Bài', 'Hàng Bồ', 'Hàng Gai', 'Hàng Trống', 'Tràng Tiền'],
+        name: 'Quận Hoàn Kiếm',
+        wards: ['Phường Hàng Bạc', 'Phường Hàng Bài', 'Phường Hàng Bồ', 'Phường Hàng Gai', 'Phường Hàng Trống', 'Phường Tràng Tiền'],
       },
       {
-        name: 'Ba Đình',
-        wards: ['Cống Vị', 'Đội Cấn', 'Điện Biên', 'Giảng Võ', 'Kim Mã', 'Ngọc Hà'],
+        name: 'Quận Ba Đình',
+        wards: ['Phường Cống Vị', 'Phường Đội Cấn', 'Phường Điện Biên', 'Phường Giảng Võ', 'Phường Kim Mã', 'Phường Ngọc Hà'],
       },
       {
-        name: 'Đống Đa',
-        wards: ['Cát Linh', 'Láng Hạ', 'Ô Chợ Dừa', 'Quang Trung', 'Thịnh Quang', 'Trung Liệt'],
+        name: 'Quận Đống Đa',
+        wards: ['Phường Cát Linh', 'Phường Láng Hạ', 'Phường Ô Chợ Dừa', 'Phường Quang Trung', 'Phường Thịnh Quang', 'Phường Trung Liệt'],
       },
       {
-        name: 'Cầu Giấy',
-        wards: ['Dịch Vọng', 'Dịch Vọng Hậu', 'Mai Dịch', 'Nghĩa Đô', 'Nghĩa Tân', 'Yên Hòa'],
+        name: 'Quận Cầu Giấy',
+        wards: ['Phường Dịch Vọng', 'Phường Dịch Vọng Hậu', 'Phường Mai Dịch', 'Phường Nghĩa Đô', 'Phường Nghĩa Tân', 'Phường Yên Hòa'],
       },
       {
-        name: 'Hai Bà Trưng',
-        wards: ['Bạch Đằng', 'Bách Khoa', 'Bùi Thị Xuân', 'Minh Khai', 'Thanh Lương', 'Trương Định'],
+        name: 'Quận Hai Bà Trưng',
+        wards: ['Phường Bạch Đằng', 'Phường Bách Khoa', 'Phường Bùi Thị Xuân', 'Phường Minh Khai', 'Phường Thanh Lương', 'Phường Trương Định'],
       },
       {
-        name: 'Thanh Xuân',
-        wards: ['Hạ Đình', 'Khương Đình', 'Khương Mai', 'Nhân Chính', 'Thanh Xuân Bắc', 'Thanh Xuân Trung'],
+        name: 'Quận Thanh Xuân',
+        wards: ['Phường Hạ Đình', 'Phường Khương Đình', 'Phường Khương Mai', 'Phường Nhân Chính', 'Phường Thanh Xuân Bắc', 'Phường Thanh Xuân Trung'],
       },
     ],
   },
@@ -43,18 +57,18 @@ export const ADDRESS_OPTIONS: ProvinceOption[] = [
     districts: [
       {
         name: 'Quận 1',
-        wards: ['Bến Nghé', 'Bến Thành', 'Cầu Kho', 'Cầu Ông Lãnh', 'Đa Kao', 'Nguyễn Cư Trinh'],
+        wards: ['Phường Bến Nghé', 'Phường Bến Thành', 'Phường Cầu Kho', 'Phường Cầu Ông Lãnh', 'Phường Đa Kao', 'Phường Nguyễn Cư Trinh'],
       },
       {
         name: 'Quận 3',
-        wards: ['Phường 1', 'Phường 2', 'Phường 4', 'Phường 5', 'Phường 9', 'Võ Thị Sáu'],
+        wards: ['Phường 1', 'Phường 2', 'Phường 4', 'Phường 5', 'Phường 9', 'Phường Võ Thị Sáu'],
       },
       {
         name: 'Quận 7',
-        wards: ['Bình Thuận', 'Phú Mỹ', 'Phú Thuận', 'Tân Hưng', 'Tân Phong', 'Tân Quy'],
+        wards: ['Phường Bình Thuận', 'Phường Phú Mỹ', 'Phường Phú Thuận', 'Phường Tân Hưng', 'Phường Tân Phong', 'Phường Tân Quy'],
       },
       {
-        name: 'Bình Thạnh',
+        name: 'Quận Bình Thạnh',
         wards: ['Phường 1', 'Phường 2', 'Phường 5', 'Phường 11', 'Phường 19', 'Phường 25'],
       },
       {
@@ -62,16 +76,16 @@ export const ADDRESS_OPTIONS: ProvinceOption[] = [
         wards: ['Phường 1', 'Phường 2', 'Phường 4', 'Phường 12', 'Phường 13', 'Phường 15'],
       },
       {
-        name: 'Phú Nhuận',
+        name: 'Quận Phú Nhuận',
         wards: ['Phường 1', 'Phường 2', 'Phường 4', 'Phường 7', 'Phường 9', 'Phường 15'],
       },
       {
-        name: 'Gò Vấp',
+        name: 'Quận Gò Vấp',
         wards: ['Phường 1', 'Phường 3', 'Phường 5', 'Phường 10', 'Phường 16', 'Phường 17'],
       },
       {
-        name: 'Thủ Đức',
-        wards: ['An Khánh', 'Bình Thọ', 'Hiệp Bình Chánh', 'Linh Chiểu', 'Linh Trung', 'Thảo Điền'],
+        name: 'Thành phố Thủ Đức',
+        wards: ['Phường An Khánh', 'Phường Bình Thọ', 'Phường Hiệp Bình Chánh', 'Phường Linh Chiểu', 'Phường Linh Trung', 'Phường Thảo Điền'],
       },
     ],
   },
@@ -79,56 +93,125 @@ export const ADDRESS_OPTIONS: ProvinceOption[] = [
     name: 'Đà Nẵng',
     districts: [
       {
-        name: 'Hải Châu',
-        wards: ['Bình Hiên', 'Bình Thuận', 'Hải Châu 1', 'Hải Châu 2', 'Hòa Cường Bắc', 'Thạch Thang'],
+        name: 'Quận Hải Châu',
+        wards: ['Phường Bình Hiên', 'Phường Bình Thuận', 'Phường Hải Châu 1', 'Phường Hải Châu 2', 'Phường Hòa Cường Bắc', 'Phường Thạch Thang'],
       },
       {
-        name: 'Thanh Khê',
-        wards: ['An Khê', 'Chính Gián', 'Hòa Khê', 'Tam Thuận', 'Tân Chính', 'Vĩnh Trung'],
+        name: 'Quận Thanh Khê',
+        wards: ['Phường An Khê', 'Phường Chính Gián', 'Phường Hòa Khê', 'Phường Tam Thuận', 'Phường Tân Chính', 'Phường Vĩnh Trung'],
       },
       {
-        name: 'Sơn Trà',
-        wards: ['An Hải Bắc', 'An Hải Đông', 'An Hải Tây', 'Mân Thái', 'Nại Hiên Đông', 'Thọ Quang'],
+        name: 'Quận Sơn Trà',
+        wards: ['Phường An Hải Bắc', 'Phường An Hải Đông', 'Phường An Hải Tây', 'Phường Mân Thái', 'Phường Nại Hiên Đông', 'Phường Thọ Quang'],
       },
       {
-        name: 'Ngũ Hành Sơn',
-        wards: ['Hòa Hải', 'Hòa Quý', 'Khuê Mỹ', 'Mỹ An'],
+        name: 'Quận Ngũ Hành Sơn',
+        wards: ['Phường Hòa Hải', 'Phường Hòa Quý', 'Phường Khuê Mỹ', 'Phường Mỹ An'],
       },
       {
-        name: 'Liên Chiểu',
-        wards: ['Hòa Hiệp Bắc', 'Hòa Hiệp Nam', 'Hòa Khánh Bắc', 'Hòa Khánh Nam', 'Hòa Minh'],
+        name: 'Quận Liên Chiểu',
+        wards: ['Phường Hòa Hiệp Bắc', 'Phường Hòa Hiệp Nam', 'Phường Hòa Khánh Bắc', 'Phường Hòa Khánh Nam', 'Phường Hòa Minh'],
       },
       {
-        name: 'Cẩm Lệ',
-        wards: ['Hòa An', 'Hòa Phát', 'Hòa Thọ Đông', 'Hòa Thọ Tây', 'Khuê Trung'],
+        name: 'Quận Cẩm Lệ',
+        wards: ['Phường Hòa An', 'Phường Hòa Phát', 'Phường Hòa Thọ Đông', 'Phường Hòa Thọ Tây', 'Phường Khuê Trung'],
       },
     ],
   },
 ];
 
 const PROVINCE_ALIASES: Record<string, string> = {
+  'Thành phố Hà Nội': 'Hà Nội',
   'TP Hồ Chí Minh': 'TP. Hồ Chí Minh',
   'TP.Hồ Chí Minh': 'TP. Hồ Chí Minh',
   'Hồ Chí Minh': 'TP. Hồ Chí Minh',
+  'Thành phố Hồ Chí Minh': 'TP. Hồ Chí Minh',
+  'Thành phố Đà Nẵng': 'Đà Nẵng',
+};
+
+const DISTRICT_ALIASES: Record<string, string> = {
+  'Hoàn Kiếm': 'Quận Hoàn Kiếm',
+  'Ba Đình': 'Quận Ba Đình',
+  'Đống Đa': 'Quận Đống Đa',
+  'Cầu Giấy': 'Quận Cầu Giấy',
+  'Hai Bà Trưng': 'Quận Hai Bà Trưng',
+  'Thanh Xuân': 'Quận Thanh Xuân',
+  'Bình Thạnh': 'Quận Bình Thạnh',
+  'Phú Nhuận': 'Quận Phú Nhuận',
+  'Gò Vấp': 'Quận Gò Vấp',
+  'Thủ Đức': 'Thành phố Thủ Đức',
+  'Hải Châu': 'Quận Hải Châu',
+  'Thanh Khê': 'Quận Thanh Khê',
+  'Sơn Trà': 'Quận Sơn Trà',
+  'Ngũ Hành Sơn': 'Quận Ngũ Hành Sơn',
+  'Liên Chiểu': 'Quận Liên Chiểu',
+  'Cẩm Lệ': 'Quận Cẩm Lệ',
 };
 
 function normalizeProvinceName(province: string) {
   return PROVINCE_ALIASES[province] || province;
 }
 
-export function getProvinceOptions() {
-  return ADDRESS_OPTIONS.map((province) => province.name);
+function normalizeDistrictName(district: string) {
+  return DISTRICT_ALIASES[district] || district;
 }
 
-export function getDistrictOptions(province: string) {
-  const normalized = normalizeProvinceName(province);
-  return ADDRESS_OPTIONS.find((item) => item.name === normalized)?.districts.map((district) => district.name) || [];
+function toText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
 }
 
-export function getWardOptions(province: string, district: string) {
+export function normalizeAddressOptions(payload: unknown): ProvinceOption[] {
+  if (!Array.isArray(payload)) return FALLBACK_ADDRESS_OPTIONS;
+
+  const options = payload
+    .map((rawProvince) => {
+      const province = rawProvince as RawProvince;
+      const name = normalizeProvinceName(toText(province.name));
+      const rawDistricts = Array.isArray(province.districts) ? province.districts : [];
+      const districts = rawDistricts
+        .map((rawDistrict) => {
+          const district = rawDistrict as RawDistrict;
+          const districtName = normalizeDistrictName(toText(district.name));
+          const rawWards = Array.isArray(district.wards) ? district.wards : [];
+          const wards = rawWards
+            .map((rawWard) => toText((rawWard as RawWard).name))
+            .filter(Boolean);
+
+          return {
+            name: districtName,
+            wards,
+          };
+        })
+        .filter((district) => district.name && district.wards.length > 0);
+
+      return {
+        name,
+        districts,
+      };
+    })
+    .filter((province) => province.name && province.districts.length > 0);
+
+  return options.length > 0 ? options : FALLBACK_ADDRESS_OPTIONS;
+}
+
+export function getProvinceOptions(addressOptions: ProvinceOption[] = FALLBACK_ADDRESS_OPTIONS) {
+  return addressOptions.map((province) => province.name);
+}
+
+export function getDistrictOptions(province: string, addressOptions: ProvinceOption[] = FALLBACK_ADDRESS_OPTIONS) {
   const normalized = normalizeProvinceName(province);
-  const provinceOption = ADDRESS_OPTIONS.find((item) => item.name === normalized);
-  return provinceOption?.districts.find((item) => item.name === district)?.wards || [];
+  return addressOptions.find((item) => item.name === normalized)?.districts.map((district) => district.name) || [];
+}
+
+export function getWardOptions(
+  province: string,
+  district: string,
+  addressOptions: ProvinceOption[] = FALLBACK_ADDRESS_OPTIONS,
+) {
+  const normalized = normalizeProvinceName(province);
+  const normalizedDistrict = normalizeDistrictName(district);
+  const provinceOption = addressOptions.find((item) => item.name === normalized);
+  return provinceOption?.districts.find((item) => item.name === normalizedDistrict)?.wards || [];
 }
 
 export function withCurrentOption(options: string[], current: string) {
