@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { BackButton } from "@/components/navigation/BackButton";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { authApi } from "@/features/auth/services/auth.api";
-import { Scale, CheckCircle2, Award, Clock, BarChart3 } from "lucide-react";
+import { Scale, CheckCircle2, Award, Clock, BarChart3, Sparkles } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -56,6 +56,9 @@ export function ServiceDetailClient({ service }: { service: any }) {
 
   const images = service?.images || [];
   const reviews = service?.reviews || [];
+  const referencePrice = Number(service.referencePrice || 0);
+  const estimateLow = referencePrice * 0.9;
+  const estimateHigh = referencePrice * 1.1;
 
   const handleStartChat = async () => {
     if (!isAuthenticated()) {
@@ -189,7 +192,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
             </p>
             <div className="flex flex-col items-end mt-1">
               <p className="text-xl sm:text-2xl font-bold text-action-blue">
-                {formatPrice(Number(service.referencePrice))}
+                {formatPrice(referencePrice)}
               </p>
               <div className="flex items-center gap-1 mt-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 shadow-sm">
                 <span className="text-[8px] sm:text-[9px] font-bold text-emerald-700 uppercase tracking-widest hidden sm:inline">
@@ -215,6 +218,45 @@ export function ServiceDetailClient({ service }: { service: any }) {
             </span>
           </div>
         </div>
+
+        <Card className="overflow-hidden rounded-[20px] border-0 bg-midnight-indigo text-white shadow-[var(--brand-shadow-card)] py-0">
+          <CardContent className="p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="rounded-lg border border-white/10 bg-white/10 p-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">
+                Ước tính giá
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-tight text-white/60">
+                  Giá dự kiến trung bình
+                </p>
+                <p className="mt-1 text-xl font-bold text-white sm:text-2xl">
+                  {formatPrice(estimateLow)} - {formatPrice(estimateHigh)}
+                </p>
+              </div>
+
+              <div className="sm:text-right">
+                <p className="text-[10px] font-bold uppercase tracking-tight text-white/60">
+                  Độ tin cậy
+                </p>
+                <div className="mt-1 flex items-center gap-2 sm:justify-end">
+                  <span className="text-xs font-bold sm:text-sm">Cao (89%)</span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-4 w-1 rounded-full bg-emerald-400" />
+                    ))}
+                    <div className="h-4 w-1 rounded-full bg-white/20" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Separator />
 
@@ -416,7 +458,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
           <div className="flex-1">
             <p className="text-[10px] sm:text-sm text-muted-foreground leading-none mb-1">Giá tham khảo</p>
             <p className="text-base sm:text-lg font-bold text-action-blue leading-none">
-              {formatPrice(Number(service.referencePrice))}
+              {formatPrice(referencePrice)}
             </p>
           </div>
           <Button

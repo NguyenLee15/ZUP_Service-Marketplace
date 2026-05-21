@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Sparkles, Clock, CheckCircle2, TrendingUp, MapPin, Plus } from 'lucide-react';
+import { Sparkles, Clock, TrendingUp, MapPin, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DynamicQuestionnaire } from '@/app/components/bookings/DynamicQuestionnaire';
 import { userApi } from '@/features/user/services/user.api';
@@ -227,44 +227,6 @@ function CreateBookingContent() {
             error={fieldErrors.description}
           />
 
-          {/* AI Quote Prediction & Risk Analysis */}
-          {description.length >= 10 && (
-            <div className="mt-3 p-4 rounded-[20px] bg-midnight-indigo text-white border border-midnight-indigo/10 shadow-[var(--brand-shadow-card)] animate-in zoom-in-95 duration-500">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="p-1.5 rounded-lg bg-white/10 border border-white/10">
-                  <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Ước tính giá</span>
-              </div>
-              
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-[10px] text-white/60 font-bold uppercase tracking-tight">Giá dự kiến trung bình</p>
-                  <p className="text-xl font-bold text-white">{formatPrice(Number(service?.referencePrice || 0) * 0.9)} - {formatPrice(Number(service?.referencePrice || 0) * 1.1)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-white/60 font-bold uppercase tracking-tight">Độ tin cậy</p>
-                  <div className="flex items-center gap-1 justify-end">
-                    <span className="text-xs font-bold">Cao (89%)</span>
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4].map(i => <div key={i} className="w-1 h-3 bg-emerald-400 rounded-full" />)}
-                      <div className="w-1 h-3 bg-white/20 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="p-3 rounded-xl bg-white/10 border border-white/10 flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs font-bold">Vấn đề phổ biến được phát hiện</p>
-                    <p className="text-[10px] text-white/60 mt-0.5">Dựa trên mô tả của bạn, đây có thể là lỗi bo mạch hoặc thiếu gas lạnh (nếu là điều hòa).</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="surface-card space-y-4 rounded-[20px] p-4 sm:p-6">
