@@ -138,7 +138,7 @@ export default function FavoritesPage() {
               {favorites.length} dịch vụ đã lưu
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
             {storedFavoriteServices.map((service, index) => (
               <UnifiedServiceCard
                 key={service.id}
@@ -146,6 +146,7 @@ export default function FavoritesPage() {
                 priority={index < 3}
                 isFavorite
                 showFavorite
+                showDescription={false}
                 showTrustBadges
                 showPrimaryAction
                 useImageCarousel

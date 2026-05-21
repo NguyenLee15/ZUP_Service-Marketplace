@@ -147,7 +147,7 @@ async function fetchCategoryServiceSections(categories: Category[]) {
     candidates.map(async (category) => {
       const services = await fetchHomeServices('/services/search', {
         categoryIds: getCategoryTreeIds(category.id, categories).join(','),
-        limit: 3,
+        limit: 4,
         sortBy: 'rating',
       });
 
@@ -194,7 +194,7 @@ function buildFallbackCategorySections(
 
     const current = grouped.get(category.id);
     if (current) {
-      if (current.services.length < 3) current.services.push(service);
+      if (current.services.length < 4) current.services.push(service);
       return;
     }
 
@@ -260,7 +260,7 @@ export default async function Home() {
               title={section.category.name}
               description={section.description}
               href={`/services?categoryIds=${section.category.id}`}
-              actionLabel="Xem danh mục"
+              actionLabel="Xem thêm"
             />
           ))}
 

@@ -544,11 +544,11 @@ function ServicesSearchContent() {
             {viewMode === 'map' ? (
               <ServiceMap services={services} userLocation={userLocation} />
             ) : loading && !isFetchingMore ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {[...Array(6)].map((_, i) => (
                   <div 
                     key={i} 
-                  className="h-[380px] surface-card rounded-[20px] overflow-hidden relative"
+                  className="h-[260px] sm:h-[300px] surface-card rounded-2xl overflow-hidden relative"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                   </div>
@@ -575,7 +575,7 @@ function ServicesSearchContent() {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {services.map((service, index) => {
                   const isFavorite = favorites.includes(service.id);
 

@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  CheckCircle2,
-  Diamond,
   Eye,
   GitCompare,
   Heart,
+  ShoppingBag,
   Sparkles,
   Star,
   Wrench,
@@ -45,6 +44,14 @@ const formatPrice = (price: string | number | undefined) => {
     currency: 'VND',
     maximumFractionDigits: 0,
   }).format(normalizedPrice);
+};
+
+const formatCompactCount = (value: number) => {
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(value < 10000 ? 1 : 0).replace('.', ',')}k`;
+  }
+
+  return String(value);
 };
 
 const HOME_FALLBACK_IMAGES = [
@@ -85,7 +92,6 @@ export function UnifiedServiceCard({
   showTrustBadges = false,
   showPrimaryAction = false,
   useImageCarousel = false,
-  priceMode = 'from',
   onToggleFavorite,
   onAddToComparison,
   onQuickView,
@@ -99,9 +105,19 @@ export function UnifiedServiceCard({
   const detailHref = `/services/${service.id}`;
   const rating = Number(service.avgRating || 0).toFixed(1);
   const totalReviews = service.totalReviews || 0;
-  const showElite = Number(service.avgRating || 0) >= 4.8;
   const basePrice = Number(service.referencePrice || 0);
-  const fullEstimatePrice = `${formatPrice(basePrice).replace('₫', '').trim()} - ${formatPrice(basePrice * 1.5)}`;
+  const displayPrice = formatPrice(basePrice).replace('₫', 'đ');
+  const salesCount =
+    (service as Service & {
+      totalCompleted?: number;
+      totalBookings?: number;
+      soldCount?: number;
+      bookingCount?: number;
+    }).soldCount ??
+    (service as Service & { totalCompleted?: number }).totalCompleted ??
+    (service as Service & { totalBookings?: number }).totalBookings ??
+    (service as Service & { bookingCount?: number }).bookingCount ??
+    totalReviews;
 
   const handleDetailClick = () => {
     onRecentlyViewed?.(service);
@@ -222,7 +238,7 @@ export function UnifiedServiceCard({
         {showTrustBadges && (
           <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex items-center gap-1 rounded-full border border-white/20 bg-midnight-indigo/65 px-1.5 py-0.5 text-white backdrop-blur-md">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest">Online</span>
+            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest">Đang hoạt động</span>
           </div>
         )}
 
@@ -246,27 +262,11 @@ export function UnifiedServiceCard({
       </div>
 
       <CardContent className="flex flex-1 flex-col p-2.5 sm:p-3">
-        <div className="flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <div className="flex items-center gap-1 rounded-full bg-amber-pop/15 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-midnight-indigo">
-              <Star className="h-2.5 w-2.5 fill-yellow-400 border-0" />
-              {rating}
-            </div>
-            <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-normal text-muted-foreground">
-              {totalReviews} đánh giá
-            </div>
-            {showTrustBadges && (
-              <div className="flex items-center gap-1 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
-                <CheckCircle2 className="h-2.5 w-2.5" />
-                Uy tín
-              </div>
-            )}
-          </div>
-
+        <div className="flex-1">
           <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block">
             <h3
               title={service.name}
-              className="line-clamp-2 text-sm sm:text-base font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
+              className="line-clamp-2 min-h-[2.35rem] text-sm sm:text-[15px] font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
               style={{ viewTransitionName: `service-title-${service.id}` } as any}
             >
               {service.name}
@@ -277,50 +277,49 @@ export function UnifiedServiceCard({
               {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
             </p>
           )}
-        </div>
-
-        <div className="mt-2 flex min-w-0 items-end justify-between gap-2 border-t border-border/50 pt-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-              Nhà cung cấp
-            </p>
-            <span
-              title={service.provider?.fullName || 'Đối tác HomeService'}
-              className="block truncate text-[11px] sm:text-xs font-bold leading-snug text-foreground/85"
-            >
+          <div className="mt-1.5 space-y-0.5 text-[10px] sm:text-[11px] leading-tight">
+            <p className="truncate font-medium text-foreground/75">
+              <span className="font-bold text-muted-foreground">Nhà cung cấp: </span>
               {service.provider?.fullName || 'Đối tác HomeService'}
-            </span>
-          </div>
-          <div className="min-w-[96px] max-w-[58%] rounded-lg border border-platinum-tint bg-pale-gray/45 px-2 py-1.5 text-right">
-            <div className="mb-1 flex flex-wrap items-center justify-end gap-1 text-[8px] sm:text-[9px] font-bold uppercase leading-none tracking-widest text-muted-foreground">
-              {priceMode === 'estimate' ? 'Khoảng' : 'Từ'}
-              {showElite && showTrustBadges && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-action-blue px-1 py-0.5 text-[8px] font-bold text-white tracking-normal">
-                  <Diamond className="h-2 w-2" />
-                  Elite
+            </p>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <p className="min-w-0 flex-1 truncate font-medium text-foreground/75">
+                <span className="font-bold text-muted-foreground">Dịch vụ con: </span>
+                {service.category?.name || 'Dịch vụ'}
+              </p>
+              {showTrustBadges && (
+                <span className="shrink-0 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
+                  Uy tín
                 </span>
               )}
             </div>
-            <div className={`${priceMode === 'estimate' ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm'} max-w-full font-bold leading-tight text-action-blue tabular-nums break-words [overflow-wrap:anywhere]`}>
-              {priceMode === 'estimate'
-                ? fullEstimatePrice
-                : formatPrice(service.referencePrice)}
-            </div>
           </div>
         </div>
-        {showPrimaryAction && (
-          <Link 
-            href={detailHref} 
-            prefetch={false}
-            onClick={handleDetailClick} 
-            className="mt-2 sm:mt-3"
-            aria-label={`Đặt ngay dịch vụ ${service.name}`}
-          >
-            <Button size="sm" className="h-8 w-full rounded-lg bg-action-blue text-xs sm:text-sm font-bold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,box-shadow,transform] hover:bg-glacier-blue active:scale-[0.98]">
-              Đặt ngay
-            </Button>
-          </Link>
-        )}
+
+        <div className="mt-2 flex min-w-0 items-end justify-between gap-2 pt-1">
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm sm:text-base font-extrabold leading-tight text-foreground tabular-nums">
+              {displayPrice}
+            </div>
+            <div className="mt-1 flex min-w-0 items-center gap-1 text-[10px] sm:text-[11px] leading-none text-foreground/80">
+              <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
+              <span className="shrink-0">{rating}</span>
+              <span className="shrink-0">({totalReviews})</span>
+              <span className="truncate">Đã bán {formatCompactCount(salesCount)}</span>
+            </div>
+          </div>
+          {showPrimaryAction && (
+            <Link
+              href={detailHref}
+              prefetch={false}
+              onClick={handleDetailClick}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-black text-white shadow-sm transition-[background-color,transform] hover:bg-neutral-800 active:scale-95 sm:h-12 sm:w-12"
+              aria-label={`Đặt ngay dịch vụ ${service.name}`}
+            >
+              <ShoppingBag className="h-5 w-5" />
+            </Link>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
