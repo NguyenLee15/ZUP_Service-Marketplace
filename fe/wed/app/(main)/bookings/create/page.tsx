@@ -21,9 +21,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  getDistrictOptions,
+  formatAdministrativeArea,
   getProvinceOptions,
   getWardOptions,
+  NEW_ADMIN_DISTRICT_VALUE,
   withCurrentOption,
 } from '@/lib/address-options';
 import { useAddressOptions } from '@/hooks/use-address-options';
@@ -71,21 +72,19 @@ function CreateBookingContent() {
 
   const [description, setDescription] = useState('');
   const [province, setProvince] = useState('');
-  const [district, setDistrict] = useState('');
+  const [district, setDistrict] = useState(NEW_ADMIN_DISTRICT_VALUE);
   const [ward, setWard] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
   const [desiredTime, setDesiredTime] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const defaultAddress = addresses.find((address) => address.isDefault);
   const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), province);
-  const districtOptions = withCurrentOption(getDistrictOptions(province, addressOptions), district);
-  const wardOptions = withCurrentOption(getWardOptions(province, district, addressOptions), ward);
+  const wardOptions = withCurrentOption(getWardOptions(province, addressOptions), ward);
 
   const clearAddressErrors = () => {
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next.province;
-      delete next.district;
       delete next.ward;
       delete next.addressDetail;
       return next;
@@ -105,7 +104,7 @@ function CreateBookingContent() {
     setAddressMode('custom');
     setSelectedAddressId(null);
     setProvince('');
-    setDistrict('');
+    setDistrict(NEW_ADMIN_DISTRICT_VALUE);
     setWard('');
     setAddressDetail('');
   };
@@ -118,7 +117,7 @@ function CreateBookingContent() {
         else if (value.length < 10) newErrors.description = 'Mô tả quá ngắn (tối thiểu 10 ký tự)';
         else delete newErrors.description;
       }
-      if (['province', 'district', 'ward', 'addressDetail'].includes(name)) {
+      if (['province', 'ward', 'addressDetail'].includes(name)) {
         if (!value) newErrors[name] = 'Bắt buộc';
         else delete newErrors[name];
       }
@@ -134,17 +133,9 @@ function CreateBookingContent() {
 
   const handleProvinceChange = (value: string) => {
     setProvince(value);
-    setDistrict('');
+    setDistrict(NEW_ADMIN_DISTRICT_VALUE);
     setWard('');
     validate('province', value);
-    validate('district', '');
-    validate('ward', '');
-  };
-
-  const handleDistrictChange = (value: string) => {
-    setDistrict(value);
-    setWard('');
-    validate('district', value);
     validate('ward', '');
   };
 
@@ -212,7 +203,7 @@ function CreateBookingContent() {
         serviceId: Number(serviceId),
         description,
         province,
-        district,
+        district: district || NEW_ADMIN_DISTRICT_VALUE,
         ward,
         addressDetail,
         desiredTime: new Date(desiredTime).toISOString(),
@@ -279,12 +270,12 @@ function CreateBookingContent() {
               </p>
               {addressOptionsLoading && (
                 <p className="mt-1 text-[11px] font-medium text-action-blue">
-                  Đang tải danh sách tỉnh/quận/phường đầy đủ…
+                  Đang tải danh sách tỉnh và phường/xã theo địa giới mới…
                 </p>
               )}
               {addressOptionsFallback && !addressOptionsLoading && (
                 <p className="mt-1 text-[11px] font-medium text-amber-600">
-                  Tạm dùng danh sách rút gọn do chưa tải được dữ liệu địa giới.
+                  Tạm dùng danh sách rút gọn do chưa tải được dữ liệu địa giới mới.
                 </p>
               )}
             </div>
@@ -320,7 +311,7 @@ function CreateBookingContent() {
                     {defaultAddress.label || 'Địa chỉ mặc định'}
                   </p>
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    {defaultAddress.addressDetail}, {defaultAddress.ward}, {defaultAddress.district}, {defaultAddress.province}
+                    {defaultAddress.addressDetail}, {formatAdministrativeArea(defaultAddress.province, defaultAddress.ward, defaultAddress.district)}
                   </p>
                 </div>
               ) : (
@@ -351,7 +342,7 @@ function CreateBookingContent() {
 
           {addressMode === 'custom' && (
             <div className="space-y-4 border-t border-platinum-tint pt-4">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="booking-province">Tỉnh/Thành *</Label>
                   <Select name="province" value={province} onValueChange={handleProvinceChange}>
@@ -373,44 +364,19 @@ function CreateBookingContent() {
                   {fieldErrors.province && <p className="text-red-500 text-[10px]">{fieldErrors.province}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="booking-district">Quận/Huyện *</Label>
-                  <Select
-                    name="district"
-                    value={district}
-                    onValueChange={handleDistrictChange}
-                    disabled={!province}
-                  >
-                    <SelectTrigger
-                      id="booking-district"
-                      className={`h-11 w-full rounded-xl bg-white text-base shadow-sm ${fieldErrors.district ? 'border-red-500' : 'border-platinum-tint'}`}
-                      aria-invalid={!!fieldErrors.district}
-                    >
-                      <SelectValue placeholder={province ? 'Chọn quận/huyện' : 'Chọn tỉnh trước'} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {districtOptions.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldErrors.district && <p className="text-red-500 text-[10px]">{fieldErrors.district}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="booking-ward">Phường/Xã *</Label>
+                  <Label htmlFor="booking-ward">Phường/Xã/Đặc khu *</Label>
                   <Select
                     name="ward"
                     value={ward}
                     onValueChange={handleWardChange}
-                    disabled={!district}
+                    disabled={!province}
                   >
                     <SelectTrigger
                       id="booking-ward"
                       className={`h-11 w-full rounded-xl bg-white text-base shadow-sm ${fieldErrors.ward ? 'border-red-500' : 'border-platinum-tint'}`}
                       aria-invalid={!!fieldErrors.ward}
                     >
-                      <SelectValue placeholder={district ? 'Chọn phường/xã' : 'Chọn quận trước'} />
+                      <SelectValue placeholder={province ? 'Chọn phường/xã/đặc khu' : 'Chọn tỉnh trước'} />
                     </SelectTrigger>
                     <SelectContent className="max-h-72">
                       {wardOptions.map((item) => (

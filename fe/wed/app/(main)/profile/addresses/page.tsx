@@ -10,9 +10,10 @@ import { Card } from '@/components/ui/card'
 import { AlertCircle, Check, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react'
 import { userApi } from '@/features/user/services/user.api'
 import {
-  getDistrictOptions,
+  formatAdministrativeArea,
   getProvinceOptions,
   getWardOptions,
+  NEW_ADMIN_DISTRICT_VALUE,
   withCurrentOption,
 } from '@/lib/address-options'
 import { useAddressOptions } from '@/hooks/use-address-options'
@@ -25,8 +26,8 @@ const DEFAULT_COORDINATES = {
 const addressSchema = z.object({
   label: z.string().max(50, 'Nhãn địa chỉ tối đa 50 ký tự').optional(),
   province: z.string().min(1, 'Vui lòng chọn tỉnh/thành phố'),
-  district: z.string().min(1, 'Vui lòng chọn quận/huyện'),
-  ward: z.string().min(1, 'Vui lòng chọn phường/xã'),
+  district: z.string().min(1, 'Thông tin địa giới không hợp lệ'),
+  ward: z.string().min(1, 'Vui lòng chọn phường/xã/đặc khu'),
   addressDetail: z.string().min(5, 'Địa chỉ phải có ít nhất 5 ký tự'),
   isDefault: z.boolean().default(false),
 })
@@ -57,7 +58,7 @@ type ApiError = {
 const emptyAddressValues: AddressFormData = {
   label: '',
   province: '',
-  district: '',
+  district: NEW_ADMIN_DISTRICT_VALUE,
   ward: '',
   addressDetail: '',
   isDefault: false,
@@ -90,23 +91,15 @@ export default function AddressesPage() {
     defaultValues: emptyAddressValues,
   })
   const selectedProvince = form.watch('province') || ''
-  const selectedDistrict = form.watch('district') || ''
   const selectedWard = form.watch('ward') || ''
   const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), selectedProvince)
-  const districtOptions = withCurrentOption(getDistrictOptions(selectedProvince, addressOptions), selectedDistrict)
-  const wardOptions = withCurrentOption(getWardOptions(selectedProvince, selectedDistrict, addressOptions), selectedWard)
+  const wardOptions = withCurrentOption(getWardOptions(selectedProvince, addressOptions), selectedWard)
   const provinceField = form.register('province')
-  const districtField = form.register('district')
   const wardField = form.register('ward')
 
   const handleProvinceSelect = (event: ChangeEvent<HTMLSelectElement>) => {
     void provinceField.onChange(event)
-    form.setValue('district', '', { shouldDirty: true, shouldValidate: true })
-    form.setValue('ward', '', { shouldDirty: true, shouldValidate: true })
-  }
-
-  const handleDistrictSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-    void districtField.onChange(event)
+    form.setValue('district', NEW_ADMIN_DISTRICT_VALUE, { shouldDirty: true, shouldValidate: true })
     form.setValue('ward', '', { shouldDirty: true, shouldValidate: true })
   }
 
@@ -150,7 +143,7 @@ export default function AddressesPage() {
       await userApi.createAddress({
         label: data.label?.trim() || undefined,
         province: data.province,
-        district: data.district,
+        district: data.district || NEW_ADMIN_DISTRICT_VALUE,
         ward: data.ward,
         addressDetail: data.addressDetail,
         latitude: selectedMap ? DEFAULT_COORDINATES.latitude : 0,
@@ -251,7 +244,7 @@ export default function AddressesPage() {
                   </div>
                   <p className="text-sm text-foreground">{addr.addressDetail}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {addr.ward}, {addr.district}, {addr.province}
+                    {formatAdministrativeArea(addr.province, addr.ward, addr.district)}
                   </p>
                   {addr.latitude != null && addr.longitude != null && (Number(addr.latitude) !== 0 || Number(addr.longitude) !== 0) && (
                     <p className="mt-2 text-[11px] text-muted-foreground">
@@ -339,15 +332,16 @@ export default function AddressesPage() {
 
               <div className="mb-4 rounded-xl border border-platinum-tint bg-pale-gray/45 px-4 py-3 text-xs text-muted-foreground">
                 {addressOptionsLoading ? (
-                  <span className="font-medium text-action-blue">Đang tải danh sách tỉnh/quận/phường đầy đủ…</span>
+                  <span className="font-medium text-action-blue">Đang tải danh sách tỉnh và phường/xã theo địa giới mới…</span>
                 ) : addressOptionsFallback ? (
-                  <span className="font-medium text-amber-600">Tạm dùng danh sách rút gọn do chưa tải được dữ liệu địa giới.</span>
+                  <span className="font-medium text-amber-600">Tạm dùng danh sách rút gọn do chưa tải được dữ liệu địa giới mới.</span>
                 ) : (
-                  <span>Danh sách tỉnh/quận/phường đã được tải theo dữ liệu địa giới đầy đủ.</span>
+                  <span>Danh sách tỉnh và phường/xã/đặc khu đã được tải theo địa giới sau sáp nhập.</span>
                 )}
               </div>
 
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <input type="hidden" {...form.register('district')} />
                 <div>
                   <label htmlFor="address-label" className="mb-2 block text-sm font-medium text-foreground/80">Nhãn địa chỉ</label>
                   <Input
@@ -361,7 +355,7 @@ export default function AddressesPage() {
                   )}
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label htmlFor="address-province" className="mb-2 block text-sm font-medium text-foreground/80">Tỉnh/thành phố</label>
                     <select
@@ -385,40 +379,17 @@ export default function AddressesPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="address-district" className="mb-2 block text-sm font-medium text-foreground/80">Quận/huyện</label>
-                    <select
-                      id="address-district"
-                      autoComplete="address-level2"
-                      {...districtField}
-                      value={selectedDistrict}
-                      onChange={handleDistrictSelect}
-                      disabled={!selectedProvince}
-                      className="w-full rounded-lg border border-platinum-tint bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-action-blue"
-                    >
-                      <option value="">{selectedProvince ? 'Chọn quận/huyện' : 'Chọn tỉnh trước'}</option>
-                      {districtOptions.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                    {form.formState.errors.district && (
-                      <p className="mt-1 text-sm text-red-600">{form.formState.errors.district.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="address-ward" className="mb-2 block text-sm font-medium text-foreground/80">Phường/xã</label>
+                    <label htmlFor="address-ward" className="mb-2 block text-sm font-medium text-foreground/80">Phường/xã/đặc khu</label>
                     <select
                       id="address-ward"
                       autoComplete="address-level3"
                       {...wardField}
                       value={selectedWard}
                       onChange={wardField.onChange}
-                      disabled={!selectedDistrict}
+                      disabled={!selectedProvince}
                       className="w-full rounded-lg border border-platinum-tint bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-action-blue"
                     >
-                      <option value="">{selectedDistrict ? 'Chọn phường/xã' : 'Chọn quận trước'}</option>
+                      <option value="">{selectedProvince ? 'Chọn phường/xã/đặc khu' : 'Chọn tỉnh trước'}</option>
                       {wardOptions.map((item) => (
                         <option key={item} value={item}>
                           {item}

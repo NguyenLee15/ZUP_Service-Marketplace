@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { FALLBACK_ADDRESS_OPTIONS, normalizeAddressOptions } from '@/lib/address-options';
 
-const ADDRESS_API_URL = 'https://provinces.open-api.vn/api/v1/?depth=3';
+const ADDRESS_API_URL = 'https://provinces.open-api.vn/api/v2/?depth=2';
 const CACHE_CONTROL = 'public, s-maxage=86400, stale-while-revalidate=604800';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +21,7 @@ export async function GET() {
       {
         data: normalizeAddressOptions(payload),
         fallback: false,
-        source: 'provinces.open-api.vn/api/v1',
+        source: 'provinces.open-api.vn/api/v2',
       },
       {
         headers: {
