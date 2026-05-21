@@ -277,22 +277,18 @@ export function UnifiedServiceCard({
               {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
             </p>
           )}
-          <div className="mt-1.5 space-y-0.5 text-[10px] sm:text-[11px] leading-tight">
-            <p className="truncate font-medium text-foreground/75">
-              <span className="font-bold text-muted-foreground">Nhà cung cấp: </span>
+          <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] sm:text-[11px] leading-tight">
+            <p
+              title={service.provider?.fullName || 'Đối tác HomeService'}
+              className="min-w-0 flex-1 truncate font-medium text-foreground/75"
+            >
               {service.provider?.fullName || 'Đối tác HomeService'}
             </p>
-            <div className="flex min-w-0 items-center gap-1.5">
-              <p className="min-w-0 flex-1 truncate font-medium text-foreground/75">
-                <span className="font-bold text-muted-foreground">Dịch vụ con: </span>
-                {service.category?.name || 'Dịch vụ'}
-              </p>
-              {showTrustBadges && (
-                <span className="shrink-0 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
-                  Uy tín
-                </span>
-              )}
-            </div>
+            {showTrustBadges && (
+              <span className="shrink-0 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
+                Uy tín
+              </span>
+            )}
           </div>
         </div>
 
