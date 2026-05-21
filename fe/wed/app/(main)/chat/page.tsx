@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bot, Send, Search } from "lucide-react";
+import { ArrowLeft, Bot, Send, Search, Wrench } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { getChatSocket } from "@/lib/socket";
@@ -216,6 +216,7 @@ function ChatPageContent() {
     (selectedChat?.booking
       ? `Đơn #${selectedChat.booking.bookingCode}`
       : "Trao đổi dịch vụ");
+  const selectedService = selectedChat?.service || selectedChat?.booking?.service || null;
 
   return (
     <div className="h-[calc(100dvh-9rem)] min-h-[620px] flex bg-card overflow-hidden rounded-[20px] border border-platinum-tint shadow-[var(--brand-shadow-card)]">
@@ -345,6 +346,28 @@ function ChatPageContent() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-cloud-mist">
+              {selectedService && (
+                <div className="rounded-2xl border border-action-blue/20 bg-white p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-action-blue/10 text-action-blue">
+                      <Wrench className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        {user?.role === "PROVIDER" ? "Khách đang hỏi về dịch vụ" : "Bạn đang trao đổi về dịch vụ"}
+                      </p>
+                      <p className="mt-1 truncate text-sm font-bold text-midnight-indigo sm:text-base">
+                        {selectedService.name}
+                      </p>
+                      {selectedChat?.booking && (
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">
+                          Đơn #{selectedChat.booking.bookingCode}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
               {isLoading ? (
                 <div className="text-center text-muted-foreground">
                   Đang tải tin nhắn…
