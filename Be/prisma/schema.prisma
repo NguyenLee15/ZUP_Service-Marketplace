@@ -102,9 +102,9 @@ model User {
   email         String     @unique @db.VarChar(100)
   password      String?    @db.VarChar(255)
   googleId      String?    @unique @map("google_id") @db.VarChar(100)
-  fullName      String     @db.VarChar(100) @map("full_name")
+  fullName      String     @map("full_name") @db.VarChar(100)
   phone         String?    @db.VarChar(15)
-  avatarUrl     String?    @db.VarChar(255) @map("avatar_url")
+  avatarUrl     String?    @map("avatar_url") @db.VarChar(255)
   role          UserRole
   status        UserStatus @default(PENDING)
   emailVerified Boolean    @default(false) @map("email_verified")
@@ -112,30 +112,30 @@ model User {
   updatedAt     DateTime   @updatedAt @map("updated_at")
 
   // Relations
-  refreshTokens    RefreshToken[]
-  passwordResets   PasswordReset[]
-  kycProfiles      KycProfile[]      @relation("ProviderKyc")
-  reviewedKyc      KycProfile[]      @relation("ReviewerKyc")
-  addresses        UserAddress[]
-  providedServices Service[]
-  customerBookings Booking[]         @relation("CustomerBooking")
-  providerBookings Booking[]         @relation("ProviderBooking")
-  reviews          Review[]
-  customerConvos   Conversation[]    @relation("CustomerConvo")
-  providerConvos   Conversation[]    @relation("ProviderConvo")
-  messages         Message[]
-  chatbotSessions  ChatbotSession[]
-  notifications    Notification[]
-  auditLogs        AuditLog[]
-  providerWallet   ProviderWallet?
+  refreshTokens     RefreshToken[]
+  passwordResets    PasswordReset[]
+  kycProfiles       KycProfile[]       @relation("ProviderKyc")
+  reviewedKyc       KycProfile[]       @relation("ReviewerKyc")
+  addresses         UserAddress[]
+  providedServices  Service[]
+  customerBookings  Booking[]          @relation("CustomerBooking")
+  providerBookings  Booking[]          @relation("ProviderBooking")
+  reviews           Review[]
+  customerConvos    Conversation[]     @relation("CustomerConvo")
+  providerConvos    Conversation[]     @relation("ProviderConvo")
+  messages          Message[]
+  chatbotSessions   ChatbotSession[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  providerWallet    ProviderWallet?
   commissionConfigs CommissionConfig[]
-  raisedDisputes   Dispute[]         @relation("DisputeRaisedBy")
-  disputeEvidences DisputeEvidence[]
-  featuredListings FeaturedListing[]
-  expoPushToken    String?           @db.VarChar(255) @map("expo_push_token")
+  raisedDisputes    Dispute[]          @relation("DisputeRaisedBy")
+  disputeEvidences  DisputeEvidence[]
+  featuredListings  FeaturedListing[]
+  expoPushToken     String?            @map("expo_push_token") @db.VarChar(255)
 
-  @@map("users")
   @@index([role, status])
+  @@map("users")
 }
 
 /// Bảng login_attempts — rate-limit đăng nhập/đổi mật khẩu không phụ thuộc Redis
@@ -147,8 +147,8 @@ model LoginAttempt {
   lockedUntil     DateTime? @map("locked_until")
   lastAttemptAt   DateTime  @default(now()) @map("last_attempt_at")
 
-  @@map("login_attempts")
   @@index([lockedUntil])
+  @@map("login_attempts")
 }
 
 /// Bảng otp_attempts — OTP và cooldown resend lưu trong DB
@@ -159,7 +159,7 @@ model OtpAttempt {
   code          String    @db.VarChar(6)
   lastSentAt    DateTime? @map("last_sent_at")
   wrongAttempts Int       @default(0) @map("wrong_attempts")
-  ipAddress     String?   @db.VarChar(50) @map("ip_address")
+  ipAddress     String?   @map("ip_address") @db.VarChar(50)
   expiresAt     DateTime  @map("expires_at")
 
   @@map("otp_attempts")
@@ -194,35 +194,35 @@ model PasswordReset {
 model KycProfile {
   id             Int       @id @default(autoincrement())
   providerId     Int       @map("provider_id")
-  cccdFrontUrl   String    @db.VarChar(255) @map("cccd_front_url")
-  cccdBackUrl    String    @db.VarChar(255) @map("cccd_back_url")
-  portraitUrl    String    @db.VarChar(255) @map("portrait_url")
-  certificateUrl String?   @db.VarChar(255) @map("certificate_url")
+  cccdFrontUrl   String    @map("cccd_front_url") @db.VarChar(255)
+  cccdBackUrl    String    @map("cccd_back_url") @db.VarChar(255)
+  portraitUrl    String    @map("portrait_url") @db.VarChar(255)
+  certificateUrl String?   @map("certificate_url") @db.VarChar(255)
   status         KycStatus @default(PENDING)
   reviewedBy     Int?      @map("reviewed_by")
-  rejectReason   String?   @db.Text @map("reject_reason")
+  rejectReason   String?   @map("reject_reason") @db.Text
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   provider       User      @relation("ProviderKyc", fields: [providerId], references: [id])
   reviewer       User?     @relation("ReviewerKyc", fields: [reviewedBy], references: [id])
 
-  @@map("kyc_profiles")
   @@index([providerId])
+  @@map("kyc_profiles")
 }
 
 /// Bảng user_addresses — có field label ("Nhà riêng", "Văn phòng")
 model UserAddress {
-  id            Int      @id @default(autoincrement())
-  userId        Int      @map("user_id")
-  label         String?  @db.VarChar(50)
-  province      String   @db.VarChar(50)
-  district      String   @db.VarChar(50)
-  ward          String   @db.VarChar(50)
-  addressDetail String   @db.Text @map("address_detail")
-  latitude      Decimal  @db.Decimal(10, 8)
-  longitude     Decimal  @db.Decimal(11, 8)
-  isDefault     Boolean  @default(false) @map("is_default")
-  user          User     @relation(fields: [userId], references: [id])
+  id            Int     @id @default(autoincrement())
+  userId        Int     @map("user_id")
+  label         String? @db.VarChar(50)
+  province      String  @db.VarChar(50)
+  district      String  @db.VarChar(50)
+  ward          String  @db.VarChar(50)
+  addressDetail String  @map("address_detail") @db.Text
+  latitude      Decimal @db.Decimal(10, 8)
+  longitude     Decimal @db.Decimal(11, 8)
+  isDefault     Boolean @default(false) @map("is_default")
+  user          User    @relation(fields: [userId], references: [id])
 
   @@map("user_addresses")
 }
@@ -244,90 +244,93 @@ model ServiceCategory {
 
 /// Bảng services — soft delete dùng is_deleted BOOLEAN
 model Service {
-  id             Int           @id @default(autoincrement())
-  providerId     Int           @map("provider_id")
-  categoryId     Int           @map("category_id")
-  name           String        @db.VarChar(100)
-  description    String        @db.Text
-  referencePrice Decimal       @db.Decimal(15, 2) @map("reference_price")
-  status         ServiceStatus @default(DRAFT)
-  isSensitive    Boolean       @default(false) @map("is_sensitive")
-  avgRating      Decimal       @default(0) @db.Decimal(3, 2) @map("avg_rating")
-  totalReviews   Int           @default(0) @map("total_reviews")
-  embedding      Unsupported("vector(768)")?
-  isDeleted      Boolean       @default(false) @map("is_deleted")
-  provider       User          @relation(fields: [providerId], references: [id])
-  category       ServiceCategory @relation(fields: [categoryId], references: [id])
-  images         ServiceImage[]
-  bookings       Booking[]
-  reviews        Review[]
+  id               Int                         @id @default(autoincrement())
+  providerId       Int                         @map("provider_id")
+  categoryId       Int                         @map("category_id")
+  name             String                      @db.VarChar(100)
+  description      String                      @db.Text
+  referencePrice   Decimal                     @map("reference_price") @db.Decimal(15, 2)
+  status           ServiceStatus               @default(DRAFT)
+  isSensitive      Boolean                     @default(false) @map("is_sensitive")
+  avgRating        Decimal                     @default(0) @map("avg_rating") @db.Decimal(3, 2)
+  totalReviews     Int                         @default(0) @map("total_reviews")
+  embedding        Unsupported("vector(768)")?
+  isDeleted        Boolean                     @default(false) @map("is_deleted")
+  provider         User                        @relation(fields: [providerId], references: [id])
+  category         ServiceCategory             @relation(fields: [categoryId], references: [id])
+  images           ServiceImage[]
+  bookings         Booking[]
+  reviews          Review[]
   featuredListings FeaturedListing[]
-  conversations  Conversation[]
+  conversations    Conversation[]
 
-  @@map("services")
   @@index([categoryId, status])
   @@index([providerId])
   @@index([status, isDeleted, avgRating])
   @@index([status, isDeleted, referencePrice])
+  @@map("services")
 }
 
 /// Bảng service_images — display_order = 0 là ảnh bìa
 model ServiceImage {
   id           Int     @id @default(autoincrement())
   serviceId    Int     @map("service_id")
-  imageUrl     String  @db.VarChar(255) @map("image_url")
-  cloudinaryId String  @db.VarChar(255) @map("cloudinary_id")
+  imageUrl     String  @map("image_url") @db.VarChar(255)
+  cloudinaryId String  @map("cloudinary_id") @db.VarChar(255)
   displayOrder Int     @default(0) @map("display_order")
   service      Service @relation(fields: [serviceId], references: [id])
 
-  @@map("service_images")
   @@index([serviceId])
+  @@map("service_images")
 }
 
 /// Bảng bookings — KHÔNG có lat/lng
 model Booking {
-  id              Int           @id @default(autoincrement())
-  bookingCode     String        @unique @db.VarChar(20) @map("booking_code")
-  customerId      Int           @map("customer_id")
-  providerId      Int           @map("provider_id")
-  serviceId       Int           @map("service_id")
-  description     String        @db.Text
-  province        String        @db.VarChar(50)
-  district        String        @db.VarChar(50)
-  ward            String        @db.VarChar(50)
-  addressDetail   String        @db.Text @map("address_detail")
-  desiredTime     DateTime      @map("desired_time")
-  status          BookingStatus @default(PENDING)
-  surveyorName    String?       @db.VarChar(100) @map("surveyor_name")
-  surveyorPhone   String?       @db.VarChar(15) @map("surveyor_phone")
-  completedAt     DateTime?     @map("completed_at")
-  autoCompletedAt DateTime?     @map("auto_completed_at")
-  createdAt       DateTime      @default(now()) @map("created_at")
+  id                       Int           @id @default(autoincrement())
+  bookingCode              String        @unique @map("booking_code") @db.VarChar(20)
+  customerId               Int           @map("customer_id")
+  providerId               Int           @map("provider_id")
+  serviceId                Int           @map("service_id")
+  description              String        @db.Text
+  province                 String        @db.VarChar(50)
+  district                 String        @db.VarChar(50)
+  ward                     String        @db.VarChar(50)
+  addressDetail            String        @map("address_detail") @db.Text
+  desiredTime              DateTime      @map("desired_time")
+  status                   BookingStatus @default(PENDING)
+  surveyorName             String?       @map("surveyor_name") @db.VarChar(100)
+  surveyorPhone            String?       @map("surveyor_phone") @db.VarChar(15)
+  providerAcceptedAt       DateTime?     @map("provider_accepted_at")
+  providerResponseDeadline DateTime?     @map("provider_response_deadline")
+  completedAt              DateTime?     @map("completed_at")
+  autoCompletedAt          DateTime?     @map("auto_completed_at")
+  createdAt                DateTime      @default(now()) @map("created_at")
 
-  customer        User          @relation("CustomerBooking", fields: [customerId], references: [id])
-  provider        User          @relation("ProviderBooking", fields: [providerId], references: [id])
-  service         Service       @relation(fields: [serviceId], references: [id])
-  quotation       Quotation?
-  attachments     BookingAttachment[]
-  statusHistories BookingStatusHistory[]
-  conversation    Conversation?
-  review          Review?
-  dispute         Dispute?
+  customer           User                   @relation("CustomerBooking", fields: [customerId], references: [id])
+  provider           User                   @relation("ProviderBooking", fields: [providerId], references: [id])
+  service            Service                @relation(fields: [serviceId], references: [id])
+  quotation          Quotation?
+  attachments        BookingAttachment[]
+  statusHistories    BookingStatusHistory[]
+  conversation       Conversation?
+  review             Review?
+  dispute            Dispute?
   walletTransactions WalletTransaction[]
 
-  @@map("bookings")
   @@index([customerId, status])
   @@index([providerId, status])
+  @@index([status, providerAcceptedAt, providerResponseDeadline])
   @@index([bookingCode])
+  @@map("bookings")
 }
 
 /// Bảng quotations — commission_rate_snapshot chốt cứng % lúc gửi báo giá
 model Quotation {
   id                     Int     @id @default(autoincrement())
   bookingId              Int     @unique @map("booking_id")
-  actualPrice            Decimal @db.Decimal(15, 2) @map("actual_price")
-  commissionRateSnapshot Decimal @db.Decimal(5, 2) @map("commission_rate_snapshot")
-  estimatedTime          String  @db.VarChar(100) @map("estimated_time")
+  actualPrice            Decimal @map("actual_price") @db.Decimal(15, 2)
+  commissionRateSnapshot Decimal @map("commission_rate_snapshot") @db.Decimal(5, 2)
+  estimatedTime          String  @map("estimated_time") @db.VarChar(100)
   note                   String? @db.Text
   booking                Booking @relation(fields: [bookingId], references: [id])
 
@@ -339,36 +342,36 @@ model BookingAttachment {
   id        Int                   @id @default(autoincrement())
   bookingId Int                   @map("booking_id")
   type      BookingAttachmentType
-  fileUrl   String                @db.VarChar(255) @map("file_url")
+  fileUrl   String                @map("file_url") @db.VarChar(255)
   booking   Booking               @relation(fields: [bookingId], references: [id])
 
-  @@map("booking_attachments")
   @@index([bookingId])
+  @@map("booking_attachments")
 }
 
 /// Bảng booking_status_histories — audit trail đầy đủ
 model BookingStatusHistory {
   id         Int      @id @default(autoincrement())
   bookingId  Int      @map("booking_id")
-  fromStatus String   @db.VarChar(50) @map("from_status")
-  toStatus   String   @db.VarChar(50) @map("to_status")
+  fromStatus String   @map("from_status") @db.VarChar(50)
+  toStatus   String   @map("to_status") @db.VarChar(50)
   changedBy  Int      @map("changed_by")
   note       String?  @db.Text
   createdAt  DateTime @default(now()) @map("created_at")
   booking    Booking  @relation(fields: [bookingId], references: [id])
 
-  @@map("booking_status_histories")
   @@index([bookingId])
+  @@map("booking_status_histories")
 }
 
 /// Bảng provider_wallets — is_restricted = true khi balance âm
 model ProviderWallet {
-  id           Int      @id @default(autoincrement())
-  providerId   Int      @unique @map("provider_id")
-  balance      Decimal  @default(0) @db.Decimal(15, 2)
-  isRestricted Boolean  @default(false) @map("is_restricted")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  provider     User     @relation(fields: [providerId], references: [id])
+  id           Int                 @id @default(autoincrement())
+  providerId   Int                 @unique @map("provider_id")
+  balance      Decimal             @default(0) @db.Decimal(15, 2)
+  isRestricted Boolean             @default(false) @map("is_restricted")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  provider     User                @relation(fields: [providerId], references: [id])
   transactions WalletTransaction[]
 
   @@map("provider_wallets")
@@ -382,16 +385,16 @@ model WalletTransaction {
   amount      Decimal                 @db.Decimal(15, 2)
   bookingId   Int?                    @map("booking_id")
   status      WalletTransactionStatus @default(PENDING)
-  vnpayTxnRef String?                 @db.VarChar(100) @map("vnpay_txn_ref")
+  vnpayTxnRef String?                 @map("vnpay_txn_ref") @db.VarChar(100)
   createdAt   DateTime                @default(now()) @map("created_at")
   wallet      ProviderWallet          @relation(fields: [walletId], references: [id])
   booking     Booking?                @relation(fields: [bookingId], references: [id])
   disputeId   Int?                    @map("dispute_id")
   dispute     Dispute?                @relation(fields: [disputeId], references: [id])
 
-  @@map("wallet_transactions")
   @@index([walletId])
   @@index([bookingId])
+  @@map("wallet_transactions")
 }
 
 /// Bảng commission_configs — mỗi lần thay đổi tạo record mới (audit trail)
@@ -420,9 +423,9 @@ model Review {
   customer   User     @relation(fields: [customerId], references: [id])
   service    Service  @relation(fields: [serviceId], references: [id])
 
-  @@map("reviews")
   @@index([serviceId])
   @@index([customerId])
+  @@map("reviews")
 }
 
 /// Bảng conversations — có thể bắt đầu từ service trước khi có booking
@@ -439,9 +442,9 @@ model Conversation {
   provider   User      @relation("ProviderConvo", fields: [providerId], references: [id])
   messages   Message[]
 
-  @@map("conversations")
   @@unique([customerId, providerId, serviceId])
   @@index([serviceId])
+  @@map("conversations")
 }
 
 /// Bảng messages — senderId null = AI chatbot
@@ -456,8 +459,8 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id])
   sender         User?        @relation(fields: [senderId], references: [id])
 
-  @@map("messages")
   @@index([conversationId, createdAt])
+  @@map("messages")
 }
 
 /// Server-side memory cho Customer AI Assistant
@@ -472,8 +475,8 @@ model ChatbotSession {
   user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  ChatbotSessionMessage[]
 
-  @@map("chatbot_sessions")
   @@index([userId, updatedAt])
+  @@map("chatbot_sessions")
 }
 
 /// Tin nhắn ngắn hạn của chatbot, dùng để dựng lại ngữ cảnh gần nhất
@@ -486,8 +489,8 @@ model ChatbotSessionMessage {
   createdAt DateTime       @default(now()) @map("created_at")
   session   ChatbotSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
-  @@map("chatbot_session_messages")
   @@index([sessionId, createdAt])
+  @@map("chatbot_session_messages")
 }
 
 /// Bảng notifications
@@ -510,10 +513,10 @@ model AuditLog {
   id          Int      @id @default(autoincrement())
   actorId     Int      @map("actor_id")
   action      String   @db.VarChar(100)
-  targetType  String   @db.VarChar(50) @map("target_type")
+  targetType  String   @map("target_type") @db.VarChar(50)
   targetId    Int      @map("target_id")
   description String?  @db.Text
-  ipAddress   String?  @db.VarChar(50) @map("ip_address")
+  ipAddress   String?  @map("ip_address") @db.VarChar(50)
   createdAt   DateTime @default(now()) @map("created_at")
   actor       User     @relation(fields: [actorId], references: [id])
 
@@ -522,19 +525,19 @@ model AuditLog {
 
 /// Bảng disputes — status: PENDING → IN_REVIEW → RESOLVED
 model Dispute {
-  id               Int           @id @default(autoincrement())
-  bookingId        Int           @unique @map("booking_id")
-  raisedBy         Int           @map("raised_by")
-  assignedTo       Int?          @map("assigned_to")
-  reason           String        @db.Text
-  status           DisputeStatus @default(PENDING)
-  resolutionAction String?       @map("resolution_action")
-  resolutionReason String?       @db.Text @map("resolution_reason")
-  aiSummary        String?       @db.Text @map("ai_summary")
-  createdAt        DateTime      @default(now()) @map("created_at")
-  booking          Booking       @relation(fields: [bookingId], references: [id])
-  raisedByUser     User          @relation("DisputeRaisedBy", fields: [raisedBy], references: [id])
-  evidences        DisputeEvidence[]
+  id                 Int                 @id @default(autoincrement())
+  bookingId          Int                 @unique @map("booking_id")
+  raisedBy           Int                 @map("raised_by")
+  assignedTo         Int?                @map("assigned_to")
+  reason             String              @db.Text
+  status             DisputeStatus       @default(PENDING)
+  resolutionAction   String?             @map("resolution_action")
+  resolutionReason   String?             @map("resolution_reason") @db.Text
+  aiSummary          String?             @map("ai_summary") @db.Text
+  createdAt          DateTime            @default(now()) @map("created_at")
+  booking            Booking             @relation(fields: [bookingId], references: [id])
+  raisedByUser       User                @relation("DisputeRaisedBy", fields: [raisedBy], references: [id])
+  evidences          DisputeEvidence[]
   walletTransactions WalletTransaction[]
 
   @@map("disputes")
@@ -545,7 +548,7 @@ model DisputeEvidence {
   id         Int                 @id @default(autoincrement())
   disputeId  Int                 @map("dispute_id")
   type       DisputeEvidenceType
-  fileUrl    String              @db.VarChar(255) @map("file_url")
+  fileUrl    String              @map("file_url") @db.VarChar(255)
   uploadedBy Int                 @map("uploaded_by")
   dispute    Dispute             @relation(fields: [disputeId], references: [id])
   uploader   User                @relation(fields: [uploadedBy], references: [id])
@@ -565,19 +568,19 @@ model SystemSetting {
 
 /// Bảng featured_listings — NCC trả phí để đẩy dịch vụ lên Top
 model FeaturedListing {
-  id          Int                   @id @default(autoincrement())
-  serviceId   Int                   @map("service_id")
-  providerId  Int                   @map("provider_id")
-  startDate   DateTime              @map("start_date")
-  endDate     DateTime              @map("end_date")
-  dailyRate   Decimal               @db.Decimal(15, 2) @map("daily_rate")
-  totalCost   Decimal               @db.Decimal(15, 2) @map("total_cost")
-  status      FeaturedListingStatus @default(ACTIVE)
-  createdAt   DateTime              @default(now()) @map("created_at")
-  service     Service               @relation(fields: [serviceId], references: [id])
-  provider    User                  @relation(fields: [providerId], references: [id])
+  id         Int                   @id @default(autoincrement())
+  serviceId  Int                   @map("service_id")
+  providerId Int                   @map("provider_id")
+  startDate  DateTime              @map("start_date")
+  endDate    DateTime              @map("end_date")
+  dailyRate  Decimal               @map("daily_rate") @db.Decimal(15, 2)
+  totalCost  Decimal               @map("total_cost") @db.Decimal(15, 2)
+  status     FeaturedListingStatus @default(ACTIVE)
+  createdAt  DateTime              @default(now()) @map("created_at")
+  service    Service               @relation(fields: [serviceId], references: [id])
+  provider   User                  @relation(fields: [providerId], references: [id])
 
-  @@map("featured_listings")
   @@index([status, endDate])
   @@index([serviceId])
+  @@map("featured_listings")
 }

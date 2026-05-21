@@ -54,6 +54,8 @@ type NormalizedProviderFilters = {
   categoryId?: number;
 };
 
+const PROVIDER_ACCEPTANCE_TIMEOUT_MS = 60 * 1000;
+
 @Injectable()
 export class BookingsService {
   private readonly logger = new Logger('BookingsService');
@@ -95,6 +97,9 @@ export class BookingsService {
     }
 
     const bookingCode = generateBookingCode();
+    const providerResponseDeadline = new Date(
+      Date.now() + PROVIDER_ACCEPTANCE_TIMEOUT_MS,
+    );
 
     const booking = await this.prisma.booking.create({
       data: {
@@ -109,6 +114,7 @@ export class BookingsService {
         addressDetail: dto.addressDetail,
         desiredTime: new Date(dto.desiredTime),
         status: BookingStatus.PENDING,
+        providerResponseDeadline,
       },
     });
 
@@ -136,11 +142,122 @@ export class BookingsService {
       `Bạn nhận được đơn hàng mới #${bookingCode}`,
       booking.id,
     );
+    this.scheduleProviderAcceptanceTimeout(booking.id);
 
     return { data: booking, message: 'Đặt dịch vụ thành công' };
   }
 
-  // ===== 2. CONFIRM SURVEYOR (Provider) =====
+  // ===== 2. PROVIDER ACCEPTANCE =====
+
+  async acceptByProvider(providerId: number, bookingId: number) {
+    await this.checkActiveUser(providerId);
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: bookingId, providerId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Đơn hàng không tồn tại',
+      });
+    }
+
+    if (booking.status !== BookingStatus.PENDING) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: `Đơn hàng không ở trạng thái phù hợp (hiện tại: ${booking.status})`,
+      });
+    }
+
+    if (booking.providerAcceptedAt) {
+      return { data: booking, message: 'Đơn hàng đã được nhận trước đó' };
+    }
+
+    if (
+      booking.providerResponseDeadline &&
+      booking.providerResponseDeadline.getTime() <= Date.now()
+    ) {
+      await this.expireProviderAcceptance(bookingId);
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Đơn đã quá 1 phút chưa nhận. Khách hàng cần tìm thợ khác.',
+      });
+    }
+
+    const updated = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { providerAcceptedAt: new Date() },
+    });
+
+    await this.addStatusHistory(
+      bookingId,
+      'PENDING',
+      'PENDING',
+      providerId,
+      'Nhà cung cấp nhận đơn',
+    );
+
+    await this.notify(
+      booking.customerId,
+      'PROVIDER_ACCEPTED_BOOKING',
+      'Thợ đã nhận đơn',
+      `Đơn #${booking.bookingCode}: Nhà cung cấp đã nhận yêu cầu của bạn`,
+      bookingId,
+    );
+
+    return { data: updated, message: 'Đã nhận đơn hàng' };
+  }
+
+  async declineByProvider(
+    providerId: number,
+    bookingId: number,
+    dto?: CancelBookingDto,
+  ) {
+    await this.checkActiveUser(providerId);
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: bookingId, providerId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Đơn hàng không tồn tại',
+      });
+    }
+
+    if (booking.status !== BookingStatus.PENDING) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Chỉ có thể từ chối đơn đang chờ xác nhận',
+      });
+    }
+
+    const reason = dto?.reason || 'Nhà cung cấp từ chối nhận đơn';
+    const updated = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
+    await this.addStatusHistory(
+      bookingId,
+      'PENDING',
+      'CANCELLED',
+      providerId,
+      reason,
+    );
+
+    await this.notify(
+      booking.customerId,
+      'PROVIDER_DECLINED_BOOKING',
+      'Thợ không nhận đơn',
+      `Đơn #${booking.bookingCode}: ${reason}. Bạn có thể tìm thợ khác.`,
+      bookingId,
+    );
+
+    return { data: updated, message: 'Đã từ chối đơn hàng' };
+  }
+
+  // ===== 3. CONFIRM SURVEYOR (Provider) =====
 
   async confirmSurveyor(
     providerId: number,
@@ -151,6 +268,13 @@ export class BookingsService {
       providerId,
       status: BookingStatus.PENDING,
     });
+
+    if (!booking.providerAcceptedAt) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Vui lòng nhận đơn trước khi xác nhận thợ khảo sát',
+      });
+    }
 
     const updated = await this.prisma.booking.update({
       where: { id: bookingId },
@@ -171,7 +295,7 @@ export class BookingsService {
     return { data: updated, message: 'Đã xác nhận người khảo sát' };
   }
 
-  // ===== 3. SEND QUOTE (Provider) =====
+  // ===== 4. SEND QUOTE (Provider) =====
 
   async sendQuote(
     providerId: number,
@@ -183,6 +307,13 @@ export class BookingsService {
       providerId,
       status: BookingStatus.PENDING,
     });
+
+    if (!booking.providerAcceptedAt) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Vui lòng nhận đơn trước khi gửi báo giá',
+      });
+    }
 
     // Phải có surveyor info
     if (!booking.surveyorName) {
@@ -1249,6 +1380,9 @@ export class BookingsService {
     }
 
     const bookingCode = generateBookingCode();
+    const providerResponseDeadline = new Date(
+      Date.now() + PROVIDER_ACCEPTANCE_TIMEOUT_MS,
+    );
 
     const newBooking = await this.prisma.booking.create({
       data: {
@@ -1264,6 +1398,7 @@ export class BookingsService {
         // Yêu cầu thời gian là thời điểm hiện tại + 1 ngày (mặc định)
         desiredTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
         status: BookingStatus.PENDING,
+        providerResponseDeadline,
       },
     });
 
@@ -1289,6 +1424,7 @@ export class BookingsService {
       `Bạn nhận được đơn hàng mới #${bookingCode} (đặt lại từ #${oldBooking.bookingCode})`,
       newBooking.id,
     );
+    this.scheduleProviderAcceptanceTimeout(newBooking.id);
 
     return { data: newBooking, message: 'Đặt lại dịch vụ thành công' };
   }
@@ -1368,6 +1504,105 @@ export class BookingsService {
   }
 
   // ===== HELPERS =====
+
+  async expirePendingProviderAcceptances() {
+    const now = new Date();
+    const overdueBookings = await this.prisma.booking.findMany({
+      where: {
+        status: BookingStatus.PENDING,
+        providerAcceptedAt: null,
+        providerResponseDeadline: { lte: now },
+      },
+      select: { id: true },
+      take: 50,
+    });
+
+    let expired = 0;
+    for (const booking of overdueBookings) {
+      if (await this.expireProviderAcceptance(booking.id)) expired += 1;
+    }
+
+    return expired;
+  }
+
+  async expireProviderAcceptance(bookingId: number) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: {
+        id: true,
+        bookingCode: true,
+        customerId: true,
+        providerId: true,
+        status: true,
+        providerAcceptedAt: true,
+        providerResponseDeadline: true,
+      },
+    });
+
+    if (
+      !booking ||
+      booking.status !== BookingStatus.PENDING ||
+      booking.providerAcceptedAt
+    ) {
+      return false;
+    }
+
+    const deadline =
+      booking.providerResponseDeadline ??
+      new Date(Date.now() - PROVIDER_ACCEPTANCE_TIMEOUT_MS);
+    if (deadline.getTime() > Date.now()) return false;
+
+    const result = await this.prisma.booking.updateMany({
+      where: {
+        id: bookingId,
+        status: BookingStatus.PENDING,
+        providerAcceptedAt: null,
+      },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
+    if (result.count === 0) return false;
+
+    const note = 'Quá 1 phút nhà cung cấp chưa nhận đơn';
+    await this.addStatusHistory(
+      bookingId,
+      'PENDING',
+      'CANCELLED',
+      booking.providerId,
+      note,
+    );
+
+    await this.notify(
+      booking.customerId,
+      'PROVIDER_ACCEPTANCE_TIMEOUT',
+      'Thợ chưa nhận đơn',
+      `Đơn #${booking.bookingCode}: Quá 1 phút chưa được nhận. Bạn có thể tìm thợ khác.`,
+      bookingId,
+    );
+
+    await this.notify(
+      booking.providerId,
+      'BOOKING_ACCEPTANCE_EXPIRED',
+      'Đơn đã quá hạn nhận',
+      `Đơn #${booking.bookingCode} đã tự hủy vì quá 1 phút chưa nhận.`,
+      bookingId,
+    );
+
+    return true;
+  }
+
+  private scheduleProviderAcceptanceTimeout(bookingId: number) {
+    const timeout = setTimeout(() => {
+      void this.expireProviderAcceptance(bookingId).catch((error) => {
+        this.logger.warn(
+          `Failed to expire booking #${bookingId}: ${error.message}`,
+        );
+      });
+    }, PROVIDER_ACCEPTANCE_TIMEOUT_MS + 1000);
+
+    timeout.unref?.();
+  }
+
   private async linkConversationToBooking(
     bookingId: number,
     customerId: number,

@@ -3,13 +3,32 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import type { ComponentProps, Dispatch, SetStateAction } from 'react';
-import { Alert, Image, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, IconButton, Modal, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import {
+  Alert,
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import {
+  ActivityIndicator,
+  Button,
+  IconButton,
+  Modal,
+  Portal,
+  Text,
+  TextInput,
+  useTheme,
+} from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { bookingApi } from '../../features/booking/booking.api';
-import { BOOKING_STATUS_LABEL, type BookingStatus } from '../../constants/booking-status';
+import {
+  BOOKING_STATUS_LABEL,
+  type BookingStatus,
+} from '../../constants/booking-status';
 import { Colors } from '../../constants/colors';
 import {
   ProviderCard,
@@ -54,24 +73,32 @@ export default function BookingDetailScreen() {
 
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quotePrice, setQuotePrice] = useState('');
+  const [quoteEstimatedTime, setQuoteEstimatedTime] = useState('');
   const [quoteNote, setQuoteNote] = useState('');
   const [quoteError, setQuoteError] = useState('');
   const [surveyorName, setSurveyorName] = useState('');
   const [surveyorPhone, setSurveyorPhone] = useState('');
-  const [surveyImages, setSurveyImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [surveyImages, setSurveyImages] = useState<
+    ImagePicker.ImagePickerAsset[]
+  >([]);
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelError, setCancelError] = useState('');
 
-  const [resultImages, setResultImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [resultImages, setResultImages] = useState<
+    ImagePicker.ImagePickerAsset[]
+  >([]);
 
   const fetchBooking = useCallback(async () => {
     try {
       const res = await bookingApi.getById(Number(id));
       setBooking(res.data?.data);
     } catch {
-      setMessage({ tone: 'error', text: 'Không thể tải thông tin đơn hàng. Kéo xuống để thử lại.' });
+      setMessage({
+        tone: 'error',
+        text: 'Không thể tải thông tin đơn hàng. Kéo xuống để thử lại.',
+      });
     } finally {
       setLoading(false);
     }
@@ -89,7 +116,10 @@ export default function BookingDetailScreen() {
   }, [fetchBooking]);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price || 0);
+    new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price || 0);
 
   const pickImages = async (setter: ImageSetter, max = 5) => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -99,7 +129,7 @@ export default function BookingDetailScreen() {
       selectionLimit: max,
     });
     if (!result.canceled) {
-      setter(prev => [...prev, ...result.assets].slice(0, max));
+      setter((prev) => [...prev, ...result.assets].slice(0, max));
       setMessage(null);
     }
   };
@@ -107,14 +137,85 @@ export default function BookingDetailScreen() {
   const takePhoto = async (setter: ImageSetter, max = 10) => {
     const result = await ImagePicker.launchCameraAsync({ quality: 0.75 });
     if (!result.canceled) {
-      setter(prev => [...prev, ...result.assets].slice(0, max));
+      setter((prev) => [...prev, ...result.assets].slice(0, max));
       setMessage(null);
     }
   };
 
+  const handleAcceptBooking = () => {
+    Alert.alert(
+      'Nhận đơn hàng?',
+      'Sau khi nhận đơn, bạn có thể cập nhật thợ khảo sát và gửi báo giá cho khách.',
+      [
+        { text: 'Để sau', style: 'cancel' },
+        {
+          text: 'Nhận đơn',
+          onPress: async () => {
+            setActionLoading(true);
+            setMessage(null);
+            try {
+              await bookingApi.acceptBooking(Number(id));
+              setMessage({
+                tone: 'success',
+                text: 'Đã nhận đơn hàng. Vui lòng cập nhật thợ khảo sát.',
+              });
+              await fetchBooking();
+            } catch (err: any) {
+              setMessage({
+                tone: 'error',
+                text:
+                  err?.response?.data?.error?.message ||
+                  'Không thể nhận đơn hàng.',
+              });
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDeclineBooking = () => {
+    Alert.alert(
+      'Từ chối đơn hàng?',
+      'Khách hàng sẽ được thông báo để tìm thợ khác.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Từ chối',
+          style: 'destructive',
+          onPress: async () => {
+            setActionLoading(true);
+            setMessage(null);
+            try {
+              await bookingApi.declineBooking(Number(id), {
+                reason: 'Nhà cung cấp từ chối nhận đơn',
+              });
+              setMessage({ tone: 'success', text: 'Đã từ chối đơn hàng.' });
+              await fetchBooking();
+            } catch (err: any) {
+              setMessage({
+                tone: 'error',
+                text:
+                  err?.response?.data?.error?.message ||
+                  'Không thể từ chối đơn hàng.',
+              });
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const handleConfirmSurveyor = async () => {
     if (!surveyorName.trim() || !surveyorPhone.trim()) {
-      setMessage({ tone: 'warning', text: 'Vui lòng nhập đầy đủ tên và số điện thoại thợ khảo sát.' });
+      setMessage({
+        tone: 'warning',
+        text: 'Vui lòng nhập đầy đủ tên và số điện thoại thợ khảo sát.',
+      });
       return;
     }
 
@@ -125,10 +226,16 @@ export default function BookingDetailScreen() {
         surveyorName: surveyorName.trim(),
         surveyorPhone: surveyorPhone.trim(),
       });
-      setMessage({ tone: 'success', text: 'Đã cập nhật thông tin thợ khảo sát.' });
+      setMessage({
+        tone: 'success',
+        text: 'Đã cập nhật thông tin thợ khảo sát.',
+      });
       await fetchBooking();
     } catch (err: any) {
-      setMessage({ tone: 'error', text: err?.response?.data?.error?.message || 'Thao tác thất bại.' });
+      setMessage({
+        tone: 'error',
+        text: err?.response?.data?.error?.message || 'Thao tác thất bại.',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -139,26 +246,42 @@ export default function BookingDetailScreen() {
       setQuoteError('Vui lòng nhập giá thực tế.');
       return;
     }
+    if (!quoteEstimatedTime.trim()) {
+      setQuoteError('Vui lòng nhập thời gian dự kiến.');
+      return;
+    }
+    if (quoteEstimatedTime.trim().length > 100) {
+      setQuoteError('Thời gian dự kiến tối đa 100 ký tự.');
+      return;
+    }
 
     setActionLoading(true);
     setQuoteError('');
     try {
       const formData = new FormData();
       formData.append('actualPrice', quotePrice.replace(/[^0-9]/g, ''));
+      formData.append('estimatedTime', quoteEstimatedTime.trim());
       if (quoteNote.trim()) formData.append('note', quoteNote.trim());
       surveyImages.forEach((img, index) => {
-        formData.append('surveyImages', { uri: img.uri, name: `survey_${index}.jpg`, type: 'image/jpeg' } as any);
+        formData.append('surveyImages', {
+          uri: img.uri,
+          name: `survey_${index}.jpg`,
+          type: 'image/jpeg',
+        } as any);
       });
 
       await bookingApi.sendQuote(Number(id), formData);
       setShowQuoteModal(false);
       setQuotePrice('');
+      setQuoteEstimatedTime('');
       setQuoteNote('');
       setSurveyImages([]);
       setMessage({ tone: 'success', text: 'Đã gửi báo giá cho khách hàng.' });
       await fetchBooking();
     } catch (err: any) {
-      setQuoteError(err?.response?.data?.error?.message || 'Gửi báo giá thất bại.');
+      setQuoteError(
+        err?.response?.data?.error?.message || 'Gửi báo giá thất bại.',
+      );
     } finally {
       setActionLoading(false);
     }
@@ -174,10 +297,16 @@ export default function BookingDetailScreen() {
           setMessage(null);
           try {
             await bookingApi.startWork(Number(id));
-            setMessage({ tone: 'success', text: 'Đã bắt đầu thực hiện đơn hàng.' });
+            setMessage({
+              tone: 'success',
+              text: 'Đã bắt đầu thực hiện đơn hàng.',
+            });
             await fetchBooking();
           } catch (err: any) {
-            setMessage({ tone: 'error', text: err?.response?.data?.error?.message || 'Thao tác thất bại.' });
+            setMessage({
+              tone: 'error',
+              text: err?.response?.data?.error?.message || 'Thao tác thất bại.',
+            });
           } finally {
             setActionLoading(false);
           }
@@ -188,7 +317,10 @@ export default function BookingDetailScreen() {
 
   const handleComplete = async () => {
     if (resultImages.length === 0) {
-      setMessage({ tone: 'warning', text: 'Vui lòng chụp hoặc chọn ảnh kết quả công việc.' });
+      setMessage({
+        tone: 'warning',
+        text: 'Vui lòng chụp hoặc chọn ảnh kết quả công việc.',
+      });
       return;
     }
 
@@ -197,14 +329,24 @@ export default function BookingDetailScreen() {
     try {
       const formData = new FormData();
       resultImages.forEach((img, index) => {
-        formData.append('resultImages', { uri: img.uri, name: `result_${index}.jpg`, type: 'image/jpeg' } as any);
+        formData.append('resultImages', {
+          uri: img.uri,
+          name: `result_${index}.jpg`,
+          type: 'image/jpeg',
+        } as any);
       });
       await bookingApi.completeWork(Number(id), formData);
       setResultImages([]);
-      setMessage({ tone: 'success', text: 'Đã báo hoàn thành. Đang chờ khách hàng nghiệm thu.' });
+      setMessage({
+        tone: 'success',
+        text: 'Đã báo hoàn thành. Đang chờ khách hàng nghiệm thu.',
+      });
       await fetchBooking();
     } catch (err: any) {
-      setMessage({ tone: 'error', text: err?.response?.data?.error?.message || 'Thao tác thất bại.' });
+      setMessage({
+        tone: 'error',
+        text: err?.response?.data?.error?.message || 'Thao tác thất bại.',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -219,13 +361,17 @@ export default function BookingDetailScreen() {
     setActionLoading(true);
     setCancelError('');
     try {
-      await bookingApi.cancelBooking(Number(id), { reason: cancelReason.trim() });
+      await bookingApi.cancelBooking(Number(id), {
+        reason: cancelReason.trim(),
+      });
       setShowCancelModal(false);
       setCancelReason('');
       setMessage({ tone: 'success', text: 'Đã hủy đơn hàng.' });
       await fetchBooking();
     } catch (err: any) {
-      setCancelError(err?.response?.data?.error?.message || 'Hủy đơn thất bại.');
+      setCancelError(
+        err?.response?.data?.error?.message || 'Hủy đơn thất bại.',
+      );
     } finally {
       setActionLoading(false);
     }
@@ -254,23 +400,58 @@ export default function BookingDetailScreen() {
   }
 
   const color = statusColor(booking.status);
-  const statusLabel = BOOKING_STATUS_LABEL[booking.status as BookingStatus] || booking.status;
-  const hasBottomActions = ['PENDING', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS'].includes(booking.status);
+  const statusLabel =
+    BOOKING_STATUS_LABEL[booking.status as BookingStatus] || booking.status;
+  const isAwaitingProviderAcceptance =
+    booking.status === 'PENDING' && !booking.providerAcceptedAt;
+  const canHandlePendingWorkflow =
+    booking.status === 'PENDING' && Boolean(booking.providerAcceptedAt);
+  const responseDeadline = booking.providerResponseDeadline
+    ? new Date(booking.providerResponseDeadline).toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    : null;
+  const hasBottomActions = [
+    'PENDING',
+    'QUOTED',
+    'CONFIRMED',
+    'IN_PROGRESS',
+  ].includes(booking.status);
 
   return (
     <ProviderScreen>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />}
-        contentContainerStyle={[styles.content, hasBottomActions && styles.contentWithActions]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.light.primary]}
+          />
+        }
+        contentContainerStyle={[
+          styles.content,
+          hasBottomActions && styles.contentWithActions,
+        ]}
         contentInsetAdjustmentBehavior="automatic"
       >
         <ProviderPageHeader
           title={`#${booking.bookingCode}`}
           subtitle="Chi tiết đơn hàng và thao tác xử lý."
-          action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+          action={
+            <IconButton
+              icon="arrow-left"
+              mode="contained-tonal"
+              onPress={() => router.back()}
+              accessibilityLabel="Quay lại"
+            />
+          }
         />
 
-        {message && <ProviderInlineMessage tone={message.tone} message={message.text} />}
+        {message && (
+          <ProviderInlineMessage tone={message.tone} message={message.text} />
+        )}
 
         <ProviderCard contentStyle={styles.statusCard}>
           <View style={styles.statusTopRow}>
@@ -285,11 +466,24 @@ export default function BookingDetailScreen() {
             <ProviderStatusChip label={statusLabel} color={color} selected />
           </View>
           <View style={styles.statusMetaRow}>
-            <MaterialCommunityIcons name="calendar-clock-outline" size={18} color={Colors.light.textSecondary} />
+            <MaterialCommunityIcons
+              name="calendar-clock-outline"
+              size={18}
+              color={Colors.light.textSecondary}
+            />
             <Text variant="bodySmall" style={styles.mutedText}>
-              {booking.desiredTime ? new Date(booking.desiredTime).toLocaleString('vi-VN') : 'Chưa có lịch'}
+              {booking.desiredTime
+                ? new Date(booking.desiredTime).toLocaleString('vi-VN')
+                : 'Chưa có lịch'}
             </Text>
           </View>
+          {isAwaitingProviderAcceptance && (
+            <ProviderInlineMessage
+              tone="warning"
+              icon="timer-sand"
+              message={`Đơn mới cần nhận trong 1 phút${responseDeadline ? `, hạn phản hồi ${responseDeadline}` : ''}.`}
+            />
+          )}
         </ProviderCard>
 
         <ProviderCard>
@@ -304,16 +498,37 @@ export default function BookingDetailScreen() {
 
         <ProviderCard>
           <ProviderSectionHeader title="Khách hàng" />
-          <InfoRow icon="account-outline" text={booking.customer?.fullName || 'Khách hàng'} selectable />
-          <InfoRow icon="phone-outline" text={booking.customer?.phone || 'Chưa có số điện thoại'} selectable />
+          <InfoRow
+            icon="account-outline"
+            text={booking.customer?.fullName || 'Khách hàng'}
+            selectable
+          />
+          <InfoRow
+            icon="phone-outline"
+            text={booking.customer?.phone || 'Chưa có số điện thoại'}
+            selectable
+          />
           <InfoRow
             icon="map-marker-outline"
-            text={[booking.addressDetail, booking.ward, booking.district, booking.province].filter(Boolean).join(', ') || 'Chưa có địa chỉ'}
+            text={
+              [
+                booking.addressDetail,
+                booking.ward,
+                booking.district,
+                booking.province,
+              ]
+                .filter(Boolean)
+                .join(', ') || 'Chưa có địa chỉ'
+            }
             selectable
           />
           <InfoRow
             icon="calendar-outline"
-            text={booking.desiredTime ? new Date(booking.desiredTime).toLocaleString('vi-VN') : 'Chưa có lịch'}
+            text={
+              booking.desiredTime
+                ? new Date(booking.desiredTime).toLocaleString('vi-VN')
+                : 'Chưa có lịch'
+            }
           />
           {booking.note && (
             <View style={styles.noteBox}>
@@ -335,6 +550,16 @@ export default function BookingDetailScreen() {
                 {formatPrice(Number(booking.quotation.actualPrice))}
               </Text>
             </View>
+            {booking.quotation.estimatedTime && (
+              <View style={styles.priceRow}>
+                <Text variant="bodyMedium" style={styles.mutedText}>
+                  Thời gian dự kiến
+                </Text>
+                <Text variant="bodyMedium" style={styles.cardTitle} selectable>
+                  {booking.quotation.estimatedTime}
+                </Text>
+              </View>
+            )}
             {booking.quotation.note && (
               <View style={styles.noteBox}>
                 <Text variant="bodySmall" style={styles.noteText}>
@@ -363,16 +588,26 @@ export default function BookingDetailScreen() {
               </View>
             )}
             {booking.dispute.evidences?.length > 0 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.evidenceRow}>
-                {booking.dispute.evidences.map((evidence: any, index: number) => (
-                  <Image key={`${evidence.fileUrl}-${index}`} source={{ uri: evidence.fileUrl }} style={styles.evidenceImage} />
-                ))}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.evidenceRow}
+              >
+                {booking.dispute.evidences.map(
+                  (evidence: any, index: number) => (
+                    <Image
+                      key={`${evidence.fileUrl}-${index}`}
+                      source={{ uri: evidence.fileUrl }}
+                      style={styles.evidenceImage}
+                    />
+                  ),
+                )}
               </ScrollView>
             )}
           </ProviderCard>
         )}
 
-        {booking.status === 'PENDING' && (
+        {canHandlePendingWorkflow && (
           <ProviderCard contentStyle={styles.formSection}>
             <ProviderSectionHeader title="Thợ khảo sát" />
             <TextInput
@@ -380,7 +615,12 @@ export default function BookingDetailScreen() {
               value={surveyorName}
               onChangeText={setSurveyorName}
               mode="outlined"
-              left={<TextInput.Icon icon="account-hard-hat" accessibilityLabel="Tên thợ khảo sát" />}
+              left={
+                <TextInput.Icon
+                  icon="account-hard-hat"
+                  accessibilityLabel="Tên thợ khảo sát"
+                />
+              }
             />
             <TextInput
               label="SĐT thợ khảo sát"
@@ -388,7 +628,12 @@ export default function BookingDetailScreen() {
               onChangeText={setSurveyorPhone}
               mode="outlined"
               keyboardType="phone-pad"
-              left={<TextInput.Icon icon="phone" accessibilityLabel="Số điện thoại thợ khảo sát" />}
+              left={
+                <TextInput.Icon
+                  icon="phone"
+                  accessibilityLabel="Số điện thoại thợ khảo sát"
+                />
+              }
             />
             <Button
               mode="contained"
@@ -407,17 +652,35 @@ export default function BookingDetailScreen() {
           <ProviderCard contentStyle={styles.formSection}>
             <ProviderSectionHeader title="Ảnh kết quả công việc" />
             <View style={styles.dualButtonRow}>
-              <Button mode="outlined" icon="image-multiple" onPress={() => pickImages(setResultImages, 10)} style={styles.flexButton}>
+              <Button
+                mode="outlined"
+                icon="image-multiple"
+                onPress={() => pickImages(setResultImages, 10)}
+                style={styles.flexButton}
+              >
                 Chọn ảnh
               </Button>
-              <Button mode="outlined" icon="camera" onPress={() => takePhoto(setResultImages, 10)} style={styles.flexButton}>
+              <Button
+                mode="outlined"
+                icon="camera"
+                onPress={() => takePhoto(setResultImages, 10)}
+                style={styles.flexButton}
+              >
                 Chụp ảnh
               </Button>
             </View>
             {resultImages.length > 0 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.evidenceRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.evidenceRow}
+              >
                 {resultImages.map((image, index) => (
-                  <Image key={`${image.uri}-${index}`} source={{ uri: image.uri }} style={styles.evidenceImage} />
+                  <Image
+                    key={`${image.uri}-${index}`}
+                    source={{ uri: image.uri }}
+                    style={styles.evidenceImage}
+                  />
                 ))}
               </ScrollView>
             )}
@@ -426,28 +689,71 @@ export default function BookingDetailScreen() {
       </ScrollView>
 
       {hasBottomActions && (
-        <View style={[styles.actionBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
+        <View
+          style={[
+            styles.actionBar,
+            {
+              backgroundColor: theme.colors.surface,
+              borderTopColor: theme.colors.outlineVariant,
+            },
+          ]}
+        >
           {booking.status === 'PENDING' && (
             <>
-              <Button
-                mode="contained"
-                onPress={() => setShowQuoteModal(true)}
-                style={styles.actionButton}
-                icon="file-document-edit-outline"
-                contentStyle={styles.actionContent}
-              >
-                Gửi báo giá
-              </Button>
-              <Button
-                mode="outlined"
-                onPress={() => setShowCancelModal(true)}
-                textColor={Colors.light.error}
-                style={[styles.actionButton, { borderColor: Colors.light.error }]}
-                icon="close-circle-outline"
-                contentStyle={styles.actionContent}
-              >
-                Hủy đơn
-              </Button>
+              {isAwaitingProviderAcceptance ? (
+                <>
+                  <Button
+                    mode="contained"
+                    onPress={handleAcceptBooking}
+                    loading={actionLoading}
+                    disabled={actionLoading}
+                    style={styles.actionButton}
+                    icon="check-circle-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Nhận đơn
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={handleDeclineBooking}
+                    disabled={actionLoading}
+                    textColor={Colors.light.error}
+                    style={[
+                      styles.actionButton,
+                      { borderColor: Colors.light.error },
+                    ]}
+                    icon="close-circle-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Từ chối
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    mode="contained"
+                    onPress={() => setShowQuoteModal(true)}
+                    style={styles.actionButton}
+                    icon="file-document-edit-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Gửi báo giá
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowCancelModal(true)}
+                    textColor={Colors.light.error}
+                    style={[
+                      styles.actionButton,
+                      { borderColor: Colors.light.error },
+                    ]}
+                    icon="close-circle-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Hủy đơn
+                  </Button>
+                </>
+              )}
             </>
           )}
           {booking.status === 'QUOTED' && (
@@ -455,7 +761,11 @@ export default function BookingDetailScreen() {
               mode="outlined"
               onPress={() => setShowCancelModal(true)}
               textColor={Colors.light.error}
-              style={[styles.actionButton, styles.singleAction, { borderColor: Colors.light.error }]}
+              style={[
+                styles.actionButton,
+                styles.singleAction,
+                { borderColor: Colors.light.error },
+              ]}
               icon="close-circle-outline"
               contentStyle={styles.actionContent}
             >
@@ -481,7 +791,11 @@ export default function BookingDetailScreen() {
               onPress={handleComplete}
               loading={actionLoading}
               disabled={actionLoading || resultImages.length === 0}
-              style={[styles.actionButton, styles.singleAction, { backgroundColor: Colors.light.success }]}
+              style={[
+                styles.actionButton,
+                styles.singleAction,
+                { backgroundColor: Colors.light.success },
+              ]}
               icon="check-circle-outline"
               contentStyle={styles.actionContent}
             >
@@ -498,22 +812,46 @@ export default function BookingDetailScreen() {
             setShowQuoteModal(false);
             setQuoteError('');
           }}
-          contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
+          contentContainerStyle={[
+            styles.modal,
+            { backgroundColor: theme.colors.surface },
+          ]}
         >
           <Text variant="titleMedium" style={styles.modalTitle}>
             Gửi báo giá
           </Text>
-          {quoteError ? <ProviderInlineMessage tone="error" message={quoteError} /> : null}
+          {quoteError ? (
+            <ProviderInlineMessage tone="error" message={quoteError} />
+          ) : null}
           <TextInput
             label="Giá thực tế (VNĐ)"
             value={quotePrice}
-            onChangeText={value => {
+            onChangeText={(value) => {
               setQuotePrice(value);
               setQuoteError('');
             }}
             mode="outlined"
             keyboardType="numeric"
-            left={<TextInput.Icon icon="cash" accessibilityLabel="Giá thực tế" />}
+            left={
+              <TextInput.Icon icon="cash" accessibilityLabel="Giá thực tế" />
+            }
+          />
+          <TextInput
+            label="Thời gian dự kiến"
+            value={quoteEstimatedTime}
+            onChangeText={(value) => {
+              setQuoteEstimatedTime(value);
+              setQuoteError('');
+            }}
+            mode="outlined"
+            maxLength={100}
+            placeholder="Ví dụ: 2 giờ, 1 ngày"
+            left={
+              <TextInput.Icon
+                icon="timer-outline"
+                accessibilityLabel="Thời gian dự kiến"
+              />
+            }
           />
           <TextInput
             label="Ghi chú"
@@ -522,16 +860,28 @@ export default function BookingDetailScreen() {
             mode="outlined"
             multiline
             numberOfLines={3}
-            left={<TextInput.Icon icon="note-text" accessibilityLabel="Ghi chú báo giá" />}
+            left={
+              <TextInput.Icon
+                icon="note-text"
+                accessibilityLabel="Ghi chú báo giá"
+              />
+            }
           />
-          <Button mode="outlined" icon="image" onPress={() => pickImages(setSurveyImages, 5)} style={styles.primaryButton}>
+          <Button
+            mode="outlined"
+            icon="image"
+            onPress={() => pickImages(setSurveyImages, 5)}
+            style={styles.primaryButton}
+          >
             Ảnh khảo sát ({surveyImages.length})
           </Button>
           <Button
             mode="contained"
             onPress={handleSendQuote}
             loading={actionLoading}
-            disabled={actionLoading || !quotePrice.trim()}
+            disabled={
+              actionLoading || !quotePrice.trim() || !quoteEstimatedTime.trim()
+            }
             style={styles.primaryButton}
             contentStyle={styles.actionContent}
           >
@@ -550,30 +900,46 @@ export default function BookingDetailScreen() {
             setShowCancelModal(false);
             setCancelError('');
           }}
-          contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
+          contentContainerStyle={[
+            styles.modal,
+            { backgroundColor: theme.colors.surface },
+          ]}
         >
-          <Text variant="titleMedium" style={[styles.modalTitle, { color: Colors.light.error }]}>
+          <Text
+            variant="titleMedium"
+            style={[styles.modalTitle, { color: Colors.light.error }]}
+          >
             Hủy đơn hàng
           </Text>
-          {cancelError ? <ProviderInlineMessage tone="error" message={cancelError} /> : null}
+          {cancelError ? (
+            <ProviderInlineMessage tone="error" message={cancelError} />
+          ) : null}
           <TextInput
             label="Lý do hủy"
             value={cancelReason}
-            onChangeText={value => {
+            onChangeText={(value) => {
               setCancelReason(value);
               setCancelError('');
             }}
             mode="outlined"
             multiline
             numberOfLines={3}
-            left={<TextInput.Icon icon="alert-circle-outline" accessibilityLabel="Lý do hủy" />}
+            left={
+              <TextInput.Icon
+                icon="alert-circle-outline"
+                accessibilityLabel="Lý do hủy"
+              />
+            }
           />
           <Button
             mode="contained"
             onPress={handleCancel}
             loading={actionLoading}
             disabled={actionLoading || !cancelReason.trim()}
-            style={[styles.primaryButton, { backgroundColor: Colors.light.error }]}
+            style={[
+              styles.primaryButton,
+              { backgroundColor: Colors.light.error },
+            ]}
             contentStyle={styles.actionContent}
           >
             {actionLoading ? 'Đang xử lý…' : 'Xác nhận hủy'}
@@ -598,8 +964,16 @@ function InfoRow({
 }) {
   return (
     <View style={styles.infoRow}>
-      <MaterialCommunityIcons name={icon} size={18} color={Colors.light.textSecondary} />
-      <Text variant="bodyMedium" style={styles.infoText} selectable={selectable}>
+      <MaterialCommunityIcons
+        name={icon}
+        size={18}
+        color={Colors.light.textSecondary}
+      />
+      <Text
+        variant="bodyMedium"
+        style={styles.infoText}
+        selectable={selectable}
+      >
         {text}
       </Text>
     </View>

@@ -4,7 +4,7 @@
  * và consumer (NotificationListener).
  */
 export const NOTIFICATION_EVENTS = {
-  /** Gửi notification cho 1 user — persist DB + push WebSocket */
+  /** Gửi notification cho 1 user — persist DB + push WebSocket + push mobile */
   SEND: 'notification.send',
 } as const;
 

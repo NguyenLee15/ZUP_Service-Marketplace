@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JobsService } from '../../shared/jobs/jobs.service';
+import { BookingsService } from './bookings.service';
 
 @Injectable()
 export class BookingsCron {
@@ -10,7 +11,20 @@ export class BookingsCron {
   constructor(
     private prisma: PrismaService,
     private jobsService: JobsService,
+    private bookingsService: BookingsService,
   ) {}
+
+  /**
+   * Chạy mỗi 15 giây. Đơn mới quá 1 phút chưa được provider nhận sẽ tự hủy.
+   */
+  @Cron('*/15 * * * * *')
+  async handleProviderAcceptanceTimeout() {
+    const expired =
+      await this.bookingsService.expirePendingProviderAcceptances();
+    if (expired > 0) {
+      this.logger.log(`Expired ${expired} unaccepted provider booking(s).`);
+    }
+  }
 
   /**
    * Chạy mỗi giờ. Tìm các đơn DONE quá 24h để tự động chốt.

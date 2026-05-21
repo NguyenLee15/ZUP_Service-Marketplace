@@ -180,6 +180,25 @@ export class ProviderBookingsController {
     return this.bookingsService.getById(id, userId);
   }
 
+  /** PATCH /provider/bookings/:id/accept */
+  @Patch(':id/accept')
+  async acceptBooking(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.bookingsService.acceptByProvider(userId, id);
+  }
+
+  /** PATCH /provider/bookings/:id/decline */
+  @Patch(':id/decline')
+  async declineBooking(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CancelBookingDto,
+  ) {
+    return this.bookingsService.declineByProvider(userId, id, dto);
+  }
+
   /** PATCH /provider/bookings/:id/surveyor */
   @Patch(':id/surveyor')
   async confirmSurveyor(

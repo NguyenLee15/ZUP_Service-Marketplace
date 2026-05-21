@@ -4,7 +4,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, IconButton, Text, useTheme } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Button,
+  IconButton,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { notificationApi } from '../features/notification/notification.api';
@@ -18,7 +24,15 @@ import {
   ProviderScreen,
 } from '../components/provider/provider-ui';
 
-const NOTIF_ICON: Record<string, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
+const NOTIF_ICON: Record<
+  string,
+  ComponentProps<typeof MaterialCommunityIcons>['name']
+> = {
+  NEW_BOOKING: 'clipboard-alert-outline',
+  PROVIDER_ACCEPTED_BOOKING: 'clipboard-check-outline',
+  PROVIDER_DECLINED_BOOKING: 'clipboard-remove-outline',
+  PROVIDER_ACCEPTANCE_TIMEOUT: 'timer-off-outline',
+  BOOKING_ACCEPTANCE_EXPIRED: 'timer-off-outline',
   BOOKING: 'clipboard-text-outline',
   QUOTATION: 'file-document-outline',
   WALLET: 'wallet-outline',
@@ -34,7 +48,10 @@ export default function NotificationsScreen() {
   const { setUnreadCount } = useNotificationStore();
 
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    tone: 'success' | 'error';
+    text: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
@@ -45,11 +62,14 @@ export default function NotificationsScreen() {
       const res = await notificationApi.getAll({ page: p, limit: 20 });
       const data = res.data?.data || [];
       if (reset || p === 1) setNotifications(data);
-      else setNotifications(prev => [...prev, ...data]);
+      else setNotifications((prev) => [...prev, ...data]);
       setHasMore(data.length === 20);
       setPage(p);
     } catch {
-      setMessage({ tone: 'error', text: 'Không thể tải thông báo. Kéo xuống để thử lại.' });
+      setMessage({
+        tone: 'error',
+        text: 'Không thể tải thông báo. Kéo xuống để thử lại.',
+      });
     } finally {
       setLoading(false);
     }
@@ -69,11 +89,19 @@ export default function NotificationsScreen() {
   const handleMarkAllRead = async () => {
     try {
       await notificationApi.markAllRead();
-      setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, isRead: true })),
+      );
       setUnreadCount(0);
-      setMessage({ tone: 'success', text: 'Đã đánh dấu tất cả thông báo là đã đọc.' });
+      setMessage({
+        tone: 'success',
+        text: 'Đã đánh dấu tất cả thông báo là đã đọc.',
+      });
     } catch {
-      setMessage({ tone: 'error', text: 'Chưa thể đánh dấu tất cả là đã đọc.' });
+      setMessage({
+        tone: 'error',
+        text: 'Chưa thể đánh dấu tất cả là đã đọc.',
+      });
     }
   };
 
@@ -81,10 +109,15 @@ export default function NotificationsScreen() {
     if (!notification.isRead) {
       try {
         await notificationApi.markRead(notification.id);
-        setNotifications(prev => prev.map(item => (item.id === notification.id ? { ...item, isRead: true } : item)));
+        setNotifications((prev) =>
+          prev.map((item) =>
+            item.id === notification.id ? { ...item, isRead: true } : item,
+          ),
+        );
       } catch {}
     }
-    if (notification.bookingId) router.push(`/booking/${notification.bookingId}` as any);
+    const bookingId = notification.referenceId || notification.bookingId;
+    if (bookingId) router.push(`/booking/${bookingId}` as any);
   };
 
   const formatTime = (date: string) => {
@@ -104,6 +137,7 @@ export default function NotificationsScreen() {
   const renderNotification = ({ item }: { item: any }) => {
     const icon = NOTIF_ICON[item.type] || 'bell-outline';
     const isUnread = !item.isRead;
+    const body = item.content || item.message;
 
     return (
       <ProviderCard
@@ -112,16 +146,37 @@ export default function NotificationsScreen() {
         style={isUnread ? styles.unreadCard : undefined}
         contentStyle={styles.notificationContent}
       >
-        <View style={[styles.iconBg, { backgroundColor: isUnread ? `${Colors.light.primary}14` : Colors.light.surfaceVariant }]}>
-          <MaterialCommunityIcons name={icon} size={21} color={isUnread ? Colors.light.primary : Colors.light.textSecondary} />
+        <View
+          style={[
+            styles.iconBg,
+            {
+              backgroundColor: isUnread
+                ? `${Colors.light.primary}14`
+                : Colors.light.surfaceVariant,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={icon}
+            size={21}
+            color={isUnread ? Colors.light.primary : Colors.light.textSecondary}
+          />
         </View>
         <View style={styles.notificationText}>
-          <Text variant="bodyLarge" style={[styles.notificationTitle, isUnread && styles.unreadTitle]} numberOfLines={2}>
+          <Text
+            variant="bodyLarge"
+            style={[styles.notificationTitle, isUnread && styles.unreadTitle]}
+            numberOfLines={2}
+          >
             {item.title || item.message}
           </Text>
-          {item.message && item.title && (
-            <Text variant="bodySmall" style={styles.notificationMessage} numberOfLines={2}>
-              {item.message}
+          {body && item.title && (
+            <Text
+              variant="bodySmall"
+              style={styles.notificationMessage}
+              numberOfLines={2}
+            >
+              {body}
             </Text>
           )}
           <Text variant="labelSmall" style={styles.notificationTime}>
@@ -137,9 +192,15 @@ export default function NotificationsScreen() {
     <ProviderScreen>
       <FlatList
         data={notifications}
-        keyExtractor={item => String(item.id)}
+        keyExtractor={(item) => String(item.id)}
         renderItem={renderNotification}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.light.primary]}
+          />
+        }
         onEndReached={() => {
           if (hasMore && !loading) fetchNotifications(page + 1);
         }}
@@ -150,11 +211,28 @@ export default function NotificationsScreen() {
             <ProviderPageHeader
               title="Thông báo"
               subtitle="Cập nhật đơn hàng, ví, KYC và tin nhắn."
-              action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+              action={
+                <IconButton
+                  icon="arrow-left"
+                  mode="contained-tonal"
+                  onPress={() => router.back()}
+                  accessibilityLabel="Quay lại"
+                />
+              }
             />
-            {message && <ProviderInlineMessage tone={message.tone} message={message.text} />}
+            {message && (
+              <ProviderInlineMessage
+                tone={message.tone}
+                message={message.text}
+              />
+            )}
             {notifications.length > 0 && (
-              <Button mode="outlined" compact onPress={handleMarkAllRead} style={styles.markAllButton}>
+              <Button
+                mode="outlined"
+                compact
+                onPress={handleMarkAllRead}
+                style={styles.markAllButton}
+              >
                 Đọc tất cả
               </Button>
             )}
@@ -162,7 +240,10 @@ export default function NotificationsScreen() {
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator style={styles.loading} color={theme.colors.primary} />
+            <ActivityIndicator
+              style={styles.loading}
+              color={theme.colors.primary}
+            />
           ) : (
             <ProviderEmptyState
               icon="bell-check-outline"
