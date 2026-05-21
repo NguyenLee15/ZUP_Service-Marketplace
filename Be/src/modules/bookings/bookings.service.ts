@@ -42,7 +42,10 @@ export interface ProviderDashboardFilters {
   status?: string;
   serviceId?: string | number;
   categoryId?: string | number;
+  reportType?: string;
 }
+
+type ProviderReportType = 'overview' | 'revenue' | 'status' | 'bookings';
 
 type NormalizedProviderFilters = {
   from?: Date;
@@ -51,6 +54,7 @@ type NormalizedProviderFilters = {
   status?: BookingStatus;
   serviceId?: number;
   categoryId?: number;
+  reportType: ProviderReportType;
 };
 
 const PROVIDER_ACCEPTANCE_TIMEOUT_MS = 60 * 1000;
@@ -1047,6 +1051,7 @@ export class BookingsService {
         count: statsMap[status] || 0,
       })),
       filterSummary: this.describeProviderDashboardFilters(normalized),
+      reportType: normalized.reportType,
     };
   }
 
@@ -1054,6 +1059,7 @@ export class BookingsService {
     providerId: number,
     filters: ProviderDashboardFilters = {},
   ) {
+    const normalized = this.normalizeProviderDashboardFilters(filters);
     const stats = await this.getProviderStats(providerId, filters);
     const rows = await this.getProviderReportRows(providerId, filters);
 
@@ -1066,52 +1072,95 @@ export class BookingsService {
       },
     };
     const printer = new PdfPrinter(fonts);
+    const content: any[] = [
+      {
+        text: 'HomeService Marketplace',
+        fontSize: 18,
+        bold: true,
+      },
+      {
+        text: this.providerReportTitle(normalized.reportType),
+        fontSize: 14,
+        bold: true,
+        margin: [0, 0, 0, 10],
+      },
+      {
+        text: `Ngay xuat: ${new Date().toLocaleString('vi-VN')}`,
+        margin: [0, 0, 0, 4],
+      },
+      {
+        text: `Dieu kien loc: ${stats.filterSummary}`,
+        margin: [0, 0, 0, 16],
+      },
+    ];
 
-    const docDefinition = {
-      pageSize: 'A4',
-      pageMargins: [36, 42, 36, 48],
-      defaultStyle: { font: 'Helvetica' },
-      content: [
-        {
-          text: 'HomeService Marketplace',
-          fontSize: 18,
-          bold: true,
+    if (normalized.reportType === 'overview') {
+      content.push({
+        table: {
+          headerRows: 1,
+          widths: ['*', '*'],
+          body: [
+            ['Chi so', 'Gia tri'],
+            ['Tong don hang', stats.totalBookings],
+            [
+              'Doanh thu',
+              `${stats.totalRevenue.toLocaleString('vi-VN')} VND`,
+            ],
+            [
+              'Hoa hong da tru',
+              `${stats.commissionPaid.toLocaleString('vi-VN')} VND`,
+            ],
+            ['Hoan thanh', stats.doneBookings],
+            ['Da huy', stats.cancelledBookings],
+            ['Danh gia trung binh', Number(stats.avgRating).toFixed(1)],
+            ['Ty le huy', `${stats.cancelRate.toFixed(1)}%`],
+          ],
         },
-        {
-          text: 'Bao cao nha cung cap',
-          fontSize: 14,
-          bold: true,
-          margin: [0, 0, 0, 10],
-        },
-        {
-          text: `Ngay xuat: ${new Date().toLocaleString('vi-VN')}`,
-          margin: [0, 0, 0, 4],
-        },
-        {
-          text: `Dieu kien loc: ${stats.filterSummary}`,
-          margin: [0, 0, 0, 16],
-        },
+        layout: 'lightHorizontalLines',
+      });
+    }
+
+    if (['overview', 'revenue'].includes(normalized.reportType)) {
+      content.push(
+        { text: 'Doanh thu theo ky', bold: true, margin: [0, 18, 0, 6] },
         {
           table: {
             headerRows: 1,
             widths: ['*', '*'],
             body: [
-              ['Chi so', 'Gia tri'],
-              ['Tong don hang', stats.totalBookings],
-              [
-                'Doanh thu',
-                `${stats.totalRevenue.toLocaleString('vi-VN')} VND`,
-              ],
-              [
-                'Hoa hong da tru',
-                `${stats.commissionPaid.toLocaleString('vi-VN')} VND`,
-              ],
-              ['Hoan thanh', stats.doneBookings],
-              ['Da huy', stats.cancelledBookings],
-              ['Ty le huy', `${stats.cancelRate.toFixed(1)}%`],
+              ['Ky', 'Doanh thu'],
+              ...(stats.revenueData.length
+                ? stats.revenueData.map((item) => [
+                    item.period,
+                    `${Number(item.revenue).toLocaleString('vi-VN')} VND`,
+                  ])
+                : [['-', '0 VND']]),
             ],
           },
+          layout: 'lightHorizontalLines',
         },
+      );
+    }
+
+    if (['overview', 'status'].includes(normalized.reportType)) {
+      content.push(
+        { text: 'Trang thai don hang', bold: true, margin: [0, 18, 0, 6] },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', 'auto'],
+            body: [
+              ['Trang thai', 'So don'],
+              ...stats.statusData.map((item) => [item.status, item.count]),
+            ],
+          },
+          layout: 'lightHorizontalLines',
+        },
+      );
+    }
+
+    if (['overview', 'bookings'].includes(normalized.reportType)) {
+      content.push(
         { text: 'Don hang trong bao cao', bold: true, margin: [0, 18, 0, 6] },
         {
           table: {
@@ -1119,26 +1168,36 @@ export class BookingsService {
             widths: ['auto', '*', 'auto', 'auto'],
             body: [
               ['Ma don', 'Dich vu', 'Trang thai', 'Gia tri'],
-              ...rows.map((booking) => [
-                booking.bookingCode,
-                booking.service?.name || '-',
-                booking.status,
-                booking.quotation?.actualPrice
-                  ? `${Number(booking.quotation.actualPrice).toLocaleString('vi-VN')} VND`
-                  : '-',
-              ]),
+              ...(rows.length
+                ? rows.map((booking) => [
+                    booking.bookingCode,
+                    booking.service?.name || '-',
+                    booking.status,
+                    booking.quotation?.actualPrice
+                      ? `${Number(booking.quotation.actualPrice).toLocaleString('vi-VN')} VND`
+                      : '-',
+                  ])
+                : [['-', 'Chua co du lieu', '-', '-']]),
             ],
           },
           layout: 'lightHorizontalLines',
         },
-        {
-          columns: [
-            { text: 'Nha cung cap', alignment: 'center' },
-            { text: 'Nguoi xac nhan', alignment: 'center' },
-          ],
-          margin: [0, 32, 0, 0],
-        },
+      );
+    }
+
+    content.push({
+      columns: [
+        { text: 'Nha cung cap', alignment: 'center' },
+        { text: 'Nguoi xac nhan', alignment: 'center' },
       ],
+      margin: [0, 32, 0, 0],
+    });
+
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [36, 42, 36, 48],
+      defaultStyle: { font: 'Helvetica' },
+      content,
     };
 
     return printer.createPdfKitDocument(docDefinition);
@@ -1148,6 +1207,7 @@ export class BookingsService {
     providerId: number,
     filters: ProviderDashboardFilters = {},
   ) {
+    const normalized = this.normalizeProviderDashboardFilters(filters);
     const stats = await this.getProviderStats(providerId, filters);
     const rows = await this.getProviderReportRows(providerId, filters);
     const workbook = new Workbook();
@@ -1159,6 +1219,7 @@ export class BookingsService {
     ];
 
     worksheet.addRows([
+      { metric: 'Loai bao cao', value: this.providerReportTitle(normalized.reportType) },
       { metric: 'Dieu kien loc', value: stats.filterSummary },
       { metric: 'Tong don hang', value: stats.totalBookings },
       { metric: 'Doanh thu', value: stats.totalRevenue },
@@ -1169,41 +1230,47 @@ export class BookingsService {
       { metric: 'Generated At', value: new Date().toLocaleString('vi-VN') },
     ]);
 
-    const revenueSheet = workbook.addWorksheet('Doanh thu');
-    revenueSheet.columns = [
-      { header: 'Ky', key: 'period', width: 20 },
-      { header: 'Doanh thu', key: 'revenue', width: 20 },
-    ];
-    revenueSheet.addRows(stats.revenueData);
+    if (['overview', 'revenue'].includes(normalized.reportType)) {
+      const revenueSheet = workbook.addWorksheet('Doanh thu');
+      revenueSheet.columns = [
+        { header: 'Ky', key: 'period', width: 20 },
+        { header: 'Doanh thu', key: 'revenue', width: 20 },
+      ];
+      revenueSheet.addRows(stats.revenueData);
+    }
 
-    const statusSheet = workbook.addWorksheet('Trang thai');
-    statusSheet.columns = [
-      { header: 'Trang thai', key: 'status', width: 22 },
-      { header: 'So don', key: 'count', width: 12 },
-    ];
-    statusSheet.addRows(stats.statusData);
+    if (['overview', 'status'].includes(normalized.reportType)) {
+      const statusSheet = workbook.addWorksheet('Trang thai');
+      statusSheet.columns = [
+        { header: 'Trang thai', key: 'status', width: 22 },
+        { header: 'So don', key: 'count', width: 12 },
+      ];
+      statusSheet.addRows(stats.statusData);
+    }
 
-    const bookingSheet = workbook.addWorksheet('Don hang');
-    bookingSheet.columns = [
-      { header: 'Ma don', key: 'code', width: 18 },
-      { header: 'Dich vu', key: 'service', width: 32 },
-      { header: 'Khach hang', key: 'customer', width: 28 },
-      { header: 'Trang thai', key: 'status', width: 18 },
-      { header: 'Gia tri', key: 'value', width: 18 },
-      { header: 'Ngay tao', key: 'createdAt', width: 22 },
-    ];
-    bookingSheet.addRows(
-      rows.map((booking) => ({
-        code: booking.bookingCode,
-        service: booking.service?.name,
-        customer: booking.customer?.fullName,
-        status: booking.status,
-        value: booking.quotation?.actualPrice
-          ? Number(booking.quotation.actualPrice)
-          : 0,
-        createdAt: booking.createdAt.toLocaleString('vi-VN'),
-      })),
-    );
+    if (['overview', 'bookings'].includes(normalized.reportType)) {
+      const bookingSheet = workbook.addWorksheet('Don hang');
+      bookingSheet.columns = [
+        { header: 'Ma don', key: 'code', width: 18 },
+        { header: 'Dich vu', key: 'service', width: 32 },
+        { header: 'Khach hang', key: 'customer', width: 28 },
+        { header: 'Trang thai', key: 'status', width: 18 },
+        { header: 'Gia tri', key: 'value', width: 18 },
+        { header: 'Ngay tao', key: 'createdAt', width: 22 },
+      ];
+      bookingSheet.addRows(
+        rows.map((booking) => ({
+          code: booking.bookingCode,
+          service: booking.service?.name,
+          customer: booking.customer?.fullName,
+          status: booking.status,
+          value: booking.quotation?.actualPrice
+            ? Number(booking.quotation.actualPrice)
+            : 0,
+          createdAt: booking.createdAt.toLocaleString('vi-VN'),
+        })),
+      );
+    }
 
     for (const sheet of workbook.worksheets) {
       sheet.getRow(1).font = { bold: true };
@@ -1234,10 +1301,11 @@ export class BookingsService {
     return {
       from: this.parseDashboardDate(filters.from, 'from'),
       to: this.parseDashboardDate(filters.to, 'to'),
-      groupBy: filters.groupBy || 'month',
+      groupBy: this.parseDashboardGroupBy(filters.groupBy),
       status: this.parseDashboardStatus(filters.status),
       serviceId: this.parseDashboardNumber(filters.serviceId),
       categoryId: this.parseDashboardNumber(filters.categoryId),
+      reportType: this.parseProviderReportType(filters.reportType),
     };
   }
 
@@ -1303,6 +1371,38 @@ export class BookingsService {
       : undefined;
   }
 
+  private parseDashboardGroupBy(
+    value: ProviderDashboardFilters['groupBy'] | undefined,
+  ) {
+    return ['day', 'week', 'month'].includes(value as string)
+      ? (value as 'day' | 'week' | 'month')
+      : 'month';
+  }
+
+  private parseProviderReportType(
+    value: string | undefined,
+  ): ProviderReportType {
+    const allowed: ProviderReportType[] = [
+      'overview',
+      'revenue',
+      'status',
+      'bookings',
+    ];
+    return allowed.includes(value as ProviderReportType)
+      ? (value as ProviderReportType)
+      : 'overview';
+  }
+
+  private providerReportTitle(type: ProviderReportType) {
+    const labels: Record<ProviderReportType, string> = {
+      overview: 'Bao cao tong quan',
+      revenue: 'Bao cao doanh thu',
+      status: 'Bao cao trang thai don',
+      bookings: 'Bao cao danh sach don',
+    };
+    return labels[type];
+  }
+
   private dashboardPeriodLabel(date: Date, groupBy: 'day' | 'week' | 'month') {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1318,6 +1418,7 @@ export class BookingsService {
 
   private describeProviderDashboardFilters(filters: NormalizedProviderFilters) {
     const parts = [
+      `loai ${this.providerReportTitle(filters.reportType).toLowerCase()}`,
       filters.from ? `tu ${filters.from.toISOString().slice(0, 10)}` : '',
       filters.to ? `den ${filters.to.toISOString().slice(0, 10)}` : '',
       filters.status ? `trang thai ${filters.status}` : '',

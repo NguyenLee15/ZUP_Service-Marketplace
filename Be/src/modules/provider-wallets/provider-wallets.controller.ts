@@ -50,7 +50,15 @@ export class ProviderWalletsController {
     @Body('amount') amount: number,
     @Req() req: any,
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const ip =
+      (Array.isArray(forwardedFor)
+        ? forwardedFor[0]
+        : typeof forwardedFor === 'string'
+          ? forwardedFor.split(',')[0]?.trim()
+          : undefined) ||
+      req.ip ||
+      '127.0.0.1';
     return this.walletsService.createDepositRequest(userId, amount, ip);
   }
 
@@ -61,9 +69,16 @@ export class ProviderWalletsController {
   }
 
   /** VNPay IPN — xử lý tiền (không cần auth) */
+  @Get('vnpay/ipn')
+  @SkipThrottle()
+  async vnpayIpnGet(@Query() query: Record<string, string>) {
+    return this.walletsService.handleIpn(query);
+  }
+
+  /** Giữ POST để tương thích với cấu hình callback cũ. */
   @Post('vnpay/ipn')
   @SkipThrottle()
-  async vnpayIpn(@Query() query: Record<string, string>) {
+  async vnpayIpnPost(@Query() query: Record<string, string>) {
     return this.walletsService.handleIpn(query);
   }
 }

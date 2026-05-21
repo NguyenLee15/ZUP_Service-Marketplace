@@ -19,6 +19,8 @@ import { useAuthStore } from "../../features/auth/auth.store";
 import { dashboardApi, bookingApi } from "../../features/booking/booking.api";
 import { BOOKING_STATUS_LABEL } from "../../constants/booking-status";
 import { Colors } from "../../constants/colors";
+import { API_BASE_URL } from "../../constants/api";
+import { storage } from "../../lib/storage";
 import {
   ProviderCard,
   ProviderEmptyState,
@@ -45,22 +47,52 @@ type Message = {
   tone: "info" | "success" | "warning" | "error";
   text: string;
 } | null;
-type PeriodKey = "month" | "30d" | "all";
+type PeriodKey = "month" | "7d" | "30d" | "all";
+type ReportTypeKey = "overview" | "revenue" | "status" | "bookings";
+
+const PERIOD_OPTIONS: Array<{ key: PeriodKey; label: string }> = [
+  { key: "month", label: "Tháng này" },
+  { key: "7d", label: "7 ngày" },
+  { key: "30d", label: "30 ngày" },
+  { key: "all", label: "Tất cả" },
+];
+
+const GROUP_OPTIONS: Array<{
+  key: "day" | "week" | "month";
+  label: string;
+}> = [
+  { key: "day", label: "Ngày" },
+  { key: "week", label: "Tuần" },
+  { key: "month", label: "Tháng" },
+];
+
+const REPORT_TYPE_OPTIONS: Array<{ key: ReportTypeKey; label: string }> = [
+  { key: "overview", label: "Tổng quan" },
+  { key: "revenue", label: "Doanh thu" },
+  { key: "status", label: "Trạng thái" },
+  { key: "bookings", label: "Đơn hàng" },
+];
 
 function periodParams(
   period: PeriodKey,
   groupBy: "day" | "week" | "month",
-): Record<string, string> {
+): { from?: string; to?: string; groupBy: "day" | "week" | "month" } {
   const now = new Date();
   if (period === "all") return { groupBy };
   const from = new Date(now);
   if (period === "month") from.setDate(1);
+  if (period === "7d") from.setDate(now.getDate() - 7);
   if (period === "30d") from.setDate(now.getDate() - 30);
   return {
     from: from.toISOString().slice(0, 10),
     to: now.toISOString().slice(0, 10),
     groupBy,
   };
+}
+
+function displayDate(value?: string) {
+  if (!value) return "Tất cả thời gian";
+  return new Date(value).toLocaleDateString("vi-VN");
 }
 
 export default function DashboardScreen() {
@@ -77,7 +109,22 @@ export default function DashboardScreen() {
   const [message, setMessage] = useState<Message>(null);
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [groupBy, setGroupBy] = useState<"day" | "week" | "month">("week");
-  const reportParams = periodParams(period, groupBy);
+  const [reportType, setReportType] = useState<ReportTypeKey>("overview");
+  const reportParams: {
+    from?: string;
+    to?: string;
+    groupBy: "day" | "week" | "month";
+    reportType: ReportTypeKey;
+  } = { ...periodParams(period, groupBy), reportType };
+  const selectedReportLabel =
+    REPORT_TYPE_OPTIONS.find((item) => item.key === reportType)?.label ||
+    "Tổng quan";
+  const selectedGroupLabel =
+    GROUP_OPTIONS.find((item) => item.key === groupBy)?.label || "Tuần";
+  const reportSummary =
+    period === "all"
+      ? `${selectedReportLabel} · Tất cả thời gian · Theo ${selectedGroupLabel.toLowerCase()}`
+      : `${selectedReportLabel} · ${displayDate(reportParams.from)} - ${displayDate(reportParams.to)} · Theo ${selectedGroupLabel.toLowerCase()}`;
 
   const fetchData = useCallback(async () => {
     setMessage(null);
@@ -98,7 +145,12 @@ export default function DashboardScreen() {
     } finally {
       setLoading(false);
     }
-  }, [reportParams.from, reportParams.to, reportParams.groupBy]);
+  }, [
+    reportParams.from,
+    reportParams.to,
+    reportParams.groupBy,
+    reportParams.reportType,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -114,28 +166,28 @@ export default function DashboardScreen() {
     setExporting(true);
     setMessage(null);
     try {
-      const res =
-        type === "pdf"
-          ? await dashboardApi.exportPdf(reportParams)
-          : await dashboardApi.exportExcel(reportParams);
-      const range = `${reportParams.from || "all"}-${reportParams.to || new Date().toISOString().slice(0, 10)}`;
-      const fileUri = `${FileSystem.documentDirectory}provider-report-${range}.${type === "pdf" ? "pdf" : "xlsx"}`;
+      const token = await storage.getAccessToken();
+      if (!token) throw new Error("Phiên đăng nhập đã hết hạn.");
 
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64data = (reader.result as string).split(",")[1];
-        await FileSystem.writeAsStringAsync(fileUri, base64data, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
+      const query = new URLSearchParams(reportParams).toString();
+      const extension = type === "pdf" ? "pdf" : "xlsx";
+      const range = `${reportParams.from || "tat-ca"}-${reportParams.to || new Date().toISOString().slice(0, 10)}`;
+      const fileUri = `${FileSystem.documentDirectory}provider-${reportType}-${range}-${Date.now()}.${extension}`;
+      const downloadUrl = `${API_BASE_URL}/provider/dashboard/export-${type === "pdf" ? "pdf" : "excel"}?${query}`;
+      const result = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        const isAvailable = await Sharing.isAvailableAsync();
-        if (isAvailable) await Sharing.shareAsync(fileUri);
-        setMessage({
-          tone: "success",
-          text: `Đã tạo báo cáo ${type.toUpperCase()}.`,
-        });
-      };
-      reader.readAsDataURL(res.data);
+      if (result.status && result.status >= 400) {
+        throw new Error(`Xuất báo cáo thất bại (${result.status}).`);
+      }
+
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) await Sharing.shareAsync(result.uri);
+      setMessage({
+        tone: "success",
+        text: `Đã tạo báo cáo ${selectedReportLabel} (${type.toUpperCase()}).`,
+      });
     } catch {
       setMessage({
         tone: "error",
@@ -229,7 +281,7 @@ export default function DashboardScreen() {
               Kỳ báo cáo
             </Text>
             <Text variant="bodySmall" style={styles.cardDescription}>
-              {stats?.filterSummary || "Lọc số liệu dashboard và file xuất."}
+              {reportSummary}
             </Text>
           </View>
           <MaterialCommunityIcons
@@ -238,12 +290,11 @@ export default function DashboardScreen() {
             color={Colors.light.primary}
           />
         </View>
+        <Text variant="labelSmall" style={styles.filterLabel}>
+          Thời gian
+        </Text>
         <View style={styles.filterRow}>
-          {[
-            { key: "month", label: "Tháng này" },
-            { key: "30d", label: "30 ngày" },
-            { key: "all", label: "Tất cả" },
-          ].map((item) => (
+          {PERIOD_OPTIONS.map((item) => (
             <Button
               key={item.key}
               mode={period === item.key ? "contained" : "outlined"}
@@ -255,12 +306,11 @@ export default function DashboardScreen() {
             </Button>
           ))}
         </View>
+        <Text variant="labelSmall" style={styles.filterLabel}>
+          Nhóm số liệu
+        </Text>
         <View style={styles.filterRow}>
-          {[
-            { key: "day", label: "Ngày" },
-            { key: "week", label: "Tuần" },
-            { key: "month", label: "Tháng" },
-          ].map((item) => (
+          {GROUP_OPTIONS.map((item) => (
             <Button
               key={item.key}
               mode={groupBy === item.key ? "contained-tonal" : "outlined"}
@@ -272,153 +322,160 @@ export default function DashboardScreen() {
             </Button>
           ))}
         </View>
-      </ProviderCard>
-
-      <View style={styles.kpiRow}>
-        <ProviderMetricCard
-          icon="clipboard-check-outline"
-          label="Tổng đơn"
-          value={String(stats?.totalBookings ?? "—")}
-          tone="info"
-          loading={loading}
-        />
-        <ProviderMetricCard
-          icon="cash-multiple"
-          label="Doanh thu"
-          value={stats ? formatCurrency(stats.totalRevenue) : "—"}
-          tone="success"
-          loading={loading}
-        />
-        <ProviderMetricCard
-          icon="star-outline"
-          label="Đánh giá"
-          value={
-            stats?.avgRating ? `${Number(stats.avgRating).toFixed(1)}/5` : "—"
-          }
-          tone="warning"
-          loading={loading}
-        />
-        <ProviderMetricCard
-          icon="cancel"
-          label="Tỷ lệ hủy"
-          value={
-            stats?.cancelRate != null
-              ? `${Number(stats.cancelRate).toFixed(1)}%`
-              : "—"
-          }
-          tone="error"
-          loading={loading}
-        />
-      </View>
-
-      <ProviderCard>
-        <View style={styles.insightRow}>
-          <View style={styles.insightIcon}>
-            <MaterialCommunityIcons
-              name="camera-iris"
-              size={24}
-              color={Colors.light.primary}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text variant="titleSmall" style={styles.cardTitle}>
-              Công cụ hỗ trợ chẩn đoán
-            </Text>
-            <Text variant="bodySmall" style={styles.cardDescription}>
-              Tính năng quét thiết bị đang được chuẩn bị. Bạn vẫn có thể xử lý
-              đơn theo quy trình thường.
-            </Text>
-          </View>
+        <Text variant="labelSmall" style={styles.filterLabel}>
+          Loại báo cáo
+        </Text>
+        <View style={styles.filterRow}>
+          {REPORT_TYPE_OPTIONS.map((item) => (
+            <Button
+              key={item.key}
+              mode={reportType === item.key ? "contained" : "outlined"}
+              compact
+              onPress={() => setReportType(item.key)}
+              style={styles.filterButton}
+            >
+              {item.label}
+            </Button>
+          ))}
         </View>
       </ProviderCard>
 
-      <View style={styles.chipRow}>
-        <ProviderStatusChip
-          label={`Chờ xác nhận: ${stats?.pendingCount ?? 0}`}
-          color={Colors.light.statusPending}
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/bookings" as any,
-              params: { status: "PENDING" },
-            })
-          }
-        />
-        <ProviderStatusChip
-          label={`Đang thực hiện: ${stats?.inProgressCount ?? 0}`}
-          color={Colors.light.statusInProgress}
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/bookings" as any,
-              params: { status: "IN_PROGRESS" },
-            })
-          }
-        />
-        <ProviderStatusChip
-          label={`Hoàn thành: ${stats?.doneCount ?? 0}`}
-          color={Colors.light.statusDone}
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/bookings" as any,
-              params: { status: "DONE" },
-            })
-          }
-        />
-      </View>
-
-      <ProviderSectionHeader title="Xu hướng doanh thu" />
-      <ProviderCard contentStyle={styles.chartCard}>
-        <LineChart
-          data={{
-            labels: revenueLabels.slice(-6),
-            datasets: [
-              {
-                data: revenueSeries
-                  .slice(-6)
-                  .map((value) => Math.max(value, 0)),
-              },
-            ],
-          }}
-          width={chartWidth}
-          height={220}
-          chartConfig={{
-            backgroundColor: Colors.light.surface,
-            backgroundGradientFrom: Colors.light.surface,
-            backgroundGradientTo: Colors.light.surface,
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
-            labelColor: () => Colors.light.textSecondary,
-            propsForDots: { r: "3" },
-          }}
-          bezier
-          style={styles.chart}
-        />
-      </ProviderCard>
-
-      <ProviderSectionHeader title="Tỉ trọng trạng thái đơn" />
-      <ProviderCard contentStyle={styles.chartCard}>
-        {hasStatusData ? (
-          <PieChart
-            data={statusChartData}
-            width={chartWidth}
-            height={200}
-            chartConfig={{
-              color: (opacity = 1) => `rgba(5, 5, 5, ${opacity})`,
-            }}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="12"
-            absolute
+      {reportType === "overview" && (
+        <View style={styles.kpiRow}>
+          <ProviderMetricCard
+            icon="clipboard-check-outline"
+            label="Tổng đơn"
+            value={String(stats?.totalBookings ?? "—")}
+            tone="info"
+            loading={loading}
           />
-        ) : (
-          <ProviderEmptyState
-            icon="chart-pie"
-            title="Chưa có dữ liệu trạng thái"
-            description="Các đơn hàng mới sẽ xuất hiện trong biểu đồ này."
+          <ProviderMetricCard
+            icon="cash-multiple"
+            label="Doanh thu"
+            value={stats ? formatCurrency(stats.totalRevenue) : "—"}
+            tone="success"
+            loading={loading}
           />
-        )}
-      </ProviderCard>
+          <ProviderMetricCard
+            icon="star-outline"
+            label="Đánh giá"
+            value={
+              stats?.avgRating
+                ? `${Number(stats.avgRating).toFixed(1)}/5`
+                : "—"
+            }
+            tone="warning"
+            loading={loading}
+          />
+          <ProviderMetricCard
+            icon="cancel"
+            label="Tỷ lệ hủy"
+            value={
+              stats?.cancelRate != null
+                ? `${Number(stats.cancelRate).toFixed(1)}%`
+                : "—"
+            }
+            tone="error"
+            loading={loading}
+          />
+        </View>
+      )}
 
-      <ProviderSectionHeader title="Xuất báo cáo" />
+      {["overview", "status"].includes(reportType) && (
+        <>
+          <View style={styles.chipRow}>
+            <ProviderStatusChip
+              label={`Chờ xác nhận: ${stats?.pendingCount ?? 0}`}
+              color={Colors.light.statusPending}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/bookings" as any,
+                  params: { status: "PENDING" },
+                })
+              }
+            />
+            <ProviderStatusChip
+              label={`Đang thực hiện: ${stats?.inProgressCount ?? 0}`}
+              color={Colors.light.statusInProgress}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/bookings" as any,
+                  params: { status: "IN_PROGRESS" },
+                })
+              }
+            />
+            <ProviderStatusChip
+              label={`Hoàn thành: ${stats?.doneCount ?? 0}`}
+              color={Colors.light.statusDone}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/bookings" as any,
+                  params: { status: "DONE" },
+                })
+              }
+            />
+          </View>
+
+          <ProviderSectionHeader title="Tỉ trọng trạng thái đơn" />
+          <ProviderCard contentStyle={styles.chartCard}>
+            {hasStatusData ? (
+              <PieChart
+                data={statusChartData}
+                width={chartWidth}
+                height={200}
+                chartConfig={{
+                  color: (opacity = 1) => `rgba(5, 5, 5, ${opacity})`,
+                }}
+                accessor="population"
+                backgroundColor="transparent"
+                paddingLeft="12"
+                absolute
+              />
+            ) : (
+              <ProviderEmptyState
+                icon="chart-pie"
+                title="Chưa có dữ liệu trạng thái"
+                description="Các đơn hàng mới sẽ xuất hiện trong biểu đồ này."
+              />
+            )}
+          </ProviderCard>
+        </>
+      )}
+
+      {["overview", "revenue"].includes(reportType) && (
+        <>
+          <ProviderSectionHeader title="Xu hướng doanh thu" />
+          <ProviderCard contentStyle={styles.chartCard}>
+            <LineChart
+              data={{
+                labels: revenueLabels.slice(-6),
+                datasets: [
+                  {
+                    data: revenueSeries
+                      .slice(-6)
+                      .map((value) => Math.max(value, 0)),
+                  },
+                ],
+              }}
+              width={chartWidth}
+              height={220}
+              chartConfig={{
+                backgroundColor: Colors.light.surface,
+                backgroundGradientFrom: Colors.light.surface,
+                backgroundGradientTo: Colors.light.surface,
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+                labelColor: () => Colors.light.textSecondary,
+                propsForDots: { r: "3" },
+              }}
+              bezier
+              style={styles.chart}
+            />
+          </ProviderCard>
+        </>
+      )}
+
+      <ProviderSectionHeader title={`Xuất ${selectedReportLabel.toLowerCase()}`} />
       <View style={styles.exportRow}>
         <ProviderCard
           style={styles.exportCard}
@@ -457,75 +514,79 @@ export default function DashboardScreen() {
         <ProviderInlineMessage tone="info" message="Đang xử lý báo cáo…" />
       )}
 
-      <ProviderSectionHeader
-        title="Đơn mới cần xử lý"
-        actionLabel="Xem tất cả"
-        onAction={() => router.push("/(tabs)/bookings" as any)}
-      />
-
-      {recentBookings.length === 0 ? (
-        <ProviderCard>
-          <ProviderEmptyState
-            icon="clipboard-check-outline"
-            title="Chưa có đơn hàng mới"
-            description="Khi có yêu cầu mới, bạn sẽ thấy chúng ở đây."
-            actionLabel="Xem đơn hàng"
+      {["overview", "bookings"].includes(reportType) && (
+        <>
+          <ProviderSectionHeader
+            title="Đơn mới cần xử lý"
+            actionLabel="Xem tất cả"
             onAction={() => router.push("/(tabs)/bookings" as any)}
           />
-        </ProviderCard>
-      ) : (
-        recentBookings.map((booking) => (
-          <ProviderCard
-            key={booking.id}
-            onPress={() => router.push(`/booking/${booking.id}` as any)}
-            accessibilityLabel={`Mở đơn hàng ${booking.bookingCode}`}
-          >
-            <View style={styles.bookingRow}>
-              <View style={{ flex: 1 }}>
-                <Text
-                  variant="labelSmall"
-                  style={styles.bookingCode}
-                  selectable
-                >
-                  #{booking.bookingCode}
-                </Text>
-                <Text
-                  variant="bodyLarge"
-                  style={styles.bookingTitle}
-                  numberOfLines={1}
-                >
-                  {booking.service?.name || "Dịch vụ"}
-                </Text>
-                <Text
-                  variant="bodySmall"
-                  style={styles.bookingMeta}
-                  numberOfLines={1}
-                >
-                  {booking.customer?.fullName} · {booking.district},{" "}
-                  {booking.province}
-                </Text>
-              </View>
-              <ProviderStatusChip
-                label={
-                  BOOKING_STATUS_LABEL[
-                    booking.status as keyof typeof BOOKING_STATUS_LABEL
-                  ] || booking.status
-                }
-                color={Colors.light.statusPending}
+
+          {recentBookings.length === 0 ? (
+            <ProviderCard>
+              <ProviderEmptyState
+                icon="clipboard-check-outline"
+                title="Chưa có đơn hàng mới"
+                description="Khi có yêu cầu mới, bạn sẽ thấy chúng ở đây."
+                actionLabel="Xem đơn hàng"
+                onAction={() => router.push("/(tabs)/bookings" as any)}
               />
-            </View>
-            <View style={styles.bookingFooter}>
-              <MaterialCommunityIcons
-                name="calendar-outline"
-                size={14}
-                color={Colors.light.textSecondary}
-              />
-              <Text variant="labelSmall" style={styles.bookingDate}>
-                {new Date(booking.desiredTime).toLocaleDateString("vi-VN")}
-              </Text>
-            </View>
-          </ProviderCard>
-        ))
+            </ProviderCard>
+          ) : (
+            recentBookings.map((booking) => (
+              <ProviderCard
+                key={booking.id}
+                onPress={() => router.push(`/booking/${booking.id}` as any)}
+                accessibilityLabel={`Mở đơn hàng ${booking.bookingCode}`}
+              >
+                <View style={styles.bookingRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      variant="labelSmall"
+                      style={styles.bookingCode}
+                      selectable
+                    >
+                      #{booking.bookingCode}
+                    </Text>
+                    <Text
+                      variant="bodyLarge"
+                      style={styles.bookingTitle}
+                      numberOfLines={1}
+                    >
+                      {booking.service?.name || "Dịch vụ"}
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={styles.bookingMeta}
+                      numberOfLines={1}
+                    >
+                      {booking.customer?.fullName} · {booking.district},{" "}
+                      {booking.province}
+                    </Text>
+                  </View>
+                  <ProviderStatusChip
+                    label={
+                      BOOKING_STATUS_LABEL[
+                        booking.status as keyof typeof BOOKING_STATUS_LABEL
+                      ] || booking.status
+                    }
+                    color={Colors.light.statusPending}
+                  />
+                </View>
+                <View style={styles.bookingFooter}>
+                  <MaterialCommunityIcons
+                    name="calendar-outline"
+                    size={14}
+                    color={Colors.light.textSecondary}
+                  />
+                  <Text variant="labelSmall" style={styles.bookingDate}>
+                    {new Date(booking.desiredTime).toLocaleDateString("vi-VN")}
+                  </Text>
+                </View>
+              </ProviderCard>
+            ))
+          )}
+        </>
       )}
     </ScrollView>
   );
@@ -545,15 +606,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.border,
   },
   kpiRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  insightRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  insightIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.light.infoBg,
-  },
   cardTitle: { color: Colors.light.text, fontWeight: "700" },
   cardDescription: {
     color: Colors.light.textSecondary,
@@ -565,6 +617,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
+  },
+  filterLabel: {
+    color: Colors.light.textSecondary,
+    fontWeight: "700",
+    marginTop: 14,
   },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
   filterButton: { borderRadius: 12 },

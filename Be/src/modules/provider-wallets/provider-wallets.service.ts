@@ -73,7 +73,8 @@ export class ProviderWalletsService {
     amount: number,
     ipAddress: string,
   ) {
-    if (amount < 10000) {
+    const depositAmount = Number(amount);
+    if (!Number.isFinite(depositAmount) || depositAmount < 10000) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
         message: 'Số tiền tối thiểu 10,000đ',
@@ -90,29 +91,38 @@ export class ProviderWalletsService {
       });
 
     const txnRef = generateVnpayTxnRef();
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const configuredReturnUrl =
+      this.configService.get<string>('VNPAY_RETURN_URL');
+    const fallbackReturnUrl =
+      this.configService.get<string>('vnpay.returnUrl') ||
+      'http://localhost:3000/payment/return';
     const returnUrl =
-      this.configService.get<string>('FRONTEND_URL') + '/payment/return';
+      configuredReturnUrl ||
+      (frontendUrl
+        ? `${frontendUrl.replace(/\/$/, '')}/payment/return`
+        : fallbackReturnUrl);
 
     // Tạo pending transaction
     await this.prisma.walletTransaction.create({
       data: {
         walletId: wallet.id,
         type: 'DEPOSIT',
-        amount,
+        amount: depositAmount,
         status: 'PENDING',
         vnpayTxnRef: txnRef,
       },
     });
 
     const paymentUrl = this.vnpayService.createPaymentUrl({
-      amount,
+      amount: depositAmount,
       txnRef,
       orderInfo: `Nap vi provider ${providerId}`,
-      returnUrl: returnUrl || 'http://localhost:3000/payment/return',
+      returnUrl,
       ipAddress,
     });
 
-    return { data: { paymentUrl, txnRef } };
+    return { data: { paymentUrl, url: paymentUrl, txnRef } };
   }
 
   async handleIpn(query: Record<string, string>) {

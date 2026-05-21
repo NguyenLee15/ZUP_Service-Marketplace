@@ -99,18 +99,23 @@ export default function WalletScreen() {
     setDepositLoading(true);
     try {
       const res = await walletApi.deposit(amount);
-      const url = res.data?.data?.url;
-      if (!url) throw new Error('Không lấy được link thanh toán');
+      const paymentUrl = res.data?.data?.paymentUrl || res.data?.data?.url;
+      if (!paymentUrl) throw new Error('Không lấy được link thanh toán');
 
       setShowDepositModal(false);
       setDepositAmount('');
       setMessage({ tone: 'info', text: 'Đang mở VNPay. Sau khi thanh toán, ví sẽ tự tải lại.' });
 
-      await WebBrowser.openBrowserAsync(url);
+      await WebBrowser.openBrowserAsync(paymentUrl);
       await fetchWallet();
       await fetchTransactions(1, true);
     } catch (err: any) {
-      setDepositError(err?.message || 'Có lỗi xảy ra khi tạo giao dịch.');
+      setDepositError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error?.message ||
+          err?.message ||
+          'Có lỗi xảy ra khi tạo giao dịch.',
+      );
     } finally {
       setDepositLoading(false);
     }
@@ -131,10 +136,18 @@ export default function WalletScreen() {
     return 'Giao dịch ví';
   };
 
+  const getStatusLabel = (status: string) => {
+    if (status === 'SUCCESS') return 'Thành công';
+    if (status === 'FAILED') return 'Thất bại';
+    if (status === 'PENDING') return 'Đang chờ';
+    return status;
+  };
+
   const renderTransaction = ({ item }: { item: any }) => {
     const color = getTxColor(item.type, item.status);
     const isPositive = item.type === 'DEPOSIT';
     const sign = isPositive ? '+' : '-';
+    const amount = Math.abs(Number(item.amount || 0));
 
     return (
       <ProviderCard style={styles.transactionCard} contentStyle={styles.transactionContent}>
@@ -165,11 +178,13 @@ export default function WalletScreen() {
             selectable
           >
             {sign}
-            {formatCurrency(item.amount)}
+            {formatCurrency(amount)}
           </Text>
-          <Chip compact style={[styles.statusChip, { backgroundColor: `${color}14` }]} textStyle={{ color }}>
-            {item.status}
-          </Chip>
+          <View style={[styles.statusBadge, { backgroundColor: `${color}14` }]}>
+            <Text variant="labelSmall" style={[styles.statusBadgeText, { color }]} numberOfLines={1}>
+              {getStatusLabel(item.status)}
+            </Text>
+          </View>
         </View>
       </ProviderCard>
     );
@@ -374,15 +389,24 @@ const styles = StyleSheet.create({
   },
   txRight: {
     alignItems: 'flex-end',
-    maxWidth: 126,
+    width: 122,
   },
   txAmount: {
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
+    textAlign: 'right',
   },
-  statusChip: {
+  statusBadge: {
     marginTop: 4,
-    height: 26,
+    minHeight: 24,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    maxWidth: 112,
+  },
+  statusBadgeText: {
+    fontWeight: '700',
+    textAlign: 'center',
   },
   loading: {
     marginTop: 40,
