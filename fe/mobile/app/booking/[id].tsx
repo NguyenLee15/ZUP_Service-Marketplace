@@ -25,6 +25,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { bookingApi } from '../../features/booking/booking.api';
+import { useNotificationStore } from '../../features/notification/notification.store';
 import {
   BOOKING_STATUS_LABEL,
   type BookingStatus,
@@ -64,6 +65,7 @@ export default function BookingDetailScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const bookingSignal = useNotificationStore((state) => state.bookingSignal);
 
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -108,6 +110,12 @@ export default function BookingDetailScreen() {
     fetchBooking();
   }, [fetchBooking]);
 
+  useEffect(() => {
+    if (bookingSignal?.bookingId === Number(id)) {
+      void fetchBooking();
+    }
+  }, [bookingSignal, fetchBooking, id]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     setMessage(null);
@@ -140,6 +148,13 @@ export default function BookingDetailScreen() {
       setter((prev) => [...prev, ...result.assets].slice(0, max));
       setMessage(null);
     }
+  };
+
+  const removeResultImage = (indexToRemove: number) => {
+    setResultImages((prev) =>
+      prev.filter((_, index) => index !== indexToRemove),
+    );
+    setMessage(null);
   };
 
   const handleAcceptBooking = () => {
@@ -676,11 +691,21 @@ export default function BookingDetailScreen() {
                 contentContainerStyle={styles.evidenceRow}
               >
                 {resultImages.map((image, index) => (
-                  <Image
-                    key={`${image.uri}-${index}`}
-                    source={{ uri: image.uri }}
-                    style={styles.evidenceImage}
-                  />
+                  <View key={`${image.uri}-${index}`} style={styles.imageTile}>
+                    <Image
+                      source={{ uri: image.uri }}
+                      style={styles.evidenceImage}
+                    />
+                    <IconButton
+                      icon="close"
+                      mode="contained"
+                      size={14}
+                      onPress={() => removeResultImage(index)}
+                      accessibilityLabel="Xóa ảnh nghiệm thu"
+                      style={styles.removeImageButton}
+                      iconColor={Colors.light.error}
+                    />
+                  </View>
                 ))}
               </ScrollView>
             )}
@@ -1061,6 +1086,18 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 12,
     backgroundColor: Colors.light.surfaceVariant,
+  },
+  imageTile: {
+    position: 'relative',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    margin: 0,
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
   },
   formSection: {
     gap: 12,

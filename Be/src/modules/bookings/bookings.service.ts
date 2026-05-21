@@ -15,7 +15,6 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
-import { AiService } from '../../shared/ai/ai.service';
 import { RedisService } from '../../shared/redis/redis.service';
 import { JobsService } from '../../shared/jobs/jobs.service';
 import { Workbook } from 'exceljs';
@@ -64,7 +63,6 @@ export class BookingsService {
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
     private eventEmitter: EventEmitter2,
-    private aiService: AiService,
     private redisService: RedisService,
     private jobsService: JobsService,
   ) {}
@@ -490,7 +488,6 @@ export class BookingsService {
     const booking = await this.checkBooking(bookingId, {
       providerId,
       status: BookingStatus.IN_PROGRESS,
-      includeService: true,
     });
 
     if (!files || files.length === 0) {
@@ -499,24 +496,6 @@ export class BookingsService {
         message: 'Vui lòng upload ít nhất 1 ảnh kết quả',
       });
     }
-
-    // --- AI VISION CHECK ---
-    const firstImage = files[0];
-    const base64Image = firstImage.buffer.toString('base64');
-    const isValidImage = await this.aiService.analyzeResultImage(
-      (booking as any).service.name,
-      base64Image,
-      firstImage.mimetype,
-    );
-
-    if (!isValidImage) {
-      throw new BadRequestException({
-        code: ErrorCodes.VALIDATION_ERROR,
-        message:
-          'Ảnh nghiệm thu không hợp lệ hoặc không liên quan đến dịch vụ. Vui lòng chụp đúng kết quả công việc.',
-      });
-    }
-    // -----------------------
 
     const now = new Date();
 

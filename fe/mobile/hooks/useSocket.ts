@@ -44,7 +44,8 @@ function showIncomingBookingAlert(notification: IncomingNotification) {
 
 export const useSocket = () => {
   const { isAuthenticated } = useAuthStore();
-  const { setUnreadCount, increment } = useNotificationStore();
+  const { setUnreadCount, increment, signalBookingChanged } =
+    useNotificationStore();
   const notifSocketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -72,6 +73,8 @@ export const useSocket = () => {
           'new_notification',
           (notification: IncomingNotification) => {
             if (mounted) increment();
+            const bookingId = getBookingId(notification);
+            if (bookingId) signalBookingChanged(Number(bookingId));
             if (notification?.type === 'NEW_BOOKING') {
               showIncomingBookingAlert(notification);
             }

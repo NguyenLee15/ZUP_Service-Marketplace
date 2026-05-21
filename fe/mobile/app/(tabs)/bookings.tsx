@@ -3,11 +3,20 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { Text, Searchbar, ActivityIndicator, useTheme } from 'react-native-paper';
+import {
+  Text,
+  Searchbar,
+  ActivityIndicator,
+  useTheme,
+} from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { bookingApi } from '../../features/booking/booking.api';
-import { BOOKING_STATUS_LABEL, type BookingStatus } from '../../constants/booking-status';
+import { useNotificationStore } from '../../features/notification/notification.store';
+import {
+  BOOKING_STATUS_LABEL,
+  type BookingStatus,
+} from '../../constants/booking-status';
 import { Colors } from '../../constants/colors';
 import {
   ProviderCard,
@@ -43,6 +52,7 @@ export default function BookingsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ status?: string }>();
+  const bookingSignal = useNotificationStore((state) => state.bookingSignal);
 
   const [activeTab, setActiveTab] = useState(params.status || '');
   const [bookings, setBookings] = useState<any[]>([]);
@@ -88,6 +98,12 @@ export default function BookingsScreen() {
     fetchBookings(1, true);
   }, [fetchBookings]);
 
+  useEffect(() => {
+    if (bookingSignal) {
+      void fetchBookings(1, true);
+    }
+  }, [bookingSignal, fetchBookings]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchBookings(1, true);
@@ -117,7 +133,10 @@ export default function BookingsScreen() {
   }, [bookings, search]);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price || 0);
+    new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(price || 0);
 
   const renderBooking = ({ item }: { item: any }) => {
     const color = statusColor(item.status);
@@ -132,24 +151,39 @@ export default function BookingsScreen() {
             <Text variant="labelSmall" style={styles.bookingCode} selectable>
               #{item.bookingCode}
             </Text>
-            <Text variant="titleSmall" style={styles.bookingTitle} numberOfLines={1}>
+            <Text
+              variant="titleSmall"
+              style={styles.bookingTitle}
+              numberOfLines={1}
+            >
               {item.service?.name || 'Dịch vụ'}
             </Text>
           </View>
           <ProviderStatusChip
-            label={BOOKING_STATUS_LABEL[item.status as BookingStatus] || item.status}
+            label={
+              BOOKING_STATUS_LABEL[item.status as BookingStatus] || item.status
+            }
             color={color}
           />
         </View>
 
         <InfoRow icon="account-outline" text={item.customer?.fullName || '—'} />
-        <InfoRow icon="map-marker-outline" text={`${item.district || ''}, ${item.province || ''}`} />
+        <InfoRow
+          icon="map-marker-outline"
+          text={`${item.district || ''}, ${item.province || ''}`}
+        />
 
         <View style={styles.cardFooter}>
           <View style={styles.footerItem}>
-            <MaterialCommunityIcons name="calendar-clock-outline" size={14} color={Colors.light.textSecondary} />
+            <MaterialCommunityIcons
+              name="calendar-clock-outline"
+              size={14}
+              color={Colors.light.textSecondary}
+            />
             <Text variant="labelSmall" style={styles.footerText}>
-              {item.desiredTime ? new Date(item.desiredTime).toLocaleDateString('vi-VN') : 'Chưa có lịch'}
+              {item.desiredTime
+                ? new Date(item.desiredTime).toLocaleDateString('vi-VN')
+                : 'Chưa có lịch'}
             </Text>
           </View>
           {item.quotation && (
@@ -163,13 +197,19 @@ export default function BookingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <FlatList
         data={filteredBookings}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderBooking}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.light.primary]}
+          />
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.3}
@@ -177,7 +217,10 @@ export default function BookingsScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerContent}>
-            <ProviderPageHeader title="Đơn hàng" subtitle="Theo dõi và xử lý các yêu cầu dịch vụ." />
+            <ProviderPageHeader
+              title="Đơn hàng"
+              subtitle="Theo dõi và xử lý các yêu cầu dịch vụ."
+            />
 
             {error && <ProviderInlineMessage tone="error" message={error} />}
 
@@ -201,7 +244,11 @@ export default function BookingsScreen() {
                 <ProviderStatusChip
                   label={tab.label}
                   selected={activeTab === tab.value}
-                  color={activeTab === tab.value ? Colors.light.primary : Colors.light.textSecondary}
+                  color={
+                    activeTab === tab.value
+                      ? Colors.light.primary
+                      : Colors.light.textSecondary
+                  }
                   onPress={() => setActiveTab(tab.value)}
                 />
               )}
@@ -210,12 +257,21 @@ export default function BookingsScreen() {
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator style={{ marginTop: 40 }} color={Colors.light.primary} />
+            <ActivityIndicator
+              style={{ marginTop: 40 }}
+              color={Colors.light.primary}
+            />
           ) : (
             <ProviderEmptyState
               icon="clipboard-text-off-outline"
-              title={search ? 'Không tìm thấy đơn phù hợp' : 'Không có đơn hàng'}
-              description={search ? 'Thử từ khóa khác hoặc xóa bộ lọc tìm kiếm.' : 'Đơn mới sẽ xuất hiện tại đây.'}
+              title={
+                search ? 'Không tìm thấy đơn phù hợp' : 'Không có đơn hàng'
+              }
+              description={
+                search
+                  ? 'Thử từ khóa khác hoặc xóa bộ lọc tìm kiếm.'
+                  : 'Đơn mới sẽ xuất hiện tại đây.'
+              }
               actionLabel="Tải lại"
               onAction={() => fetchBookings(1, true)}
             />
@@ -223,7 +279,10 @@ export default function BookingsScreen() {
         }
         ListFooterComponent={
           hasMore && bookings.length > 0 ? (
-            <ActivityIndicator style={{ paddingVertical: 16 }} color={Colors.light.primary} />
+            <ActivityIndicator
+              style={{ paddingVertical: 16 }}
+              color={Colors.light.primary}
+            />
           ) : null
         }
       />
@@ -231,11 +290,26 @@ export default function BookingsScreen() {
   );
 }
 
-function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; text: string }) {
+function InfoRow({
+  icon,
+  text,
+}: {
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  text: string;
+}) {
   return (
     <View style={styles.infoRow}>
-      <MaterialCommunityIcons name={icon} size={15} color={Colors.light.textSecondary} />
-      <Text variant="bodySmall" style={styles.infoText} numberOfLines={1} selectable>
+      <MaterialCommunityIcons
+        name={icon}
+        size={15}
+        color={Colors.light.textSecondary}
+      />
+      <Text
+        variant="bodySmall"
+        style={styles.infoText}
+        numberOfLines={1}
+        selectable
+      >
         {text}
       </Text>
     </View>
@@ -273,5 +347,9 @@ const styles = StyleSheet.create({
   },
   footerItem: { flexDirection: 'row', alignItems: 'center' },
   footerText: { color: Colors.light.textSecondary, marginLeft: 4 },
-  price: { color: Colors.light.primary, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  price: {
+    color: Colors.light.primary,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
 });
