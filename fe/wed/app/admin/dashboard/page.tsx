@@ -441,69 +441,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <label className="space-y-1 text-xs font-medium text-slate-blue">
-            Trạng thái
-            <select
-              value={filters.status}
-              onChange={(event) => setFilter("status", event.target.value)}
-              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
-            >
-              {bookingStatuses.map((status) => (
-                <option key={status.value || "all"} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1 text-xs font-medium text-slate-blue">
-            Nhà cung cấp
-            <select
-              value={filters.providerId}
-              onChange={(event) => setFilter("providerId", event.target.value)}
-              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
-            >
-              <option value="">Tất cả nhà cung cấp</option>
-              {(filterOptions.providers || []).map((provider) => (
-                <option key={provider.id} value={provider.id}>
-                  {provider.fullName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1 text-xs font-medium text-slate-blue">
-            Danh mục
-            <select
-              value={filters.categoryId}
-              onChange={(event) => setFilter("categoryId", event.target.value)}
-              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
-            >
-              <option value="">Tất cả danh mục</option>
-              {(filterOptions.categories || []).map((category) => (
-                <option key={category.id} value={category.id}>
-                  {"— ".repeat(Math.max((category.level || 1) - 1, 0))}
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1 text-xs font-medium text-slate-blue">
-            Dịch vụ
-            <select
-              value={filters.serviceId}
-              onChange={(event) => setFilter("serviceId", event.target.value)}
-              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
-            >
-              <option value="">Tất cả dịch vụ</option>
-              {(filterOptions.services || []).map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name}
-                  {service.provider?.fullName ? ` · ${service.provider.fullName}` : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
         <p className="mt-3 text-xs text-slate-blue">
           Báo cáo hiện tại: {currentReportSummary}
         </p>
@@ -529,35 +466,7 @@ export default function AdminDashboard() {
         {loading ? (
           <DashboardLoadingState label="Đang tải phân bố địa lý…" />
         ) : provinceData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={provinceData}
-              margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7EDF6" />
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "#476788" }}
-                interval={0}
-                angle={-12}
-                textAnchor="end"
-                height={54}
-              />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#476788" }} />
-              <Tooltip
-                formatter={(value: number) => [value, "Số đơn"]}
-                cursor={{ fill: "#F8F9FB" }}
-                contentStyle={{
-                  borderRadius: "10px",
-                  border: "1px solid #D4E0ED",
-                  boxShadow: "var(--brand-shadow-sm)",
-                }}
-              />
-              <Bar dataKey="count" fill="#0f766e" radius={[4, 4, 0, 0]} maxBarSize={42} />
-            </BarChart>
-          </ResponsiveContainer>
+          <SimpleBarList data={provinceData} color="bg-teal-600" />
         ) : (
           <ChartEmptyState label="Chưa có đơn hàng theo tỉnh/thành phố." />
         )}
@@ -572,49 +481,14 @@ export default function AdminDashboard() {
           {loading ? (
             <DashboardLoadingState label="Đang tải biểu đồ…" />
           ) : revenueData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={revenueData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#E7EDF6"
-                />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#476788" }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#476788" }}
-                  tickFormatter={(value: number) => `${value / 1000}k`}
-                />
-                <Tooltip
-                  formatter={(value: number) => [
-                    `${Number(value).toLocaleString("vi-VN")}₫`,
-                    "Hoa hồng",
-                  ]}
-                  cursor={{ fill: "#F8F9FB" }}
-                  contentStyle={{
-                    borderRadius: "10px",
-                    border: "1px solid #D4E0ED",
-                    boxShadow: "var(--brand-shadow-sm)",
-                  }}
-                />
-                <Bar
-                  dataKey="commission"
-                  fill="#006BFF"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <SimpleBarList
+              data={revenueData.map((item) => ({
+                name: item.month,
+                count: item.commission,
+              }))}
+              color="bg-action-blue"
+              valueFormatter={(value) => `${Math.round(value).toLocaleString("vi-VN")}₫`}
+            />
           ) : (
             <ChartEmptyState label="Chưa có dữ liệu hoa hồng." />
           )}
@@ -627,47 +501,13 @@ export default function AdminDashboard() {
           {loading ? (
             <DashboardLoadingState />
           ) : statusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={statusData}
-                layout="vertical"
-                margin={{ top: 10, right: 20, left: 20, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal
-                  vertical={false}
-                  stroke="#E7EDF6"
-                />
-                <XAxis type="number" hide />
-                <YAxis
-                  dataKey="status"
-                  type="category"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#476788" }}
-                  width={86}
-                />
-                <Tooltip
-                  cursor={{ fill: "#F8F9FB" }}
-                  contentStyle={{
-                    borderRadius: "10px",
-                    border: "1px solid #D4E0ED",
-                    boxShadow: "var(--brand-shadow-sm)",
-                  }}
-                />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
-                  {statusData.map((entry, index) => (
-                    <Cell
-                      key={`${entry.status}-${index}`}
-                      fill={
-                        entry.fill || statusColors[index % statusColors.length]
-                      }
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <SimpleBarList
+              data={statusData.map((item) => ({
+                name: item.status,
+                count: item.count,
+              }))}
+              color="bg-amber-500"
+            />
           ) : (
             <ChartEmptyState label="Chưa có dữ liệu trạng thái." />
           )}
@@ -682,34 +522,7 @@ export default function AdminDashboard() {
           {loading ? (
             <DashboardLoadingState />
           ) : categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={categoryData}
-                layout="vertical"
-                margin={{ top: 10, right: 20, left: 40, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} stroke="#E7EDF6" />
-                <XAxis type="number" hide />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#476788" }}
-                  width={120}
-                />
-                <Tooltip
-                  cursor={{ fill: "#F8F9FB" }}
-                  formatter={(value: number) => [value, "Số đơn"]}
-                  contentStyle={{
-                    borderRadius: "10px",
-                    border: "1px solid #D4E0ED",
-                    boxShadow: "var(--brand-shadow-sm)",
-                  }}
-                />
-                <Bar dataKey="count" fill="#006BFF" radius={[0, 4, 4, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+            <SimpleBarList data={categoryData} color="bg-action-blue" />
           ) : (
             <ChartEmptyState label="Chưa có đơn hàng theo danh mục." />
           )}
@@ -722,34 +535,7 @@ export default function AdminDashboard() {
           {loading ? (
             <DashboardLoadingState />
           ) : serviceData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={serviceData}
-                layout="vertical"
-                margin={{ top: 10, right: 20, left: 40, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} stroke="#E7EDF6" />
-                <XAxis type="number" hide />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#476788" }}
-                  width={120}
-                />
-                <Tooltip
-                  cursor={{ fill: "#F8F9FB" }}
-                  formatter={(value: number) => [value, "Số đơn"]}
-                  contentStyle={{
-                    borderRadius: "10px",
-                    border: "1px solid #D4E0ED",
-                    boxShadow: "var(--brand-shadow-sm)",
-                  }}
-                />
-                <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+            <SimpleBarList data={serviceData} color="bg-emerald-500" />
           ) : (
             <ChartEmptyState label="Chưa có dữ liệu dịch vụ." />
           )}
@@ -761,11 +547,49 @@ export default function AdminDashboard() {
 
 function ChartEmptyState({ label }: { label: string }) {
   return (
-    <div className="flex h-[280px] items-center justify-center text-center text-sm font-medium text-slate-blue">
-      <div className="flex flex-col items-center gap-2">
-        <Package className="size-5 text-slate-blue" />
+    <div className="flex h-[280px] items-center justify-center rounded-lg bg-pale-gray/70 text-center text-sm font-medium text-slate-blue">
+      <div className="flex flex-col items-center gap-2 px-4">
+        <Package className="size-6 text-action-blue" />
         <span>{label}</span>
       </div>
+    </div>
+  );
+}
+
+function SimpleBarList({
+  data,
+  color,
+  valueFormatter = (value) => value.toLocaleString("vi-VN"),
+}: {
+  data: Array<{ name: string; count: number }>;
+  color: string;
+  valueFormatter?: (value: number) => string;
+}) {
+  const maxValue = Math.max(...data.map((item) => Number(item.count) || 0), 1);
+
+  return (
+    <div className="min-h-[280px] space-y-3 p-3">
+      {data.map((item) => {
+        const value = Number(item.count) || 0;
+        const width = Math.max((value / maxValue) * 100, value > 0 ? 8 : 0);
+
+        return (
+          <div key={item.name} className="grid grid-cols-[minmax(120px,220px)_1fr_auto] items-center gap-3">
+            <p className="truncate text-sm font-medium text-midnight-indigo" title={item.name}>
+              {item.name}
+            </p>
+            <div className="h-3 overflow-hidden rounded-full bg-pale-gray">
+              <div
+                className={`h-full rounded-full ${color}`}
+                style={{ width: `${width}%` }}
+              />
+            </div>
+            <p className="min-w-16 text-right text-sm font-semibold text-midnight-indigo">
+              {valueFormatter(value)}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }
