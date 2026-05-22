@@ -143,7 +143,7 @@ export class ChatsService {
       });
     }
 
-    const existing = await this.prisma.conversation.findFirst({
+    const existingForService = await this.prisma.conversation.findFirst({
       where: {
         customerId,
         providerId: service.providerId,
@@ -151,7 +151,26 @@ export class ChatsService {
       },
       include: this.conversationInclude,
     });
-    if (existing) return this.toConversationResponse(existing);
+    if (existingForService)
+      return this.toConversationResponse(existingForService);
+
+    const existingForProvider = await this.prisma.conversation.findFirst({
+      where: {
+        customerId,
+        providerId: service.providerId,
+      },
+      orderBy: { updatedAt: 'desc' },
+      include: this.conversationInclude,
+    });
+
+    if (existingForProvider) {
+      const updated = await this.prisma.conversation.update({
+        where: { id: existingForProvider.id },
+        data: { serviceId: service.id },
+        include: this.conversationInclude,
+      });
+      return this.toConversationResponse(updated);
+    }
 
     const conversation = await this.prisma.conversation.create({
       data: {

@@ -70,6 +70,7 @@ function ChatPageContent() {
   const [conversationError, setConversationError] = useState("");
   const [messagesError, setMessagesError] = useState("");
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -173,7 +174,13 @@ function ChatPageContent() {
 
   // Scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: messages.length > 1 ? "smooth" : "auto",
+    });
   }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -345,7 +352,10 @@ function ChatPageContent() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-cloud-mist">
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-cloud-mist"
+            >
               {selectedService && (
                 <div className="rounded-2xl border border-action-blue/20 bg-white p-4 shadow-sm">
                   <div className="flex items-start gap-3">
