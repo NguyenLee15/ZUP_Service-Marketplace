@@ -76,6 +76,21 @@ export class ServicesController {
     return this.servicesService.getProviderMetrics(providerId);
   }
 
+  /** GET /services/providers/:id — thông tin cá nhân công khai NCC */
+  @Get('providers/:id')
+  async getPublicProviderProfile(@Param('id', ParseIntPipe) id: number) {
+    return this.servicesService.getPublicProviderProfile(id);
+  }
+
+  /** GET /services/providers/:id/services — danh sách dịch vụ của thợ */
+  @Get('providers/:id/services')
+  async getPublicProviderServices(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: any,
+  ) {
+    return this.servicesService.getPublicProviderServices(id, query);
+  }
+
   // ===== PROVIDER =====
 
   /** GET /services/my — provider's own services */

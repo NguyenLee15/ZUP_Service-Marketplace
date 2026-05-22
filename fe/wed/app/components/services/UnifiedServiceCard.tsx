@@ -278,12 +278,23 @@ export function UnifiedServiceCard({
             </p>
           )}
           <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] sm:text-[11px] leading-tight">
-            <p
-              title={service.provider?.fullName || 'Đối tác HomeService'}
-              className="min-w-0 flex-1 truncate font-medium text-foreground/75"
-            >
-              {service.provider?.fullName || 'Đối tác HomeService'}
-            </p>
+            {service.provider?.id ? (
+              <Link
+                href={`/providers/${service.provider.id}`}
+                onClick={(e) => e.stopPropagation()}
+                title={service.provider.fullName}
+                className="min-w-0 flex-1 truncate font-medium text-foreground/75 hover:text-action-blue hover:underline transition-colors"
+              >
+                {service.provider.fullName}
+              </Link>
+            ) : (
+              <p
+                title={service.provider?.fullName || 'Đối tác HomeService'}
+                className="min-w-0 flex-1 truncate font-medium text-foreground/75"
+              >
+                {service.provider?.fullName || 'Đối tác HomeService'}
+              </p>
+            )}
             {showTrustBadges && (
               <span className="shrink-0 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
                 Uy tín

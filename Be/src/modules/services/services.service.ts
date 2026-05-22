@@ -831,6 +831,151 @@ export class ServicesService {
     };
   }
 
+  /**
+   * Lấy thông tin hồ sơ công khai của nhà cung cấp
+   */
+  async getPublicProviderProfile(providerId: number) {
+    const provider = await this.prisma.user.findFirst({
+      where: {
+        id: providerId,
+        role: 'PROVIDER',
+        status: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        fullName: true,
+        avatarUrl: true,
+        phone: true,
+        email: true,
+        createdAt: true,
+        addresses: {
+          where: { isDefault: true },
+          select: {
+            province: true,
+            district: true,
+            ward: true,
+            addressDetail: true,
+          },
+        },
+      },
+    });
+
+    if (!provider) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Không tìm thấy nhà cung cấp hoặc tài khoản đã bị khóa',
+      });
+    }
+
+    // Tính điểm đánh giá trung bình tích lũy và số lượt đánh giá
+    const aggregateReviews = await this.prisma.review.aggregate({
+      where: {
+        service: {
+          providerId: provider.id,
+          isDeleted: false,
+        },
+      },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    // Đếm tổng số dịch vụ active
+    const totalServices = await this.prisma.service.count({
+      where: {
+        providerId: provider.id,
+        status: 'ACTIVE',
+        isDeleted: false,
+      },
+    });
+
+    // Lấy chỉ số hiệu suất
+    const metricsResult = await this.getProviderMetrics(provider.id);
+
+    return {
+      success: true,
+      data: {
+        id: provider.id,
+        fullName: provider.fullName,
+        avatarUrl: provider.avatarUrl,
+        phone: provider.phone,
+        email: provider.email,
+        createdAt: provider.createdAt,
+        address: provider.addresses[0] || null,
+        stats: {
+          avgRating: aggregateReviews._avg.rating
+            ? Number(aggregateReviews._avg.rating.toFixed(1))
+            : 0,
+          totalReviews: aggregateReviews._count.rating || 0,
+          totalServices,
+        },
+        metrics: metricsResult.data,
+      },
+    };
+  }
+
+  /**
+   * Lấy danh sách dịch vụ của thợ hỗ trợ phân trang và tìm kiếm/sắp xếp
+   */
+  async getPublicProviderServices(providerId: number, queryParams: any) {
+    const page = queryParams.page ? parseInt(queryParams.page) : 1;
+    const limit = queryParams.limit ? parseInt(queryParams.limit) : 8;
+    const skip = (page - 1) * limit;
+    const search = queryParams.search ? String(queryParams.search).trim() : undefined;
+    const sortBy = queryParams.sortBy || 'newest';
+
+    const whereClause: any = {
+      providerId,
+      status: 'ACTIVE',
+      isDeleted: false,
+    };
+
+    if (search) {
+      whereClause.name = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    let orderByClause: any = { id: 'desc' };
+    if (sortBy === 'rating') {
+      orderByClause = { avgRating: 'desc' };
+    } else if (sortBy === 'priceAsc') {
+      orderByClause = { referencePrice: 'asc' };
+    } else if (sortBy === 'priceDesc') {
+      orderByClause = { referencePrice: 'desc' };
+    }
+
+    const [services, total] = await Promise.all([
+      this.prisma.service.findMany({
+        where: whereClause,
+        include: {
+          images: { orderBy: { displayOrder: 'asc' }, take: 1 },
+          category: true,
+        },
+        skip,
+        take: limit,
+        orderBy: orderByClause,
+      }),
+      this.prisma.service.count({
+        where: whereClause,
+      }),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        list: services,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    };
+  }
+
+
   // ===== HELPERS =====
 
   private async checkOwnership(serviceId: number, providerId: number) {

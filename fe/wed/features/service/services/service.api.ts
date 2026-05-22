@@ -14,6 +14,12 @@ export const serviceApi = {
   getReviews: (serviceId: number, params?: Record<string, unknown>) =>
     api.get(`/services/${serviceId}/reviews`, { params }),
 
+  getProviderProfile: (providerId: number) =>
+    api.get(`/services/providers/${providerId}`),
+
+  getProviderServices: (providerId: number, params?: Record<string, unknown>) =>
+    api.get(`/services/providers/${providerId}/services`, { params }),
+
   // Provider
   getMyServices: (params?: Record<string, unknown>) =>
     api.get('/services/my', { params }),

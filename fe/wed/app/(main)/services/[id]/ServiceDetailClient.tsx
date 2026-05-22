@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Star,
   MessageSquare,
@@ -275,14 +276,32 @@ export function ServiceDetailClient({ service }: { service: any }) {
         <Card className="surface-card rounded-[20px] py-0">
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-action-blue flex items-center justify-center text-white text-xl font-bold shrink-0">
-                {service.provider?.fullName?.charAt(0)}
-              </div>
+              {service.provider?.id ? (
+                <Link
+                  href={`/providers/${service.provider.id}`}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-action-blue flex items-center justify-center text-white text-xl font-bold shrink-0 hover:opacity-90 transition-opacity"
+                >
+                  {service.provider?.fullName?.charAt(0)}
+                </Link>
+              ) : (
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-action-blue flex items-center justify-center text-white text-xl font-bold shrink-0">
+                  {service.provider?.fullName?.charAt(0)}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <h3 className="font-bold text-foreground text-base sm:text-lg">
-                    {service.provider?.fullName}
-                  </h3>
+                  {service.provider?.id ? (
+                    <Link
+                      href={`/providers/${service.provider.id}`}
+                      className="font-bold text-foreground text-base sm:text-lg hover:text-action-blue hover:underline transition-colors truncate"
+                    >
+                      {service.provider?.fullName}
+                    </Link>
+                  ) : (
+                    <h3 className="font-bold text-foreground text-base sm:text-lg truncate">
+                      {service.provider?.fullName}
+                    </h3>
+                  )}
                   <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border border-green-200">
                     <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     Đã xác minh
@@ -309,16 +328,29 @@ export function ServiceDetailClient({ service }: { service: any }) {
                 </div>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full sm:w-auto sm:ml-auto shrink-0 mt-2 sm:mt-0"
-              onClick={handleStartChat}
-              disabled={chatLoading}
-            >
-              <MessageSquare className="w-4 h-4 mr-1.5" />
-              {chatLoading ? "Đang mở..." : "Nhắn tin cho thợ"}
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto sm:ml-auto shrink-0 mt-2 sm:mt-0">
+              {service.provider?.id && (
+                <Link href={`/providers/${service.provider.id}`} className="w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-midnight-indigo border-midnight-indigo/20 hover:bg-pale-gray"
+                  >
+                    Xem hồ sơ
+                  </Button>
+                </Link>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto bg-action-blue border-action-blue text-white hover:bg-glacier-blue hover:border-glacier-blue"
+                onClick={handleStartChat}
+                disabled={chatLoading}
+              >
+                <MessageSquare className="w-4 h-4 mr-1.5" />
+                {chatLoading ? "Đang mở..." : "Nhắn tin cho thợ"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

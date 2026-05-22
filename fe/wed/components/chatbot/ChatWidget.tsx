@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   useChat,
@@ -105,6 +105,7 @@ function getAuthToken(): string {
 
 export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
   const hiddenRoutes = [
     "/login",
     "/register",
@@ -443,10 +444,10 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                     {meta.services && meta.services.length > 0 && (
                       <div className="space-y-2">
                         {meta.services.map((service) => (
-                          <Link
+                          <div
                             key={service.id}
-                            href={`/services/${service.id}`}
-                            className="group block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-[border-color,box-shadow] hover:border-blue-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            onClick={() => router.push(`/services/${service.id}`)}
+                            className="group block cursor-pointer rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-[border-color,box-shadow] hover:border-blue-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                           >
                             <div className="flex gap-3">
                               <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 text-slate-500">
@@ -471,7 +472,15 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                                 <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
                                   <span className="truncate max-w-[120px]">{service.categoryName}</span>
                                   <span>·</span>
-                                  <span className="truncate max-w-[120px]">{service.providerName}</span>
+                                  <Link
+                                    href={`/providers/${service.providerId}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                    }}
+                                    className="truncate max-w-[120px] hover:text-blue-700 hover:underline transition-colors font-medium text-slate-600"
+                                  >
+                                    {service.providerName}
+                                  </Link>
                                   {service.distanceKm !== undefined && (
                                     <>
                                       <span>·</span>
@@ -506,7 +515,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                                 </div>
                               </div>
                             </div>
-                          </Link>
+                          </div>
                         ))}
                       </div>
                     )}
