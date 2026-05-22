@@ -16,6 +16,7 @@ export class ProviderWalletsService {
   private readonly logger = new Logger('ProviderWalletsService');
   private readonly minDepositAmount = 10000;
   private readonly minWithdrawalAmount = 50000;
+  private readonly manualDepositTtlMs = 5 * 60 * 1000;
 
   constructor(
     private prisma: PrismaService,
@@ -57,6 +58,26 @@ export class ProviderWalletsService {
     const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
     return `NAPVI-${providerId}-${timestamp}-${suffix}`;
+  }
+
+  private getManualDepositExpiryDate() {
+    return new Date(Date.now() - this.manualDepositTtlMs);
+  }
+
+  private async expireStaleManualDeposits(
+    tx: Prisma.TransactionClient | PrismaService = this.prisma,
+  ) {
+    await tx.manualDepositRequest.updateMany({
+      where: {
+        status: 'PENDING',
+        createdAt: { lt: this.getManualDepositExpiryDate() },
+      },
+      data: {
+        status: 'EXPIRED',
+        adminNote: 'Yêu cầu nạp tiền đã quá 5 phút và tự hết hạn.',
+        processedAt: new Date(),
+      },
+    });
   }
 
   private async getWalletOrThrow(providerId: number) {
@@ -199,6 +220,8 @@ export class ProviderWalletsService {
   }
 
   async getManualDepositRequests(providerId: number, page = 1, limit = 20) {
+    await this.expireStaleManualDeposits();
+
     const where = { providerId };
     const [data, total] = await Promise.all([
       this.prisma.manualDepositRequest.findMany({
@@ -301,6 +324,8 @@ export class ProviderWalletsService {
     page = 1,
     limit = 20,
   ) {
+    await this.expireStaleManualDeposits();
+
     const where: Prisma.ManualDepositRequestWhereInput = {};
     if (status && status !== 'all') {
       where.status = status as any;
@@ -332,6 +357,8 @@ export class ProviderWalletsService {
 
   async adminApproveManualDeposit(adminId: number, id: number, note?: string) {
     const approved = await this.prisma.$transaction(async (tx) => {
+      await this.expireStaleManualDeposits(tx);
+
       const request = await tx.manualDepositRequest.findUnique({
         where: { id },
       });
@@ -344,7 +371,10 @@ export class ProviderWalletsService {
       if (request.status !== 'PENDING') {
         throw new BadRequestException({
           code: ErrorCodes.VALIDATION_ERROR,
-          message: 'Yêu cầu này đã được xử lý',
+          message:
+            request.status === 'EXPIRED'
+              ? 'Yêu cầu nạp tiền đã quá 5 phút và tự hết hạn'
+              : 'Yêu cầu này đã được xử lý',
         });
       }
 

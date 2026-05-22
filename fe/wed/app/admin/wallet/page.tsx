@@ -19,7 +19,7 @@ import { adminApi } from '@/features/auth/services/api';
 type WalletRequest = {
   id: number;
   amount: number | string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
   adminNote?: string | null;
   transferCode?: string | null;
   bankName?: string;
@@ -55,6 +55,11 @@ const statusConfig = {
     className: 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-200',
     icon: XCircle,
   },
+  EXPIRED: {
+    label: 'Hết hạn',
+    className: 'bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
+    icon: XCircle,
+  },
 };
 
 const tabs = [
@@ -67,6 +72,7 @@ const statusFilters = [
   { value: 'PENDING', label: 'Chờ xử lý' },
   { value: 'APPROVED', label: 'Đã xử lý' },
   { value: 'REJECTED', label: 'Từ chối' },
+  { value: 'EXPIRED', label: 'Hết hạn' },
 ];
 
 export default function AdminWalletPage() {

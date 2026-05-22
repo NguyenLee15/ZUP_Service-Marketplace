@@ -1,0 +1,1 @@
+ALTER TYPE "WalletRequestStatus" ADD VALUE IF NOT EXISTS 'EXPIRED';

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Chip, Modal, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import * as WebBrowser from 'expo-web-browser';
 import { walletApi } from '../../features/wallet/wallet.api';
 import { Colors } from '../../constants/colors';
@@ -27,7 +28,7 @@ type MessageState = {
 type WalletRequest = {
   id: number;
   amount: number | string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
   createdAt: string;
   adminNote?: string | null;
   transferCode?: string | null;
@@ -265,13 +266,21 @@ export default function WalletScreen() {
     if (status === 'PENDING') return 'Đang chờ';
     if (status === 'APPROVED') return 'Đã xử lý';
     if (status === 'REJECTED') return 'Từ chối';
+    if (status === 'EXPIRED') return 'Hết hạn';
     return status;
   };
 
   const getRequestTone = (status: string) => {
     if (status === 'APPROVED') return Colors.light.success;
-    if (status === 'REJECTED') return Colors.light.error;
+    if (status === 'REJECTED' || status === 'EXPIRED') return Colors.light.error;
     return Colors.light.warning;
+  };
+
+  const copyTransferCode = async () => {
+    const code = transferCode || generateManualDepositCode();
+    setTransferCode(code);
+    await Clipboard.setStringAsync(code);
+    setMessage({ tone: 'success', text: 'Đã sao chép mã giao dịch.' });
   };
 
   const renderRequest = (item: WalletRequest, type: 'deposit' | 'withdrawal') => {
@@ -474,6 +483,15 @@ export default function WalletScreen() {
               <Text style={styles.bankLine}>Số tài khoản: {MANUAL_BANK_INFO.accountNumber}</Text>
               <Text style={styles.bankLine}>Chủ tài khoản: {MANUAL_BANK_INFO.holder}</Text>
               <Text style={styles.bankHint}>Nội dung chuyển khoản: {transferCode || 'Đang tạo mã...'}</Text>
+              <Button
+                mode="outlined"
+                compact
+                icon="content-copy"
+                onPress={copyTransferCode}
+                style={styles.copyButton}
+              >
+                Sao chép mã
+              </Button>
             </View>
           )}
 
@@ -751,6 +769,11 @@ const styles = StyleSheet.create({
   bankHint: {
     color: Colors.light.textSecondary,
     marginTop: 4,
+  },
+  copyButton: {
+    alignSelf: 'flex-start',
+    borderRadius: 10,
+    marginTop: 6,
   },
   amountInput: {
     backgroundColor: Colors.light.surface,
