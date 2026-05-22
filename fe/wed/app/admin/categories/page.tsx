@@ -9,8 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
-import { serviceApi } from '@/features/service/services/service.api';
-import { adminApi } from '@/features/auth/services/api';
+import { adminApi, categoriesApi } from '@/features/auth/services/api';
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Tên danh mục phải có ít nhất 2 ký tự'),
@@ -51,7 +50,7 @@ export default function CategoriesPage() {
 
   const fetchCategories = () => {
     setLoading(true);
-    serviceApi.getCategories()
+    categoriesApi.getTree()
       .then((res) => {
         // Mặc định expand level 1
         const addExpand = (cats: any[]): Category[] => {

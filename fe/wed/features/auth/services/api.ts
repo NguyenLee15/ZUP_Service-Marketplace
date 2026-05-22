@@ -146,10 +146,10 @@ export const adminApi = {
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
 
   // Categories
-  createCategory: (data: any) => api.post("/admin/categories", data),
+  createCategory: (data: any) => api.post("/categories", data),
   updateCategory: (id: number, data: any) =>
-    api.patch(`/admin/categories/${id}`, data),
-  deleteCategory: (id: number) => api.delete(`/admin/categories/${id}`),
+    api.patch(`/categories/${id}`, data),
+  deleteCategory: (id: number) => api.delete(`/categories/${id}`),
 
   // Staffs — UC07
   getStaffs: (params?: Record<string, any>) =>

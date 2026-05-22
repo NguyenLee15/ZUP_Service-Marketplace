@@ -502,18 +502,23 @@ export class AdminDashboardService {
   }
 
   private describeFilters(filters: NormalizedFilters) {
+    const groupLabels: Record<DashboardGroupBy, string> = {
+      day: 'ngày',
+      week: 'tuần',
+      month: 'tháng',
+    };
     const parts = [
-      filters.from ? `Tu ${this.formatDate(filters.from)}` : '',
-      filters.to ? `den ${this.formatDate(filters.to)}` : '',
+      filters.from ? `Từ ${this.formatDate(filters.from)}` : '',
+      filters.to ? `đến ${this.formatDate(filters.to)}` : '',
       filters.status
-        ? `trang thai ${STATUS_LABELS[filters.status] || filters.status}`
+        ? `trạng thái ${STATUS_LABELS[filters.status] || filters.status}`
         : '',
-      filters.providerId ? `nha cung cap #${filters.providerId}` : '',
-      filters.categoryId ? `danh muc #${filters.categoryId}` : '',
-      filters.serviceId ? `dich vu #${filters.serviceId}` : '',
-      `nhom theo ${filters.groupBy}`,
+      filters.providerId ? `theo nhà cung cấp đã chọn` : '',
+      filters.categoryId ? `theo danh mục đã chọn` : '',
+      filters.serviceId ? `theo dịch vụ đã chọn` : '',
+      `nhóm theo ${groupLabels[filters.groupBy]}`,
     ].filter(Boolean);
-    return parts.join(', ') || 'Tat ca du lieu';
+    return parts.join(', ') || 'Tất cả dữ liệu';
   }
 
   private reportFileName(

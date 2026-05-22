@@ -98,7 +98,14 @@ export class AdminService {
         include: {
           customer: { select: { id: true, fullName: true, email: true } },
           provider: { select: { id: true, fullName: true, email: true } },
-          service: { select: { id: true, name: true } },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              category: { select: { id: true, name: true } },
+            },
+          },
+          quotation: true,
         },
         orderBy: { id: 'desc' },
         skip: (page - 1) * limit,

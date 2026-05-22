@@ -124,9 +124,9 @@ const bookingStatuses = [
 ];
 
 type DashboardFilters = {
+  range: "day" | "month" | "year" | "all";
   from: string;
   to: string;
-  groupBy: "day" | "week" | "month";
   status: string;
   providerId: string;
   categoryId: string;
@@ -134,19 +134,74 @@ type DashboardFilters = {
 };
 
 const defaultFilters: DashboardFilters = {
+  range: "month",
   from: "",
   to: "",
-  groupBy: "month",
   status: "",
   providerId: "",
   categoryId: "",
   serviceId: "",
 };
 
-function compactFilters(filters: DashboardFilters) {
+function toIsoDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildDashboardParams(filters: DashboardFilters) {
+  const today = new Date();
+  const params: Record<string, string> = {};
+
+  if (filters.range === "day") {
+    if (filters.from) params.from = filters.from;
+    if (filters.to) params.to = filters.to;
+    params.groupBy = "day";
+  } else if (filters.range === "month") {
+    params.from = toIsoDate(new Date(today.getFullYear(), today.getMonth(), 1));
+    params.to = toIsoDate(today);
+    params.groupBy = "day";
+  } else if (filters.range === "year") {
+    params.from = toIsoDate(new Date(today.getFullYear(), 0, 1));
+    params.to = toIsoDate(today);
+    params.groupBy = "month";
+  } else {
+    params.groupBy = "month";
+  }
+
+  if (filters.status) params.status = filters.status;
+  if (filters.providerId) params.providerId = filters.providerId;
+  if (filters.categoryId) params.categoryId = filters.categoryId;
+  if (filters.serviceId) params.serviceId = filters.serviceId;
+  return params;
+}
+
+function compactFilters(filters: Record<string, string>) {
   return Object.fromEntries(
     Object.entries(filters).filter(([, value]) => value !== ""),
   );
+}
+
+function reportSummary(filters: DashboardFilters) {
+  const rangeLabels = {
+    day: "Theo ngày",
+    month: "Tháng này",
+    year: "Năm nay",
+    all: "Tất cả dữ liệu",
+  };
+  const groupLabels = {
+    day: "ngày",
+    week: "tuần",
+    month: "tháng",
+  };
+  const params = buildDashboardParams(filters);
+  const parts = [rangeLabels[filters.range]];
+  if (filters.range === "day" && (filters.from || filters.to)) {
+    parts.push(`từ ${filters.from || "đầu kỳ"} đến ${filters.to || "hiện tại"}`);
+  }
+  parts.push(`nhóm theo ${groupLabels[params.groupBy as keyof typeof groupLabels]}`);
+  return parts.join(", ");
 }
 
 export default function AdminDashboard() {
@@ -158,7 +213,7 @@ export default function AdminDashboard() {
   const [filters, setFilters] = useState<DashboardFilters>(defaultFilters);
 
   const fetchStats = useCallback(() => {
-    const params = compactFilters(filters);
+    const params = compactFilters(buildDashboardParams(filters));
     setLoading(true);
     setLoadError("");
     Promise.all([
@@ -189,8 +244,8 @@ export default function AdminDashboard() {
     try {
       const res =
         type === "pdf"
-          ? await adminApi.exportDashboardPdf(compactFilters(filters))
-          : await adminApi.exportDashboardExcel(compactFilters(filters));
+          ? await adminApi.exportDashboardPdf(compactFilters(buildDashboardParams(filters)))
+          : await adminApi.exportDashboardExcel(compactFilters(buildDashboardParams(filters)));
       const mimeType =
         type === "pdf"
           ? "application/pdf"
@@ -201,7 +256,7 @@ export default function AdminDashboard() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `dashboard-report-${filters.from || "all"}-${filters.to || formattedToday}.${extension}`;
+      link.download = `dashboard-report-${filters.range}.${extension}`;
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(url);
@@ -253,6 +308,7 @@ export default function AdminDashboard() {
   const setFilter = (key: keyof DashboardFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
+  const currentReportSummary = reportSummary(filters);
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
@@ -334,43 +390,58 @@ export default function AdminDashboard() {
           </Button>
         }
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <label className="space-y-1 text-xs font-medium text-slate-blue">
-            Từ ngày
-            <div className="flex h-11 items-center gap-2 rounded-lg border border-platinum-tint bg-white px-3">
-              <CalendarDays className="size-4 text-action-blue" />
-              <input
-                type="date"
-                value={filters.from}
-                onChange={(event) => setFilter("from", event.target.value)}
-                className="w-full bg-transparent text-sm text-midnight-indigo outline-none"
-              />
-            </div>
-          </label>
-          <label className="space-y-1 text-xs font-medium text-slate-blue">
-            Đến ngày
-            <div className="flex h-11 items-center gap-2 rounded-lg border border-platinum-tint bg-white px-3">
-              <CalendarDays className="size-4 text-action-blue" />
-              <input
-                type="date"
-                value={filters.to}
-                onChange={(event) => setFilter("to", event.target.value)}
-                className="w-full bg-transparent text-sm text-midnight-indigo outline-none"
-              />
-            </div>
-          </label>
-          <label className="space-y-1 text-xs font-medium text-slate-blue">
-            Nhóm
-            <select
-              value={filters.groupBy}
-              onChange={(event) => setFilter("groupBy", event.target.value)}
-              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
+        <div className="mb-4 flex flex-wrap gap-2">
+          {[
+            { value: "day", label: "Theo ngày" },
+            { value: "month", label: "Tháng này" },
+            { value: "year", label: "Năm nay" },
+            { value: "all", label: "Tất cả" },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setFilter("range", option.value)}
+              className={`h-10 rounded-lg border px-4 text-sm font-semibold transition-colors ${
+                filters.range === option.value
+                  ? "border-action-blue bg-action-blue text-white"
+                  : "border-platinum-tint bg-white text-slate-blue hover:border-action-blue hover:text-action-blue"
+              }`}
             >
-              <option value="day">Theo ngày</option>
-              <option value="week">Theo tuần</option>
-              <option value="month">Theo tháng</option>
-            </select>
-          </label>
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {filters.range === "day" && (
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <label className="space-y-1 text-xs font-medium text-slate-blue">
+              Từ ngày
+              <div className="flex h-11 items-center gap-2 rounded-lg border border-platinum-tint bg-white px-3">
+                <CalendarDays className="size-4 text-action-blue" />
+                <input
+                  type="date"
+                  value={filters.from}
+                  onChange={(event) => setFilter("from", event.target.value)}
+                  className="w-full bg-transparent text-sm text-midnight-indigo outline-none"
+                />
+              </div>
+            </label>
+            <label className="space-y-1 text-xs font-medium text-slate-blue">
+              Đến ngày
+              <div className="flex h-11 items-center gap-2 rounded-lg border border-platinum-tint bg-white px-3">
+                <CalendarDays className="size-4 text-action-blue" />
+                <input
+                  type="date"
+                  value={filters.to}
+                  onChange={(event) => setFilter("to", event.target.value)}
+                  className="w-full bg-transparent text-sm text-midnight-indigo outline-none"
+                />
+              </div>
+            </label>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <label className="space-y-1 text-xs font-medium text-slate-blue">
             Trạng thái
             <select
@@ -433,11 +504,9 @@ export default function AdminDashboard() {
             </select>
           </label>
         </div>
-        {stats?.filterSummary && (
-          <p className="mt-3 text-xs text-slate-blue">
-            Báo cáo hiện tại: {stats.filterSummary}
-          </p>
-        )}
+        <p className="mt-3 text-xs text-slate-blue">
+          Báo cáo hiện tại: {currentReportSummary}
+        </p>
       </AdminDashboardCard>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

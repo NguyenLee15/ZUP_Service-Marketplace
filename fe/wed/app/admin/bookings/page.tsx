@@ -19,6 +19,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   QUOTED: { label: 'Đã Báo Giá', color: 'bg-blue-100 text-blue-800' },
   CONFIRMED: { label: 'Đã Xác Nhận', color: 'bg-indigo-100 text-indigo-800' },
   IN_PROGRESS: { label: 'Đang Thực Hiện', color: 'bg-purple-100 text-purple-800' },
+  DONE: { label: 'Hoàn Thành', color: 'bg-green-100 text-green-800' },
   COMPLETED: { label: 'Hoàn Thành', color: 'bg-green-100 text-green-800' },
   CANCELLED: { label: 'Đã Hủy', color: 'bg-muted text-foreground' },
   DISPUTED: { label: 'Tranh Chấp', color: 'bg-red-100 text-red-800' },
@@ -58,6 +59,10 @@ export default function BookingsPage() {
   );
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN').format(p) + '₫';
+  const getBookingPrice = (booking: any) =>
+    Number(booking?.quotation?.actualPrice ?? booking?.agreedPrice ?? 0);
+  const getBookingDescription = (booking: any) =>
+    booking?.description || booking?.notes || 'Không có ghi chú chi tiết.';
 
   return (
     <div className="space-y-6">
@@ -81,7 +86,7 @@ export default function BookingsPage() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {['all', 'PENDING', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'DISPUTED'].map((status) => (
+          {['all', 'PENDING', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'DONE', 'CANCELLED', 'DISPUTED'].map((status) => (
             <Button
               key={status}
               variant={filterStatus === status ? 'default' : 'outline'}
@@ -136,7 +141,7 @@ export default function BookingsPage() {
                       <p className="text-sm font-medium text-foreground truncate mb-1">{booking.service?.name}</p>
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-muted-foreground truncate mr-2">KH: {booking.customer?.fullName}</span>
-                        <span className="font-semibold text-foreground">{formatPrice(Number(booking.agreedPrice || 0))}</span>
+                        <span className="font-semibold text-foreground">{formatPrice(getBookingPrice(booking))}</span>
                       </div>
                     </button>
                   );
@@ -170,7 +175,7 @@ export default function BookingsPage() {
                   </div>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Tổng Tiền (Đã chốt)</p>
-                    <p className="font-bold text-foreground text-lg">{formatPrice(Number(selectedBooking.agreedPrice || 0))}</p>
+                    <p className="font-bold text-foreground text-lg">{formatPrice(getBookingPrice(selectedBooking))}</p>
                   </div>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Khách Hàng</p>
@@ -187,7 +192,7 @@ export default function BookingsPage() {
                 <div className="border-t pt-4">
                   <h4 className="font-medium text-foreground mb-3">Chi tiết công việc</h4>
                   <div className="bg-muted p-4 rounded-lg text-sm text-foreground/80 whitespace-pre-wrap">
-                    {selectedBooking.notes || 'Không có ghi chú chi tiết.'}
+                    {getBookingDescription(selectedBooking)}
                   </div>
                 </div>
 
