@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import {
   CalendarDays,
   ChevronDown,
@@ -30,46 +29,6 @@ import {
   DashboardLoadingState,
 } from "../_components/AdminDashboardPrimitives";
 
-const BarChart = dynamic(
-  () => import("recharts").then((mod) => mod.BarChart as any),
-  {
-    ssr: false,
-  },
-) as any;
-const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar as any), {
-  ssr: false,
-}) as any;
-const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell as any), {
-  ssr: false,
-}) as any;
-const XAxis = dynamic(
-  () => import("recharts").then((mod) => mod.XAxis as any),
-  {
-    ssr: false,
-  },
-) as any;
-const YAxis = dynamic(
-  () => import("recharts").then((mod) => mod.YAxis as any),
-  {
-    ssr: false,
-  },
-) as any;
-const CartesianGrid = dynamic(
-  () => import("recharts").then((mod) => mod.CartesianGrid as any),
-  {
-    ssr: false,
-  },
-) as any;
-const Tooltip = dynamic(
-  () => import("recharts").then((mod) => mod.Tooltip as any),
-  {
-    ssr: false,
-  },
-) as any;
-const ResponsiveContainer = dynamic(
-  () => import("recharts").then((mod) => mod.ResponsiveContainer as any),
-  { ssr: false },
-) as any;
 type DashboardStats = {
   totalBookings?: number;
   totalUsers?: number;
@@ -79,7 +38,6 @@ type DashboardStats = {
   totalRevenue?: number;
   commissionRevenue?: number;
   avgOrderValue?: number;
-  filterSummary?: string;
 };
 
 type RevenueDataPoint = {
@@ -96,32 +54,9 @@ type StatusDataPoint = {
 type DashboardChartData = {
   revenueData?: RevenueDataPoint[];
   statusData?: StatusDataPoint[];
-  provinceData?: Array<{ name: string; count: number }>;
   categoryData?: Array<{ name: string; count: number }>;
   serviceData?: Array<{ name: string; count: number }>;
-  filterOptions?: {
-    providers?: Array<{ id: number; fullName: string }>;
-    categories?: Array<{ id: number; name: string; level?: number; parentId?: number | null }>;
-    services?: Array<{
-      id: number;
-      name: string;
-      provider?: { fullName?: string };
-      category?: { name?: string };
-    }>;
-  };
 };
-
-const statusColors = ["#006BFF", "#10b981", "#f59e0b", "#ef4444", "#64748b"];
-const bookingStatuses = [
-  { value: "", label: "Tất cả trạng thái" },
-  { value: "PENDING", label: "Chờ xử lý" },
-  { value: "QUOTED", label: "Đã báo giá" },
-  { value: "CONFIRMED", label: "Đã xác nhận" },
-  { value: "IN_PROGRESS", label: "Đang thực hiện" },
-  { value: "DONE", label: "Hoàn thành" },
-  { value: "DISPUTED", label: "Khiếu nại" },
-  { value: "CANCELLED", label: "Đã hủy" },
-];
 
 type DashboardFilters = {
   range: "day" | "month" | "year" | "all";
@@ -300,10 +235,8 @@ export default function AdminDashboard() {
 
   const revenueData = chartData?.revenueData || [];
   const statusData = chartData?.statusData || [];
-  const provinceData = chartData?.provinceData || [];
   const categoryData = chartData?.categoryData || [];
   const serviceData = chartData?.serviceData || [];
-  const filterOptions = chartData?.filterOptions || {};
   const formattedToday = new Intl.DateTimeFormat("vi-VN").format(new Date());
   const setFilter = (key: keyof DashboardFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -459,34 +392,20 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <AdminDashboardCard
-        title="Phân bố đơn hàng theo tỉnh/thành phố"
-        contentClassName="px-2 pb-5 pt-3"
-      >
-        {loading ? (
-          <DashboardLoadingState label="Đang tải phân bố địa lý…" />
-        ) : provinceData.length > 0 ? (
-          <SimpleBarList data={provinceData} color="bg-teal-600" />
-        ) : (
-          <ChartEmptyState label="Chưa có đơn hàng theo tỉnh/thành phố." />
-        )}
-      </AdminDashboardCard>
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <AdminDashboardCard
-          title="Hoa hồng theo bộ lọc"
+          title="Hoa hồng theo thời gian"
           className="lg:col-span-2"
-          contentClassName="px-2 pb-5 pt-3"
+          contentClassName="px-4 pb-5 pt-4"
         >
           {loading ? (
             <DashboardLoadingState label="Đang tải biểu đồ…" />
           ) : revenueData.length > 0 ? (
-            <SimpleBarList
+            <LineChartCard
               data={revenueData.map((item) => ({
                 name: item.month,
                 count: item.commission,
               }))}
-              color="bg-action-blue"
               valueFormatter={(value) => `${Math.round(value).toLocaleString("vi-VN")}₫`}
             />
           ) : (
@@ -496,12 +415,12 @@ export default function AdminDashboard() {
 
         <AdminDashboardCard
           title="Trạng thái đơn hàng"
-          contentClassName="px-2 pb-5 pt-3"
+          contentClassName="px-4 pb-5 pt-4"
         >
           {loading ? (
             <DashboardLoadingState />
           ) : statusData.length > 0 ? (
-            <SimpleBarList
+            <RoundedColumnChart
               data={statusData.map((item) => ({
                 name: item.status,
                 count: item.count,
@@ -517,12 +436,12 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <AdminDashboardCard
           title="Đơn hàng theo danh mục"
-          contentClassName="px-2 pb-5 pt-3"
+          contentClassName="px-4 pb-5 pt-4"
         >
           {loading ? (
             <DashboardLoadingState />
           ) : categoryData.length > 0 ? (
-            <SimpleBarList data={categoryData} color="bg-action-blue" />
+            <RoundedColumnChart data={categoryData} color="bg-action-blue" />
           ) : (
             <ChartEmptyState label="Chưa có đơn hàng theo danh mục." />
           )}
@@ -530,12 +449,12 @@ export default function AdminDashboard() {
 
         <AdminDashboardCard
           title="Dịch vụ có nhiều đơn"
-          contentClassName="px-2 pb-5 pt-3"
+          contentClassName="px-4 pb-5 pt-4"
         >
           {loading ? (
             <DashboardLoadingState />
           ) : serviceData.length > 0 ? (
-            <SimpleBarList data={serviceData} color="bg-emerald-500" />
+            <RoundedColumnChart data={serviceData} color="bg-emerald-500" />
           ) : (
             <ChartEmptyState label="Chưa có dữ liệu dịch vụ." />
           )}
@@ -556,7 +475,7 @@ function ChartEmptyState({ label }: { label: string }) {
   );
 }
 
-function SimpleBarList({
+function RoundedColumnChart({
   data,
   color,
   valueFormatter = (value) => value.toLocaleString("vi-VN"),
@@ -566,30 +485,97 @@ function SimpleBarList({
   valueFormatter?: (value: number) => string;
 }) {
   const maxValue = Math.max(...data.map((item) => Number(item.count) || 0), 1);
+  const visibleData = data.slice(0, 8);
 
   return (
-    <div className="min-h-[280px] space-y-3 p-3">
-      {data.map((item) => {
+    <div className="flex min-h-[280px] items-end gap-4 overflow-x-auto rounded-lg bg-gradient-to-b from-pale-gray/60 to-white px-4 pb-4 pt-6">
+      {visibleData.map((item) => {
         const value = Number(item.count) || 0;
-        const width = Math.max((value / maxValue) * 100, value > 0 ? 8 : 0);
+        const height = Math.max((value / maxValue) * 210, value > 0 ? 28 : 0);
 
         return (
-          <div key={item.name} className="grid grid-cols-[minmax(120px,220px)_1fr_auto] items-center gap-3">
-            <p className="truncate text-sm font-medium text-midnight-indigo" title={item.name}>
-              {item.name}
+          <div key={item.name} className="flex min-w-20 flex-1 flex-col items-center gap-2">
+            <p className="text-sm font-semibold text-midnight-indigo">
+              {valueFormatter(value)}
             </p>
-            <div className="h-3 overflow-hidden rounded-full bg-pale-gray">
+            <div className="flex h-[210px] w-full max-w-16 items-end rounded-full bg-white shadow-inner">
               <div
-                className={`h-full rounded-full ${color}`}
-                style={{ width: `${width}%` }}
+                className={`w-full rounded-full ${color} shadow-sm`}
+                style={{ height: `${height}px` }}
               />
             </div>
-            <p className="min-w-16 text-right text-sm font-semibold text-midnight-indigo">
-              {valueFormatter(value)}
+            <p className="line-clamp-2 min-h-10 text-center text-xs font-medium text-slate-blue" title={item.name}>
+              {item.name}
             </p>
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function LineChartCard({
+  data,
+  valueFormatter,
+}: {
+  data: Array<{ name: string; count: number }>;
+  valueFormatter: (value: number) => string;
+}) {
+  const visibleData = data.slice(-12);
+  const maxValue = Math.max(...visibleData.map((item) => Number(item.count) || 0), 1);
+  const width = 720;
+  const height = 220;
+  const points = visibleData.map((item, index) => {
+    const x =
+      visibleData.length === 1
+        ? width / 2
+        : (index / (visibleData.length - 1)) * width;
+    const y = height - ((Number(item.count) || 0) / maxValue) * (height - 20) - 10;
+    return { ...item, x, y };
+  });
+  const path = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
+  return (
+    <div className="min-h-[280px] rounded-lg bg-gradient-to-b from-blue-50/60 to-white p-4">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-[220px] w-full overflow-visible"
+        role="img"
+        aria-label="Biểu đồ đường hoa hồng"
+      >
+        {[0, 1, 2, 3].map((line) => (
+          <line
+            key={line}
+            x1="0"
+            x2={width}
+            y1={(height / 4) * line}
+            y2={(height / 4) * line}
+            stroke="#E7EDF6"
+            strokeDasharray="6 6"
+          />
+        ))}
+        <path d={path} fill="none" stroke="#006BFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        {points.map((point) => (
+          <g key={point.name}>
+            <circle cx={point.x} cy={point.y} r="6" fill="#006BFF" stroke="white" strokeWidth="3" />
+            <title>{`${point.name}: ${valueFormatter(Number(point.count) || 0)}`}</title>
+          </g>
+        ))}
+      </svg>
+      <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.max(points.length, 1)}, minmax(0, 1fr))` }}>
+        {points.map((point) => (
+          <div key={point.name} className="min-w-0 text-center">
+            <p className="truncate text-xs font-medium text-slate-blue" title={point.name}>
+              {point.name}
+            </p>
+            <p className="truncate text-[11px] font-semibold text-midnight-indigo">
+              {valueFormatter(Number(point.count) || 0)}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
