@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { Menu, Search } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
+import { HeaderSearchBar } from '@/components/layout/HeaderSearchBar';
 import { HomeHeaderAuth } from '@/components/layout/HomeHeaderAuth';
 
 export function HomeHeader() {
@@ -20,26 +21,10 @@ export function HomeHeader() {
             </span>
           </Link>
 
-          <form
-            action="/services"
-            className="relative hidden min-w-0 flex-1 max-w-2xl px-1 pr-12 sm:block sm:px-2 sm:pr-12 md:pr-0"
-          >
-            <input
-              type="text"
-              name="keyword"
-              aria-label="Tìm kiếm dịch vụ"
-              autoComplete="off"
-              placeholder="Hôm nay bạn cần giúp gì?…"
-              className="w-full rounded-full border border-platinum-tint bg-cloud-mist py-1.5 pl-4 pr-10 text-xs text-foreground outline-none transition-colors hover:border-steel-gray focus:border-action-blue focus:bg-card focus-visible:ring-2 focus-visible:ring-action-blue sm:py-2.5 sm:pl-5 sm:pr-14 sm:text-sm md:text-base"
-            />
-            <button
-              type="submit"
-              aria-label="Tìm kiếm"
-              className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-action-blue p-1.5 text-white shadow-sm transition-colors hover:bg-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue sm:p-2 md:right-1.5"
-            >
-              <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-          </form>
+          {/* Search bar: ẩn trên mobile, slide-in khi cuộn qua Hero */}
+          <div className="hidden sm:block flex-1 min-w-0">
+            <HeaderSearchBar />
+          </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-3">
             <HomeHeaderAuth />
