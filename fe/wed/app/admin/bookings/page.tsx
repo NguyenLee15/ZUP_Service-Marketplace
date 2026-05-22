@@ -3,11 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search,
-  CheckCircle2,
-  Clock,
   AlertCircle,
-  ArrowRight,
-  Filter,
+  X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +28,9 @@ export default function BookingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchBookings = () => {
     setLoading(true);
@@ -63,6 +63,22 @@ export default function BookingsPage() {
     Number(booking?.quotation?.actualPrice ?? booking?.agreedPrice ?? 0);
   const getBookingDescription = (booking: any) =>
     booking?.description || booking?.notes || 'Không có ghi chú chi tiết.';
+  const canAdminCancel = (booking: any) =>
+    booking && !['CANCELLED', 'DONE', 'COMPLETED', 'DISPUTED'].includes(booking.status);
+
+  const handleAdminCancel = async () => {
+    if (!selectedBooking || cancelReason.trim().length < 10) return;
+    setActionLoading(true);
+    try {
+      await adminApi.cancelBooking(selectedBooking.id, cancelReason.trim());
+      setShowCancelModal(false);
+      setCancelReason('');
+      setSelectedBooking(null);
+      fetchBookings();
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -155,7 +171,8 @@ export default function BookingsPage() {
         {selectedBooking && (
           <Card className="lg:col-span-2">
             <CardHeader>
-              <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
                 <CardTitle className="text-lg flex items-center gap-2">
                   Đơn hàng #{selectedBooking.bookingCode}
                   <span className={`px-2 py-1 rounded-full text-xs font-medium border ${statusConfig[selectedBooking.status]?.color}`}>
@@ -163,6 +180,20 @@ export default function BookingsPage() {
                   </span>
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">Ngày tạo: {new Date(selectedBooking.createdAt).toLocaleString('vi-VN')}</p>
+                </div>
+                {canAdminCancel(selectedBooking) && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setCancelReason('');
+                      setShowCancelModal(true);
+                    }}
+                  >
+                    Hủy đơn đặc biệt
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -211,6 +242,60 @@ export default function BookingsPage() {
           </Card>
         )}
       </div>
+
+      {showCancelModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                Hủy đơn đặc biệt
+              </CardTitle>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="p-1 hover:bg-muted rounded"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg bg-muted p-3 text-sm">
+                <p className="font-medium text-foreground">
+                  #{selectedBooking.bookingCode} · {selectedBooking.service?.name}
+                </p>
+                <p className="text-muted-foreground">
+                  Chỉ dùng khi khách hàng hoặc thợ yêu cầu hủy trong trường hợp đặc biệt.
+                </p>
+              </div>
+              <label className="block text-sm font-medium text-foreground/80">
+                Lý do hủy
+                <textarea
+                  value={cancelReason}
+                  onChange={(event) => setCancelReason(event.target.value)}
+                  placeholder="Nhập lý do hủy để lưu lịch sử và thông báo cho hai bên..."
+                  className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  rows={4}
+                />
+              </label>
+              {cancelReason.trim().length > 0 && cancelReason.trim().length < 10 && (
+                <p className="text-sm text-red-600">Lý do cần ít nhất 10 ký tự.</p>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowCancelModal(false)}>
+                  Đóng
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={actionLoading || cancelReason.trim().length < 10}
+                  onClick={handleAdminCancel}
+                >
+                  Xác nhận hủy
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -146,7 +146,7 @@ export default function StaffsPage() {
         <div>
           <h3 className="text-2xl font-bold text-foreground">Quản Lý Nhân Viên</h3>
           <p className="text-muted-foreground mt-1">
-            {meta.total || staffs.length} nhân viên trong hệ thống
+            {meta.total || staffs.length} admin và nhân viên trong hệ thống
           </p>
         </div>
         <Button onClick={openCreateModal} className="gap-2">
@@ -189,6 +189,7 @@ export default function StaffsPage() {
                     <th className="text-left py-3 px-4 font-medium text-gray-700">ID</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Tên</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Email</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Vai trò</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">SĐT</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Trạng thái</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Ngày tạo</th>
@@ -213,11 +214,16 @@ export default function StaffsPage() {
                           {staff.email}
                         </div>
                       </td>
+                      <td className="py-3 px-4">
+                        <Badge className={`border-0 text-xs ${staff.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {staff.role === 'ADMIN' ? 'Admin' : 'Nhân viên'}
+                        </Badge>
+                      </td>
                       <td className="py-3 px-4 text-gray-700">{staff.phone || '—'}</td>
                       <td className="py-3 px-4">
                         <Badge
-                          className={`border-0 text-xs cursor-pointer ${staff.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                          onClick={() => handleToggleStatus(staff)}
+                          className={`border-0 text-xs ${staff.role === 'ADMIN' ? '' : 'cursor-pointer'} ${staff.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                          onClick={() => staff.role !== 'ADMIN' && handleToggleStatus(staff)}
                         >
                           {staff.status === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}
                         </Badge>
@@ -230,9 +236,11 @@ export default function StaffsPage() {
                           <Button variant="ghost" size="sm" onClick={() => openEditModal(staff)}>
                             <Edit2 className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleDelete(staff.id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {staff.role !== 'ADMIN' && (
+                            <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleDelete(staff.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

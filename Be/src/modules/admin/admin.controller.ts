@@ -210,6 +210,15 @@ export class AdminController {
     return { data };
   }
 
+  @Patch('bookings/:id/cancel')
+  async cancelBooking(
+    @CurrentUser('id') adminId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { reason: string },
+  ) {
+    return this.adminService.cancelBooking(adminId, id, body.reason);
+  }
+
   // ===== DISPUTES =====
 
   @Get('disputes')

@@ -11,7 +11,7 @@ export class StaffAdminService {
   constructor(private prisma: PrismaService) {}
 
   async getStaffs(page: number = 1, limit: number = 20, keyword?: string) {
-    const where: any = { role: 'STAFF' };
+    const where: any = { role: { in: ['ADMIN', 'STAFF'] } };
     if (keyword) {
       where.OR = [
         { fullName: { contains: keyword, mode: 'insensitive' } },

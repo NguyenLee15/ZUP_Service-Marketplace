@@ -7,6 +7,8 @@ import {
   AlertCircle,
   Search,
   X,
+  Users,
+  Wrench,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +48,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showLockModal, setShowLockModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
 
   const {
     register,
@@ -59,7 +62,10 @@ export default function UsersPage() {
 
   const fetchUsers = () => {
     setLoading(true);
-    adminApi.getUsers(searchTerm ? { keyword: searchTerm } : {})
+    adminApi.getUsers({
+      role: roleFilter,
+      ...(searchTerm ? { keyword: searchTerm } : {}),
+    })
       .then((res) => setUsers(res.data.data || []))
       .catch(() => setUsers([]))
       .finally(() => setLoading(false));
@@ -70,7 +76,7 @@ export default function UsersPage() {
       fetchUsers();
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [searchTerm, roleFilter]);
 
   const handleLockUser = async (data: LockFormData) => {
     if (!selectedUser) return;
@@ -111,21 +117,47 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold text-foreground">Quản Lý Người Dùng</h3>
-          <p className="text-muted-foreground mt-1">Danh sách người dùng trong hệ thống</p>
+          <p className="text-muted-foreground mt-1">Quản lý tài khoản khách hàng và thợ</p>
         </div>
       </div>
 
       {/* Search Bar */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="Tìm kiếm theo tên hoặc email..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex gap-2">
+              {[
+                { value: 'CUSTOMER', label: 'Khách hàng', icon: Users },
+                { value: 'PROVIDER', label: 'Thợ', icon: Wrench },
+              ].map((option) => {
+                const Icon = option.icon;
+                const active = roleFilter === option.value;
+                return (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant={active ? 'default' : 'outline'}
+                    onClick={() => {
+                      setRoleFilter(option.value as 'CUSTOMER' | 'PROVIDER');
+                      setSelectedUser(null);
+                    }}
+                    className="gap-2"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {option.label}
+                  </Button>
+                );
+              })}
+            </div>
+            <div className="relative w-full lg:max-w-md">
+              <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="Tìm kiếm theo tên hoặc email..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

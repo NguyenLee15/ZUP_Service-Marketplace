@@ -788,6 +788,73 @@ export class BookingsService {
     return { data: updated, message: 'Đã hủy đơn' };
   }
 
+  async cancelByAdmin(
+    adminId: number,
+    bookingId: number,
+    dto: CancelBookingDto,
+  ) {
+    await this.checkActiveUser(adminId);
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: {
+        id: true,
+        bookingCode: true,
+        customerId: true,
+        providerId: true,
+        status: true,
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Đơn hàng không tồn tại',
+      });
+    }
+
+    if (
+      ([BookingStatus.CANCELLED, BookingStatus.DONE, BookingStatus.DISPUTED] as BookingStatus[]).includes(
+        booking.status,
+      )
+    ) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Không thể hủy đơn đã hủy, đã hoàn thành hoặc đang tranh chấp',
+      });
+    }
+
+    const reason = dto.reason || 'Admin hủy đơn theo yêu cầu đặc biệt';
+    const updated = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
+    await this.addStatusHistory(
+      bookingId,
+      booking.status,
+      'CANCELLED',
+      adminId,
+      `Admin hủy đơn: ${reason}`,
+    );
+
+    await this.notify(
+      booking.customerId,
+      'BOOKING_CANCELLED_BY_ADMIN',
+      'Đơn hàng đã được hủy',
+      `Đơn #${booking.bookingCode}: ${reason}`,
+      bookingId,
+    );
+    await this.notify(
+      booking.providerId,
+      'BOOKING_CANCELLED_BY_ADMIN',
+      'Đơn hàng đã được hủy',
+      `Đơn #${booking.bookingCode}: ${reason}`,
+      bookingId,
+    );
+
+    return { data: updated, message: 'Đã hủy đơn' };
+  }
+
   // ===== 12. DEDUCT COMMISSION =====
 
   private async deductCommission(bookingId: number, txClient?: any) {

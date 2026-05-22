@@ -188,6 +188,8 @@ export const adminApi = {
   getBookings: (params?: Record<string, any>) =>
     api.get("/admin/bookings", { params }),
   getBookingDetail: (id: number) => api.get(`/admin/bookings/${id}`),
+  cancelBooking: (id: number, reason: string) =>
+    api.patch(`/admin/bookings/${id}/cancel`, { reason }),
 
   // Wallet manual deposits / withdrawals
   getWalletDeposits: (params?: Record<string, any>) =>

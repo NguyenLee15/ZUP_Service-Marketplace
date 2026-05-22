@@ -151,6 +151,10 @@ export class AdminService {
     return booking;
   }
 
+  async cancelBooking(adminId: number, id: number, reason: string) {
+    return this.bookingsService.cancelByAdmin(adminId, id, { reason });
+  }
+
   // ===== DISPUTES =====
 
   async getDisputes(status?: string, page: number = 1, limit: number = 20) {
