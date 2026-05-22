@@ -86,17 +86,61 @@ function getMessageText(msg: ChatbotUIMessage): string {
   return "";
 }
 
-function renderMarkdown(text: string) {
+function parseInlineStyles(text: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={index} className="font-semibold">
+        <strong key={index} className="font-bold text-slate-950">
           {part.slice(2, -2)}
         </strong>
       );
     }
     return <span key={index}>{part}</span>;
   });
+}
+
+function renderMarkdown(text: string) {
+  if (!text) return null;
+
+  const lines = text.split("\n");
+  return (
+    <div className="space-y-1">
+      {lines.map((line, lineIdx) => {
+        const trimmed = line.trim();
+
+        // Bullet lists
+        if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+          const content = trimmed.substring(2);
+          return (
+            <div key={lineIdx} className="flex items-start gap-1.5 pl-1.5 py-0.5 text-sm">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+              <span className="flex-1 text-slate-800">{parseInlineStyles(content)}</span>
+            </div>
+          );
+        }
+
+        // Numbered lists
+        const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+        if (numMatch) {
+          const num = numMatch[1];
+          const content = numMatch[2];
+          return (
+            <div key={lineIdx} className="flex items-start gap-1.5 pl-1.5 py-0.5 text-sm">
+              <span className="font-semibold text-blue-600 shrink-0 text-xs mt-0.5">{num}.</span>
+              <span className="flex-1 text-slate-800">{parseInlineStyles(content)}</span>
+            </div>
+          );
+        }
+
+        // Standard text lines
+        return (
+          <p key={lineIdx} className="text-sm min-h-[1rem] leading-relaxed text-slate-800">
+            {parseInlineStyles(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
 }
 
 function getAuthToken(): string {
@@ -121,6 +165,8 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   );
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
@@ -225,6 +271,37 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   });
 
   const isLoading = status === "streaming" || status === "submitted";
+
+  // Khôi phục lịch sử chat từ API khi có sessionId và accessToken
+  useEffect(() => {
+    if (!sessionId || !accessToken || messages.length > 1 || historyLoading) return;
+
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const response = await api.get(`/chatbot/history?sessionId=${sessionId}`);
+        const historyData = response.data?.data;
+        if (Array.isArray(historyData) && historyData.length > 0) {
+          setMessages(historyData);
+          
+          // Hydrate metaMap
+          const newMetaMap: Record<string, ChatbotMessageMeta> = {};
+          historyData.forEach((msg: any) => {
+            if (msg.role === "assistant" && msg.metadata) {
+              newMetaMap[msg.id] = msg.metadata;
+            }
+          });
+          setMetaMap((prev) => ({ ...prev, ...newMetaMap }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch chatbot history:", err);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [sessionId, accessToken, setMessages, messages.length]);
 
   // Thiết lập welcome message metadata
   useEffect(() => {
@@ -410,6 +487,12 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           )}
 
           <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4" aria-live="polite">
+            {historyLoading && (
+              <div className="flex items-center justify-center gap-2 py-4 text-xs text-slate-500 font-medium">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                Đang khôi phục lịch sử chat...
+              </div>
+            )}
             {messages.map((message) => {
               const streamMeta = message.metadata || {};
               const mapMeta = metaMap[message.id] || {};

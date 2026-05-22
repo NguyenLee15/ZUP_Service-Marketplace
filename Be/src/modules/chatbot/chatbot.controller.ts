@@ -63,4 +63,13 @@ export class ChatbotController {
   ) {
     return this.chatbotService.deleteSession(userId, sessionId);
   }
+
+  @Get('sessions/:id/messages')
+  @UseGuards(JwtAuthGuard)
+  async getSessionHistory(
+    @CurrentUser('id') userId: number,
+    @Param('id') sessionId: string,
+  ) {
+    return this.chatbotService.getSessionHistory(userId, sessionId);
+  }
 }

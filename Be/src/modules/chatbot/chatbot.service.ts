@@ -312,6 +312,140 @@ export class ChatbotService {
     return { message: 'Đã xóa phiên chatbot' };
   }
 
+  async getSessionHistory(userId: number, sessionId: string): Promise<any[]> {
+    const session = await this.prisma.chatbotSession.findFirst({
+      where: { id: sessionId, userId },
+      select: { id: true, state: true },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Không tìm thấy phiên trò chuyện');
+    }
+
+    const messages = await this.prisma.chatbotSessionMessage.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // 1. Thu thập tất cả serviceIds từ metadata tin nhắn
+    const serviceIds: number[] = [];
+    messages.forEach((msg) => {
+      if (msg.role === 'assistant' && msg.metadata) {
+        const meta = msg.metadata as any;
+        if (Array.isArray(meta.serviceIds)) {
+          meta.serviceIds.forEach((id: number) => {
+            if (typeof id === 'number') serviceIds.push(id);
+          });
+        }
+      }
+    });
+
+    // 2. Hydrate services
+    const uniqueServiceIds = Array.from(new Set(serviceIds));
+    const services = uniqueServiceIds.length > 0
+      ? await this.prisma.service.findMany({
+          where: {
+            id: { in: uniqueServiceIds },
+            isDeleted: false,
+          },
+          include: serviceCardInclude,
+        })
+      : [];
+
+    const defaultAddress = await this.getDefaultAddress(userId);
+    const customerCoords = defaultAddress && defaultAddress.latitude && defaultAddress.longitude
+      ? { lat: Number(defaultAddress.latitude), lng: Number(defaultAddress.longitude) }
+      : undefined;
+
+    const providerIds = Array.from(new Set(services.map(s => s.providerId)));
+    const addresses = providerIds.length > 0
+      ? await this.prisma.userAddress.findMany({
+          where: { userId: { in: providerIds } },
+          orderBy: [{ isDefault: 'desc' }, { id: 'desc' }]
+        })
+      : [];
+
+    const addressMap = new Map<number, any>();
+    for (const addr of addresses) {
+      if (!addressMap.has(addr.userId)) {
+        addressMap.set(addr.userId, addr);
+      }
+    }
+
+    const serviceMap = new Map<number, ChatServiceResult>();
+    services.forEach((s) => {
+      const geoService = s as any;
+      const addr = addressMap.get(s.providerId);
+      if (addr) {
+        geoService.providerAddress = `${addr.addressDetail}, ${addr.ward}, ${addr.district}, ${addr.province}`;
+        if (customerCoords && addr.latitude && addr.longitude) {
+          geoService.distanceKm = calculateHaversineDistance(
+            customerCoords.lat,
+            customerCoords.lng,
+            Number(addr.latitude),
+            Number(addr.longitude),
+          );
+        }
+      }
+      serviceMap.set(s.id, this.toServiceCard(geoService));
+    });
+
+    // 3. Phục dựng trạng thái action từ session state
+    const sessionState = this.deserializeState(session.state);
+    const pendingActions = sessionState.pendingActions || {};
+
+    // 4. Map tin nhắn sang UIMessage
+    return messages.map((msg) => {
+      const role = msg.role === 'user' ? 'user' : 'assistant';
+      const uiMsg: any = {
+        id: `msg-${msg.id}`,
+        role,
+        parts: [{ type: 'text', text: msg.content }],
+        createdAt: msg.createdAt.toISOString(),
+      };
+
+      if (role === 'assistant') {
+        const meta = msg.metadata as any;
+        const msgServices: ChatServiceResult[] = [];
+        let msgAction: any = undefined;
+
+        if (meta) {
+          if (Array.isArray(meta.serviceIds)) {
+            meta.serviceIds.forEach((id: number) => {
+              const svc = serviceMap.get(id);
+              if (svc) msgServices.push(svc);
+            });
+          }
+
+          if (meta.action && meta.action.id) {
+            const act = pendingActions[meta.action.id];
+            if (act) {
+              msgAction = act;
+            } else {
+              // Action dự phòng nếu đã bị trim/hết hạn
+              msgAction = {
+                id: meta.action.id,
+                type: meta.action.type,
+                label: 'Thao tác liên quan',
+                summary: 'Thao tác này đã kết thúc',
+                requiresConfirmation: false,
+              };
+            }
+          }
+        }
+
+        uiMsg.metadata = {
+          sessionId,
+          services: msgServices,
+          action: msgAction,
+          quickReplies: [],
+        };
+      }
+
+      return uiMsg;
+    });
+  }
+
   async persistStreamResult(
     userId: number | undefined,
     input: ChatbotStreamResultRequest,
