@@ -303,25 +303,6 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
     fetchHistory();
   }, [sessionId, accessToken, setMessages, messages.length]);
 
-  // Thiết lập welcome message metadata
-  useEffect(() => {
-    setMetaMap((prev) => ({
-      ...prev,
-      welcome: {
-        quickReplies: [
-          {
-            label: "Tìm dịch vụ",
-            message: "Máy lạnh chảy nước thì nên chọn dịch vụ nào?",
-          },
-          {
-            label: "So sánh",
-            message: "So sánh dịch vụ vệ sinh máy lạnh giúp tôi",
-          },
-          { label: "Đơn của tôi", message: "Đơn của tôi tới đâu rồi?" },
-        ],
-      },
-    }));
-  }, []);
 
   // Auto-scroll
   useEffect(() => {
