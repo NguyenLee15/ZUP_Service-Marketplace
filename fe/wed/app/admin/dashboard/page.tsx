@@ -420,12 +420,12 @@ export default function AdminDashboard() {
           {loading ? (
             <DashboardLoadingState />
           ) : statusData.length > 0 ? (
-            <RoundedColumnChart
+            <RankedBarChart
               data={statusData.map((item) => ({
                 name: item.status,
                 count: item.count,
               }))}
-              color="bg-amber-500"
+              barClassName="bg-amber-500"
             />
           ) : (
             <ChartEmptyState label="Chưa có dữ liệu trạng thái." />
@@ -441,7 +441,7 @@ export default function AdminDashboard() {
           {loading ? (
             <DashboardLoadingState />
           ) : categoryData.length > 0 ? (
-            <RoundedColumnChart data={categoryData} color="bg-action-blue" />
+            <RankedBarChart data={categoryData} barClassName="bg-action-blue" />
           ) : (
             <ChartEmptyState label="Chưa có đơn hàng theo danh mục." />
           )}
@@ -454,7 +454,7 @@ export default function AdminDashboard() {
           {loading ? (
             <DashboardLoadingState />
           ) : serviceData.length > 0 ? (
-            <RoundedColumnChart data={serviceData} color="bg-emerald-500" />
+            <RankedBarChart data={serviceData} barClassName="bg-emerald-500" />
           ) : (
             <ChartEmptyState label="Chưa có dữ liệu dịch vụ." />
           )}
@@ -475,41 +475,45 @@ function ChartEmptyState({ label }: { label: string }) {
   );
 }
 
-function RoundedColumnChart({
+function RankedBarChart({
   data,
-  color,
+  barClassName,
   valueFormatter = (value) => value.toLocaleString("vi-VN"),
 }: {
   data: Array<{ name: string; count: number }>;
-  color: string;
+  barClassName: string;
   valueFormatter?: (value: number) => string;
 }) {
   const maxValue = Math.max(...data.map((item) => Number(item.count) || 0), 1);
-  const visibleData = data.slice(0, 8);
+  const visibleData = data.slice(0, 7);
 
   return (
-    <div className="flex min-h-[280px] items-end gap-4 overflow-x-auto rounded-lg bg-gradient-to-b from-pale-gray/60 to-white px-4 pb-4 pt-6">
+    <div className="min-h-[280px] rounded-lg bg-pale-gray/60 p-4">
+      <div className="space-y-3">
       {visibleData.map((item) => {
         const value = Number(item.count) || 0;
-        const height = Math.max((value / maxValue) * 210, value > 0 ? 28 : 0);
+        const width = Math.max((value / maxValue) * 100, value > 0 ? 10 : 0);
 
         return (
-          <div key={item.name} className="flex min-w-20 flex-1 flex-col items-center gap-2">
-            <p className="text-sm font-semibold text-midnight-indigo">
-              {valueFormatter(value)}
-            </p>
-            <div className="flex h-[210px] w-full max-w-16 items-end rounded-full bg-white shadow-inner">
+          <div key={item.name} className="rounded-lg bg-white p-3 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="truncate text-sm font-semibold text-midnight-indigo" title={item.name}>
+                {item.name}
+              </p>
+              <p className="shrink-0 font-mono text-sm font-bold text-midnight-indigo">
+                {valueFormatter(value)}
+              </p>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-[#E7EDF6]">
               <div
-                className={`w-full rounded-full ${color} shadow-sm`}
-                style={{ height: `${height}px` }}
+                className={`h-full rounded-full ${barClassName}`}
+                style={{ width: `${width}%` }}
               />
             </div>
-            <p className="line-clamp-2 min-h-10 text-center text-xs font-medium text-slate-blue" title={item.name}>
-              {item.name}
-            </p>
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -523,6 +527,7 @@ function LineChartCard({
 }) {
   const visibleData = data.slice(-12);
   const maxValue = Math.max(...visibleData.map((item) => Number(item.count) || 0), 1);
+  const total = visibleData.reduce((sum, item) => sum + (Number(item.count) || 0), 0);
   const width = 720;
   const height = 220;
   const points = visibleData.map((item, index) => {
@@ -538,10 +543,21 @@ function LineChartCard({
     .join(" ");
 
   return (
-    <div className="min-h-[280px] rounded-lg bg-gradient-to-b from-blue-50/60 to-white p-4">
+    <div className="min-h-[280px] rounded-lg bg-pale-gray/60 p-4">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-slate-blue">Tổng hoa hồng trong kỳ</p>
+          <p className="mt-1 font-mono text-2xl font-bold text-midnight-indigo">
+            {valueFormatter(total)}
+          </p>
+        </div>
+        <p className="rounded-md bg-white px-3 py-1 text-xs font-semibold text-slate-blue shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+          {visibleData.length} mốc dữ liệu
+        </p>
+      </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-[220px] w-full overflow-visible"
+        className="h-[190px] w-full overflow-visible rounded-lg bg-white px-2"
         role="img"
         aria-label="Biểu đồ đường hoa hồng"
       >
@@ -556,10 +572,17 @@ function LineChartCard({
             strokeDasharray="6 6"
           />
         ))}
-        <path d={path} fill="none" stroke="#006BFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        {points.length > 1 && (
+          <path
+            d={`${path} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`}
+            fill="#006BFF"
+            opacity="0.08"
+          />
+        )}
+        <path d={path} fill="none" stroke="#006BFF" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
         {points.map((point) => (
           <g key={point.name}>
-            <circle cx={point.x} cy={point.y} r="6" fill="#006BFF" stroke="white" strokeWidth="3" />
+            <circle cx={point.x} cy={point.y} r="5" fill="#006BFF" stroke="white" strokeWidth="3" />
             <title>{`${point.name}: ${valueFormatter(Number(point.count) || 0)}`}</title>
           </g>
         ))}
