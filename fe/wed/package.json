@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/vercel-finalize-workaround.mjs",
+    "build": "next build --webpack && node scripts/vercel-finalize-workaround.mjs",
     "start": "next start",
     "lint": "eslint ."
   },

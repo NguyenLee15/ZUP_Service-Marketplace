@@ -1,4 +1,8 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import withPWAInit from "@ducanh2912/next-pwa";
+
+const appDir = dirname(fileURLToPath(import.meta.url));
 
 const withPWA = withPWAInit({
   dest: "public",
@@ -10,6 +14,7 @@ const withPWA = withPWAInit({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  outputFileTracingRoot: appDir,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
@@ -33,7 +38,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.pravatar.cc' },
     ],
   },
-  turbopack: {},
 }
 
 export default withPWA(nextConfig)
