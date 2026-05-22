@@ -2,7 +2,9 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, symlinkSync }
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const appDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const appDir = (typeof import.meta !== 'undefined' && import.meta.url)
+  ? resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  : process.cwd();
 const appNextDir = resolve(appDir, '.next');
 const routesManifest = resolve(appNextDir, 'routes-manifest.json');
 const deterministicRoutesManifest = resolve(appNextDir, 'routes-manifest-deterministic.json');

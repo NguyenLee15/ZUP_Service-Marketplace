@@ -2,7 +2,9 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import withPWAInit from "@ducanh2912/next-pwa";
 
-const appDir = dirname(fileURLToPath(import.meta.url));
+const appDir = (typeof import.meta !== 'undefined' && import.meta.url)
+  ? dirname(fileURLToPath(import.meta.url))
+  : process.cwd();
 
 const withPWA = withPWAInit({
   dest: "public",
