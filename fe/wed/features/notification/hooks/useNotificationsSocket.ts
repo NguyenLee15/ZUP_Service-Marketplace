@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Socket } from 'socket.io-client';
+import { ensureAccessToken } from '@/lib/auth-token';
 import { useAuthStore } from '@/store/auth.store';
 
 type NotificationPayload = {
@@ -13,12 +14,15 @@ export const useNotificationsSocket = (onNotificationReceived: (notification: No
   const { accessToken, user } = useAuthStore();
 
   useEffect(() => {
-    if (!accessToken || !user) return;
+    if (!user) return;
 
     let cancelled = false;
     let socket: Socket | null = null;
 
     async function connect() {
+      const token = accessToken || (await ensureAccessToken());
+      if (!token) return;
+
       const { io } = await import('socket.io-client');
       if (cancelled) return;
 
@@ -27,7 +31,7 @@ export const useNotificationsSocket = (onNotificationReceived: (notification: No
       const baseUrl = wsUrl.replace(/\/api\/?$/, '');
 
       socket = io(`${baseUrl}/notifications`, {
-        auth: { token: accessToken },
+        auth: { token },
         // Allow both polling and websocket for better compatibility
       });
 

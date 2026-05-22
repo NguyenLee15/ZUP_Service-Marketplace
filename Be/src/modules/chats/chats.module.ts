@@ -16,8 +16,7 @@ import { isRedisQueueEnabled } from '../../config/runtime.config';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) =>
         ({
-          secret:
-            configService.get<string>('app.jwtSecret') || 'fallback-secret',
+          secret: configService.getOrThrow<string>('app.jwtSecret'),
         }) as any,
       inject: [ConfigService],
     }),

@@ -1,6 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const ACCESS_TOKEN_COOKIE = 'hs_access_token';
+const REFRESH_TOKEN_COOKIE = 'hs_refresh_token';
+const AUTH_TOKEN_PATHS = new Set([
+  '/auth/login',
+  '/auth/google',
+  '/auth/verify-otp',
+  '/auth/refresh',
+]);
+
+function authCookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge,
+  };
+}
+
+function clearAuthCookies(response: NextResponse) {
+  response.cookies.set(ACCESS_TOKEN_COOKIE, '', authCookieOptions(0));
+  response.cookies.set(REFRESH_TOKEN_COOKIE, '', authCookieOptions(0));
+}
+
+function readJsonBody(text: string) {
+  if (!text.trim()) return {};
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function getPayloadData(payload: any) {
+  return payload?.data && typeof payload.data === 'object'
+    ? payload.data
+    : payload;
+}
+
+function getAuthTokens(payload: any) {
+  const data = getPayloadData(payload);
+  return {
+    accessToken:
+      typeof data?.accessToken === 'string' ? data.accessToken : null,
+    refreshToken:
+      typeof data?.refreshToken === 'string' ? data.refreshToken : null,
+  };
+}
+
+function stripRefreshToken(payload: any) {
+  const data = getPayloadData(payload);
+  if (data && typeof data === 'object') {
+    delete data.refreshToken;
+  }
+}
+
+function storeAuthCookies(
+  response: NextResponse,
+  tokens: { accessToken: string | null; refreshToken: string | null },
+) {
+  if (tokens.accessToken) {
+    response.cookies.set(
+      ACCESS_TOKEN_COOKIE,
+      tokens.accessToken,
+      authCookieOptions(30 * 60),
+    );
+  }
+
+  if (tokens.refreshToken) {
+    response.cookies.set(
+      REFRESH_TOKEN_COOKIE,
+      tokens.refreshToken,
+      authCookieOptions(7 * 24 * 60 * 60),
+    );
+  }
+}
 
 /**
  * Proxy request tới NestJS backend.
@@ -15,9 +92,14 @@ export async function proxyToBackend(
   backendPath: string,
 ) {
   const headers: Record<string, string> = {};
+  const cookieStore = await cookies();
 
-  // Forward auth header
-  const auth = req.headers.get('authorization');
+  // Forward auth header. Browser callers can rely on httpOnly cookies; socket
+  // callers can still pass the short-lived in-memory access token explicitly.
+  const cookieAccessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+  const auth =
+    req.headers.get('authorization') ||
+    (cookieAccessToken ? `Bearer ${cookieAccessToken}` : null);
   if (auth) headers['Authorization'] = auth;
 
   // Forward IP for audit logs
@@ -40,7 +122,16 @@ export async function proxyToBackend(
     } else {
       // JSON or other text body
       headers['Content-Type'] = contentType || 'application/json';
-      fetchOptions.body = await req.text();
+      const bodyText = await req.text();
+      if (backendPath === '/auth/refresh') {
+        const body = readJsonBody(bodyText);
+        if (!body.refreshToken) {
+          body.refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
+        }
+        fetchOptions.body = JSON.stringify(body);
+      } else {
+        fetchOptions.body = bodyText;
+      }
     }
   } else {
     headers['Content-Type'] = 'application/json';
@@ -79,12 +170,42 @@ export async function proxyToBackend(
 
     // JSON/text responses
     const data = await response.text();
-    return new NextResponse(data, {
+    let responseBody = data;
+    let parsedPayload: any = null;
+    let authTokens: ReturnType<typeof getAuthTokens> | null = null;
+
+    if (responseContentType.includes('application/json')) {
+      try {
+        parsedPayload = JSON.parse(data);
+        if (response.ok && AUTH_TOKEN_PATHS.has(backendPath)) {
+          authTokens = getAuthTokens(parsedPayload);
+          stripRefreshToken(parsedPayload);
+        }
+      } catch {
+        parsedPayload = null;
+      }
+    }
+
+    if (parsedPayload && responseContentType.includes('application/json')) {
+      responseBody = JSON.stringify(parsedPayload);
+    }
+
+    const proxiedResponse = new NextResponse(responseBody, {
       status: response.status,
       headers: {
         'Content-Type': responseContentType,
       },
     });
+
+    if (authTokens) {
+      storeAuthCookies(proxiedResponse, authTokens);
+    }
+
+    if (backendPath === '/auth/logout') {
+      clearAuthCookies(proxiedResponse);
+    }
+
+    return proxiedResponse;
   } catch (error) {
     console.error(`[BFF Proxy] Failed to reach backend: ${error}`);
     return NextResponse.json(

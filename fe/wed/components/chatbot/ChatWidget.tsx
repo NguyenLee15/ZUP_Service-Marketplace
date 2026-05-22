@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { z } from "zod/v4";
 import api from "@/lib/axios";
+import { useAuthStore } from "@/store/auth.store";
 
 const chatServiceSchema = z.object({
   id: z.number(),
@@ -96,17 +97,8 @@ function renderMarkdown(text: string) {
   });
 }
 
-/** Get auth token from localStorage */
 function getAuthToken(): string {
-  if (typeof window === "undefined") return "";
-  try {
-    const store = JSON.parse(
-      window.localStorage.getItem("auth-storage") || "{}",
-    );
-    return store?.state?.accessToken || "";
-  } catch {
-    return "";
-  }
+  return useAuthStore.getState().accessToken || "";
 }
 
 export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {

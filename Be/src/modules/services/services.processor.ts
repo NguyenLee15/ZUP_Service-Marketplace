@@ -41,14 +41,22 @@ export class ServicesProcessor extends WorkerHost {
     description: string,
   ) {
     this.logger.log(`Generating embedding for service #${serviceId}`);
+    const normalizedServiceId = Number(serviceId);
+    if (!Number.isInteger(normalizedServiceId) || normalizedServiceId <= 0) {
+      this.logger.warn(`Invalid service id for embedding: ${serviceId}`);
+      return;
+    }
+
     const text = `${name} ${description}`;
     const embedding = await this.aiService.createEmbedding(text);
 
     if (embedding) {
       const vectorStr = `[${embedding.join(',')}]`;
-      await this.prisma.$executeRawUnsafe(
-        `UPDATE services SET embedding = '${vectorStr}'::vector WHERE id = ${serviceId}`,
-      );
+      await this.prisma.$executeRaw`
+        UPDATE services
+        SET embedding = ${vectorStr}::vector
+        WHERE id = ${normalizedServiceId}
+      `;
     }
   }
 

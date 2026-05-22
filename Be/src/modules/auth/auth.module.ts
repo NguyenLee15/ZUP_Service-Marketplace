@@ -21,8 +21,7 @@ import {
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) =>
         ({
-          secret:
-            configService.get<string>('app.jwtSecret') || 'fallback-secret',
+          secret: configService.getOrThrow<string>('app.jwtSecret'),
           signOptions: {
             expiresIn: configService.get<string>('app.jwtExpiresIn') || '30m',
           },

@@ -729,8 +729,7 @@ export class AuthService {
     role: UserRole,
   ) {
     const payload = { sub: userId, email, role };
-    const secret =
-      this.configService.get<string>('app.jwtSecret') || 'fallback-secret';
+    const secret = this.configService.getOrThrow<string>('app.jwtSecret');
     const expiresIn =
       this.configService.get<string>('app.jwtExpiresIn') || '30m';
 

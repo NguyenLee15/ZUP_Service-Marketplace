@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { getNotifSocket, connectSockets, disconnectSockets } from '@/lib/socket';
+import { ensureAccessToken } from '@/lib/auth-token';
 import { useAuthStore } from '@/store/auth.store';
 import type { Socket } from 'socket.io-client';
 
@@ -12,20 +13,30 @@ import type { Socket } from 'socket.io-client';
 export function useSocket() {
   const socketRef = useRef<Socket | null>(null);
   const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (accessToken) {
       connectSockets();
       socketRef.current = getNotifSocket();
-    } else {
+    } else if (user) {
+      void ensureAccessToken().then((token) => {
+        if (!cancelled && token) {
+          connectSockets();
+          socketRef.current = getNotifSocket();
+        }
+      });
+    } else if (!user) {
       disconnectSockets();
       socketRef.current = null;
     }
 
     return () => {
-      // Không disconnect khi unmount component — socket là singleton
+      cancelled = true;
     };
-  }, [accessToken]);
+  }, [accessToken, user]);
 
   const emit = useCallback((event: string, data?: unknown) => {
     socketRef.current?.emit(event, data);

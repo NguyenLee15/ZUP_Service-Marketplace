@@ -93,6 +93,6 @@ export function useAuth() {
     logout,
     register,
     verifyOtp,
-    isAuthenticated: !!useAuthStore.getState().accessToken,
+    isAuthenticated: !!useAuthStore.getState().user,
   };
 }

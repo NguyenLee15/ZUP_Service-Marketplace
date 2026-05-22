@@ -8,7 +8,7 @@ interface AuthState {
   refreshToken: string | null;
 
   // Actions
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken?: string | null, refreshToken?: string | null) => void;
   setUser: (user: User) => void;
   logout: () => void;
 
@@ -27,8 +27,8 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
 
-      setTokens: (accessToken, refreshToken) =>
-        set({ accessToken, refreshToken }),
+      setTokens: (accessToken) =>
+        set({ accessToken: accessToken || null, refreshToken: null }),
 
       setUser: (user) => set({ user }),
 
@@ -39,14 +39,22 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
         }),
 
-      isAuthenticated: () => !!get().accessToken,
+      isAuthenticated: () => !!get().user,
       isProvider: () => get().user?.role === Role.PROVIDER,
       isAdmin: () => get().user?.role === Role.ADMIN,
       isStaff: () => get().user?.role === Role.STAFF,
       isCustomer: () => get().user?.role === Role.CUSTOMER,
     }),
     {
-      name: 'auth-storage', // Key lưu trong localStorage
+      name: 'auth-storage',
+      partialize: (state) => ({ user: state.user }),
+      version: 2,
+      merge: (persisted, current) => ({
+        ...current,
+        user: (persisted as Partial<AuthState> | undefined)?.user ?? null,
+        accessToken: null,
+        refreshToken: null,
+      }),
     }
   )
 );

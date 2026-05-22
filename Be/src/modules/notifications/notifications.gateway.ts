@@ -8,9 +8,10 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { OnEvent } from '@nestjs/event-emitter';
+import { resolveWebsocketCorsOrigin } from '../../config/websocket-cors.config';
 
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: { origin: resolveWebsocketCorsOrigin(), credentials: true },
   namespace: '/notifications',
 })
 export class NotificationsGateway

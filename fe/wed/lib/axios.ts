@@ -21,7 +21,8 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
   failedQueue = [];
 };
 
-// 1. Tự động đính kèm Access Token
+// 1. Tự động đính kèm Access Token trong memory.
+// Refresh token nằm trong httpOnly cookie do BFF quản lý.
 instance.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().accessToken;
@@ -41,7 +42,10 @@ instance.interceptors.response.use(
       _retry?: boolean;
     };
 
-    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/auth/register');
+    const isAuthEndpoint =
+      originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/refresh') ||
+      originalRequest.url?.includes('/auth/register');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       // Nếu đang refresh rồi → đưa vào hàng đợi
@@ -60,19 +64,14 @@ instance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = useAuthStore.getState().refreshToken;
-        if (!refreshToken) {
-          throw new Error('No refresh token');
-        }
-
-        const { data } = await axios.post(
-          '/api/auth/refresh',
-          { refreshToken },
-        );
+        const { data } = await axios.post('/api/auth/refresh', {});
 
         const newAccessToken = data.data?.accessToken || data.accessToken;
-        const newRefreshToken = data.data?.refreshToken || data.refreshToken;
-        useAuthStore.getState().setTokens(newAccessToken, newRefreshToken);
+        if (!newAccessToken) {
+          throw new Error('No access token returned from refresh');
+        }
+
+        useAuthStore.getState().setTokens(newAccessToken);
 
         processQueue(null, newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
