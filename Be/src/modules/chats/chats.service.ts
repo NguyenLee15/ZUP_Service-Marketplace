@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { SenderType, ServiceStatus, UserRole } from '@prisma/client';
 
 import { AiService } from '../../shared/ai/ai.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 type CreateConversationInput = {
   serviceId?: number | string;
@@ -22,6 +23,7 @@ export class ChatsService {
   constructor(
     private prisma: PrismaService,
     private aiService: AiService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async isMember(conversationId: number, userId: number): Promise<boolean> {
@@ -290,6 +292,55 @@ export class ChatsService {
     });
 
     return message;
+  }
+
+  async recallMessage(messageId: number, userId: number) {
+    const message = await this.prisma.message.findFirst({
+      where: {
+        id: messageId,
+        senderId: userId,
+        senderType: { in: [SenderType.CUSTOMER, SenderType.PROVIDER] },
+        recalledAt: null,
+      },
+      include: {
+        conversation: {
+          select: { id: true, customerId: true, providerId: true },
+        },
+      },
+    });
+
+    if (!message) {
+      throw new NotFoundException({
+        message: 'Tin nhắn không tồn tại hoặc không thể thu hồi',
+      });
+    }
+
+    const recallWindowMs = 5 * 60 * 1000;
+    if (Date.now() - message.createdAt.getTime() > recallWindowMs) {
+      throw new BadRequestException({
+        message: 'Chỉ có thể thu hồi tin nhắn trong 5 phút sau khi gửi',
+      });
+    }
+
+    const recalled = await this.prisma.message.update({
+      where: { id: message.id },
+      data: {
+        recalledAt: new Date(),
+        content: 'Tin nhắn đã được thu hồi',
+      },
+      include: {
+        sender: { select: { id: true, fullName: true, avatarUrl: true } },
+      },
+    });
+
+    await this.prisma.conversation.update({
+      where: { id: message.conversationId },
+      data: { updatedAt: new Date() },
+    });
+
+    this.eventEmitter.emit('chat.message.recalled', recalled);
+
+    return recalled;
   }
 
   async markAsRead(conversationId: number, userId: number) {

@@ -41,6 +41,13 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       .emit('newMessage', message);
   }
 
+  @OnEvent('chat.message.recalled')
+  handleMessageRecalled(message: any) {
+    this.server
+      .to(`convo:${message.conversationId}`)
+      .emit('messageRecalled', message);
+  }
+
   async handleConnection(client: Socket) {
     try {
       const token =
@@ -148,6 +155,21 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.to(`convo:${data.conversationId}`).emit('typing', {
       userId,
     });
+  }
+
+  @SubscribeMessage('revokeMessage')
+  async handleRevokeMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { messageId: number },
+  ) {
+    const userId = (client as any).userId;
+    if (!userId || !Number.isInteger(Number(data.messageId))) return;
+
+    try {
+      await this.chatsService.recallMessage(Number(data.messageId), userId);
+    } catch {
+      return;
+    }
   }
 
   isUserOnline(userId: number): boolean {

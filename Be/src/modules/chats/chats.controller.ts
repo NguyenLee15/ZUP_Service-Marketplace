@@ -3,6 +3,7 @@ import {
   Body,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   ParseIntPipe,
@@ -51,5 +52,13 @@ export class ChatsController {
     @Param('conversationId', ParseIntPipe) conversationId: number,
   ) {
     return this.chatsService.getSmartReplies(conversationId, userId);
+  }
+
+  @Patch('messages/:messageId/recall')
+  async recallMessage(
+    @CurrentUser('id') userId: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
+  ) {
+    return { data: await this.chatsService.recallMessage(messageId, userId) };
   }
 }

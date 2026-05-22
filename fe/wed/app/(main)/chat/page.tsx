@@ -2,18 +2,19 @@
 
 import { Suspense, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bot, Send, Search, Wrench } from "lucide-react";
+import { ArrowLeft, Bot, RotateCcw, Send, Search, Wrench } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { getChatSocket } from "@/lib/socket";
 import { useAuthStore } from "@/store/auth.store";
 
 interface Message {
-  id: string;
+  id: number;
   senderId: number | null;
   senderType: "CUSTOMER" | "PROVIDER" | "AI";
   content: string;
   createdAt: string;
+  recalledAt?: string | null;
   isAiGenerated?: boolean;
 }
 
@@ -129,6 +130,26 @@ function ChatPageContent() {
       });
     };
 
+    const handleMessageRecalled = (msg: IncomingMessage) => {
+      setMessages((prev) =>
+        prev.map((message) => (message.id === msg.id ? msg : message)),
+      );
+      setConversations((prev) =>
+        prev.map((conversation) =>
+          conversation.id === msg.conversationId
+            ? {
+                ...conversation,
+                lastMessage: {
+                  content: msg.content,
+                  createdAt: msg.createdAt,
+                  isAiGenerated: Boolean(msg.isAiGenerated),
+                },
+              }
+            : conversation,
+        ),
+      );
+    };
+
     const handleTyping = (data: TypingPayload) => {
       if (
         data.userId !== user?.id &&
@@ -142,10 +163,12 @@ function ChatPageContent() {
     };
 
     socket.on("newMessage", handleNewMessage);
+    socket.on("messageRecalled", handleMessageRecalled);
     socket.on("typing", handleTyping);
 
     return () => {
       socket.off("newMessage", handleNewMessage);
+      socket.off("messageRecalled", handleMessageRecalled);
       socket.off("typing", handleTyping);
     };
   }, [selectedConversation, user?.id]);
@@ -202,6 +225,28 @@ function ChatPageContent() {
     const socket = getChatSocket();
     if (socket && selectedConversation) {
       socket.emit("typing", { conversationId: selectedConversation });
+    }
+  };
+
+  const canRecallMessage = (message: Message) => {
+    if (message.recalledAt || message.senderId !== user?.id) return false;
+    if (message.senderType === "AI") return false;
+    return Date.now() - new Date(message.createdAt).getTime() <= 5 * 60 * 1000;
+  };
+
+  const handleRecallMessage = async (messageId: number) => {
+    try {
+      const response = await chatApi.recallMessage(messageId);
+      const recalled = response.data?.data;
+      if (recalled) {
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId ? { ...message, ...recalled } : message,
+          ),
+        );
+      }
+    } catch {
+      setMessagesError("Không thể thu hồi tin nhắn này.");
     }
   };
 
@@ -401,12 +446,25 @@ function ChatPageContent() {
                   const isMe = message.senderId === user?.id;
                   const isAi =
                     message.senderType === "AI" || message.isAiGenerated;
+                  const isRecalled = Boolean(message.recalledAt);
 
                   return (
                     <div
                       key={message.id}
-                      className={`flex gap-3 ${isMe ? "justify-end" : "justify-start"}`}
+                      className={`group flex gap-3 ${isMe ? "justify-end" : "justify-start"}`}
                     >
+                      {isMe && canRecallMessage(message) && (
+                        <button
+                          type="button"
+                          onClick={() => handleRecallMessage(message.id)}
+                          aria-label="Thu hồi tin nhắn"
+                          title="Thu hồi tin nhắn"
+                          className="mt-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-platinum-tint bg-white text-muted-foreground shadow-sm transition-colors hover:border-red-200 hover:text-red-600 group-hover:flex focus-visible:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+
                       {!isMe && (
                         <img
                           src={partnerAvatar}
@@ -417,7 +475,9 @@ function ChatPageContent() {
 
                       <div
                         className={`max-w-xs md:max-w-md px-4 py-3 rounded-lg ${
-                          isMe
+                          isRecalled
+                            ? "border border-dashed border-platinum-tint bg-white/70 text-muted-foreground italic"
+                            : isMe
                             ? "bg-action-blue text-white rounded-br-none"
                             : isAi
                               ? "bg-midnight-indigo text-white rounded-bl-none shadow-[var(--brand-shadow-sm)]"
@@ -428,7 +488,7 @@ function ChatPageContent() {
                           {message.content}
                         </p>
                         <p
-                          className={`text-[10px] mt-1 text-right ${isMe || isAi ? "text-white/70" : "text-muted-foreground"}`}
+                          className={`text-[10px] mt-1 text-right ${!isRecalled && (isMe || isAi) ? "text-white/70" : "text-muted-foreground"}`}
                         >
                           {new Date(message.createdAt).toLocaleTimeString(
                             "vi-VN",

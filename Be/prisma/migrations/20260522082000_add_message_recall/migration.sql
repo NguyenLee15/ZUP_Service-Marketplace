@@ -1,0 +1,2 @@
+ALTER TABLE "messages"
+  ADD COLUMN IF NOT EXISTS "recalled_at" TIMESTAMP(3);

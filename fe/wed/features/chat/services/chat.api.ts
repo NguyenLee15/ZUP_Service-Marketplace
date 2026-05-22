@@ -9,4 +9,7 @@ export const chatApi = {
 
   getOrCreateConversation: (data: { bookingId?: number; serviceId?: number }) =>
     api.post('/chats/conversations', data),
+
+  recallMessage: (messageId: number) =>
+    api.patch(`/chats/messages/${messageId}/recall`),
 };
