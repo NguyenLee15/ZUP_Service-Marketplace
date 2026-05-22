@@ -28,13 +28,13 @@ type NormalizedFilters = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Cho xu ly',
-  QUOTED: 'Da bao gia',
-  CONFIRMED: 'Da xac nhan',
-  IN_PROGRESS: 'Dang thuc hien',
-  DONE: 'Hoan thanh',
-  DISPUTED: 'Khieu nai',
-  CANCELLED: 'Da huy',
+  PENDING: 'Chờ xử lý',
+  QUOTED: 'Đã báo giá',
+  CONFIRMED: 'Đã xác nhận',
+  IN_PROGRESS: 'Đang thực hiện',
+  DONE: 'Hoàn thành',
+  DISPUTED: 'Khiếu nại',
+  CANCELLED: 'Đã hủy',
 };
 
 @Injectable()
@@ -108,7 +108,8 @@ export class AdminDashboardService {
     const normalized = this.normalizeFilters(filters);
     const bookingWhere = this.buildBookingWhere(normalized);
 
-    const [statusCounts, quotations] = await Promise.all([
+    const [statusCounts, quotations, bookings, filterOptions] =
+      await Promise.all([
       this.prisma.booking.groupBy({
         by: ['status'],
         where: bookingWhere,
@@ -123,6 +124,20 @@ export class AdminDashboardService {
         },
         orderBy: { booking: { createdAt: 'asc' } },
       }),
+      this.prisma.booking.findMany({
+        where: bookingWhere,
+        select: {
+          province: true,
+          service: {
+            select: {
+              id: true,
+              name: true,
+              category: { select: { id: true, name: true } },
+            },
+          },
+        },
+      }),
+      this.getFilterOptions(),
     ]);
 
     const revenueMap = new Map<string, number>();
@@ -147,6 +162,17 @@ export class AdminDashboardService {
         status: STATUS_LABELS[item.status] || item.status,
         count: item._count.id,
       })),
+      provinceData: this.groupCount(
+        bookings.map((item) => item.province || 'Chưa có tỉnh/thành'),
+      ),
+      categoryData: this.groupCount(
+        bookings.map((item) => item.service?.category?.name || 'Chưa có danh mục'),
+      ),
+      serviceData: this.groupCount(
+        bookings.map((item) => item.service?.name || 'Chưa có dịch vụ'),
+        8,
+      ),
+      filterOptions,
       filterSummary: this.describeFilters(normalized),
     };
   }
@@ -337,6 +363,48 @@ export class AdminDashboardService {
     });
   }
 
+  private async getFilterOptions() {
+    const [providers, categories, services] = await Promise.all([
+      this.prisma.user.findMany({
+        where: { role: UserRole.PROVIDER, status: 'ACTIVE' },
+        select: { id: true, fullName: true },
+        orderBy: { fullName: 'asc' },
+        take: 200,
+      }),
+      this.prisma.serviceCategory.findMany({
+        where: { isDeleted: false },
+        select: { id: true, name: true, level: true, parentId: true },
+        orderBy: [{ level: 'asc' }, { name: 'asc' }],
+        take: 300,
+      }),
+      this.prisma.service.findMany({
+        where: { status: ServiceStatus.ACTIVE, isDeleted: false },
+        select: {
+          id: true,
+          name: true,
+          provider: { select: { fullName: true } },
+          category: { select: { name: true } },
+        },
+        orderBy: { name: 'asc' },
+        take: 300,
+      }),
+    ]);
+
+    return { providers, categories, services };
+  }
+
+  private groupCount(values: string[], limit = 10) {
+    const counts = new Map<string, number>();
+    for (const value of values) {
+      counts.set(value, (counts.get(value) || 0) + 1);
+    }
+
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+  }
+
   private normalizeFilters(filters: DashboardReportFilters): NormalizedFilters {
     return {
       from: this.parseDate(filters.from, 'from'),
@@ -440,7 +508,7 @@ export class AdminDashboardService {
       filters.status
         ? `trang thai ${STATUS_LABELS[filters.status] || filters.status}`
         : '',
-      filters.providerId ? `provider #${filters.providerId}` : '',
+      filters.providerId ? `nha cung cap #${filters.providerId}` : '',
       filters.categoryId ? `danh muc #${filters.categoryId}` : '',
       filters.serviceId ? `dich vu #${filters.serviceId}` : '',
       `nhom theo ${filters.groupBy}`,

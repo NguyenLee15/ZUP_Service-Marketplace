@@ -16,12 +16,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Moon,
-  Sun,
   WalletCards,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTheme } from 'next-themes';
 import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/features/auth/services/auth.api';
 import { Toaster } from '@/components/ui/sonner';
@@ -53,7 +50,6 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { resolvedTheme, setTheme } = useTheme();
   const { logout: clearStore, user } = useAuthStore();
 
   return (
@@ -121,14 +117,6 @@ export default function AdminLayout({
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold text-foreground">Quản trị hệ thống</h2>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                aria-label={resolvedTheme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-                title="Đổi giao diện"
-              >
-                {resolvedTheme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-foreground">{user?.fullName || 'Quản trị viên'}</p>
                 <p className="text-xs text-muted-foreground">{user?.email || 'Tài khoản quản trị'}</p>

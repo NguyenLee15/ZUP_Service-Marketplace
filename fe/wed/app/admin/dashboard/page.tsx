@@ -3,23 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import {
-  Activity,
-  ArrowUpRight,
   CalendarDays,
   ChevronDown,
   DollarSign,
   Download,
   FileText,
-  Fingerprint,
   Package,
   RefreshCw,
-  Search,
-  ShieldAlert,
-  ShieldCheck,
   Table,
   TrendingUp,
   Users,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +26,6 @@ import { toast } from "sonner";
 import {
   AdminDashboardCard,
   AdminMetricCard,
-  AdminStatusBadge,
   DashboardErrorState,
   DashboardLoadingState,
 } from "../_components/AdminDashboardPrimitives";
@@ -78,14 +70,6 @@ const ResponsiveContainer = dynamic(
   () => import("recharts").then((mod) => mod.ResponsiveContainer as any),
   { ssr: false },
 ) as any;
-const ProviderHeatmap = dynamic(
-  () => import("./ProviderHeatmap").then((mod) => mod.ProviderHeatmap),
-  {
-    ssr: false,
-    loading: () => <DashboardLoadingState label="Đang tải bản đồ…" />,
-  },
-);
-
 type DashboardStats = {
   totalBookings?: number;
   totalUsers?: number;
@@ -112,6 +96,19 @@ type StatusDataPoint = {
 type DashboardChartData = {
   revenueData?: RevenueDataPoint[];
   statusData?: StatusDataPoint[];
+  provinceData?: Array<{ name: string; count: number }>;
+  categoryData?: Array<{ name: string; count: number }>;
+  serviceData?: Array<{ name: string; count: number }>;
+  filterOptions?: {
+    providers?: Array<{ id: number; fullName: string }>;
+    categories?: Array<{ id: number; name: string; level?: number; parentId?: number | null }>;
+    services?: Array<{
+      id: number;
+      name: string;
+      provider?: { fullName?: string };
+      category?: { name?: string };
+    }>;
+  };
 };
 
 const statusColors = ["#006BFF", "#10b981", "#f59e0b", "#ef4444", "#64748b"];
@@ -151,30 +148,6 @@ function compactFilters(filters: DashboardFilters) {
     Object.entries(filters).filter(([, value]) => value !== ""),
   );
 }
-
-const securityAlerts = [
-  {
-    id: "PRO-9921",
-    name: "Trần Văn Mạnh",
-    reason: "Dấu hiệu tự đặt đơn tăng rating",
-    risk: 85,
-    time: "15 phút trước",
-  },
-  {
-    id: "USR-1102",
-    name: "Lê Thu Trang",
-    reason: "Hủy đơn hàng loạt hơn 10 đơn trong 1 giờ",
-    risk: 92,
-    time: "1 giờ trước",
-  },
-  {
-    id: "TRX-8821",
-    name: "Giao dịch #BK-772",
-    reason: "IP trùng lặp giữa khách hàng và thợ",
-    risk: 78,
-    time: "3 giờ trước",
-  },
-];
 
 export default function AdminDashboard() {
   const [isExporting, setIsExporting] = useState(false);
@@ -272,6 +245,10 @@ export default function AdminDashboard() {
 
   const revenueData = chartData?.revenueData || [];
   const statusData = chartData?.statusData || [];
+  const provinceData = chartData?.provinceData || [];
+  const categoryData = chartData?.categoryData || [];
+  const serviceData = chartData?.serviceData || [];
+  const filterOptions = chartData?.filterOptions || {};
   const formattedToday = new Intl.DateTimeFormat("vi-VN").format(new Date());
   const setFilter = (key: keyof DashboardFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -357,7 +334,7 @@ export default function AdminDashboard() {
           </Button>
         }
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-7">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <label className="space-y-1 text-xs font-medium text-slate-blue">
             Từ ngày
             <div className="flex h-11 items-center gap-2 rounded-lg border border-platinum-tint bg-white px-3">
@@ -408,26 +385,53 @@ export default function AdminDashboard() {
               ))}
             </select>
           </label>
-          {(["providerId", "categoryId", "serviceId"] as const).map((key) => (
-            <label
-              key={key}
-              className="space-y-1 text-xs font-medium text-slate-blue"
+          <label className="space-y-1 text-xs font-medium text-slate-blue">
+            Nhà cung cấp
+            <select
+              value={filters.providerId}
+              onChange={(event) => setFilter("providerId", event.target.value)}
+              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
             >
-              {key === "providerId"
-                ? "Provider ID"
-                : key === "categoryId"
-                  ? "Danh mục ID"
-                  : "Dịch vụ ID"}
-              <input
-                type="number"
-                min="1"
-                value={filters[key]}
-                onChange={(event) => setFilter(key, event.target.value)}
-                placeholder="Tất cả"
-                className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
-              />
-            </label>
-          ))}
+              <option value="">Tất cả nhà cung cấp</option>
+              {(filterOptions.providers || []).map((provider) => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.fullName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1 text-xs font-medium text-slate-blue">
+            Danh mục
+            <select
+              value={filters.categoryId}
+              onChange={(event) => setFilter("categoryId", event.target.value)}
+              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
+            >
+              <option value="">Tất cả danh mục</option>
+              {(filterOptions.categories || []).map((category) => (
+                <option key={category.id} value={category.id}>
+                  {"— ".repeat(Math.max((category.level || 1) - 1, 0))}
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1 text-xs font-medium text-slate-blue">
+            Dịch vụ
+            <select
+              value={filters.serviceId}
+              onChange={(event) => setFilter("serviceId", event.target.value)}
+              className="h-11 w-full rounded-lg border border-platinum-tint bg-white px-3 text-sm text-midnight-indigo outline-none"
+            >
+              <option value="">Tất cả dịch vụ</option>
+              {(filterOptions.services || []).map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name}
+                  {service.provider?.fullName ? ` · ${service.provider.fullName}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         {stats?.filterSummary && (
           <p className="mt-3 text-xs text-slate-blue">
@@ -449,90 +453,46 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <AdminDashboardCard contentClassName="p-0">
-        <div className="flex h-14 items-center overflow-hidden rounded-xl border border-platinum-tint bg-white px-4 shadow-[var(--brand-shadow-sm)] transition-[border-color,box-shadow] focus-within:border-action-blue focus-within:ring-4 focus-within:ring-action-blue/10 dark:border-gray-800 dark:bg-gray-900">
-          <Search className="size-5 shrink-0 text-slate-blue" />
-          <input
-            type="text"
-            name="admin-dashboard-search"
-            aria-label="Tìm kiếm dữ liệu dashboard"
-            autoComplete="off"
-            placeholder="Tìm trong dashboard… Ví dụ: thợ rủi ro cao"
-            className="h-full flex-1 border-none bg-transparent px-4 text-sm text-midnight-indigo placeholder:text-slate-blue focus-visible:outline-none dark:text-white"
-          />
-          <span className="hidden rounded-md border border-platinum-tint bg-cloud-mist px-2 py-1 text-[11px] font-medium text-slate-blue sm:inline-flex">
-            Command K
-          </span>
-        </div>
+      <AdminDashboardCard
+        title="Phân bố đơn hàng theo tỉnh/thành phố"
+        contentClassName="px-2 pb-5 pt-3"
+      >
+        {loading ? (
+          <DashboardLoadingState label="Đang tải phân bố địa lý…" />
+        ) : provinceData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={provinceData}
+              margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7EDF6" />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: "#476788" }}
+                interval={0}
+                angle={-12}
+                textAnchor="end"
+                height={54}
+              />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#476788" }} />
+              <Tooltip
+                formatter={(value: number) => [value, "Số đơn"]}
+                cursor={{ fill: "#F8F9FB" }}
+                contentStyle={{
+                  borderRadius: "10px",
+                  border: "1px solid #D4E0ED",
+                  boxShadow: "var(--brand-shadow-sm)",
+                }}
+              />
+              <Bar dataKey="count" fill="#0f766e" radius={[4, 4, 0, 0]} maxBarSize={42} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <ChartEmptyState label="Chưa có đơn hàng theo tỉnh/thành phố." />
+        )}
       </AdminDashboardCard>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <AdminDashboardCard title="Bản đồ phân bổ" contentClassName="p-0">
-          <ProviderHeatmap />
-        </AdminDashboardCard>
-
-        <AdminDashboardCard
-          title="Phân tích vận hành"
-          action={<AdminStatusBadge tone="info">Trực tiếp</AdminStatusBadge>}
-          className="flex flex-col"
-          contentClassName="flex flex-1 flex-col gap-4"
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-platinum-tint/70 bg-cloud-mist p-4 dark:border-gray-800 dark:bg-gray-800">
-              <div className="mb-2 flex items-center gap-2">
-                <Activity className="size-4 text-action-blue" />
-                <span className="text-xs font-medium text-slate-blue dark:text-gray-300">
-                  Dự báo nhu cầu
-                </span>
-              </div>
-              <div className="mb-1 flex items-baseline gap-2">
-                <span className="text-2xl font-semibold text-midnight-indigo dark:text-white">
-                  +25%
-                </span>
-                <ArrowUpRight className="size-4 text-emerald-500" />
-              </div>
-              <p className="mt-2 text-xs leading-5 text-slate-blue">
-                Khu vực Cầu Giấy dự kiến tăng nhu cầu trong 24 giờ tới.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-platinum-tint/70 bg-cloud-mist p-4 dark:border-gray-800 dark:bg-gray-800">
-              <div className="mb-2 flex items-center gap-2">
-                <ShieldCheck className="size-4 text-emerald-500" />
-                <span className="text-xs font-medium text-slate-blue dark:text-gray-300">
-                  Tải máy chủ
-                </span>
-              </div>
-              <div className="mt-4 space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-blue">Tối ưu</span>
-                  <span className="font-medium text-emerald-600">12%</span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-platinum-tint dark:bg-gray-700">
-                  <div className="h-full w-[12%] bg-emerald-500" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-auto rounded-xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-800/40 dark:bg-blue-950/30">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-action-blue text-white">
-                <Zap className="size-4" />
-              </div>
-              <div>
-                <p className="mb-1 text-xs font-medium text-blue-800 dark:text-blue-300">
-                  Đề xuất điều phối
-                </p>
-                <p className="text-[13px] leading-6 text-blue-900/80 dark:text-blue-200/80">
-                  Cần điều phối 15 thợ từ Hoàn Kiếm sang Cầu Giấy để giảm độ
-                  trễ.
-                </p>
-              </div>
-            </div>
-          </div>
-        </AdminDashboardCard>
-      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <AdminDashboardCard
@@ -645,53 +605,87 @@ export default function AdminDashboard() {
         </AdminDashboardCard>
       </div>
 
-      <AdminDashboardCard
-        title="Giám sát an ninh"
-        action={
-          <AdminStatusBadge tone="danger">12 cảnh báo mới</AdminStatusBadge>
-        }
-        className="border-red-100 dark:border-red-900/50"
-        contentClassName="p-0"
-      >
-        <div className="divide-y divide-platinum-tint/70 dark:divide-gray-800">
-          {securityAlerts.map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-col gap-4 p-4 transition-colors hover:bg-cloud-mist/70 dark:hover:bg-gray-800/60 sm:flex-row sm:items-center sm:justify-between sm:px-5"
-            >
-              <div className="flex items-start gap-3 sm:items-center">
-                <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/30 sm:mt-0">
-                  <Fingerprint className="size-5" />
-                </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium text-midnight-indigo dark:text-white">
-                      {item.name}
-                    </span>
-                    <AdminStatusBadge tone="danger">
-                      Rủi ro {item.risk}%
-                    </AdminStatusBadge>
-                  </div>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-blue">
-                    {item.reason}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <span className="text-xs text-slate-blue">{item.time}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="font-medium text-action-blue transition-colors hover:bg-blue-50 hover:text-glacier-blue dark:hover:bg-blue-950/30"
-                >
-                  Xử lý
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </AdminDashboardCard>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <AdminDashboardCard
+          title="Đơn hàng theo danh mục"
+          contentClassName="px-2 pb-5 pt-3"
+        >
+          {loading ? (
+            <DashboardLoadingState />
+          ) : categoryData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={categoryData}
+                layout="vertical"
+                margin={{ top: 10, right: 20, left: 40, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} stroke="#E7EDF6" />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#476788" }}
+                  width={120}
+                />
+                <Tooltip
+                  cursor={{ fill: "#F8F9FB" }}
+                  formatter={(value: number) => [value, "Số đơn"]}
+                  contentStyle={{
+                    borderRadius: "10px",
+                    border: "1px solid #D4E0ED",
+                    boxShadow: "var(--brand-shadow-sm)",
+                  }}
+                />
+                <Bar dataKey="count" fill="#006BFF" radius={[0, 4, 4, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ChartEmptyState label="Chưa có đơn hàng theo danh mục." />
+          )}
+        </AdminDashboardCard>
+
+        <AdminDashboardCard
+          title="Dịch vụ có nhiều đơn"
+          contentClassName="px-2 pb-5 pt-3"
+        >
+          {loading ? (
+            <DashboardLoadingState />
+          ) : serviceData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={serviceData}
+                layout="vertical"
+                margin={{ top: 10, right: 20, left: 40, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} stroke="#E7EDF6" />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#476788" }}
+                  width={120}
+                />
+                <Tooltip
+                  cursor={{ fill: "#F8F9FB" }}
+                  formatter={(value: number) => [value, "Số đơn"]}
+                  contentStyle={{
+                    borderRadius: "10px",
+                    border: "1px solid #D4E0ED",
+                    boxShadow: "var(--brand-shadow-sm)",
+                  }}
+                />
+                <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ChartEmptyState label="Chưa có dữ liệu dịch vụ." />
+          )}
+        </AdminDashboardCard>
+      </div>
     </div>
   );
 }
@@ -700,7 +694,7 @@ function ChartEmptyState({ label }: { label: string }) {
   return (
     <div className="flex h-[280px] items-center justify-center text-center text-sm font-medium text-slate-blue">
       <div className="flex flex-col items-center gap-2">
-        <ShieldAlert className="size-5 text-slate-blue" />
+        <Package className="size-5 text-slate-blue" />
         <span>{label}</span>
       </div>
     </div>
