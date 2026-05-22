@@ -18,6 +18,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  WalletCards,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   { label: 'Tổng quan', href: '/admin/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: 'Đơn hàng', href: '/admin/bookings', icon: <BookOpen className="w-5 h-5" /> },
   { label: 'Dịch vụ', href: '/admin/services', icon: <Package className="w-5 h-5" /> },
+  { label: 'Ví', href: '/admin/wallet', icon: <WalletCards className="w-5 h-5" /> },
   { label: 'Người dùng', href: '/admin/users', icon: <Users className="w-5 h-5" /> },
   { label: 'Tranh chấp', href: '/admin/disputes', icon: <MessageSquare className="w-5 h-5" /> },
   { label: 'KYC', href: '/admin/kyc', icon: <CheckSquare className="w-5 h-5" /> },

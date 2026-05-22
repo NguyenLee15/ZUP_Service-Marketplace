@@ -1,9 +1,9 @@
 /**
- * Wallet Tab - Provider wallet + VNPay deposit.
+ * Wallet Tab - Provider wallet, VNPay sandbox and manual transfer requests.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Chip, Modal, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Button, Chip, Modal, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { walletApi } from '../../features/wallet/wallet.api';
@@ -24,12 +24,31 @@ type MessageState = {
   text: string;
 } | null;
 
+type WalletRequest = {
+  id: number;
+  amount: number | string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  adminNote?: string | null;
+  transferCode?: string | null;
+  bankName?: string;
+  bankAccountNumber?: string;
+};
+
+const MANUAL_BANK_INFO = {
+  bankName: 'Ngân hàng của nền tảng',
+  accountNumber: 'Cấu hình số tài khoản admin',
+  holder: 'Chủ tài khoản nền tảng',
+};
+
 export default function WalletScreen() {
   const theme = useTheme();
 
   const [balance, setBalance] = useState(0);
   const [isRestricted, setIsRestricted] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [manualDeposits, setManualDeposits] = useState<WalletRequest[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WalletRequest[]>([]);
   const [message, setMessage] = useState<MessageState>(null);
 
   const [loading, setLoading] = useState(true);
@@ -38,19 +57,42 @@ export default function WalletScreen() {
   const [hasMore, setHasMore] = useState(true);
 
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [depositMode, setDepositMode] = useState<'vnpay' | 'manual'>('manual');
   const [depositAmount, setDepositAmount] = useState('');
+  const [transferCode, setTransferCode] = useState('');
   const [depositError, setDepositError] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
+
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankAccountHolder, setBankAccountHolder] = useState('');
+  const [withdrawError, setWithdrawError] = useState('');
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   const fetchWallet = useCallback(async () => {
     try {
       const res = await walletApi.getBalance();
       if (res.data?.data) {
-        setBalance(res.data.data.balance);
-        setIsRestricted(res.data.data.isRestricted);
+        setBalance(Number(res.data.data.balance || 0));
+        setIsRestricted(Boolean(res.data.data.isRestricted));
       }
     } catch {
       setMessage({ tone: 'error', text: 'Chưa tải được số dư ví. Kéo xuống để thử lại.' });
+    }
+  }, []);
+
+  const fetchRequests = useCallback(async () => {
+    try {
+      const [depositRes, withdrawalRes] = await Promise.all([
+        walletApi.getManualDeposits({ page: 1, limit: 5 }),
+        walletApi.getWithdrawals({ page: 1, limit: 5 }),
+      ]);
+      setManualDeposits(depositRes.data?.data || []);
+      setWithdrawals(withdrawalRes.data?.data || []);
+    } catch {
+      setMessage({ tone: 'warning', text: 'Chưa tải được trạng thái yêu cầu nạp/rút.' });
     }
   }, []);
 
@@ -74,22 +116,32 @@ export default function WalletScreen() {
 
   useEffect(() => {
     fetchWallet();
+    fetchRequests();
     fetchTransactions(1, true);
-  }, [fetchWallet, fetchTransactions]);
+  }, [fetchWallet, fetchRequests, fetchTransactions]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     setMessage(null);
     await fetchWallet();
+    await fetchRequests();
     await fetchTransactions(1, true);
     setRefreshing(false);
-  }, [fetchWallet, fetchTransactions]);
+  }, [fetchWallet, fetchRequests, fetchTransactions]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
 
+  const parseMoney = (value: string) => Number.parseInt(value.replace(/[^0-9]/g, ''), 10);
+
+  const resetDepositForm = () => {
+    setDepositAmount('');
+    setTransferCode('');
+    setDepositError('');
+  };
+
   const handleDeposit = async () => {
-    const amount = Number.parseInt(depositAmount.replace(/[^0-9]/g, ''), 10);
+    const amount = parseMoney(depositAmount);
     if (!amount || amount < 10000) {
       setDepositError('Số tiền tối thiểu là 10.000đ.');
       return;
@@ -98,13 +150,25 @@ export default function WalletScreen() {
     setDepositError('');
     setDepositLoading(true);
     try {
+      if (depositMode === 'manual') {
+        await walletApi.createManualDeposit({ amount, transferCode });
+        setShowDepositModal(false);
+        resetDepositForm();
+        setMessage({
+          tone: 'success',
+          text: 'Đã gửi yêu cầu nạp thủ công. Admin sẽ kiểm tra chuyển khoản và cộng ví.',
+        });
+        await fetchRequests();
+        return;
+      }
+
       const res = await walletApi.deposit(amount);
       const paymentUrl = res.data?.data?.paymentUrl || res.data?.data?.url;
       if (!paymentUrl) throw new Error('Không lấy được link thanh toán');
 
       setShowDepositModal(false);
-      setDepositAmount('');
-      setMessage({ tone: 'info', text: 'Đang mở VNPay. Sau khi thanh toán, ví sẽ tự tải lại.' });
+      resetDepositForm();
+      setMessage({ tone: 'info', text: 'Đang mở VNPay sandbox. Sau khi thanh toán, ví sẽ tự tải lại.' });
 
       await WebBrowser.openBrowserAsync(paymentUrl);
       await fetchWallet();
@@ -121,16 +185,61 @@ export default function WalletScreen() {
     }
   };
 
+  const resetWithdrawForm = () => {
+    setWithdrawAmount('');
+    setBankName('');
+    setBankAccountNumber('');
+    setBankAccountHolder('');
+    setWithdrawError('');
+  };
+
+  const handleWithdraw = async () => {
+    const amount = parseMoney(withdrawAmount);
+    if (!amount || amount < 50000) {
+      setWithdrawError('Số tiền rút tối thiểu là 50.000đ.');
+      return;
+    }
+    if (!bankName.trim() || !bankAccountNumber.trim() || !bankAccountHolder.trim()) {
+      setWithdrawError('Vui lòng nhập đầy đủ ngân hàng, số tài khoản và tên chủ tài khoản.');
+      return;
+    }
+
+    setWithdrawError('');
+    setWithdrawLoading(true);
+    try {
+      await walletApi.createWithdrawal({
+        amount,
+        bankName,
+        bankAccountNumber,
+        bankAccountHolder,
+      });
+      setShowWithdrawModal(false);
+      resetWithdrawForm();
+      setMessage({ tone: 'success', text: 'Đã gửi yêu cầu rút tiền. Admin sẽ chuyển khoản thủ công sau khi kiểm tra.' });
+      await fetchRequests();
+    } catch (err: any) {
+      setWithdrawError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error?.message ||
+          err?.message ||
+          'Có lỗi xảy ra khi tạo yêu cầu rút tiền.',
+      );
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
+
   const getTxColor = (type: string, status: string) => {
     if (status === 'PENDING') return Colors.light.warning;
     if (status === 'FAILED') return Colors.light.error;
     if (type === 'DEPOSIT') return Colors.light.success;
-    if (type === 'COMMISSION' || type === 'PENALTY') return Colors.light.error;
+    if (type === 'COMMISSION' || type === 'PENALTY' || type === 'WITHDRAWAL') return Colors.light.error;
     return Colors.light.textSecondary;
   };
 
   const getTxLabel = (type: string) => {
-    if (type === 'DEPOSIT') return 'Nạp tiền VNPay';
+    if (type === 'DEPOSIT') return 'Nạp tiền';
+    if (type === 'WITHDRAWAL') return 'Rút tiền';
     if (type === 'COMMISSION') return 'Trừ hoa hồng';
     if (type === 'PENALTY') return 'Trừ tiền phạt';
     return 'Giao dịch ví';
@@ -140,13 +249,53 @@ export default function WalletScreen() {
     if (status === 'SUCCESS') return 'Thành công';
     if (status === 'FAILED') return 'Thất bại';
     if (status === 'PENDING') return 'Đang chờ';
+    if (status === 'APPROVED') return 'Đã xử lý';
+    if (status === 'REJECTED') return 'Từ chối';
     return status;
+  };
+
+  const getRequestTone = (status: string) => {
+    if (status === 'APPROVED') return Colors.light.success;
+    if (status === 'REJECTED') return Colors.light.error;
+    return Colors.light.warning;
+  };
+
+  const renderRequest = (item: WalletRequest, type: 'deposit' | 'withdrawal') => {
+    const color = getRequestTone(item.status);
+    return (
+      <ProviderCard key={`${type}-${item.id}`} style={styles.requestCard} contentStyle={styles.requestContent}>
+        <View style={[styles.requestIcon, { backgroundColor: `${color}16` }]}>
+          <MaterialCommunityIcons
+            name={type === 'deposit' ? 'bank-transfer-in' : 'bank-transfer-out'}
+            size={22}
+            color={color}
+          />
+        </View>
+        <View style={styles.requestBody}>
+          <Text variant="bodyMedium" style={styles.requestTitle} numberOfLines={1}>
+            {type === 'deposit' ? 'Nạp thủ công' : 'Rút tiền'} {formatCurrency(Number(item.amount || 0))}
+          </Text>
+          <Text variant="bodySmall" style={styles.txMeta} numberOfLines={1}>
+            {new Date(item.createdAt).toLocaleString('vi-VN')}
+          </Text>
+          {item.adminNote ? (
+            <Text variant="labelSmall" style={styles.txMeta} numberOfLines={2}>
+              {item.adminNote}
+            </Text>
+          ) : null}
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: `${color}14` }]}>
+          <Text variant="labelSmall" style={[styles.statusBadgeText, { color }]} numberOfLines={1}>
+            {getStatusLabel(item.status)}
+          </Text>
+        </View>
+      </ProviderCard>
+    );
   };
 
   const renderTransaction = ({ item }: { item: any }) => {
     const color = getTxColor(item.type, item.status);
     const isPositive = item.type === 'DEPOSIT';
-    const sign = isPositive ? '+' : '-';
     const amount = Math.abs(Number(item.amount || 0));
 
     return (
@@ -177,7 +326,7 @@ export default function WalletScreen() {
             style={[styles.txAmount, { color: item.status === 'FAILED' ? Colors.light.textSecondary : color }]}
             selectable
           >
-            {sign}
+            {isPositive ? '+' : '-'}
             {formatCurrency(amount)}
           </Text>
           <View style={[styles.statusBadge, { backgroundColor: `${color}14` }]}>
@@ -206,17 +355,16 @@ export default function WalletScreen() {
           <View style={styles.headerStack}>
             <ProviderPageHeader
               title="Ví tiền"
-              subtitle="Theo dõi số dư, phí hoa hồng và lịch sử nạp tiền."
+              subtitle="Quản lý số dư, nạp thủ công, rút tiền và hoa hồng."
               action={
-                <Button
-                  mode="contained"
-                  icon="plus"
-                  compact
-                  onPress={() => setShowDepositModal(true)}
-                  style={styles.headerButton}
-                >
-                  Nạp tiền
-                </Button>
+                <View style={styles.headerActions}>
+                  <Button mode="outlined" icon="bank-transfer-out" compact onPress={() => setShowWithdrawModal(true)} style={styles.headerButton}>
+                    Rút tiền
+                  </Button>
+                  <Button mode="contained" icon="plus" compact onPress={() => setShowDepositModal(true)} style={styles.headerButton}>
+                    Nạp tiền
+                  </Button>
+                </View>
               }
             />
 
@@ -246,6 +394,14 @@ export default function WalletScreen() {
               )}
             </ProviderCard>
 
+            {(manualDeposits.length > 0 || withdrawals.length > 0) && (
+              <>
+                <ProviderSectionHeader title="Yêu cầu gần đây" />
+                {manualDeposits.slice(0, 3).map(item => renderRequest(item, 'deposit'))}
+                {withdrawals.slice(0, 3).map(item => renderRequest(item, 'withdrawal'))}
+              </>
+            )}
+
             <ProviderSectionHeader title="Lịch sử giao dịch" />
           </View>
         }
@@ -256,7 +412,7 @@ export default function WalletScreen() {
             <ProviderEmptyState
               icon="receipt-text-outline"
               title="Chưa có giao dịch"
-              description="Các lần nạp tiền, trừ hoa hồng và phí phạt sẽ xuất hiện tại đây."
+              description="Các lần nạp tiền, rút tiền, trừ hoa hồng và phí phạt sẽ xuất hiện tại đây."
               actionLabel="Nạp tiền"
               onAction={() => setShowDepositModal(true)}
             />
@@ -270,16 +426,41 @@ export default function WalletScreen() {
           visible={showDepositModal}
           onDismiss={() => {
             setShowDepositModal(false);
-            setDepositError('');
+            resetDepositForm();
           }}
           contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
         >
           <Text variant="titleMedium" style={styles.modalTitle}>
             Nạp tiền vào ví
           </Text>
+          <SegmentedButtons
+            value={depositMode}
+            onValueChange={value => {
+              setDepositMode(value as 'vnpay' | 'manual');
+              setDepositError('');
+            }}
+            buttons={[
+              { value: 'manual', label: 'Chuyển khoản' },
+              { value: 'vnpay', label: 'VNPAY sandbox' },
+            ]}
+          />
           <Text variant="bodySmall" style={styles.modalDescription}>
-            Số tiền tối thiểu là 10.000đ. Bạn sẽ được chuyển sang VNPay để hoàn tất thanh toán.
+            {depositMode === 'manual'
+              ? 'Chuyển khoản thật vào tài khoản nền tảng, sau đó gửi yêu cầu để admin xác nhận.'
+              : 'Thanh toán mô phỏng qua VNPAY sandbox.'}
           </Text>
+
+          {depositMode === 'manual' && (
+            <View style={styles.bankInfo}>
+              <Text variant="labelLarge" style={styles.bankInfoTitle}>
+                Thông tin nhận chuyển khoản
+              </Text>
+              <Text style={styles.bankLine}>Ngân hàng: {MANUAL_BANK_INFO.bankName}</Text>
+              <Text style={styles.bankLine}>Số tài khoản: {MANUAL_BANK_INFO.accountNumber}</Text>
+              <Text style={styles.bankLine}>Chủ tài khoản: {MANUAL_BANK_INFO.holder}</Text>
+              <Text style={styles.bankHint}>Nội dung gợi ý: NAPVI + số điện thoại tài khoản</Text>
+            </View>
+          )}
 
           {depositError ? <ProviderInlineMessage tone="error" message={depositError} /> : null}
 
@@ -295,6 +476,17 @@ export default function WalletScreen() {
             left={<TextInput.Icon icon="cash" accessibilityLabel="Số tiền" />}
             style={styles.amountInput}
           />
+
+          {depositMode === 'manual' && (
+            <TextInput
+              label="Mã giao dịch / nội dung chuyển khoản"
+              value={transferCode}
+              onChangeText={setTransferCode}
+              mode="outlined"
+              left={<TextInput.Icon icon="identifier" accessibilityLabel="Mã giao dịch" />}
+              style={styles.amountInput}
+            />
+          )}
 
           <View style={styles.quickAmounts}>
             {[50000, 100000, 200000, 500000].map(amount => (
@@ -312,9 +504,80 @@ export default function WalletScreen() {
             style={styles.primaryButton}
             contentStyle={styles.buttonContent}
           >
-            {depositLoading ? 'Đang xử lý…' : 'Thanh toán qua VNPay'}
+            {depositLoading ? 'Đang xử lý...' : depositMode === 'manual' ? 'Gửi yêu cầu nạp' : 'Thanh toán qua VNPAY'}
           </Button>
           <Button mode="text" onPress={() => setShowDepositModal(false)} style={styles.cancelButton}>
+            Hủy
+          </Button>
+        </Modal>
+
+        <Modal
+          visible={showWithdrawModal}
+          onDismiss={() => {
+            setShowWithdrawModal(false);
+            resetWithdrawForm();
+          }}
+          contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
+        >
+          <Text variant="titleMedium" style={styles.modalTitle}>
+            Rút tiền về ngân hàng
+          </Text>
+          <Text variant="bodySmall" style={styles.modalDescription}>
+            Admin sẽ chuyển khoản thủ công sau khi kiểm tra yêu cầu. Số tiền tối thiểu là 50.000đ.
+          </Text>
+
+          {withdrawError ? <ProviderInlineMessage tone="error" message={withdrawError} /> : null}
+
+          <TextInput
+            label="Số tiền rút (VNĐ)"
+            value={withdrawAmount}
+            onChangeText={value => {
+              setWithdrawAmount(value);
+              setWithdrawError('');
+            }}
+            mode="outlined"
+            keyboardType="numeric"
+            left={<TextInput.Icon icon="cash-minus" accessibilityLabel="Số tiền rút" />}
+            style={styles.amountInput}
+          />
+          <TextInput
+            label="Ngân hàng"
+            value={bankName}
+            onChangeText={setBankName}
+            mode="outlined"
+            left={<TextInput.Icon icon="bank" accessibilityLabel="Ngân hàng" />}
+            style={styles.amountInput}
+          />
+          <TextInput
+            label="Số tài khoản"
+            value={bankAccountNumber}
+            onChangeText={setBankAccountNumber}
+            mode="outlined"
+            keyboardType="number-pad"
+            left={<TextInput.Icon icon="credit-card-outline" accessibilityLabel="Số tài khoản" />}
+            style={styles.amountInput}
+          />
+          <TextInput
+            label="Tên chủ tài khoản"
+            value={bankAccountHolder}
+            onChangeText={setBankAccountHolder}
+            mode="outlined"
+            autoCapitalize="characters"
+            left={<TextInput.Icon icon="account" accessibilityLabel="Tên chủ tài khoản" />}
+            style={styles.amountInput}
+          />
+
+          <Button
+            mode="contained"
+            onPress={handleWithdraw}
+            loading={withdrawLoading}
+            disabled={withdrawLoading || !withdrawAmount}
+            style={styles.primaryButton}
+            contentStyle={styles.buttonContent}
+          >
+            {withdrawLoading ? 'Đang gửi...' : 'Gửi yêu cầu rút'}
+          </Button>
+          <Button mode="text" onPress={() => setShowWithdrawModal(false)} style={styles.cancelButton}>
             Hủy
           </Button>
         </Modal>
@@ -331,6 +594,12 @@ const styles = StyleSheet.create({
   },
   headerStack: {
     gap: 14,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 8,
   },
   headerButton: {
     borderRadius: 999,
@@ -360,6 +629,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: `${Colors.light.primary}14`,
+  },
+  requestCard: {
+    marginBottom: 8,
+  },
+  requestContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  requestIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  requestBody: {
+    flex: 1,
+    gap: 2,
+  },
+  requestTitle: {
+    color: Colors.light.text,
+    fontWeight: '700',
   },
   transactionCard: {
     marginBottom: 10,
@@ -427,6 +719,23 @@ const styles = StyleSheet.create({
   modalDescription: {
     color: Colors.light.textSecondary,
     lineHeight: 18,
+  },
+  bankInfo: {
+    borderRadius: 14,
+    padding: 12,
+    backgroundColor: Colors.light.surfaceVariant,
+    gap: 4,
+  },
+  bankInfoTitle: {
+    color: Colors.light.text,
+    fontWeight: '800',
+  },
+  bankLine: {
+    color: Colors.light.text,
+  },
+  bankHint: {
+    color: Colors.light.textSecondary,
+    marginTop: 4,
   },
   amountInput: {
     backgroundColor: Colors.light.surface,

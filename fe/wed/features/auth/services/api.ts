@@ -189,6 +189,20 @@ export const adminApi = {
     api.get("/admin/bookings", { params }),
   getBookingDetail: (id: number) => api.get(`/admin/bookings/${id}`),
 
+  // Wallet manual deposits / withdrawals
+  getWalletDeposits: (params?: Record<string, any>) =>
+    api.get("/admin/wallet-deposits", { params }),
+  approveWalletDeposit: (id: number, note?: string) =>
+    api.patch(`/admin/wallet-deposits/${id}/approve`, { note }),
+  rejectWalletDeposit: (id: number, note?: string) =>
+    api.patch(`/admin/wallet-deposits/${id}/reject`, { note }),
+  getWalletWithdrawals: (params?: Record<string, any>) =>
+    api.get("/admin/wallet-withdrawals", { params }),
+  approveWalletWithdrawal: (id: number, note?: string) =>
+    api.patch(`/admin/wallet-withdrawals/${id}/approve`, { note }),
+  rejectWalletWithdrawal: (id: number, note?: string) =>
+    api.patch(`/admin/wallet-withdrawals/${id}/reject`, { note }),
+
   // Disputes — UC09
   getDisputes: (params?: Record<string, any>) =>
     api.get("/admin/disputes", { params }),

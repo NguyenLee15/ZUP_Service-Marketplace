@@ -63,12 +63,19 @@ enum WalletTransactionType {
   COMMISSION
   PENALTY
   FEATURED_FEE
+  WITHDRAWAL
 }
 
 enum WalletTransactionStatus {
   SUCCESS
   FAILED
   PENDING
+}
+
+enum WalletRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum SenderType {
@@ -112,27 +119,31 @@ model User {
   updatedAt     DateTime   @updatedAt @map("updated_at")
 
   // Relations
-  refreshTokens     RefreshToken[]
-  passwordResets    PasswordReset[]
-  kycProfiles       KycProfile[]       @relation("ProviderKyc")
-  reviewedKyc       KycProfile[]       @relation("ReviewerKyc")
-  addresses         UserAddress[]
-  providedServices  Service[]
-  customerBookings  Booking[]          @relation("CustomerBooking")
-  providerBookings  Booking[]          @relation("ProviderBooking")
-  reviews           Review[]
-  customerConvos    Conversation[]     @relation("CustomerConvo")
-  providerConvos    Conversation[]     @relation("ProviderConvo")
-  messages          Message[]
-  chatbotSessions   ChatbotSession[]
-  notifications     Notification[]
-  auditLogs         AuditLog[]
-  providerWallet    ProviderWallet?
-  commissionConfigs CommissionConfig[]
-  raisedDisputes    Dispute[]          @relation("DisputeRaisedBy")
-  disputeEvidences  DisputeEvidence[]
-  featuredListings  FeaturedListing[]
-  expoPushToken     String?            @map("expo_push_token") @db.VarChar(255)
+  refreshTokens           RefreshToken[]
+  passwordResets          PasswordReset[]
+  kycProfiles             KycProfile[]           @relation("ProviderKyc")
+  reviewedKyc             KycProfile[]           @relation("ReviewerKyc")
+  addresses               UserAddress[]
+  providedServices        Service[]
+  customerBookings        Booking[]              @relation("CustomerBooking")
+  providerBookings        Booking[]              @relation("ProviderBooking")
+  reviews                 Review[]
+  customerConvos          Conversation[]         @relation("CustomerConvo")
+  providerConvos          Conversation[]         @relation("ProviderConvo")
+  messages                Message[]
+  chatbotSessions         ChatbotSession[]
+  notifications           Notification[]
+  auditLogs               AuditLog[]
+  providerWallet          ProviderWallet?
+  withdrawalRequests      WithdrawalRequest[]    @relation("ProviderWithdrawalRequests")
+  processedWithdrawals    WithdrawalRequest[]    @relation("WithdrawalProcessor")
+  manualDepositRequests   ManualDepositRequest[] @relation("ProviderManualDepositRequests")
+  processedManualDeposits ManualDepositRequest[] @relation("ManualDepositProcessor")
+  commissionConfigs       CommissionConfig[]
+  raisedDisputes          Dispute[]              @relation("DisputeRaisedBy")
+  disputeEvidences        DisputeEvidence[]
+  featuredListings        FeaturedListing[]
+  expoPushToken           String?                @map("expo_push_token") @db.VarChar(255)
 
   @@index([role, status])
   @@map("users")
@@ -395,6 +406,47 @@ model WalletTransaction {
   @@index([walletId])
   @@index([bookingId])
   @@map("wallet_transactions")
+}
+
+model WithdrawalRequest {
+  id                Int                 @id @default(autoincrement())
+  providerId        Int                 @map("provider_id")
+  amount            Decimal             @db.Decimal(15, 2)
+  bankName          String              @map("bank_name") @db.VarChar(100)
+  bankAccountNumber String              @map("bank_account_number") @db.VarChar(50)
+  bankAccountHolder String              @map("bank_account_holder") @db.VarChar(100)
+  status            WalletRequestStatus @default(PENDING)
+  adminNote         String?             @map("admin_note") @db.Text
+  processedBy       Int?                @map("processed_by")
+  processedAt       DateTime?           @map("processed_at")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  provider          User                @relation("ProviderWithdrawalRequests", fields: [providerId], references: [id])
+  processor         User?               @relation("WithdrawalProcessor", fields: [processedBy], references: [id])
+
+  @@index([providerId, status])
+  @@index([status, createdAt])
+  @@map("withdrawal_requests")
+}
+
+model ManualDepositRequest {
+  id           Int                 @id @default(autoincrement())
+  providerId   Int                 @map("provider_id")
+  amount       Decimal             @db.Decimal(15, 2)
+  transferCode String?             @map("transfer_code") @db.VarChar(100)
+  receiptUrl   String?             @map("receipt_url") @db.VarChar(255)
+  status       WalletRequestStatus @default(PENDING)
+  adminNote    String?             @map("admin_note") @db.Text
+  processedBy  Int?                @map("processed_by")
+  processedAt  DateTime?           @map("processed_at")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  provider     User                @relation("ProviderManualDepositRequests", fields: [providerId], references: [id])
+  processor    User?               @relation("ManualDepositProcessor", fields: [processedBy], references: [id])
+
+  @@index([providerId, status])
+  @@index([status, createdAt])
+  @@map("manual_deposit_requests")
 }
 
 /// Bảng commission_configs — mỗi lần thay đổi tạo record mới (audit trail)

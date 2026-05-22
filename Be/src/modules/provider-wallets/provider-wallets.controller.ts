@@ -6,6 +6,8 @@ import {
   Query,
   Req,
   UseGuards,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -62,6 +64,69 @@ export class ProviderWalletsController {
     return this.walletsService.createDepositRequest(userId, amount, ip);
   }
 
+  @Post('manual-deposits')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PROVIDER')
+  async createManualDeposit(
+    @CurrentUser('id') userId: number,
+    @Body('amount') amount: number,
+    @Body('transferCode') transferCode?: string,
+    @Body('receiptUrl') receiptUrl?: string,
+  ) {
+    return this.walletsService.createManualDepositRequest(
+      userId,
+      amount,
+      transferCode,
+      receiptUrl,
+    );
+  }
+
+  @Get('manual-deposits')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PROVIDER')
+  async getManualDeposits(
+    @CurrentUser('id') userId: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.walletsService.getManualDepositRequests(
+      userId,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20,
+    );
+  }
+
+  @Post('withdrawals')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PROVIDER')
+  async createWithdrawal(
+    @CurrentUser('id') userId: number,
+    @Body()
+    body: {
+      amount: number;
+      bankName: string;
+      bankAccountNumber: string;
+      bankAccountHolder: string;
+    },
+  ) {
+    return this.walletsService.createWithdrawalRequest(userId, body);
+  }
+
+  @Get('withdrawals')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PROVIDER')
+  async getWithdrawals(
+    @CurrentUser('id') userId: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.walletsService.getWithdrawalRequests(
+      userId,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20,
+    );
+  }
+
   /** VNPay return (FE chỉ hiển thị kết quả) */
   @Get('vnpay/return')
   async vnpayReturn(@Query() query: Record<string, string>) {
@@ -80,5 +145,97 @@ export class ProviderWalletsController {
   @SkipThrottle()
   async vnpayIpnPost(@Query() query: Record<string, string>) {
     return this.walletsService.handleIpn(query);
+  }
+}
+
+@Controller('admin/wallet-deposits')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'STAFF')
+export class AdminWalletDepositsController {
+  constructor(private readonly walletsService: ProviderWalletsService) {}
+
+  @Get()
+  async list(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.walletsService.adminListManualDepositRequests(
+      status,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20,
+    );
+  }
+
+  @Patch(':id/approve')
+  async approve(
+    @CurrentUser('id') adminId: number,
+    @Param('id') id: string,
+    @Body('note') note?: string,
+  ) {
+    return this.walletsService.adminApproveManualDeposit(
+      adminId,
+      parseInt(id),
+      note,
+    );
+  }
+
+  @Patch(':id/reject')
+  async reject(
+    @CurrentUser('id') adminId: number,
+    @Param('id') id: string,
+    @Body('note') note?: string,
+  ) {
+    return this.walletsService.adminRejectManualDeposit(
+      adminId,
+      parseInt(id),
+      note,
+    );
+  }
+}
+
+@Controller('admin/wallet-withdrawals')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'STAFF')
+export class AdminWalletWithdrawalsController {
+  constructor(private readonly walletsService: ProviderWalletsService) {}
+
+  @Get()
+  async list(
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.walletsService.adminListWithdrawalRequests(
+      status,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20,
+    );
+  }
+
+  @Patch(':id/approve')
+  async approve(
+    @CurrentUser('id') adminId: number,
+    @Param('id') id: string,
+    @Body('note') note?: string,
+  ) {
+    return this.walletsService.adminApproveWithdrawal(
+      adminId,
+      parseInt(id),
+      note,
+    );
+  }
+
+  @Patch(':id/reject')
+  async reject(
+    @CurrentUser('id') adminId: number,
+    @Param('id') id: string,
+    @Body('note') note?: string,
+  ) {
+    return this.walletsService.adminRejectWithdrawal(
+      adminId,
+      parseInt(id),
+      note,
+    );
   }
 }
