@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import * as querystring from 'qs';
@@ -27,6 +27,12 @@ export class VnpayService {
   }
 
   createPaymentUrl(params: VnpayParams): string {
+    if (!this.tmnCode || !this.hashSecret) {
+      throw new BadRequestException({
+        message: 'Thiếu cấu hình VNPAY_TMN_CODE hoặc VNPAY_HASH_SECRET',
+      });
+    }
+
     const date = new Date();
     const createDate = this.formatDate(date);
 
@@ -51,7 +57,7 @@ export class VnpayService {
     const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
     sortedParams.vnp_SecureHash = signed;
-    return `${this.vnpUrl}?${querystring.stringify(sortedParams, { encode: false })}`;
+    return `${this.vnpUrl}?${querystring.stringify(sortedParams)}`;
   }
 
   verifyIpn(query: Record<string, string>): {
