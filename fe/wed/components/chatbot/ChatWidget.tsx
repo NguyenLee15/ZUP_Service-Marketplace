@@ -337,6 +337,23 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   };
 
   const confirmAction = async (action: AssistantAction) => {
+    if (!accessToken) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `auth-err-${Date.now()}`,
+          role: "assistant",
+          parts: [
+            {
+              type: "text",
+              text: "Vui lòng đăng nhập tài khoản khách hàng để thực hiện thao tác này.",
+            },
+          ],
+        } as ChatbotUIMessage,
+      ]);
+      return;
+    }
+
     // Confirmed actions gọi qua API cũ (không stream)
     try {
       const response = await api.post("/chatbot/ask", {
@@ -351,6 +368,23 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
       });
       const data = response.data?.data;
       if (data?.sessionId) setSessionId(data.sessionId);
+
+      if (
+        data?.action &&
+        data.action.requiresConfirmation === false &&
+        data.action.href
+      ) {
+        if (data.action.type === "OPEN_PROVIDER_CHAT") {
+          if (!data.action.href.startsWith("/chat") || !data.action.href.includes("conversationId=")) {
+            throw new Error("Thông tin cuộc trò chuyện không hợp lệ hoặc thiếu conversationId.");
+          }
+        }
+        if (data.action.href.startsWith("/chat") || data.action.href.startsWith("/bookings")) {
+          setIsOpen(false);
+          router.push(data.action.href);
+          return;
+        }
+      }
 
       const msgId = `confirm-${Date.now()}`;
       setMetaMap((prev) => ({
@@ -377,7 +411,8 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           ],
         } as ChatbotUIMessage,
       ]);
-    } catch {
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || err?.message || "Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.";
       setMessages((prev) => [
         ...prev,
         {
@@ -386,7 +421,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           parts: [
             {
               type: "text",
-              text: "Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.",
+              text: errMsg,
             },
           ],
         } as ChatbotUIMessage,
@@ -597,8 +632,45 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                             </p>
                           </div>
                         </div>
+                        {meta.action.type === "CREATE_BOOKING_DRAFT" && !(meta.action.payload as any)?.draft?.desiredTime && (
+                          <div className="mt-3 space-y-1 rounded-lg border border-blue-100 bg-white p-2 shadow-sm">
+                            <label className="block text-[11px] font-medium text-slate-600">
+                              📅 Chọn thời gian mong muốn đặt lịch:
+                            </label>
+                            <input
+                              type="datetime-local"
+                              min={(() => {
+                                const localDate = new Date(Date.now() + 2 * 60 * 60 * 1000);
+                                const tzOffset = localDate.getTimezoneOffset() * 60000;
+                                const localISOTime = new Date(localDate.getTime() - tzOffset).toISOString().slice(0, 16);
+                                return localISOTime;
+                              })()}
+                              className="w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  const dateObj = new Date(e.target.value);
+                                  const day = String(dateObj.getDate()).padStart(2, "0");
+                                  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+                                  const year = dateObj.getFullYear();
+                                  const hours = String(dateObj.getHours()).padStart(2, "0");
+                                  const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+                                  handleSendMessage(`Tôi muốn đặt vào ngày ${day}/${month}/${year} lúc ${hours}:${minutes}`);
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {meta.action.requiresConfirmation ? (
+                          {!accessToken ? (
+                            <Link
+                              href="/login"
+                              onClick={() => setIsOpen(false)}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            >
+                              Đăng nhập để thực hiện
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </Link>
+                          ) : meta.action.requiresConfirmation ? (
                             <>
                               <button
                                 type="button"
@@ -623,6 +695,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                           ) : meta.action.href ? (
                             <Link
                               href={meta.action.href}
+                              onClick={() => setIsOpen(false)}
                               className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                             >
                               Mở ngay

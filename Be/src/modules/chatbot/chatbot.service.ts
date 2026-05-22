@@ -61,7 +61,7 @@ const districtCoords: Record<string, { lat: number; lng: number }> = {
 
 const serviceCardInclude = {
   category: { select: { id: true, name: true } },
-  provider: { select: { id: true, fullName: true, avatarUrl: true } },
+  provider: { select: { id: true, fullName: true, avatarUrl: true, status: true } },
   images: {
     select: { id: true, imageUrl: true },
     orderBy: { displayOrder: 'asc' as const },
@@ -267,12 +267,23 @@ export class ChatbotService {
       await this.persistTurn(session, message, response);
       return response;
     } catch (error) {
-      const messageText =
-        error instanceof Error ? error.message : String(error);
+      const messageText = error instanceof Error ? error.message : String(error);
       this.logger.error(`Chatbot error: ${messageText}`);
+
+      let userFriendlyReply = 'Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.';
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errResp = (error as any).response;
+        if (errResp && typeof errResp === 'object' && 'message' in errResp) {
+          userFriendlyReply = Array.isArray(errResp.message) ? errResp.message[0] : errResp.message;
+        } else if (errResp && typeof errResp === 'string') {
+          userFriendlyReply = errResp;
+        }
+      } else if (error instanceof Error && !(error instanceof Prisma.PrismaClientKnownRequestError)) {
+        userFriendlyReply = error.message;
+      }
+
       const response = this.withSession(session, {
-        reply:
-          'Tôi chưa xử lý được yêu cầu này. Bạn có thể nói rõ hơn nhu cầu dịch vụ, thời gian hoặc mã đơn cần tra cứu.',
+        reply: userFriendlyReply,
         services: [],
         quickReplies: this.defaultQuickReplies(),
         confidence: 0.2,
@@ -1092,7 +1103,15 @@ export class ChatbotService {
     await this.ensureCustomer(userId);
 
     if (action.type === 'CONFIRM_CREATE_BOOKING') {
-      const dto = this.toCreateBookingDto(action.payload.draft as BookingDraft);
+      const draft = action.payload.draft as BookingDraft;
+      if (draft?.desiredTime) {
+        const desiredDate = new Date(draft.desiredTime);
+        const minDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // Hiện tại + 2 tiếng
+        if (isNaN(desiredDate.getTime()) || desiredDate.getTime() < minDate.getTime()) {
+          throw new BadRequestException('Thời gian đặt lịch không hợp lệ hoặc phải sau ít nhất 2 giờ tính từ thời điểm hiện tại.');
+        }
+      }
+      const dto = this.toCreateBookingDto(draft);
       const result = await this.bookingsService.create(userId, dto);
       const booking = result.data;
       delete session.state.pendingActions?.[actionId];
@@ -1314,6 +1333,9 @@ export class ChatbotService {
           id: contextServiceId,
           status: ServiceStatus.ACTIVE,
           isDeleted: false,
+          provider: {
+            status: UserStatus.ACTIVE,
+          },
         },
         include: serviceCardInclude,
       });
@@ -1334,6 +1356,9 @@ export class ChatbotService {
               id: { in: ids },
               status: ServiceStatus.ACTIVE,
               isDeleted: false,
+              provider: {
+                status: UserStatus.ACTIVE,
+              },
             },
             include: serviceCardInclude,
           });
@@ -1357,6 +1382,9 @@ export class ChatbotService {
           where: {
             status: ServiceStatus.ACTIVE,
             isDeleted: false,
+            provider: {
+              status: UserStatus.ACTIVE,
+            },
             OR:
               keywords.length > 0
                 ? keywords.map((keyword) => ({
@@ -1457,6 +1485,9 @@ export class ChatbotService {
     });
     if (!service) {
       throw new NotFoundException('Dịch vụ không khả dụng');
+    }
+    if (service.provider.status !== UserStatus.ACTIVE) {
+      throw new BadRequestException('Nhà cung cấp dịch vụ hiện đang bị khóa hoặc ngưng hoạt động.');
     }
     return service;
   }
