@@ -41,6 +41,14 @@ const MANUAL_BANK_INFO = {
   holder: 'LE VAN NGUYEN',
 };
 
+function generateManualDepositCode() {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `NAPVI-${timestamp}-${suffix}`;
+}
+
 export default function WalletScreen() {
   const theme = useTheme();
 
@@ -136,8 +144,13 @@ export default function WalletScreen() {
 
   const resetDepositForm = () => {
     setDepositAmount('');
-    setTransferCode('');
+    setTransferCode(generateManualDepositCode());
     setDepositError('');
+  };
+
+  const openDepositModal = () => {
+    if (!transferCode) setTransferCode(generateManualDepositCode());
+    setShowDepositModal(true);
   };
 
   const handleDeposit = async () => {
@@ -151,7 +164,8 @@ export default function WalletScreen() {
     setDepositLoading(true);
     try {
       if (depositMode === 'manual') {
-        await walletApi.createManualDeposit({ amount, transferCode });
+        const code = transferCode || generateManualDepositCode();
+        await walletApi.createManualDeposit({ amount, transferCode: code });
         setShowDepositModal(false);
         resetDepositForm();
         setMessage({
@@ -361,7 +375,7 @@ export default function WalletScreen() {
                   <Button mode="outlined" icon="bank-transfer-out" compact onPress={() => setShowWithdrawModal(true)} style={styles.headerButton}>
                     Rút tiền
                   </Button>
-                  <Button mode="contained" icon="plus" compact onPress={() => setShowDepositModal(true)} style={styles.headerButton}>
+                  <Button mode="contained" icon="plus" compact onPress={openDepositModal} style={styles.headerButton}>
                     Nạp tiền
                   </Button>
                 </View>
@@ -414,7 +428,7 @@ export default function WalletScreen() {
               title="Chưa có giao dịch"
               description="Các lần nạp tiền, rút tiền, trừ hoa hồng và phí phạt sẽ xuất hiện tại đây."
               actionLabel="Nạp tiền"
-              onAction={() => setShowDepositModal(true)}
+              onAction={openDepositModal}
             />
           )
         }
@@ -438,6 +452,7 @@ export default function WalletScreen() {
             onValueChange={value => {
               setDepositMode(value as 'vnpay' | 'manual');
               setDepositError('');
+              if (value === 'manual' && !transferCode) setTransferCode(generateManualDepositCode());
             }}
             buttons={[
               { value: 'manual', label: 'Chuyển khoản' },
@@ -458,7 +473,7 @@ export default function WalletScreen() {
               <Text style={styles.bankLine}>Ngân hàng: {MANUAL_BANK_INFO.bankName}</Text>
               <Text style={styles.bankLine}>Số tài khoản: {MANUAL_BANK_INFO.accountNumber}</Text>
               <Text style={styles.bankLine}>Chủ tài khoản: {MANUAL_BANK_INFO.holder}</Text>
-              <Text style={styles.bankHint}>Nội dung gợi ý: NAPVI + số điện thoại tài khoản</Text>
+              <Text style={styles.bankHint}>Nội dung chuyển khoản: {transferCode || 'Đang tạo mã...'}</Text>
             </View>
           )}
 
@@ -479,9 +494,9 @@ export default function WalletScreen() {
 
           {depositMode === 'manual' && (
             <TextInput
-              label="Mã giao dịch / nội dung chuyển khoản"
+              label="Mã giao dịch tự tạo"
               value={transferCode}
-              onChangeText={setTransferCode}
+              editable={false}
               mode="outlined"
               left={<TextInput.Icon icon="identifier" accessibilityLabel="Mã giao dịch" />}
               style={styles.amountInput}

@@ -51,6 +51,14 @@ export class ProviderWalletsService {
     return normalized;
   }
 
+  private generateManualDepositCode(providerId: number): string {
+    const now = new Date();
+    const pad = (value: number) => value.toString().padStart(2, '0');
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `NAPVI-${providerId}-${timestamp}-${suffix}`;
+  }
+
   private async getWalletOrThrow(providerId: number) {
     const wallet = await this.prisma.providerWallet.findUnique({
       where: { providerId },
@@ -178,7 +186,7 @@ export class ProviderWalletsService {
       data: {
         providerId,
         amount: depositAmount,
-        transferCode: transferCode?.trim() || null,
+        transferCode: transferCode?.trim() || this.generateManualDepositCode(providerId),
         receiptUrl: receiptUrl?.trim() || null,
       },
     });

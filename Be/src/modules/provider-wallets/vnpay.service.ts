@@ -51,13 +51,13 @@ export class VnpayService {
       vnp_CreateDate: createDate,
     };
 
-    const sortedParams = this.sortObject(vnpParams);
+    const sortedParams = this.sortAndEncodeObject(vnpParams);
     const signData = querystring.stringify(sortedParams, { encode: false });
     const hmac = crypto.createHmac('sha512', this.hashSecret);
     const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
     sortedParams.vnp_SecureHash = signed;
-    return `${this.vnpUrl}?${querystring.stringify(sortedParams)}`;
+    return `${this.vnpUrl}?${querystring.stringify(sortedParams, { encode: false })}`;
   }
 
   verifyIpn(query: Record<string, string>): {
@@ -71,7 +71,7 @@ export class VnpayService {
     delete params.vnp_SecureHash;
     delete params.vnp_SecureHashType;
 
-    const sortedParams = this.sortObject(params);
+    const sortedParams = this.sortAndEncodeObject(params);
     const signData = querystring.stringify(sortedParams, { encode: false });
     const hmac = crypto.createHmac('sha512', this.hashSecret);
     const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
@@ -84,11 +84,11 @@ export class VnpayService {
     };
   }
 
-  private sortObject(obj: Record<string, string>): Record<string, string> {
+  private sortAndEncodeObject(obj: Record<string, string>): Record<string, string> {
     return Object.keys(obj)
       .sort()
       .reduce((result: Record<string, string>, key) => {
-        result[key] = obj[key];
+        result[key] = encodeURIComponent(obj[key]).replace(/%20/g, '+');
         return result;
       }, {});
   }

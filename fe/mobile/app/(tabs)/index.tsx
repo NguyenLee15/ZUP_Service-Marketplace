@@ -95,6 +95,33 @@ function displayDate(value?: string) {
   return new Date(value).toLocaleDateString("vi-VN");
 }
 
+async function getFreshAccessToken() {
+  const refreshToken = await storage.getRefreshToken();
+  if (!refreshToken) return storage.getAccessToken();
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) return storage.getAccessToken();
+
+    const payload = await response.json();
+    const accessToken = payload?.data?.accessToken;
+    const nextRefreshToken = payload?.data?.refreshToken;
+    if (accessToken && nextRefreshToken) {
+      await storage.setTokens(accessToken, nextRefreshToken);
+      return accessToken;
+    }
+  } catch {
+    return storage.getAccessToken();
+  }
+
+  return storage.getAccessToken();
+}
+
 export default function DashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
@@ -166,7 +193,7 @@ export default function DashboardScreen() {
     setExporting(true);
     setMessage(null);
     try {
-      const token = await storage.getAccessToken();
+      const token = await getFreshAccessToken();
       if (!token) throw new Error("Phiên đăng nhập đã hết hạn.");
 
       const query = new URLSearchParams(reportParams).toString();
@@ -183,15 +210,25 @@ export default function DashboardScreen() {
       }
 
       const isAvailable = await Sharing.isAvailableAsync();
-      if (isAvailable) await Sharing.shareAsync(result.uri);
+      if (isAvailable) {
+        await Sharing.shareAsync(result.uri, {
+          mimeType:
+            type === "pdf"
+              ? "application/pdf"
+              : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          dialogTitle: `Báo cáo ${selectedReportLabel}`,
+        });
+      }
       setMessage({
         tone: "success",
         text: `Đã tạo báo cáo ${selectedReportLabel} (${type.toUpperCase()}).`,
       });
-    } catch {
+    } catch (error: any) {
       setMessage({
         tone: "error",
-        text: "Không thể xuất báo cáo. Vui lòng thử lại sau.",
+        text:
+          error?.message ||
+          "Không thể xuất báo cáo. Vui lòng thử lại sau.",
       });
     } finally {
       setExporting(false);
