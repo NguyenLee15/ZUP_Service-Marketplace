@@ -72,4 +72,19 @@
   - [x] Step 4: Chạy biên dịch Frontend Next.js để xác minh
   - [x] Step 5: Commit thay đổi và hoàn tất
 
-
+## 💬 Giai đoạn 8: AI-to-Provider Chat Handover & Bộ chọn Ngày Giờ Trực Quan với Ràng Buộc Bảo Mật (Hoàn thành)
+- [x] Triển khai **AI-to-Provider Chat Handover**:
+  - [x] Chuyển tiếp an toàn sang chat với thợ realtime (`/chat?conversationId=...`) khi kết nối AI chatbot.
+  - [x] Cơ chế tự động đóng Widget chatbot khi click mở liên kết chat/booking.
+- [x] Triển khai **Interactive Date-Time Picker**:
+  - [x] Form chọn ngày giờ trực quan lồng trong hội thoại khi tạo đơn nháp (`CREATE_BOOKING_DRAFT`).
+  - [x] Chuyển đổi định dạng ngày giờ tiếng Việt thân thiện để LLM phân tích không bị lệch múi giờ (Timezone-safe).
+- [x] Bổ sung các **Ràng buộc Bảo mật nâng cao**:
+  - [x] Kiểm tra đăng nhập ngay tại nút hành động (Redirect sang `/login` nếu chưa đăng nhập).
+  - [x] Lọc bỏ triệt để dịch vụ của các Thợ bị khóa (`provider.status !== ACTIVE`) hoặc dịch vụ bị ẩn trên cả Backend và Chatbot.
+  - [x] Validate ngày giờ đặt lịch (`desiredTime`) ở Backend phải tối thiểu 2 giờ kể từ thời điểm hiện tại.
+- [x] Bóc tách và hiển thị thông tin lỗi chi tiết của NestJS Exception trực tiếp trên Chatbot UI.
+- [x] **Khắc phục lỗi build dự án (Build Failed - Command "npm run build" exited with 1)**:
+  - [x] Bổ sung script `"build"` vào root `package.json` để kích hoạt build đồng bộ cả Backend (`Be/`) và Frontend Web (`fe/wed/`) ở thư mục gốc.
+  - [x] Kiểm tra và xác minh biên dịch Next.js và NestJS thành công 100% không lỗi.
+  - [x] Commit và push mã nguồn lên GitLab remote.

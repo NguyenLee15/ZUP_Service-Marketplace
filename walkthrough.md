@@ -112,3 +112,34 @@ Chatbot tự động xác định tọa độ của khách hàng theo thứ tự
 ### 4. Kết quả Kiểm thử & Biên dịch (Diagnostics & Verification)
 - **Backend Typecheck & Spec:** Biên dịch sạch 100%, chạy `npm run test -- modules/chatbot/chatbot.service.spec.ts` cho kết quả **PASS** tuyệt đối, mọi kịch bản trích xuất NLU vị trí hoạt động hoàn hảo.
 - **Frontend Next.js 16 Typecheck:** Chạy typecheck `npx tsc --noEmit --skipLibCheck` trên `fe/wed` cho kết quả **thành công không có lỗi** biên dịch nào.
+
+---
+
+## Giai đoạn 8: AI-to-Provider Chat Handover & Bộ chọn Ngày Giờ Trực Quan với Ràng Buộc Bảo Mật (HOÀN THÀNH - PREMIUM DIALOGUE EXPERIENCES)
+
+Chúng tôi đã triển khai thành công mô hình **chuyển tiếp hội thoại thông minh** và **giao diện chọn ngày giờ trực quan** giúp gia tăng tính tiện ích, an toàn và chuyên nghiệp cho AI Chatbot:
+
+### 1. AI-to-Provider Chat Handover (Chuyển tiếp Thợ Realtime)
+- **Hành động một chạm:** Tự động tạo conversation giữa khách hàng và thợ ngay sau khi khách hàng đồng ý chốt liên hệ trong chatbot. Chatbot tự động hiển thị nút hành động *"Mở ngay"*.
+- **Chuyển hướng an toàn & Tự đóng widget:** Khi khách hàng click vào nút *"Mở ngay"* (đường dẫn `/chat?conversationId=...`), Widget chatbot sẽ tự động đóng lại mượt mà và thực hiện chuyển hướng router an toàn đến trang chat realtime với thợ.
+- **Guard Validation:** Kiểm tra và validate chặt chẽ cấu trúc `conversationId` trong link chuyển tiếp để bảo vệ an toàn hệ thống, tránh chuyển hướng sang các trang độc hại ngoài tầm kiểm soát.
+
+### 2. Interactive Date-Time Picker (Bộ Chọn Ngày Giờ Trực Quan Lồng Trong Chat)
+- **Giao diện thời gian trực quan:** Thay vì bắt người dùng nhập tay ngày giờ đặt lịch dễ dẫn đến sai định dạng hoặc nhầm múi giờ, hệ thống sẽ tự động hiển thị một **Interactive Date-Time Picker** (bộ chọn ngày giờ HTML5 thông minh) lồng ngay dưới khung thẻ hội thoại khi phát hiện hành động chuẩn bị tạo đơn đặt lịch nháp (`CREATE_BOOKING_DRAFT`).
+- **Timezone-safe & Tiếng Việt thân thiện:** Định dạng ngày giờ khi khách hàng chọn sẽ tự động được chuyển đổi sang câu tiếng Việt tự nhiên *"Tôi muốn đặt vào ngày DD/MM/YYYY lúc HH:mm"* để chatbot gửi lên Backend. Điều này loại bỏ hoàn toàn tình trạng lệch múi giờ UTC, giúp AI Gemini phân tích chính xác tuyệt đối.
+
+### 3. Ràng Buộc Bảo Mật & Lọc Nâng Cao (Advanced Security & Integrity Guards)
+- **Đăng nhập tại nút hành động:** Chatbot chủ động phát hiện trạng thái phiên làm việc của khách hàng. Nếu khách hàng chưa đăng nhập (`!accessToken`), các nút xác nhận hành động nhạy cảm sẽ tự động chuyển thành nút *"Đăng nhập để thực hiện"*, hướng dẫn khách hàng đăng nhập an toàn tại `/login` và tự đóng widget chatbot để tạo trải nghiệm liền mạch.
+- **Lọc triệt để Thợ bị khóa hoặc ngưng hoạt động:**
+  - Cập nhật backend `chatbot.service.ts` để select trạng thái `status` của nhà cung cấp (`provider.status === UserStatus.ACTIVE`).
+  - Toàn bộ 3 phương thức gợi ý dịch vụ (`findRelevantServices`, `getActiveServiceOrThrow`) đều tự động lọc bỏ các dịch vụ thuộc nhà cung cấp bị khóa hoặc ngưng hoạt động.
+- **Validate thời gian đặt lịch Backend:**
+  - Tầng dịch vụ `bookings.service` kiểm tra và validate nghiêm ngặt ngày giờ mong muốn đặt lịch (`desiredTime`) phải **sau ít nhất 2 giờ** tính từ thời điểm hiện tại.
+- **Bóc tách lỗi chi tiết của NestJS Exception:**
+  - Bổ sung khối try-catch bóc tách mã lỗi và nội dung thông báo lỗi trực tiếp từ NestJS gửi về (ví dụ: lỗi validate ngày giờ dưới 2 giờ, lỗi ví thợ bị khóa, v.v.) hiển thị rõ ràng trên bong bóng chat của AI để người dùng nắm thông tin ngay lập tức.
+
+### 4. Giải Quyết Lỗi Biên Dịch & Build Sản Xuất (Root Build Exited with 1 Fixed)
+- **Phát hiện:** Khi chạy build ở root workspace, do đây là một monorepo chứa nhiều sub-project (`Be/` và `fe/wed/`) nhưng root `package.json` chưa được định nghĩa script `"build"`, dẫn đến việc build lỗi `npm error Missing script: "build"` và exit 1.
+- **Giải quyết:** Thêm script `"build": "npm run build --prefix Be && npm run build --prefix fe/wed"` vào file root `package.json`.
+- **Kết quả kiểm chứng:** Chạy thử nghiệm build monorepo hoàn tất thành công xuất sắc, Next.js frontend và NestJS backend đều hoàn thành biên dịch tối ưu hóa 100% không có bất kỳ lỗi nào. Đã git commit và push code thành công lên GitLab.
+
