@@ -36,9 +36,9 @@ type WalletRequest = {
 };
 
 const MANUAL_BANK_INFO = {
-  bankName: 'Ngân hàng của nền tảng',
-  accountNumber: 'Cấu hình số tài khoản admin',
-  holder: 'Chủ tài khoản nền tảng',
+  bankName: 'MB Bank',
+  accountNumber: '0583489535',
+  holder: 'LE VAN NGUYEN',
 };
 
 export default function WalletScreen() {
