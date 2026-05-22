@@ -83,3 +83,32 @@ Trang sản xuất của bạn hiện tại đã đạt độ hoàn thiện cự
 👉 [service-marketplace-gold.vercel.app](https://service-marketplace-gold.vercel.app/)
 
 Các chỉ số di động sẽ phản ánh điểm số xuất sắc nhờ sự kết hợp giữa các thay đổi tối ưu hóa mã nguồn và việc kích hoạt thành công Vercel Web Analytics!
+
+---
+
+## Giai đoạn 7: Chatbot Nhận Biết Vị Trí & Đề Xuất Thợ Gần Nhất (HOÀN THÀNH - PREMIUM EXPERIENCES)
+
+Chúng tôi đã hoàn thiện toàn diện tính năng **định vị thông minh địa lý** cho Customer AI Assistant (Chatbot), mang lại trải nghiệm tương tác cực kỳ cao cấp, tối ưu hóa đáng kể hành trình tìm kiếm và đặt lịch của khách hàng:
+
+### 1. Kiến trúc Định vị 3 Lớp (Tri-tier Geolocation Resolution)
+Chatbot tự động xác định tọa độ của khách hàng theo thứ tự ưu tiên giảm dần:
+1. **Lớp 1 (Real-time GPS):** Nhận tọa độ trực tiếp từ GPS trình duyệt của khách hàng thông qua nút Chia sẻ vị trí trên Frontend.
+2. **Lớp 2 (Default Address):** Tự động bóc tách tọa độ mặc định từ địa chỉ đã lưu trong hồ sơ cơ sở dữ liệu nếu người dùng đã đăng nhập.
+3. **Lớp 3 (NLU District Fallback):** Trích xuất tên quận/huyện TP.HCM & Hà Nội bằng giải thuật NLU tự nhiên trực tiếp từ tin nhắn chat (ví dụ: *"tìm thợ ở quận 10"* hoặc *"máy lạnh hỏng ở Hoàn Kiếm"*), tự động khớp với tọa độ trung tâm quận/huyện đã được map sẵn.
+
+### 2. Tính khoảng cách Haversine & Tối ưu hóa Thứ tự Đề xuất
+- **Công thức Haversine:** Tích hợp bộ tiện ích toán học để tính khoảng cách thực tế dạng đường cong trái đất (km) giữa khách hàng và các nhà cung cấp dịch vụ dựa trên tọa độ vĩ độ/kinh độ chính xác.
+- **Sắp xếp thông minh:** Tự động sắp xếp các thợ gần khách hàng nhất lên đầu danh sách đề xuất.
+- **Tích hợp prompt Gemini 2.5 Flash:** Khoảng cách thực tế (ví dụ: *"cách bạn 2.3 km"*) và địa chỉ của thợ được tự động bơm trực tiếp vào ngữ cảnh hội thoại của AI Gemini, giúp chatbot tư vấn cực kỳ chân thực, thuyết phục và gợi ý các thợ sát nhà nhất.
+
+### 3. Giao diện Premium Frontend UI/UX
+- **Location Banner Lấp Lánh:** Banner định vị lấp lánh (Emerald/Blue) hiển thị ngay dưới Header của chatbot giúp thúc đẩy người dùng tương tác chia sẻ vị trí hiện tại chỉ với 1 cú click nhanh.
+- **Distance Badges Sinh Động:** Thẻ dịch vụ hiển thị khoảng cách được phân cấp màu sắc hiện đại theo khoảng cách:
+  - 🟢 **Dưới 3km (Siêu gần):** Badge màu xanh lá (`bg-emerald-50 text-emerald-700 border-emerald-200`) tạo cảm giác an tâm và tin cậy cao.
+  - 🔵 **Từ 3km đến 8km (Gần):** Badge màu xanh dương (`bg-blue-50 text-blue-700 border-blue-200`).
+  - 🔘 **Trên 8km (Xa):** Badge màu xám Slate (`bg-slate-100 text-slate-600 border-slate-200`).
+- **Địa chỉ thợ trực quan:** Địa chỉ chi tiết của nhà cung cấp được hiển thị gọn gàng dưới tên thợ, giúp tăng cường tính minh bạch.
+
+### 4. Kết quả Kiểm thử & Biên dịch (Diagnostics & Verification)
+- **Backend Typecheck & Spec:** Biên dịch sạch 100%, chạy `npm run test -- modules/chatbot/chatbot.service.spec.ts` cho kết quả **PASS** tuyệt đối, mọi kịch bản trích xuất NLU vị trí hoạt động hoàn hảo.
+- **Frontend Next.js 16 Typecheck:** Chạy typecheck `npx tsc --noEmit --skipLibCheck` trên `fe/wed` cho kết quả **thành công không có lỗi** biên dịch nào.

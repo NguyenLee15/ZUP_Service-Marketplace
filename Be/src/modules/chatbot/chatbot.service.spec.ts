@@ -133,4 +133,16 @@ describe('ChatbotService stream persistence', () => {
     expect(mockPrisma.chatbotSession.findFirst).not.toHaveBeenCalled();
     expect(mockPrisma.chatbotSessionMessage.create).not.toHaveBeenCalled();
   });
+
+  describe('extractDistrictFromText', () => {
+    it('should extract district names correctly from Vietnamese chat message', () => {
+      const privateService = service as any;
+      expect(privateService.extractDistrictFromText('Tôi muốn tìm thợ sửa điều hòa ở Quận 7')).toBe('Quận 7');
+      expect(privateService.extractDistrictFromText('Cần dọn nhà gấp tại Q. Bình Thạnh')).toBe('Quận Bình Thạnh');
+      expect(privateService.extractDistrictFromText('Alo, có thợ nào gần Q1 không')).toBe('Quận 1');
+      expect(privateService.extractDistrictFromText('Tìm thợ tại Quận Gò Vấp')).toBe('Quận Gò Vấp');
+      expect(privateService.extractDistrictFromText('Tôi ở quận phú nhuận')).toBe('Quận Phú Nhuận');
+      expect(privateService.extractDistrictFromText('Không có thông tin quận')).toBeNull();
+    });
+  });
 });

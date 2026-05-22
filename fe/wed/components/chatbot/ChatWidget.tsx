@@ -38,6 +38,8 @@ const chatServiceSchema = z.object({
   totalReviews: z.number(),
   categoryName: z.string(),
   imageUrl: z.string().optional(),
+  distanceKm: z.number().optional(),
+  providerAddress: z.string().optional(),
 });
 
 const quickReplySchema = z.object({
@@ -116,6 +118,35 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const [metaMap, setMetaMap] = useState<Record<string, ChatbotMessageMeta>>(
     {},
   );
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Trình duyệt của bạn không hỗ trợ định vị GPS.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newCoords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+        setCoords(newCoords);
+        setIsLocating(false);
+        sendMessage({
+          text: "📍 Đã chia sẻ vị trí hiện tại của tôi",
+        });
+      },
+      (error) => {
+        console.error("Lỗi lấy vị trí:", error);
+        setIsLocating(false);
+        alert("Không thể lấy vị trí hiện tại. Vui lòng cấp quyền truy cập GPS cho trang web.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const pageContext = useMemo(() => {
     const serviceMatch = pathname?.match(/\/services\/(\d+)/);
@@ -150,9 +181,16 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           if (token) hdrs["Authorization"] = `Bearer ${token}`;
           return hdrs;
         },
-        body: { sessionId, pageContext },
+        body: {
+          sessionId,
+          pageContext: {
+            ...pageContext,
+            latitude: coords?.latitude,
+            longitude: coords?.longitude,
+          },
+        },
       }),
-    [sessionId, pageContext],
+    [sessionId, pageContext, coords],
   );
 
   const {
@@ -343,6 +381,33 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
             </div>
           </div>
 
+          {!coords ? (
+            <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-center justify-between gap-2 text-xs">
+              <span className="text-blue-800 flex items-center gap-1 font-medium">
+                <Sparkles className="h-3 w-3 text-blue-600 animate-pulse" />
+                Bật định vị để đề xuất thợ siêu gần bạn
+              </span>
+              <button
+                type="button"
+                onClick={requestLocation}
+                disabled={isLocating}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50 shrink-0"
+              >
+                {isLocating ? <Loader2 className="h-3 w-3 animate-spin" /> : "📍 Chia sẻ"}
+              </button>
+            </div>
+          ) : (
+            <div className="bg-emerald-50 border-b border-emerald-100 px-4 py-2 flex items-center justify-between gap-2 text-xs text-emerald-800 font-medium">
+              <span className="flex items-center gap-1">
+                <Check className="h-3 w-3 text-emerald-600" />
+                Đã bật định vị thông minh (thợ gần nhất sẽ được ưu tiên)
+              </span>
+              <span className="text-[10px] text-emerald-600 font-normal">
+                {coords.latitude.toFixed(4)}, {coords.longitude.toFixed(4)}
+              </span>
+            </div>
+          )}
+
           <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4" aria-live="polite">
             {messages.map((message) => {
               const streamMeta = message.metadata || {};
@@ -403,10 +468,30 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                                   </p>
                                   <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-600" />
                                 </div>
-                                <p className="mt-1 truncate text-xs text-slate-500">
-                                  {service.categoryName} ·{" "}
-                                  {service.providerName}
-                                </p>
+                                <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
+                                  <span className="truncate max-w-[120px]">{service.categoryName}</span>
+                                  <span>·</span>
+                                  <span className="truncate max-w-[120px]">{service.providerName}</span>
+                                  {service.distanceKm !== undefined && (
+                                    <>
+                                      <span>·</span>
+                                      <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium border shrink-0 ${
+                                        service.distanceKm < 3
+                                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                          : service.distanceKm <= 8
+                                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                                          : "bg-slate-100 text-slate-600 border-slate-200"
+                                      }`}>
+                                        {service.distanceKm.toFixed(1)} km
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                {service.providerAddress && (
+                                  <p className="mt-1 line-clamp-1 text-[11px] text-slate-400">
+                                    Địa chỉ: {service.providerAddress}
+                                  </p>
+                                )}
                                 <div className="mt-2 flex items-center justify-between gap-2">
                                   <span className="text-sm font-semibold text-blue-700">
                                     {formatPrice(service.referencePrice)}

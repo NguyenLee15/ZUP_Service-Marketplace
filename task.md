@@ -44,3 +44,32 @@
 - [x] Commit thay đổi và push code lên GitLab nhánh `main` để Vercel tự động cập nhật
 - [x] Cập nhật tệp walkthrough.md và báo cáo kết quả hoàn thành với điểm số kỷ lục tuyệt đối ổn định
 
+## 📍 Giai đoạn 7: Chatbot Nhận Biết Vị Trí & Đề Xuất Thợ Gần Nhất (Đang thực hiện)
+- [x] Task 1: Tiện ích tính khoảng cách Haversine (Backend Geo Utility)
+  - [x] Step 1: Viết test kiểm thử cho hàm tính khoảng cách Haversine tại `Be/src/shared/utils/geo.spec.ts`
+  - [x] Step 2: Tạo hàm tính khoảng cách Haversine tại `Be/src/shared/utils/geo.ts`
+  - [x] Step 3: Chạy test và xác minh hàm hoạt động chính xác
+  - [x] Step 4: Commit thay đổi lên Git
+- [x] Task 2: Trích xuất Quận/Huyện từ tin nhắn văn bản (NLU Location Extraction Fallback)
+  - [x] Step 1: Viết test cho phương thức trích xuất vị trí trong ChatbotService Spec
+  - [x] Step 2: Triển khai phương thức trích xuất vị trí `extractDistrictFromText` ở ChatbotService
+  - [x] Step 3: Chạy test và đảm bảo pass
+  - [x] Step 4: Commit thay đổi
+- [x] Task 3: Cập nhật Interface & DTO Vị Trí (Backend & Frontend Types)
+  - [x] Step 1: Cập nhật các DTO/Interface phía Backend
+  - [x] Step 2: Cập nhật định nghĩa Zod Schema phía Frontend
+  - [x] Step 3: Commit thay đổi
+- [x] Task 4: Tích hợp Tính khoảng cách & Dựng Prompt Nhận Biết Vị Trí (Backend Logic Integration)
+  - [x] Step 1: Import hàm tính Haversine vào ChatbotService
+  - [x] Step 2: Triển khai việc lấy tọa độ & tính khoảng cách của Thợ trong `prepareContext` & `findRelevantServices`
+  - [x] Step 3: Tinh chỉnh hàm `buildServiceContext` để đưa khoảng cách vào prompt của Gemini
+  - [x] Step 4: Chạy biên dịch kiểm tra tính đúng đắn ở Backend
+  - [x] Step 5: Commit thay đổi
+- [x] Task 5: Chia sẻ vị trí & Hiển thị Khoảng cách trực quan (Frontend UI/UX)
+  - [x] Step 1: Bổ sung tọa độ GPS hiện tại vào `pageContext` gửi từ Frontend
+  - [x] Step 2: Triển khai nút Quick Reply "📍 Chia sẻ vị trí" và gọi Geolocation API
+  - [x] Step 3: Thiết kế Premium Badge Khoảng cách trên thẻ Dịch vụ
+  - [x] Step 4: Chạy biên dịch Frontend Next.js để xác minh
+  - [x] Step 5: Commit thay đổi và hoàn tất
+
+

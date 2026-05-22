@@ -19,6 +19,45 @@ import { BookingsService } from '../bookings/bookings.service';
 import { ChatsService } from '../chats/chats.service';
 import { ServicesService } from '../services/services.service';
 import { CreateBookingDto } from '../bookings/dto/bookings.dto';
+import { calculateHaversineDistance } from '../../shared/utils/geo';
+
+const districtCoords: Record<string, { lat: number; lng: number }> = {
+  // TP.HCM
+  'Quận 1': { lat: 10.7769, lng: 106.7009 },
+  'Quận 2': { lat: 10.7872, lng: 106.7498 },
+  'Quận 3': { lat: 10.7794, lng: 106.6816 },
+  'Quận 4': { lat: 10.7580, lng: 106.7067 },
+  'Quận 5': { lat: 10.7541, lng: 106.6631 },
+  'Quận 6': { lat: 10.7483, lng: 106.6358 },
+  'Quận 7': { lat: 10.7327, lng: 106.7268 },
+  'Quận 8': { lat: 10.7236, lng: 106.6346 },
+  'Quận 9': { lat: 10.8428, lng: 106.8286 },
+  'Quận 10': { lat: 10.7746, lng: 106.6669 },
+  'Quận 11': { lat: 10.7629, lng: 106.6508 },
+  'Quận 12': { lat: 10.8671, lng: 106.6413 },
+  'Quận Bình Thạnh': { lat: 10.8106, lng: 106.7091 },
+  'Quận Gò Vấp': { lat: 10.8388, lng: 106.6657 },
+  'Thành phố Thủ Đức': { lat: 10.8494, lng: 106.7716 },
+  'Quận Phú Nhuận': { lat: 10.7992, lng: 106.6803 },
+  'Quận Tân Bình': { lat: 10.8014, lng: 106.6525 },
+  'Quận Tân Phú': { lat: 10.7923, lng: 106.6183 },
+  'Quận Bình Tân': { lat: 10.7656, lng: 106.5813 },
+  'Huyện Củ Chi': { lat: 10.9850, lng: 106.4984 },
+  'Huyện Hóc Môn': { lat: 10.8854, lng: 106.5910 },
+  'Huyện Nhà Bè': { lat: 10.6661, lng: 106.7317 },
+  'Huyện Bình Chánh': { lat: 10.6875, lng: 106.5938 },
+  'Huyện Cần Giờ': { lat: 10.5083, lng: 106.8635 },
+  // Hà Nội
+  'Quận Hoàn Kiếm': { lat: 21.0285, lng: 105.8522 },
+  'Quận Ba Đình': { lat: 21.0362, lng: 105.8290 },
+  'Quận Tây Hồ': { lat: 21.0718, lng: 105.8227 },
+  'Quận Cầu Giấy': { lat: 21.0358, lng: 105.7952 },
+  'Quận Đống Đa': { lat: 21.0122, lng: 105.8280 },
+  'Quận Hai Bà Trưng': { lat: 21.0102, lng: 105.8573 },
+  'Quận Hoàng Mai': { lat: 20.9704, lng: 105.8450 },
+  'Quận Long Biên': { lat: 21.0428, lng: 105.8943 },
+  'Quận Thanh Xuân': { lat: 20.9938, lng: 105.8048 },
+};
 
 const serviceCardInclude = {
   category: { select: { id: true, name: true } },
@@ -62,6 +101,8 @@ export interface ChatServiceResult {
   totalReviews: number;
   categoryName: string;
   imageUrl?: string;
+  distanceKm?: number;
+  providerAddress?: string;
 }
 
 export interface ChatbotQuickReply {
@@ -108,6 +149,9 @@ export interface ChatbotPageContext {
   serviceId?: number | string;
   bookingId?: number | string;
   serviceName?: string;
+  latitude?: number;
+  longitude?: number;
+  addressText?: string;
 }
 
 export interface ChatbotAskRequest {
@@ -207,6 +251,7 @@ export class ChatbotService {
           });
         } else {
           const intent = this.detectIntent(message);
+          const customerCoords = await this.getCustomerCoords(userId, message, request.pageContext);
           response = await this.handleIntent(
             userId,
             session,
@@ -214,6 +259,7 @@ export class ChatbotService {
             request.history || [],
             request.pageContext,
             intent,
+            customerCoords,
           );
         }
       }
@@ -374,16 +420,17 @@ export class ChatbotService {
     }
 
     const intent = this.detectIntent(message);
+    const customerCoords = await this.getCustomerCoords(userId, message, input.pageContext);
 
     // Các intent không cần AI stream — xử lý trực tiếp
     if (intent.name !== 'search') {
-      const response = await this.handleIntent(userId, session, message, input.history || [], input.pageContext, intent);
+      const response = await this.handleIntent(userId, session, message, input.history || [], input.pageContext, intent, customerCoords);
       await this.persistTurn(session, message, response);
       return { ...baseResult, ...response, needsAiStream: false, reply: response.reply };
     }
 
     // Intent 'search' — cần AI stream
-    const services = await this.findRelevantServices(message, input.pageContext);
+    const services = await this.findRelevantServices(message, input.pageContext, customerCoords);
     const serviceCards = services.map((s) => this.toServiceCard(s));
 
     if (services.length === 0) {
@@ -424,6 +471,7 @@ export class ChatbotService {
     history: Array<{ role: string; content: string }>,
     pageContext: ChatbotPageContext | undefined,
     intent: DetectedIntent,
+    customerCoords?: { lat: number; lng: number },
   ): Promise<ChatResponse> {
     if (intent.name === 'smalltalk') {
       return this.withSession(session, {
@@ -445,10 +493,10 @@ export class ChatbotService {
     }
 
     if (intent.name === 'open_chat') {
-      return this.handleOpenProviderChat(userId, session, message, pageContext);
+      return this.handleOpenProviderChat(userId, session, message, pageContext, customerCoords);
     }
 
-    const services = await this.findRelevantServices(message, pageContext);
+    const services = await this.findRelevantServices(message, pageContext, customerCoords);
 
     if (intent.name === 'compare') {
       return this.handleCompare(session, services, intent.confidence);
@@ -756,6 +804,7 @@ export class ChatbotService {
     session: SessionContext,
     message: string,
     pageContext: ChatbotPageContext | undefined,
+    customerCoords?: { lat: number; lng: number },
   ): Promise<ChatResponse> {
     if (!userId) {
       return this.withSession(session, {
@@ -771,7 +820,7 @@ export class ChatbotService {
 
     await this.ensureCustomer(userId);
 
-    const services = await this.findRelevantServices(message, pageContext);
+    const services = await this.findRelevantServices(message, pageContext, customerCoords);
     const serviceId = this.resolveServiceId(message, pageContext, services);
 
     if (!serviceId) {
@@ -1120,7 +1169,8 @@ export class ChatbotService {
   private async findRelevantServices(
     query: string,
     pageContext?: ChatbotPageContext,
-  ): Promise<ServiceWithRelations[]> {
+    customerCoords?: { lat: number; lng: number },
+  ): Promise<(ServiceWithRelations & { distanceKm?: number; providerAddress?: string })[]> {
     const results: ServiceWithRelations[] = [];
     const contextServiceId = this.parsePositiveInt(pageContext?.serviceId);
 
@@ -1216,7 +1266,54 @@ export class ChatbotService {
       }
     }
 
-    return this.uniqueServices(results).slice(0, 5);
+    const unique = this.uniqueServices(results);
+    const providerIds = Array.from(new Set(unique.map(s => s.providerId)));
+    const addresses = await this.prisma.userAddress.findMany({
+      where: {
+        userId: { in: providerIds },
+      },
+      orderBy: [
+        { isDefault: 'desc' },
+        { id: 'desc' }
+      ]
+    });
+
+    const addressMap = new Map<number, any>();
+    for (const addr of addresses) {
+      if (!addressMap.has(addr.userId)) {
+        addressMap.set(addr.userId, addr);
+      }
+    }
+
+    const servicesWithGeo = unique.map(service => {
+      const geoService = service as ServiceWithRelations & { distanceKm?: number; providerAddress?: string };
+      const addr = addressMap.get(service.providerId);
+      if (addr) {
+        geoService.providerAddress = `${addr.addressDetail}, ${addr.ward}, ${addr.district}, ${addr.province}`;
+        if (customerCoords && addr.latitude && addr.longitude) {
+          geoService.distanceKm = calculateHaversineDistance(
+            customerCoords.lat,
+            customerCoords.lng,
+            Number(addr.latitude),
+            Number(addr.longitude),
+          );
+        }
+      }
+      return geoService;
+    });
+
+    if (customerCoords) {
+      servicesWithGeo.sort((a, b) => {
+        if (a.distanceKm !== undefined && b.distanceKm !== undefined) {
+          return a.distanceKm - b.distanceKm;
+        }
+        if (a.distanceKm !== undefined) return -1;
+        if (b.distanceKm !== undefined) return 1;
+        return 0;
+      });
+    }
+
+    return servicesWithGeo.slice(0, 5);
   }
 
   private async getActiveServiceOrThrow(serviceId: number) {
@@ -1239,6 +1336,8 @@ export class ChatbotService {
         district: true,
         ward: true,
         addressDetail: true,
+        latitude: true,
+        longitude: true,
       },
     });
   }
@@ -1564,7 +1663,9 @@ export class ChatbotService {
     };
   }
 
-  private toServiceCard(service: ServiceWithRelations): ChatServiceResult {
+  private toServiceCard(
+    service: ServiceWithRelations & { distanceKm?: number; providerAddress?: string },
+  ): ChatServiceResult {
     return {
       id: service.id,
       name: service.name,
@@ -1576,15 +1677,26 @@ export class ChatbotService {
       totalReviews: service.totalReviews || 0,
       categoryName: service.category?.name || 'Khác',
       imageUrl: service.images?.[0]?.imageUrl,
+      distanceKm: service.distanceKm !== undefined ? Number(service.distanceKm) : undefined,
+      providerAddress: service.providerAddress,
     };
   }
 
-  private buildServiceContext(services: ServiceWithRelations[]) {
+  private buildServiceContext(
+    services: (ServiceWithRelations & { distanceKm?: number; providerAddress?: string })[],
+  ) {
     return services
-      .map(
-        (service) =>
-          `- [ID:${service.id}] ${service.name} | Giá tham khảo: ${this.formatPrice(Number(service.referencePrice))} | Đánh giá: ${Number(service.avgRating || 0).toFixed(1)} | Lượt đánh giá: ${service.totalReviews || 0} | Nhà cung cấp: ${service.provider.fullName} | Danh mục: ${service.category?.name || 'Khác'} | Mô tả: ${service.description}`,
-      )
+      .map((service) => {
+        let text = `- [ID:${service.id}] ${service.name} | Giá tham khảo: ${this.formatPrice(Number(service.referencePrice))} | Đánh giá: ${Number(service.avgRating || 0).toFixed(1)} | Lượt đánh giá: ${service.totalReviews || 0} | Nhà cung cấp: ${service.provider.fullName} | Danh mục: ${service.category?.name || 'Khác'}`;
+        if (service.distanceKm !== undefined) {
+          text += ` | Khoảng cách đến khách hàng: ${service.distanceKm.toFixed(1)} km`;
+        }
+        if (service.providerAddress) {
+          text += ` | Địa chỉ thợ: ${service.providerAddress}`;
+        }
+        text += ` | Mô tả: ${service.description}`;
+        return text;
+      })
       .join('\n');
   }
 
@@ -1767,5 +1879,97 @@ export class ChatbotService {
       { label: 'So sánh dịch vụ', message: 'So sánh các dịch vụ giúp tôi' },
       { label: 'Đơn của tôi', message: 'Đơn của tôi tới đâu rồi?' },
     ];
+  }
+
+  private async getCustomerCoords(
+    userId: number | undefined,
+    message: string,
+    pageContext?: ChatbotPageContext,
+  ): Promise<{ lat: number; lng: number } | undefined> {
+    if (
+      pageContext &&
+      typeof pageContext.latitude === 'number' &&
+      typeof pageContext.longitude === 'number'
+    ) {
+      return {
+        lat: pageContext.latitude,
+        lng: pageContext.longitude,
+      };
+    }
+
+    if (userId) {
+      const defaultAddress = await this.getDefaultAddress(userId);
+      if (
+        defaultAddress &&
+        defaultAddress.latitude !== null &&
+        defaultAddress.latitude !== undefined &&
+        defaultAddress.longitude !== null &&
+        defaultAddress.longitude !== undefined
+      ) {
+        return {
+          lat: Number(defaultAddress.latitude),
+          lng: Number(defaultAddress.longitude),
+        };
+      }
+    }
+
+    if (message) {
+      const detectedDistrict = this.extractDistrictFromText(message);
+      if (detectedDistrict && districtCoords[detectedDistrict]) {
+        return districtCoords[detectedDistrict];
+      }
+    }
+
+    return undefined;
+  }
+
+  private extractDistrictFromText(text: string): string | null {
+    if (!text) return null;
+    const normalized = text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/\s+/g, ' ');
+
+    // 1. Tìm quận số trước: q1, q.1, q 1, quan 1, quan 12...
+    const matchNumber = normalized.match(/(?:quan|q\.?\s?)\s*(\d+)\b/i);
+    if (matchNumber) {
+      return `Quận ${matchNumber[1]}`;
+    }
+
+    // 2. Tìm quận chữ bằng cách quét từ khóa đặc trưng trong districtMap
+    const districtMap: Record<string, string> = {
+      'binh thanh': 'Quận Bình Thạnh',
+      'go vap': 'Quận Gò Vấp',
+      'thu duc': 'Thành phố Thủ Đức',
+      'phu nhuan': 'Quận Phú Nhuận',
+      'tan binh': 'Quận Tân Bình',
+      'tan phu': 'Quận Tân Phú',
+      'binh tan': 'Quận Bình Tân',
+      'cu chi': 'Huyện Củ Chi',
+      'hoc mon': 'Huyện Hóc Môn',
+      'nha be': 'Huyện Nhà Bè',
+      'binh chanh': 'Huyện Bình Chánh',
+      'can gio': 'Huyện Cần Giờ',
+      'hoan kiem': 'Quận Hoàn Kiếm',
+      'ba dinh': 'Quận Ba Đình',
+      'tay ho': 'Quận Tây Hồ',
+      'cau giay': 'Quận Cầu Giấy',
+      'dong da': 'Quận Đống Đa',
+      'hai ba trung': 'Quận Hai Bà Trưng',
+      'hoang mai': 'Quận Hoàng Mai',
+      'long bien': 'Quận Long Biên',
+      'thanh xuan': 'Quận Thanh Xuân',
+    };
+
+    for (const [key, name] of Object.entries(districtMap)) {
+      const regex = new RegExp(`(?:quan|q\\.?\\s?)?\\s*${key}`, 'i');
+      if (regex.test(normalized)) {
+        return name;
+      }
+    }
+
+    return null;
   }
 }
