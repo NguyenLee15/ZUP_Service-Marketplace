@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { CheckCircle2, Home, ShieldCheck, Wrench } from 'lucide-react';
+import { CheckCircle2, Home, ShieldCheck, Sparkles, Wrench } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -36,15 +36,17 @@ export function AuthShell({
   className,
 }: AuthShellProps) {
   return (
-    <main className="min-h-screen bg-slate-950 text-white relative overflow-hidden flex items-center justify-center py-6 sm:py-12">
+    <main className="auth-aether min-h-screen text-white relative overflow-hidden flex items-center justify-center">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-sky-600/15 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 mx-auto grid min-h-[620px] w-full max-w-6xl items-stretch gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_480px] lg:px-8">
+      <div className="relative z-10 grid min-h-screen w-full items-stretch lg:grid-cols-2">
         
         {/* Left Side: Inspiration Section */}
-        <section className="hidden min-h-[620px] flex-col justify-between rounded-[24px] glass-panel p-10 shadow-2xl relative overflow-hidden lg:flex">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-teal-500/5 to-transparent z-0" />
+        <section className="hidden flex-col justify-between p-12 shadow-2xl relative overflow-hidden lg:flex">
+          <div className="absolute inset-0 bg-[url('/images/hero_bg.webp')] bg-cover bg-center opacity-55" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/95 via-slate-950/62 to-slate-950/35" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_32%_36%,rgba(6,182,212,0.22),transparent_24rem)]" />
           
           <Link
             href="/"
@@ -57,9 +59,9 @@ export function AuthShell({
             <span className="text-xl font-bold tracking-tight">Home<span className="text-sky-400">Serve</span></span>
           </Link>
 
-          <div className="relative z-10 max-w-xl space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md px-4 py-2 text-sm font-semibold text-sky-400">
-              <ShieldCheck className="size-4 text-sky-400" />
+          <div className="relative z-10 max-w-xl space-y-7 rounded-2xl border border-white/10 bg-slate-950/45 p-8 shadow-[0_8px_32px_rgba(2,132,199,0.22)] backdrop-blur-xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md px-4 py-2 text-sm font-semibold text-cyan-300">
+              <ShieldCheck className="size-4 text-cyan-300" />
               Nền tảng dịch vụ tại gia cao cấp
             </div>
             <div className="space-y-4">
@@ -92,7 +94,10 @@ export function AuthShell({
         </section>
 
         {/* Right Side: Form Container */}
-        <div className="mx-auto w-full max-w-[480px] flex flex-col justify-center">
+        <div className="relative flex w-full items-center justify-center overflow-y-auto px-4 py-8 sm:px-8 lg:px-16">
+          <div className="absolute right-1/4 top-1/4 h-96 w-96 rounded-full bg-sky-600/10 blur-3xl" />
+          <div className="absolute bottom-0 left-1/4 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="relative z-10 mx-auto w-full max-w-[480px]">
           <div className="mb-6 flex justify-center lg:hidden">
             <Link
               href="/"
@@ -108,18 +113,18 @@ export function AuthShell({
 
           <Card
             className={cn(
-              'glass-panel glow-hover gap-0 rounded-[24px] border-white/10 py-0 shadow-2xl text-white relative overflow-hidden',
+              'glass-panel gap-0 rounded-2xl border-white/10 py-0 shadow-xl shadow-black/45 text-white relative overflow-hidden',
               className,
             )}
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-transparent z-0 pointer-events-none" />
             
             <CardHeader className="relative z-10 space-y-3 px-6 pb-4 pt-7 text-center sm:px-8">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-sky-400">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-sky-600/15 border border-sky-400/20 text-cyan-300">
                 <Home className="size-6" />
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-bold uppercase tracking-widest text-sky-400">{eyebrow}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">{eyebrow}</p>
                 <CardTitle className="text-2xl font-extrabold leading-tight text-white sm:text-3xl">
                   {title}
                 </CardTitle>
@@ -134,6 +139,7 @@ export function AuthShell({
           {footer && (
             <div className="mt-6 text-center text-sm text-slate-400">{footer}</div>
           )}
+          </div>
         </div>
       </div>
     </main>
@@ -143,7 +149,10 @@ export function AuthShell({
 function AuthMetric({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded-2xl border border-white/5 bg-white/5 backdrop-blur-md p-4 text-center">
-      <div className="text-xl font-bold text-white">{value}</div>
+      <div className="flex items-center justify-center gap-1 text-xl font-bold text-white">
+        <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+        {value}
+      </div>
       <div className="mt-1 text-xs font-medium text-slate-400">{label}</div>
     </div>
   );
