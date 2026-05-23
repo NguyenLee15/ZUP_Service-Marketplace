@@ -73,7 +73,7 @@ export function HomeHeaderAuth() {
   }, [authenticated, logout, setUser, user]);
 
   if (!mounted) {
-    return <div className="hidden h-9 w-20 rounded-full bg-pale-gray md:block" aria-hidden="true" />;
+    return <div className="hidden h-9 w-20 rounded-full bg-white/10 md:block" aria-hidden="true" />;
   }
 
   if (!authenticated) {
@@ -81,13 +81,13 @@ export function HomeHeaderAuth() {
       <div className="hidden items-center gap-2 md:flex">
         <Link
           href="/register"
-          className="inline-flex h-9 items-center justify-center rounded-lg border border-action-blue px-4 text-sm font-medium text-action-blue transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+          className="inline-flex h-9 items-center justify-center rounded-lg border border-cyan-300/50 px-4 text-sm font-medium text-cyan-300 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
         >
           Đăng ký
         </Link>
         <Link
           href="/login"
-          className="inline-flex h-9 items-center justify-center rounded-lg bg-action-blue px-4 text-sm font-medium text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+          className="inline-flex h-9 items-center justify-center rounded-lg bg-sky-600 px-4 text-sm font-medium text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] transition-colors hover:bg-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
         >
           Đăng nhập
         </Link>
@@ -103,21 +103,21 @@ export function HomeHeaderAuth() {
       <Link
         href="/bookings"
         aria-label="Đơn hàng của tôi"
-        className="hidden h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-pale-gray hover:text-action-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue sm:flex"
+        className="hidden h-10 w-10 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:flex"
       >
         <Package className="h-5 w-5" />
       </Link>
       <Link
         href="/chat"
         aria-label="Tin nhắn"
-        className="hidden h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-pale-gray hover:text-action-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue sm:flex"
+        className="hidden h-10 w-10 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:flex"
       >
         <MessageSquare className="h-5 w-5" />
       </Link>
       <Link
         href="/favorites"
         aria-label="Dịch vụ yêu thích"
-        className="relative hidden h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-pale-gray hover:text-action-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue sm:flex"
+        className="relative hidden h-10 w-10 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:flex"
       >
         <Heart className="h-5 w-5" />
         {favoriteCount > 0 && (
@@ -129,7 +129,7 @@ export function HomeHeaderAuth() {
       <Link
         href="/notifications"
         aria-label="Thông báo"
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-pale-gray hover:text-action-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+        className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -141,12 +141,12 @@ export function HomeHeaderAuth() {
       <Link
         href="/profile"
         aria-label="Tài khoản"
-        className="hidden items-center gap-2 rounded-full border border-platinum-tint bg-white/90 py-1.5 pl-1 pr-3 transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue lg:flex"
+        className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/10 py-1.5 pl-1 pr-3 transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 lg:flex"
       >
         <span className="flex size-8 items-center justify-center rounded-full bg-action-blue text-sm font-semibold text-white">
           {userInitial || <User className="h-4 w-4" />}
         </span>
-        <span className="max-w-28 truncate text-sm font-medium text-foreground xl:max-w-36">
+        <span className="max-w-28 truncate text-sm font-medium text-white xl:max-w-36">
           {displayName}
         </span>
       </Link>

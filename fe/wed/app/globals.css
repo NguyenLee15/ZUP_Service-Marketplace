@@ -241,10 +241,24 @@
   }
 
   .aether-page {
+    --background: #101415;
+    --foreground: #e0e3e5;
+    --card: rgba(15, 23, 42, 0.7);
+    --card-foreground: #e0e3e5;
+    --popover: rgba(15, 23, 42, 0.92);
+    --popover-foreground: #e0e3e5;
+    --muted: #1d2022;
+    --muted-foreground: #bfc7d2;
+    --accent: rgba(76, 215, 246, 0.12);
+    --accent-foreground: #4cd7f6;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.12);
+    --ring: #4cd7f6;
     background:
       radial-gradient(circle at 12% 8%, rgba(6, 182, 212, 0.12), transparent 28rem),
       radial-gradient(circle at 90% 0%, rgba(0, 107, 255, 0.1), transparent 24rem),
       var(--background);
+    color: var(--foreground);
   }
 
   .aether-card {
@@ -252,6 +266,65 @@
     border: 1px solid color-mix(in oklab, var(--border) 72%, white 28%);
     box-shadow: var(--brand-shadow-sm);
     backdrop-filter: blur(14px);
+  }
+
+  .aether-page .bg-white,
+  .aether-page .bg-white\/90,
+  .aether-page .bg-white\/95 {
+    background-color: rgba(15, 23, 42, 0.72) !important;
+  }
+
+  .aether-page .bg-cloud-mist,
+  .aether-page .bg-pale-gray {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .aether-page .border-platinum-tint,
+  .aether-page .border-slate-200,
+  .aether-page .border-border {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .aether-page .text-midnight-indigo,
+  .aether-page .text-slate-900,
+  .aether-page .text-foreground,
+  .aether-page .brand-heading {
+    color: #e0e3e5 !important;
+  }
+
+  .aether-page .text-slate-blue,
+  .aether-page .text-muted-foreground,
+  .aether-page .text-foreground\/75,
+  .aether-page .text-foreground\/80 {
+    color: #bfc7d2 !important;
+  }
+
+  .aether-page .text-action-blue,
+  .aether-page .text-glacier-blue,
+  .aether-page .brand-link {
+    color: #4cd7f6 !important;
+  }
+
+  .aether-page .glass-panel,
+  .aether-page .surface-card,
+  .aether-page .surface-card-elevated {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: rgba(2, 132, 199, 0.2) 0 18px 50px -28px;
+    backdrop-filter: blur(16px);
+  }
+
+  .aether-page input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .aether-page select,
+  .aether-page textarea {
+    background-color: rgba(50, 53, 55, 0.72);
+    color: #e0e3e5;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .aether-page input::placeholder,
+  .aether-page textarea::placeholder {
+    color: rgba(191, 199, 210, 0.78);
   }
 
   .admin-shell {

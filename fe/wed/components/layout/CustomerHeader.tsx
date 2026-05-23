@@ -170,19 +170,19 @@ export function CustomerHeader() {
       <header
         className={`sticky top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'bg-white/80 dark:bg-slate-950/80 border-b border-slate-200/40 dark:border-slate-800/40 shadow-lg shadow-sky-600/5 dark:shadow-sky-950/20 py-2.5 sm:py-3.5'
-            : 'bg-white/90 dark:bg-slate-950/90 border-b border-slate-200/20 dark:border-slate-800/20 py-3.5 sm:py-4.5'
+            ? 'bg-slate-950/78 border-b border-white/10 shadow-lg shadow-sky-950/20 py-2.5 sm:py-3.5'
+            : 'bg-slate-950/70 border-b border-white/10 py-3.5 sm:py-4.5'
         } backdrop-blur-xl`}
       >
         <div className="mobile-header-width mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex justify-between items-center gap-2 sm:gap-4 h-14 sm:h-16">
             <div className="flex items-center gap-2 shrink-0">
               <Link href="/" prefetch={false} className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl active:scale-95 transition-transform duration-200">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 dark:shadow-sky-950/40 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform duration-300">
                   <Wrench className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <span className="font-sans text-[22px] sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white hidden md:block">
-                  Home<span className="text-sky-600 dark:text-sky-400">Serve</span>
+                <span className="font-sans text-[22px] sm:text-2xl font-bold tracking-tight text-white hidden md:block">
+                  Home<span className="text-cyan-300">Serve</span>
                 </span>
               </Link>
             </div>
@@ -201,13 +201,13 @@ export function CustomerHeader() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Hôm nay bạn cần giúp gì?…"
-                  className="w-full bg-cloud-mist border border-platinum-tint hover:border-steel-gray focus:bg-card focus:border-action-blue focus:ring-4 focus:ring-action-blue/10 rounded-full py-1.5 sm:py-2.5 pl-4 sm:pl-5 pr-10 sm:pr-14 outline-none focus-visible:ring-2 focus-visible:ring-action-blue transition-colors duration-300 text-xs sm:text-sm md:text-base text-foreground"
+                  className="w-full bg-white/10 border border-white/10 hover:border-cyan-300/35 focus:bg-white/12 focus:border-cyan-300 focus:ring-4 focus:ring-cyan-300/10 rounded-full py-1.5 sm:py-2.5 pl-4 sm:pl-5 pr-10 sm:pr-14 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 transition-colors duration-300 text-xs sm:text-sm md:text-base text-white placeholder:text-slate-400"
                 />
                 <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <button
                     type="submit"
                     aria-label="Tìm kiếm"
-                    className="p-1.5 sm:p-2 bg-action-blue text-white hover:bg-glacier-blue rounded-full shadow-sm hover:shadow transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                    className="p-1.5 sm:p-2 bg-sky-600 text-white hover:bg-cyan-500 rounded-full shadow-sm hover:shadow transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
                   >
                     <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
@@ -218,13 +218,13 @@ export function CustomerHeader() {
             <div className="flex items-center gap-1 sm:gap-3 shrink-0">
               {mounted && isAuthenticated() ? (
                 <>
-                  <Link href="/bookings" prefetch={false} aria-label="Đơn hàng" className="hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/bookings" prefetch={false} aria-label="Đơn hàng" className="hidden sm:flex flex-col items-center justify-center text-slate-300 hover:text-cyan-300 hover:bg-white/10 w-10 h-10 rounded-lg transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                     <Package className="w-5 h-5" />
                   </Link>
-                  <Link href="/chat" prefetch={false} aria-label="Tin nhắn" className="hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/chat" prefetch={false} aria-label="Tin nhắn" className="hidden sm:flex flex-col items-center justify-center text-slate-300 hover:text-cyan-300 hover:bg-white/10 w-10 h-10 rounded-lg transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                     <MessageSquare className="w-5 h-5" />
                   </Link>
-                  <Link href="/favorites" prefetch={false} aria-label="Dịch vụ yêu thích" className="relative hidden sm:flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/favorites" prefetch={false} aria-label="Dịch vụ yêu thích" className="relative hidden sm:flex flex-col items-center justify-center text-slate-300 hover:text-cyan-300 hover:bg-white/10 w-10 h-10 rounded-lg transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                     <Heart className="w-5 h-5" />
                     {favorites.length > 0 && (
                       <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-4 h-4 px-1 bg-red-500 text-[10px] font-bold text-white rounded-full border-2 border-white">
@@ -232,7 +232,7 @@ export function CustomerHeader() {
                       </span>
                     )}
                   </Link>
-                  <Link href="/notifications" prefetch={false} aria-label="Thông báo" className="relative flex flex-col items-center justify-center text-muted-foreground hover:text-action-blue hover:bg-pale-gray w-10 h-10 rounded-xl transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                  <Link href="/notifications" prefetch={false} aria-label="Thông báo" className="relative flex flex-col items-center justify-center text-slate-300 hover:text-cyan-300 hover:bg-white/10 w-10 h-10 rounded-lg transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
                       <span className="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 bg-red-500 text-[10px] font-bold text-white rounded-full border-2 border-white">
@@ -247,7 +247,7 @@ export function CustomerHeader() {
                       aria-haspopup="menu"
                       aria-expanded={accountMenuOpen}
                       onClick={() => setAccountMenuOpen((open) => !open)}
-                      className="flex items-center gap-2 pl-1 pr-3 py-1.5 rounded-full border border-platinum-tint bg-white/90 hover:bg-pale-gray transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                      className="flex items-center gap-2 pl-1 pr-3 py-1.5 rounded-full border border-white/10 bg-white/10 text-white hover:bg-white/15 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
                     >
                       <span className="flex size-8 items-center justify-center rounded-full bg-action-blue text-sm font-semibold text-white">
                         {userInitial}

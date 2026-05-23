@@ -1,23 +1,23 @@
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, Wrench } from 'lucide-react';
 
 import { HeaderSearchBar } from '@/components/layout/HeaderSearchBar';
 import { HomeHeaderAuth } from '@/components/layout/HomeHeaderAuth';
 
 export function HomeHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-platinum-tint bg-white/95 py-2 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(15,23,42,0.72)] py-2 shadow-lg shadow-sky-950/20 backdrop-blur-xl">
       <div className="mobile-header-width mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-4">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-action-blue text-lg font-bold text-white shadow-[var(--brand-shadow-button)] sm:h-10 sm:w-10 sm:text-xl">
-              H
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] sm:h-10 sm:w-10">
+              <Wrench className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <span className="hidden text-2xl font-bold tracking-normal text-midnight-indigo md:block">
-              Home<span className="text-action-blue">Service</span>
+            <span className="hidden text-2xl font-bold tracking-normal text-white md:block">
+              Home<span className="text-cyan-300">Serve</span>
             </span>
           </Link>
 
@@ -30,29 +30,29 @@ export function HomeHeader() {
             <HomeHeaderAuth />
 
             <details className="group relative md:hidden">
-              <summary className="flex cursor-pointer list-none items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-center rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 [&::-webkit-details-marker]:hidden">
                 <Menu className="h-6 w-6 group-open:hidden" />
                 <span className="hidden h-6 w-6 items-center justify-center text-xl font-semibold group-open:flex">×</span>
                 <span className="sr-only">Mở menu</span>
               </summary>
-              <nav className="absolute right-0 top-[calc(100%+0.75rem)] w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-platinum-tint bg-card p-2 shadow-[var(--brand-shadow-card)]">
-                <Link href="/services" className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+              <nav className="absolute right-0 top-[calc(100%+0.75rem)] w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-white/10 bg-slate-950/95 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+                <Link href="/services" className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Tìm dịch vụ
                 </Link>
-                <Link href="/bookings" className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                <Link href="/bookings" className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Đơn hàng của tôi
                 </Link>
-                <Link href="/notifications" className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                <Link href="/notifications" className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Thông báo
                 </Link>
-                <Link href="/profile" className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                <Link href="/profile" className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Tài khoản
                 </Link>
-                <div className="my-1 h-px bg-platinum-tint" />
-                <Link href="/login" className="block rounded-lg px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                <div className="my-1 h-px bg-white/10" />
+                <Link href="/login" className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Đăng nhập
                 </Link>
-                <Link href="/register" className="block rounded-lg px-4 py-3 text-sm font-bold text-action-blue hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+                <Link href="/register" className="block rounded-lg px-4 py-3 text-sm font-bold text-cyan-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Đăng ký tài khoản
                 </Link>
               </nav>
