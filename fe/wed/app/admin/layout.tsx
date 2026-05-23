@@ -17,6 +17,9 @@ import {
   ChevronRight,
   LogOut,
   WalletCards,
+  Search,
+  Bell,
+  CircleHelp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth.store';
@@ -62,9 +65,14 @@ export default function AdminLayout({
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4 shrink-0">
           {sidebarOpen ? (
-            <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase">
-              HomeServe Admin
-            </h1>
+            <div>
+              <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase">
+                HomeServe Admin
+              </h1>
+              <p className="mt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                Hệ thống quản trị
+              </p>
+            </div>
           ) : (
             <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xs mx-auto">
               HS
@@ -137,12 +145,40 @@ export default function AdminLayout({
       </aside>
 
       <main className={`flex-grow overflow-auto transition-[margin-left] duration-300 flex flex-col h-screen ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        <header className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-white/86 px-6 py-3 backdrop-blur-md shrink-0 xl:px-8">
+        <header className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-white/92 px-6 py-3 backdrop-blur-md shrink-0 xl:px-8">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">
-              {navItems.find(item => pathname.startsWith(item.href))?.label || 'Quản trị hệ thống'}
-            </h2>
+            <div className="flex items-center gap-5">
+              <h2 className="hidden text-lg font-bold tracking-tight text-slate-900 xl:block">
+                {navItems.find(item => pathname.startsWith(item.href))?.label || 'Quản trị hệ thống'}
+              </h2>
+              <div className="relative hidden w-80 md:block">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="search"
+                  placeholder="Tìm kiếm giao dịch, người dùng..."
+                  className="h-10 w-full rounded-md border border-[var(--admin-border)] bg-slate-50 pl-9 pr-3 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-700 focus:bg-white"
+                />
+              </div>
+            </div>
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Thông báo"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Trợ giúp"
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
+                >
+                  <CircleHelp className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="h-6 w-px bg-[var(--admin-border)]" />
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-slate-800">{user?.fullName || 'Quản trị viên'}</p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'ADMIN'}</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Lock,
   Unlock,
@@ -9,6 +9,7 @@ import {
   X,
   Users,
   Wrench,
+  Filter,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,16 +29,16 @@ const lockSchema = z.object({
 type LockFormData = z.infer<typeof lockSchema>;
 
 const roleConfig: Record<string, { label: string; color: string }> = {
-  CUSTOMER: { label: 'Khách Hàng', color: 'bg-blue-100 text-blue-800' },
-  PROVIDER: { label: 'Nhà Cung Cấp', color: 'bg-green-100 text-green-800' },
-  ADMIN: { label: 'Admin', color: 'bg-purple-100 text-purple-800' },
-  STAFF: { label: 'Nhân Viên', color: 'bg-purple-100 text-purple-800' },
+  CUSTOMER: { label: 'Khách hàng', color: 'border-slate-200 bg-slate-100 text-slate-700' },
+  PROVIDER: { label: 'Thợ đối tác', color: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+  ADMIN: { label: 'Admin', color: 'border-slate-300 bg-slate-900 text-white' },
+  STAFF: { label: 'Nhân viên', color: 'border-slate-200 bg-slate-100 text-slate-700' },
 };
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  ACTIVE: { label: 'Hoạt Động', color: 'bg-green-100 text-green-800' },
-  LOCKED: { label: 'Bị Khóa', color: 'bg-red-100 text-red-800' },
-  PENDING: { label: 'Chờ Duyệt', color: 'bg-yellow-100 text-yellow-800' },
+  ACTIVE: { label: 'Hoạt động', color: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+  LOCKED: { label: 'Bị khóa', color: 'border-rose-200 bg-rose-50 text-rose-700' },
+  PENDING: { label: 'Chờ duyệt', color: 'border-amber-200 bg-amber-50 text-amber-700' },
 };
 
 export default function UsersPage() {
@@ -49,6 +50,21 @@ export default function UsersPage() {
   const [showLockModal, setShowLockModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING' | 'LOCKED'>('ALL');
+
+  const statusCounts = useMemo(() => ({
+    total: users.length,
+    active: users.filter((user) => user.status === 'ACTIVE').length,
+    pending: users.filter((user) => user.status === 'PENDING').length,
+    locked: users.filter((user) => user.status === 'LOCKED').length,
+  }), [users]);
+
+  const filteredUsers = useMemo(
+    () => statusFilter === 'ALL'
+      ? users
+      : users.filter((user) => user.status === statusFilter),
+    [statusFilter, users],
+  );
 
   const {
     register,
@@ -113,126 +129,169 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="-m-5 flex min-h-[calc(100vh-64px)] flex-col xl:-m-6">
+      <div className="shrink-0 border-b border-[var(--admin-border)] bg-white px-5 pt-5 xl:px-6">
+        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h3 className="text-2xl font-bold text-foreground">Quản Lý Người Dùng</h3>
-          <p className="text-muted-foreground mt-1">Quản lý tài khoản khách hàng và thợ</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-950">
+              Quản lý người dùng
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Giám sát và quản lý tài khoản khách hàng và thợ đối tác.
+            </p>
         </div>
+          <Button className="h-10 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800">
+            <Users className="mr-2 h-4 w-4" />
+            Thêm người dùng mới
+          </Button>
       </div>
 
-      {/* Search Bar */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex gap-2">
+        <div className="flex gap-8">
               {[
                 { value: 'CUSTOMER', label: 'Khách hàng', icon: Users },
-                { value: 'PROVIDER', label: 'Thợ', icon: Wrench },
+              { value: 'PROVIDER', label: 'Thợ (Đối tác)', icon: Wrench },
               ].map((option) => {
                 const Icon = option.icon;
                 const active = roleFilter === option.value;
                 return (
-                  <Button
+                <button
                     key={option.value}
                     type="button"
-                    variant={active ? 'default' : 'outline'}
                     onClick={() => {
                       setRoleFilter(option.value as 'CUSTOMER' | 'PROVIDER');
+                      setStatusFilter('ALL');
                       setSelectedUser(null);
                     }}
-                    className="gap-2"
+                  className={`flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-semibold transition-colors ${
+                    active
+                      ? 'border-slate-950 text-slate-950'
+                      : 'border-transparent text-slate-500 hover:text-slate-950'
+                  }`}
                   >
-                    <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" />
                     {option.label}
-                  </Button>
+                </button>
                 );
               })}
             </div>
-            <div className="relative w-full lg:max-w-md">
-              <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+      </div>
+
+      <div className="flex shrink-0 flex-col gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-canvas)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between xl:px-6">
+        <div className="flex max-w-full overflow-x-auto rounded-md border border-[var(--admin-border)] bg-white p-1">
+          {[
+            { value: 'ALL', label: `Tất cả (${statusCounts.total})`, tone: 'text-slate-700 hover:bg-slate-100', activeTone: 'bg-slate-100 text-slate-950' },
+            { value: 'ACTIVE', label: `Hoạt động (${statusCounts.active})`, tone: 'text-slate-600 hover:bg-slate-100', activeTone: 'bg-emerald-50 text-emerald-700' },
+            { value: 'PENDING', label: `Chờ duyệt (${statusCounts.pending})`, tone: 'text-amber-700 hover:bg-amber-50', activeTone: 'bg-amber-50 text-amber-700' },
+            { value: 'LOCKED', label: `Bị khóa (${statusCounts.locked})`, tone: 'text-rose-700 hover:bg-rose-50', activeTone: 'bg-rose-50 text-rose-700' },
+          ].map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => setStatusFilter(item.value as 'ALL' | 'ACTIVE' | 'PENDING' | 'LOCKED')}
+              className={`h-8 shrink-0 rounded px-3 text-xs font-semibold transition-colors ${
+                statusFilter === item.value ? item.activeTone : item.tone
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-64">
+            <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <select className="h-10 w-full appearance-none rounded-md border border-[var(--admin-border)] bg-white pl-9 pr-8 text-sm text-slate-700 outline-none focus:border-slate-700">
+              <option>Lọc theo vai trò...</option>
+              <option>Đã xác thực</option>
+              <option>Chưa cập nhật hồ sơ</option>
+            </select>
+          </div>
+          <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <Input
                 placeholder="Tìm kiếm theo tên hoặc email..."
-                className="pl-10"
+              className="h-10 rounded-md border-[var(--admin-border)] bg-white pl-9 text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
-      {/* Users Table */}
-      <Card>
-        <CardContent className="pt-6">
+      <div className="flex-1 overflow-auto bg-white p-5 xl:p-6">
+        <div className="overflow-hidden rounded-lg border border-[var(--admin-border)] bg-white">
           {loading ? (
-            <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-muted rounded animate-pulse" />)}</div>
-          ) : users.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">Không tìm thấy người dùng</p>
+            <div className="space-y-2 p-4">{[...Array(8)].map((_, i) => <div key={i} className="h-12 rounded bg-slate-100 animate-pulse" />)}</div>
+          ) : filteredUsers.length === 0 ? (
+            <p className="py-12 text-center text-sm font-medium text-slate-500">Không tìm thấy người dùng</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-border bg-gray-50">
+              <table className="min-w-[980px] text-left">
+                <thead>
                   <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Người dùng</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Email & SĐT</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Vai Trò</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Trạng Thái</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Đăng Ký</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Hành Động</th>
+                    <th>Người dùng</th>
+                    <th>Liên hệ</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tham gia</th>
+                    <th className="text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => {
+                  {filteredUsers.map((user) => {
                     const roleInfo = roleConfig[user.role] || { label: user.role, color: 'bg-muted text-foreground' };
                     const statusInfo = statusConfig[user.status] || { label: user.status, color: 'bg-muted text-foreground' };
 
                     return (
                       <tr
                         key={user.id}
-                        className={`border-b border-border hover:bg-muted ${
-                          user.status === 'LOCKED' ? 'bg-red-50' : ''
+                        className={`group transition-colors ${
+                          user.status === 'LOCKED' ? 'bg-rose-50/35' : ''
                         }`}
                       >
-                        <td className="py-3 px-4">
+                        <td>
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600 overflow-hidden">
+                            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded bg-slate-100 font-semibold text-slate-600 ring-1 ring-slate-200">
                               {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.fullName?.charAt(0)}
                             </div>
                             <div>
-                              <p className="font-medium text-foreground">{user.fullName}</p>
-                              <p className="text-xs text-muted-foreground">ID: {user.id}</p>
+                              <p className="font-semibold text-slate-950">{user.fullName}</p>
+                              <p className="font-mono text-[11px] text-slate-500">ID: USR-{user.id}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <p className="text-foreground">{user.email}</p>
-                          <p className="text-xs text-muted-foreground">{user.phone || 'Chưa cập nhật'}</p>
+                        <td>
+                          <p className="text-slate-800">{user.email}</p>
+                          <p className="text-xs text-slate-500">{user.phone || 'Chưa cập nhật'}</p>
                         </td>
-                        <td className="py-3 px-4">
-                          <Badge className={`${roleInfo.color} border-0`}>{roleInfo.label}</Badge>
+                        <td>
+                          <Badge variant="outline" className={`rounded px-2 py-0.5 text-[11px] font-semibold ${roleInfo.color}`}>{roleInfo.label}</Badge>
                         </td>
-                        <td className="py-3 px-4">
+                        <td>
                           <div className="flex items-center gap-2">
-                            <Badge className={`${statusInfo.color} border-0 flex items-center gap-1`}>
+                            <Badge variant="outline" className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-semibold ${statusInfo.color}`}>
                               {user.status === 'LOCKED' && <Lock className="w-3 h-3" />}
                               {statusInfo.label}
                             </Badge>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground">
+                        <td className="text-slate-500">
                           {new Date(user.createdAt).toLocaleDateString('vi-VN')}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="text-right">
                           {user.role !== 'ADMIN' && (
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               onClick={() => {
                                 setSelectedUser(user);
                                 setShowLockModal(true);
                               }}
-                              className={user.status === 'LOCKED' ? 'text-green-600' : 'text-red-600'}
+                              className={`h-8 w-8 rounded opacity-80 transition-opacity group-hover:opacity-100 ${
+                                user.status === 'LOCKED'
+                                  ? 'text-emerald-700 hover:bg-emerald-50'
+                                  : 'text-rose-700 hover:bg-rose-50'
+                              }`}
                             >
                               {user.status === 'LOCKED' ? (
                                 <Unlock className="w-4 h-4" />
@@ -249,15 +308,15 @@ export default function UsersPage() {
               </table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Lock/Unlock Modal */}
       {showLockModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
+        <div className="fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <Card className="w-full max-w-md overflow-hidden rounded-xl border-[var(--admin-border)] bg-white shadow-2xl">
+            <CardHeader className={`flex flex-row items-center justify-between border-b border-[var(--admin-border)] ${selectedUser.status === 'LOCKED' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <AlertCircle className={`w-5 h-5 ${selectedUser.status === 'LOCKED' ? 'text-green-600' : 'text-red-600'}`} />
                 {selectedUser.status === 'LOCKED' ? 'Mở Khóa' : 'Khóa'} Tài Khoản
               </CardTitle>
@@ -272,10 +331,10 @@ export default function UsersPage() {
                 <X className="w-5 h-5" />
               </button>
             </CardHeader>
-            <CardContent>
-              <div className="mb-4 p-3 bg-muted rounded-lg">
-                <p className="text-sm font-medium text-foreground">{selectedUser.fullName}</p>
-                <p className="text-xs text-muted-foreground">{selectedUser.email}</p>
+            <CardContent className="p-5">
+              <div className="mb-4 rounded-md border border-[var(--admin-border)] bg-slate-50 p-3">
+                <p className="text-sm font-semibold text-slate-950">{selectedUser.fullName}</p>
+                <p className="text-xs text-slate-500">{selectedUser.email}</p>
               </div>
 
               {selectedUser.status !== 'LOCKED' && (
@@ -287,7 +346,7 @@ export default function UsersPage() {
                     <textarea
                       placeholder="Nhập lý do chi tiết..."
                       {...register('reason')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-sm focus:border-slate-700 focus:ring-2 focus:ring-slate-900/10"
                       rows={3}
                     />
                     {errors.reason && (
