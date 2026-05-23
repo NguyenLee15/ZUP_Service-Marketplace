@@ -398,14 +398,14 @@ function ServicesSearchContent() {
 
               <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto md:items-center">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-[180px] rounded-xl border-platinum-tint bg-white shadow-sm h-10">
+                  <SelectTrigger className="h-10 w-full rounded-xl border-white/10 bg-[#101827] text-slate-100 shadow-sm hover:border-cyan-300/35 focus:ring-cyan-300/30 sm:w-[180px]">
                     <SelectValue placeholder="Sắp xếp" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Mới nhất</SelectItem>
-                    <SelectItem value="price_asc">Giá tăng dần</SelectItem>
-                    <SelectItem value="price_desc">Giá giảm dần</SelectItem>
-                    <SelectItem value="rating">Đánh giá cao</SelectItem>
+                  <SelectContent className="border-white/10 bg-[#101827] text-slate-100 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
+                    <SelectItem className="cursor-pointer text-slate-100 focus:bg-cyan-400/12 focus:text-cyan-200 data-[highlighted]:bg-cyan-400/12 data-[highlighted]:text-cyan-200" value="newest">Mới nhất</SelectItem>
+                    <SelectItem className="cursor-pointer text-slate-100 focus:bg-cyan-400/12 focus:text-cyan-200 data-[highlighted]:bg-cyan-400/12 data-[highlighted]:text-cyan-200" value="price_asc">Giá tăng dần</SelectItem>
+                    <SelectItem className="cursor-pointer text-slate-100 focus:bg-cyan-400/12 focus:text-cyan-200 data-[highlighted]:bg-cyan-400/12 data-[highlighted]:text-cyan-200" value="price_desc">Giá giảm dần</SelectItem>
+                    <SelectItem className="cursor-pointer text-slate-100 focus:bg-cyan-400/12 focus:text-cyan-200 data-[highlighted]:bg-cyan-400/12 data-[highlighted]:text-cyan-200" value="rating">Đánh giá cao</SelectItem>
                   </SelectContent>
                 </Select>
 
