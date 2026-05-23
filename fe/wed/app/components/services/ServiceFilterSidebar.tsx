@@ -70,21 +70,21 @@ export function ServiceFilterSidebar({
   };
 
   return (
-    <aside className="glass-panel glow-hover max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain scroll-smooth [scrollbar-gutter:stable] space-y-8 p-6 rounded-[20px] lg:sticky lg:top-24">
+    <aside className="max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain scroll-smooth [scrollbar-gutter:stable] space-y-6 bg-transparent p-5 text-white">
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-action-blue" />
-            <h2 className="font-bold text-lg text-slate-900 dark:text-white">Bộ lọc tìm kiếm</h2>
+            <Filter className="w-4 h-4 text-cyan-300" />
+            <h2 className="font-bold text-base text-white">Bộ lọc</h2>
             {activeFilterCount > 0 && (
-              <span className="min-w-5 h-5 px-1.5 rounded-full bg-action-blue text-white text-[11px] font-bold flex items-center justify-center">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1.5 text-[11px] font-bold text-white">
                 {activeFilterCount}
               </span>
             )}
           </div>
           <Button 
             variant="ghost" size="sm" onClick={onClear} aria-label="Xóa tất cả bộ lọc"
-            className="text-xs text-muted-foreground hover:text-action-blue px-2 h-8"
+            className="h-8 px-2 text-xs text-slate-400 hover:bg-white/10 hover:text-cyan-300"
           >
             Xóa tất cả
           </Button>
@@ -111,7 +111,7 @@ export function ServiceFilterSidebar({
 
         <Button 
           onClick={() => onFilterChange(localFilters)}
-          className="sticky bottom-0 w-full bg-action-blue hover:bg-glacier-blue text-white font-bold py-6 rounded-lg shadow-[var(--brand-shadow-button)] transition-[background-color,box-shadow,transform] active:scale-[0.98]"
+          className="sticky bottom-0 w-full rounded-lg border border-sky-400/20 bg-sky-600 py-6 font-bold text-white shadow-[0_0_18px_rgba(2,132,199,0.35)] transition-[background-color,box-shadow,transform] hover:bg-cyan-500 active:scale-[0.98]"
         >
           Áp dụng bộ lọc{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
         </Button>

@@ -347,9 +347,9 @@ function ServicesSearchContent() {
                     )}
                   </Button>
                   </SheetTrigger>
-                <SheetContent side="left" className="w-[min(22rem,calc(100vw_-_1rem))] p-0 border-0 bg-background">
-                  <SheetHeader className="p-6 border-b border-platinum-tint bg-white">
-                    <SheetTitle className="text-xl font-bold tracking-tight text-midnight-indigo">Bộ lọc tìm kiếm</SheetTitle>
+                <SheetContent side="right" className="w-[min(22rem,calc(100vw_-_1rem))] border-l border-white/10 bg-slate-950/95 p-0 text-white shadow-[0_18px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+                  <SheetHeader className="border-b border-white/10 bg-white/[0.03] p-5">
+                    <SheetTitle className="text-left text-lg font-bold tracking-tight text-white">Bộ lọc tìm kiếm</SheetTitle>
                   </SheetHeader>
                   <div className="overflow-y-auto h-full pb-20">
                     <ServiceFilterSidebar 

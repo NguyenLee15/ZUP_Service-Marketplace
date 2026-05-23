@@ -38,7 +38,7 @@ export function CategoryFilter({ categories, selectedIds, onToggle }: CategoryFi
         key={`select-${category.id}`}
         onClick={() => onToggle(category.id.toString())}
         aria-pressed={isSelected}
-        className={`w-full text-left text-sm p-2 rounded-md cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${isSelected ? 'bg-pale-gray text-action-blue font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+        className={`w-full cursor-pointer rounded-md p-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${isSelected ? 'bg-sky-600/18 font-bold text-cyan-300' : 'text-slate-300 hover:bg-white/8 hover:text-white'}`}
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
       >
         {labelPrefix}{category.name}
@@ -57,9 +57,9 @@ export function CategoryFilter({ categories, selectedIds, onToggle }: CategoryFi
     return (
       <Accordion type="multiple" className="w-full" key={category.id}>
         <AccordionItem value={`cat-${category.id}`} className="border-none">
-          <AccordionTrigger className={`hover:no-underline py-2 group/trigger ${isSelected ? 'text-action-blue' : ''}`}>
+          <AccordionTrigger className={`py-2 text-slate-200 hover:no-underline group/trigger ${isSelected ? 'text-cyan-300' : ''}`}>
             <div className="flex min-w-0 items-center space-x-3">
-              <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center transition-[background-color,color,box-shadow] ${isSelected ? 'bg-action-blue text-white shadow-[var(--brand-shadow-sm)]' : 'bg-muted group-hover/trigger:bg-pale-gray text-muted-foreground group-hover/trigger:text-action-blue'}`}>
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[background-color,color,box-shadow] ${isSelected ? 'bg-sky-600 text-white shadow-[0_0_14px_rgba(2,132,199,0.3)]' : 'bg-white/8 text-slate-400 group-hover/trigger:bg-white/12 group-hover/trigger:text-cyan-300'}`}>
                 {category.iconUrl ? <Image src={category.iconUrl} alt={category.name} width={16} height={16} className="w-4 h-4 object-contain" /> : getCategoryIcon(category.name)}
               </div>
               <span className="truncate text-sm font-bold">{category.name}</span>
@@ -76,7 +76,7 @@ export function CategoryFilter({ categories, selectedIds, onToggle }: CategoryFi
 
   return (
     <div className="space-y-4 mb-8">
-      <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-widest">Loại dịch vụ</h3>
+      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Loại dịch vụ</h3>
       <div className="space-y-1">
         {mainCategories.map((cat) => renderCategoryNode(cat))}
       </div>
