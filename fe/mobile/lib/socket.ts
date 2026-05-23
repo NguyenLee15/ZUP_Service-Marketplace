@@ -1,5 +1,5 @@
 /**
- * Socket.io singleton — kết nối /chat và /notifications namespaces
+ * Socket.io singleton — kết nối /chat, /notifications, /tracking namespaces
  */
 import { io, Socket } from 'socket.io-client';
 import { WS_URL } from '../constants/api';
@@ -7,6 +7,7 @@ import { storage } from './storage';
 
 let chatSocket: Socket | null = null;
 let notifSocket: Socket | null = null;
+let trackingSocket: Socket | null = null;
 
 const createSocket = async (namespace: string): Promise<Socket> => {
   const token = await storage.getAccessToken();
@@ -33,9 +34,18 @@ export const getNotifSocket = async (): Promise<Socket> => {
   return notifSocket;
 };
 
+export const getTrackingSocket = async (): Promise<Socket> => {
+  if (trackingSocket?.connected) return trackingSocket;
+  trackingSocket = await createSocket('/tracking');
+  return trackingSocket;
+};
+
 export const disconnectAll = () => {
   chatSocket?.disconnect();
   notifSocket?.disconnect();
+  trackingSocket?.disconnect();
   chatSocket = null;
   notifSocket = null;
+  trackingSocket = null;
 };
+

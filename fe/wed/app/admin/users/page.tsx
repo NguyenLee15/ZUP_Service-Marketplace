@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -82,14 +82,14 @@ export default function UsersPage() {
     if (!selectedUser) return;
     setActionLoading(true);
     try {
-      await adminApi.lockUser(selectedUser.id);
-      toast({ title: 'Đã khóa tài khoản' });
+      await adminApi.lockUser(selectedUser.id, { reason: data.reason });
+      toast({ title: 'Đã khóa tài khoản thành công' });
       setShowLockModal(false);
       setSelectedUser(null);
       reset();
       fetchUsers();
     } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
+      toast({ title: 'Lỗi', description: err.response?.data?.error?.message || err.message, variant: 'destructive' });
     } finally {
       setActionLoading(false);
     }
@@ -100,13 +100,13 @@ export default function UsersPage() {
     setActionLoading(true);
     try {
       await adminApi.unlockUser(selectedUser.id);
-      toast({ title: 'Đã mở khóa tài khoản' });
+      toast({ title: 'Đã mở khóa tài khoản thành công' });
       setShowLockModal(false);
       setSelectedUser(null);
       reset();
       fetchUsers();
     } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
+      toast({ title: 'Lỗi', description: err.response?.data?.error?.message || err.message, variant: 'destructive' });
     } finally {
       setActionLoading(false);
     }

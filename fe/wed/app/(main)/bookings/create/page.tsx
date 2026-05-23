@@ -229,9 +229,9 @@ function CreateBookingContent() {
       </div>
 
       {service && (
-        <Card className="surface-card mb-6 rounded-[20px] py-0">
+        <Card className="glass-panel glow-hover mb-6 rounded-[20px] py-0 text-white">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-pale-gray flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+            <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl shrink-0 overflow-hidden shadow-sm">
               {service.images?.[0]?.imageUrl ? (
                 <img src={service.images[0].imageUrl} alt={service.name} loading="lazy" className="w-full h-full object-cover" />
               ) : '🔧'}
@@ -248,7 +248,7 @@ function CreateBookingContent() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-        <div className="surface-card space-y-2 p-4 sm:p-6 rounded-[20px]">
+        <div className="glass-panel glow-hover space-y-2 p-4 sm:p-6 rounded-[20px] text-white shadow-xl">
           <DynamicQuestionnaire 
             serviceName={service?.name || ''}
             description={description}
@@ -261,7 +261,7 @@ function CreateBookingContent() {
 
         </div>
 
-        <div className="surface-card space-y-4 rounded-[20px] p-4 sm:p-6">
+        <div className="glass-panel glow-hover space-y-4 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Địa chỉ thực hiện *</Label>
@@ -293,15 +293,15 @@ function CreateBookingContent() {
                 setAddressMode('default');
                 applyAddress(defaultAddress);
               }}
-              className={`rounded-2xl border p-4 text-left transition-[border-color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
+              className={`rounded-2xl border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
                 addressMode === 'default'
-                  ? 'border-action-blue bg-action-blue/5 shadow-sm'
-                  : 'border-platinum-tint bg-white hover:bg-pale-gray/50'
-              } ${!defaultAddress ? 'cursor-not-allowed opacity-60' : ''}`}
+                  ? 'border-action-blue bg-action-blue/10 shadow-sm'
+                  : 'border-white/10 bg-white/5 hover:bg-white/10'
+              } ${!defaultAddress ? 'cursor-not-allowed opacity-40' : ''}`}
             >
               <div className="mb-2 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-action-blue" />
-                <span className="text-sm font-bold text-foreground">Địa chỉ mặc định</span>
+                <MapPin className="h-4 w-4 text-sky-400" />
+                <span className="text-sm font-bold text-slate-900 dark:text-white">Địa chỉ mặc định</span>
               </div>
               {addressesLoading ? (
                 <p className="text-xs text-muted-foreground">Đang tải địa chỉ…</p>
@@ -324,15 +324,15 @@ function CreateBookingContent() {
             <button
               type="button"
               onClick={useCustomAddress}
-              className={`rounded-2xl border p-4 text-left transition-[border-color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
+              className={`rounded-2xl border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
                 addressMode === 'custom'
-                  ? 'border-action-blue bg-action-blue/5 shadow-sm'
-                  : 'border-platinum-tint bg-white hover:bg-pale-gray/50'
+                  ? 'border-action-blue bg-action-blue/10 shadow-sm'
+                  : 'border-white/10 bg-white/5 hover:bg-white/10'
               }`}
             >
               <div className="mb-2 flex items-center gap-2">
-                <Plus className="h-4 w-4 text-action-blue" />
-                <span className="text-sm font-bold text-foreground">Nhập địa chỉ khác</span>
+                <Plus className="h-4 w-4 text-sky-400" />
+                <span className="text-sm font-bold text-slate-900 dark:text-white">Nhập địa chỉ khác</span>
               </div>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Dùng khi bạn muốn thợ đến địa điểm khác với địa chỉ mặc định.
@@ -341,14 +341,14 @@ function CreateBookingContent() {
           </div>
 
           {addressMode === 'custom' && (
-            <div className="space-y-4 border-t border-platinum-tint pt-4">
+            <div className="space-y-4 border-t border-white/10 pt-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="booking-province">Tỉnh/Thành *</Label>
                   <Select name="province" value={province} onValueChange={handleProvinceChange}>
                     <SelectTrigger
                       id="booking-province"
-                      className={`h-11 w-full rounded-xl bg-white text-base shadow-sm ${fieldErrors.province ? 'border-red-500' : 'border-platinum-tint'}`}
+                      className={`h-11 w-full rounded-xl bg-white/5 text-white border-white/10 shadow-sm ${fieldErrors.province ? 'border-red-500' : ''}`}
                       aria-invalid={!!fieldErrors.province}
                     >
                       <SelectValue placeholder="Chọn tỉnh/thành" />
@@ -373,7 +373,7 @@ function CreateBookingContent() {
                   >
                     <SelectTrigger
                       id="booking-ward"
-                      className={`h-11 w-full rounded-xl bg-white text-base shadow-sm ${fieldErrors.ward ? 'border-red-500' : 'border-platinum-tint'}`}
+                      className={`h-11 w-full rounded-xl bg-white/5 text-white border-white/10 shadow-sm ${fieldErrors.ward ? 'border-red-500' : ''}`}
                       aria-invalid={!!fieldErrors.ward}
                     >
                       <SelectValue placeholder={province ? 'Chọn phường/xã/đặc khu' : 'Chọn tỉnh trước'} />
@@ -396,30 +396,30 @@ function CreateBookingContent() {
                   setAddressDetail(e.target.value);
                   validate('addressDetail', e.target.value);
                 }}
-                  placeholder="Số nhà, tên đường…" className={fieldErrors.addressDetail ? 'border-red-500' : ''} />
+                  placeholder="Số nhà, tên đường…" className={`bg-white/5 border-white/10 ${fieldErrors.addressDetail ? 'border-red-500' : ''}`} />
                 {fieldErrors.addressDetail && <p className="text-red-500 text-[10px]">{fieldErrors.addressDetail}</p>}
               </div>
             </div>
           )}
         </div>
 
-        <div className="surface-card space-y-2 rounded-[20px] p-4 sm:p-6">
-          <Label htmlFor="booking-desired-time">Thời gian mong muốn *</Label>
+        <div className="glass-panel glow-hover space-y-2 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">
+          <Label htmlFor="booking-desired-time" className="font-semibold">Thời gian mong muốn *</Label>
           <Input id="booking-desired-time" name="desiredTime" autoComplete="off" type="datetime-local" value={desiredTime} onChange={(e) => {
             setDesiredTime(e.target.value);
             validate('desiredTime', e.target.value);
           }}
-            min={new Date().toISOString().slice(0, 16)} className={fieldErrors.desiredTime ? 'border-red-500' : ''} />
+            min={new Date().toISOString().slice(0, 16)} className={fieldErrors.desiredTime ? 'border-red-500' : 'border-white/10 bg-white/5'} />
           {fieldErrors.desiredTime && <p className="text-red-500 text-[10px]">{fieldErrors.desiredTime}</p>}
 
           {/* AI Scheduling Hints */}
-          <div className="mt-4 p-4 rounded-[20px] bg-pale-gray/55 border border-platinum-tint relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 rotate-12 transition-transform group-hover:scale-110">
-              <Sparkles className="w-12 h-12 text-action-blue" />
+          <div className="mt-4 p-4 rounded-[20px] bg-white/5 border border-white/10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-3 opacity-5 rotate-12 transition-transform group-hover:scale-110">
+              <Sparkles className="w-12 h-12 text-sky-400" />
             </div>
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-4 h-4 text-action-blue" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-blue">Gợi ý lịch hẹn</span>
+              <Sparkles className="w-4 h-4 text-sky-400" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-sky-400">Gợi ý lịch hẹn</span>
             </div>
             <div className="space-y-3">
               <button
@@ -432,15 +432,15 @@ function CreateBookingContent() {
                   setDesiredTime(value);
                   validate('desiredTime', value);
                 }}
-                className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/80 hover:bg-white rounded-xl border border-white cursor-pointer transition-[background-color,box-shadow] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-green-100 text-green-600 rounded-lg shrink-0">
+                  <div className="p-2 bg-green-500/10 text-green-400 rounded-lg shrink-0">
                     <TrendingUp className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-foreground truncate">Sáng mai, 09:00</p>
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">Khung giờ vàng - Thợ đang trống lịch gần đây</p>
+                    <p className="text-xs font-bold text-white truncate">Sáng mai, 09:00</p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Khung giờ vàng - Thợ đang trống lịch gần đây</p>
                   </div>
                 </div>
                 <Badge className="bg-green-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">-10% phí</Badge>
@@ -455,18 +455,18 @@ function CreateBookingContent() {
                   setDesiredTime(value);
                   validate('desiredTime', value);
                 }}
-                className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/80 hover:bg-white rounded-xl border border-white cursor-pointer transition-[background-color,box-shadow] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-pale-gray text-action-blue rounded-lg shrink-0">
+                  <div className="p-2 bg-sky-500/10 text-sky-400 rounded-lg shrink-0">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-foreground truncate">Hôm nay, trong 2 giờ tới</p>
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">Phản hồi siêu tốc - Ưu tiên nhận đơn</p>
+                    <p className="text-xs font-bold text-white truncate">Hôm nay, trong 2 giờ tới</p>
+                    <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Phản hồi siêu tốc - Ưu tiên nhận đơn</p>
                   </div>
                 </div>
-                <Badge className="bg-action-blue text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">Ưu tiên</Badge>
+                <Badge className="bg-sky-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">Ưu tiên</Badge>
               </button>
             </div>
           </div>

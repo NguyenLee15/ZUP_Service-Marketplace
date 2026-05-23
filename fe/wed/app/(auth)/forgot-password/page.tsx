@@ -103,7 +103,7 @@ function ForgotPasswordContent() {
     return (
       <AuthShell
         title="Đặt lại mật khẩu"
-        description="Tạo mật khẩu mới để tiếp tục sử dụng tài khoản HomeService."
+        description="Tạo mật khẩu mới để tiếp tục sử dụng tài khoản HomeServe."
         footer={
           <Link
             href="/login"

@@ -26,6 +26,8 @@ export function HeroSection() {
         />
         <div className="absolute inset-0 bg-midnight-indigo/55"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-midnight-indigo/35 to-midnight-indigo/75"></div>
+        {/* Glow Ring from Stitch */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-sky-600/20 dark:bg-sky-600/30 rounded-full blur-[120px] pointer-events-none" />
       </div>
 
       <div className="relative z-10 px-4 md:px-6 max-w-6xl w-full mx-auto flex flex-col items-center text-center pt-8 pb-12 lg:pt-12 lg:pb-16">
@@ -51,15 +53,14 @@ export function HeroSection() {
           </span>
         </div>
 
-        <h1 className="mx-auto max-w-[360px] sm:max-w-none text-[2rem] min-[420px]:text-4xl sm:text-5xl md:text-7xl lg:text-[80px] font-bold mb-5 sm:mb-6 text-white drop-shadow-2xl tracking-normal leading-[1.05] sm:leading-[1] text-balance">
-          Dịch vụ tại nhà <br className="hidden md:block" />
-          <span className="text-pale-gray">
-            trong tầm tay <br className="md:hidden" />
-            bạn
+        <h1 className="mx-auto max-w-[360px] sm:max-w-none text-[2.2rem] min-[420px]:text-4xl sm:text-6xl md:text-7xl lg:text-[80px] font-extrabold mb-5 sm:mb-6 text-white drop-shadow-2xl tracking-normal leading-[1.1] text-balance">
+          Mọi dịch vụ bạn cần, <br className="hidden md:block" />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-teal-400">
+            ngay tại ngôi nhà bạn
           </span>
         </h1>
-        <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
-          Nhập nhu cầu và khu vực, chúng tôi sẽ đưa bạn tới danh sách dịch vụ phù hợp để lọc, so sánh và đặt lịch.
+        <p className="text-base sm:text-lg md:text-xl text-white/95 mb-8 sm:mb-10 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
+          Nền tảng kết nối dịch vụ tiện ích số 1 Việt Nam. Nhanh chóng, an toàn và minh bạch.
         </p>
 
         <HeroSearchForm />

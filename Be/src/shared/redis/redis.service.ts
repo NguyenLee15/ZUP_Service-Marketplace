@@ -107,4 +107,22 @@ export class RedisService implements OnModuleDestroy {
     if (!this.client) return -2;
     return this.client.ttl(key);
   }
+
+  /** Store JSON object with TTL */
+  async setJson(key: string, value: object, ttlSeconds: number): Promise<void> {
+    if (!this.client) return;
+    await this.client.setex(key, ttlSeconds, JSON.stringify(value));
+  }
+
+  /** Get JSON object */
+  async getJson<T = unknown>(key: string): Promise<T | null> {
+    if (!this.client) return null;
+    const raw = await this.client.get(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
 }

@@ -471,7 +471,7 @@ export default function RegisterPage() {
           />
 
           <p className="text-center text-xs leading-5 text-slate-blue">
-            Bằng việc đăng ký, bạn đồng ý với điều khoản dịch vụ của HomeService.
+            Bằng việc đăng ký, bạn đồng ý với điều khoản dịch vụ của HomeServe.
           </p>
         </form>
       ) : (

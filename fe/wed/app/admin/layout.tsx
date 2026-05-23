@@ -54,25 +54,33 @@ export default function AdminLayout({
 
   return (
     <>
-    <div className="themed-shell flex h-screen bg-background text-foreground">
+    <div className="themed-shell flex h-screen bg-[#F8FAFC] text-slate-900 font-sans">
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen border-r border-border bg-card shadow-[var(--brand-shadow-sm)] transition-[width] duration-300 ${
+        className={`fixed left-0 top-0 z-40 h-screen border-r border-slate-800 bg-[#0F172A] text-slate-200 transition-[width] duration-300 flex flex-col ${
           sidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-border px-4">
-          {sidebarOpen && <h1 className="text-lg font-semibold text-action-blue">Bảng quản trị</h1>}
+        <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4 shrink-0">
+          {sidebarOpen ? (
+            <h1 className="text-md font-black tracking-tight text-white uppercase bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+              HomeServe Admin
+            </h1>
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-xs mx-auto">
+              HS
+            </div>
+          )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label={sidebarOpen ? 'Thu gọn sidebar' : 'Mở rộng sidebar'}
-            title={sidebarOpen ? 'Thu gọn sidebar' : 'Mở rộng sidebar'}
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label={sidebarOpen ? 'Thu gọn' : 'Mở rộng'}
+            title={sidebarOpen ? 'Thu gọn' : 'Mở rộng'}
+            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus:outline-none"
           >
-            {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 px-2">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
@@ -81,54 +89,72 @@ export default function AdminLayout({
                 href={item.href}
                 title={!sidebarOpen ? item.label : undefined}
                 aria-label={item.label}
-                className={`mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 group active:scale-[0.98] ${
                   isActive
-                    ? 'bg-blue-50/80 text-action-blue shadow-sm dark:bg-blue-950/40 dark:text-blue-300'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 font-semibold'
+                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
                 }`}
               >
-                {item.icon}
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                <div className={`transition-transform duration-200 group-hover:scale-110 shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                  {item.icon}
+                </div>
+                {sidebarOpen && <span className="text-sm">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-slate-800 p-4 shrink-0 space-y-3">
+          {sidebarOpen && (
+            <div className="flex items-center gap-3 px-1 py-1">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 border border-slate-700 font-bold text-blue-400">
+                {user?.fullName?.charAt(0)?.toUpperCase() || 'A'}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-white truncate">{user?.fullName || 'Quản trị viên'}</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                  {user?.role === 'ADMIN' ? 'Super Admin' : 'Staff'}
+                </span>
+              </div>
+            </div>
+          )}
+
           <Button
-            variant="outline"
+            variant="ghost"
             title="Đăng xuất"
             aria-label="Đăng xuất"
-            className="w-full justify-start gap-2 rounded-lg transition-colors"
+            className="w-full justify-start gap-3 rounded-xl border border-transparent text-slate-400 hover:bg-slate-800 hover:text-white active:scale-95 transition-all px-3 py-2.5 h-auto text-sm font-medium"
             onClick={async () => {
               try { await authApi.logout(); } catch {}
               clearStore();
               router.push('/login');
             }}
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-5 h-5 shrink-0" />
             {sidebarOpen && <span>Đăng xuất</span>}
           </Button>
         </div>
       </aside>
 
-      <main className={`flex-1 overflow-auto transition-[margin-left] duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border px-8 py-4">
+      <main className={`flex-grow overflow-auto transition-[margin-left] duration-300 flex flex-col h-screen ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
+        <header className="sticky top-0 z-30 bg-[#F8FAFC]/80 backdrop-blur-md border-b border-slate-200/80 px-8 py-4 shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-foreground">Quản trị hệ thống</h2>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 bg-clip-text text-transparent">
+              {navItems.find(item => pathname.startsWith(item.href))?.label || 'Quản trị hệ thống'}
+            </h2>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-foreground">{user?.fullName || 'Quản trị viên'}</p>
-                <p className="text-xs text-muted-foreground">{user?.email || 'Tài khoản quản trị'}</p>
+                <p className="text-sm font-semibold text-slate-800">{user?.fullName || 'Quản trị viên'}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'ADMIN'}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-action-blue font-semibold text-white shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-md shadow-blue-500/20 font-black text-white">
                 {user?.fullName?.charAt(0)?.toUpperCase() || 'A'}
               </div>
             </div>
           </div>
         </header>
 
-        <div className="p-8 bg-background">
+        <div className="p-8 flex-1 bg-[#F8FAFC]">
           {children}
         </div>
       </main>

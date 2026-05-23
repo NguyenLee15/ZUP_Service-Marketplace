@@ -220,8 +220,9 @@ export function ServiceDetailClient({ service }: { service: any }) {
           </div>
         </div>
 
-        <Card className="overflow-hidden rounded-[20px] border-0 bg-midnight-indigo text-white shadow-[var(--brand-shadow-card)] py-0">
-          <CardContent className="p-4 sm:p-5">
+        <Card className="glass-panel rounded-[20px] border-white/10 text-white shadow-[var(--brand-shadow-card)] py-0 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-500/15 via-teal-500/5 to-transparent z-0" />
+          <CardContent className="relative z-10 p-4 sm:p-5">
             <div className="mb-4 flex items-center gap-2">
               <div className="rounded-lg border border-white/10 bg-white/10 p-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
@@ -273,8 +274,8 @@ export function ServiceDetailClient({ service }: { service: any }) {
         <Separator />
 
         {/* Provider Card */}
-        <Card className="surface-card rounded-[20px] py-0">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+        <Card className="glass-panel glow-hover rounded-[20px] border-white/10 py-0">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4 text-white">
             <div className="flex items-center gap-3">
               {service.provider?.id ? (
                 <Link
@@ -357,67 +358,67 @@ export function ServiceDetailClient({ service }: { service: any }) {
         <Separator />
 
         {/* Thống kê hiệu suất nhà cung cấp — dữ liệu thật từ API */}
-        <Card className="surface-card overflow-hidden rounded-[20px] mb-8 py-0">
-          <CardContent className="p-4 sm:p-6">
+        <Card className="glass-panel glow-hover overflow-hidden rounded-[20px] mb-8 py-0">
+          <CardContent className="p-4 sm:p-6 text-white">
             <div className="flex items-center gap-2 mb-4 sm:mb-5">
-              <div className="p-1.5 rounded-lg bg-pale-gray text-action-blue">
+              <div className="p-1.5 rounded-lg bg-white/5 text-sky-400">
                 <BarChart3 className="w-4 h-4" />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-midnight-indigo">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 Thống kê nhà cung cấp
               </h3>
             </div>
 
             {providerStats ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <div className="p-3 sm:p-4 rounded-xl bg-pale-gray/50 border border-platinum-tint text-center">
+                <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 text-center">
                   <div className="flex justify-center mb-1 sm:mb-2">
-                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-action-blue" />
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-sky-400" />
                   </div>
-                  <p className="text-lg sm:text-2xl font-bold text-action-blue">
+                  <p className="text-lg sm:text-2xl font-bold text-sky-400">
                     {providerStats.avgResponseHours !== null
                       ? `~${providerStats.avgResponseHours}h`
                       : "N/A"}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-slate-blue font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-1">
                     Phản hồi TB
                   </p>
                 </div>
 
-                <div className="p-3 sm:p-4 rounded-xl bg-green-50 border border-green-100 text-center">
+                <div className="p-3 sm:p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
                   <div className="flex justify-center mb-1 sm:mb-2">
-                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
                   </div>
-                  <p className="text-lg sm:text-2xl font-bold text-green-700">
+                  <p className="text-lg sm:text-2xl font-bold text-green-400">
                     {providerStats.completionRate !== null
                       ? `${providerStats.completionRate}%`
                       : "N/A"}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-green-600/70 font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-green-400/80 font-medium mt-1">
                     Hoàn thành
                   </p>
                 </div>
 
-                <div className="p-3 sm:p-4 rounded-xl bg-pale-gray/50 border border-platinum-tint text-center">
+                <div className="p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5 text-center">
                   <div className="flex justify-center mb-1 sm:mb-2">
-                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-action-blue" />
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-sky-400" />
                   </div>
-                  <p className="text-lg sm:text-2xl font-bold text-action-blue">
+                  <p className="text-lg sm:text-2xl font-bold text-sky-400">
                     {providerStats.totalCompleted}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-slate-blue font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-1">
                     Đơn hoàn thành
                   </p>
                 </div>
 
-                <div className="p-3 sm:p-4 rounded-xl bg-yellow-50 border border-yellow-100 text-center">
+                <div className="p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
                   <div className="flex justify-center mb-1 sm:mb-2">
-                    <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-400" />
+                    <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />
                   </div>
-                  <p className="text-lg sm:text-2xl font-bold text-yellow-700">
+                  <p className="text-lg sm:text-2xl font-bold text-amber-400">
                     {Number(service.avgRating || 0).toFixed(1)}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-yellow-600/70 font-medium mt-1">
+                  <p className="text-[10px] sm:text-xs text-amber-400/80 font-medium mt-1">
                     Đánh giá TB
                   </p>
                 </div>
@@ -485,7 +486,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border p-3 sm:p-4 z-30">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-800/50 p-3 sm:p-4 z-30 shadow-lg">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <div className="flex-1">
             <p className="text-[10px] sm:text-sm text-muted-foreground leading-none mb-1">Giá tham khảo</p>

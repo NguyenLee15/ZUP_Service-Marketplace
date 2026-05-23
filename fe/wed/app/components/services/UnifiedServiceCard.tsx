@@ -138,7 +138,7 @@ export function UnifiedServiceCard({
 
   return (
     <Card
-      className="surface-card group relative flex h-full cursor-pointer flex-col gap-0 overflow-hidden rounded-2xl py-0 transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-action-blue/30 hover:shadow-[var(--brand-shadow-card)]"
+      className="glass-panel glow-hover group relative flex h-full cursor-pointer flex-col gap-0 overflow-hidden rounded-2xl py-0 hover:-translate-y-1"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -274,7 +274,7 @@ export function UnifiedServiceCard({
           </Link>
           {showDescription && (
             <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground text-pretty break-words [overflow-wrap:anywhere]">
-              {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeService.'}
+              {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeServe.'}
             </p>
           )}
           <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] sm:text-[11px] leading-tight">
@@ -289,10 +289,10 @@ export function UnifiedServiceCard({
               </Link>
             ) : (
               <p
-                title={service.provider?.fullName || 'Đối tác HomeService'}
+                title={service.provider?.fullName || 'Đối tác HomeServe'}
                 className="min-w-0 flex-1 truncate font-medium text-foreground/75"
               >
-                {service.provider?.fullName || 'Đối tác HomeService'}
+                {service.provider?.fullName || 'Đối tác HomeServe'}
               </p>
             )}
             {showTrustBadges && (

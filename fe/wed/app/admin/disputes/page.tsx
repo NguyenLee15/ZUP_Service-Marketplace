@@ -1,142 +1,159 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
-import { bookingsApi } from '@/features/auth/services/api';
-import { AlertTriangle, CheckCircle, Clock, Search, Eye } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Search, Eye, Scale, ShieldCheck } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AdminDisputesPage() {
-  const { toast } = useToast();
+  const router = useRouter();
   const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<any>(null);
-  const [resolution, setResolution] = useState('');
-  const [refundPercent, setRefundPercent] = useState(0);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | ''>('');
 
-  useEffect(() => {
-    // Fetch disputed bookings
-    bookingsApi.getMyBookings({ status: 'DISPUTED' })
-      .then((res) => setDisputes(res.data.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleResolve = async () => {
-    if (!selected || !resolution) return;
-    setActionLoading(true);
+  const fetchDisputes = async () => {
+    setLoading(true);
     try {
-      await adminApi.resolveDispute(selected.id, {
-        resolutionAction: refundPercent > 0 ? `REFUND_${refundPercent}%` : 'COMPLETE',
-        resolutionReason: resolution
-      });
-      toast({ title: 'Đã giải quyết tranh chấp' });
-      setSelected(null);
-      setResolution('');
-      setRefundPercent(0);
-      // Refresh
-      const res = await bookingsApi.getMyBookings({ status: 'DISPUTED' });
+      const res = await adminApi.getDisputes(statusFilter ? { status: statusFilter } : undefined);
       setDisputes(res.data.data || []);
-    } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
-    } finally { setActionLoading(false); }
+    } catch {
+      toast.error('Không thể tải danh sách khiếu nại');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('vi-VN');
+  useEffect(() => {
+    fetchDisputes();
+  }, [statusFilter]);
+
+  const formatDate = (d: string) => new Date(d).toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-2xl font-bold text-foreground">Quản Lý Tranh Chấp</h3>
-        <p className="text-muted-foreground mt-1">Giải quyết khiếu nại từ khách hàng</p>
+    <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-2xl font-bold tracking-tight text-slate-900">
+            Quản Lý Tranh Chấp & Khiếu Nại
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Xem hồ sơ, đối chiếu chứng cứ và đưa ra phán quyết tối hậu giải quyết mâu thuẫn.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: '', label: 'Tất cả' },
+            { value: 'PENDING', label: 'Đang chờ xử lý' },
+            { value: 'RESOLVED', label: 'Đã giải quyết' },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setStatusFilter(option.value as any)}
+              className={`h-9 rounded-lg border px-4 text-xs font-bold transition-all ${
+                statusFilter === option.value
+                  ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/10'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
-        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />)}</div>
-      ) : disputes.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-400" />
-          <p className="font-medium">Không có tranh chấp nào</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {disputes.map((d: any) => (
-            <Card key={d.id} className="hover:shadow-md transition-shadow border-red-100">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-mono text-xs text-muted-foreground">#{d.bookingCode}</span>
-                    <Badge className="bg-red-100 text-red-700 border-0 text-[10px]">Khiếu nại</Badge>
-                  </div>
-                  <p className="text-sm font-medium truncate">{d.service?.name}</p>
-                  <p className="text-xs text-muted-foreground">KH: {d.customer?.fullName} · {formatDate(d.createdAt)}</p>
-                </div>
-                <Button size="sm" variant="outline" onClick={() => setSelected(d)}>
-                  <Eye className="w-4 h-4 mr-1" /> Xem
-                </Button>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-slate-100 rounded-2xl animate-pulse border border-slate-200" />
           ))}
         </div>
-      )}
+      ) : disputes.length === 0 ? (
+        <div className="text-center py-16 rounded-3xl bg-white border border-slate-200 shadow-[var(--brand-shadow-sm)]">
+          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-500" />
+          <p className="font-semibold text-slate-800 text-sm">Tuyệt vời! Không có tranh chấp nào</p>
+          <p className="text-xs text-slate-400 mt-1">Hệ thống đang vận hành hoàn toàn ổn định.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {disputes.map((d: any) => {
+            const isResolved = d.status === 'RESOLVED';
+            const booking = d.booking || {};
+            const service = booking.service || {};
+            const customer = booking.customer || {};
+            const provider = booking.provider || {};
 
-      {/* Resolve Modal */}
-      {selected && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-500" />
-                Giải quyết tranh chấp #{selected.bookingCode}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm space-y-2">
-                <p><span className="text-muted-foreground">Dịch vụ:</span> {selected.service?.name}</p>
-                <p><span className="text-muted-foreground">Khách hàng:</span> {selected.customer?.fullName}</p>
-                {selected.dispute && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p className="text-red-800 font-medium text-sm mb-1">Lý do khiếu nại:</p>
-                    <p className="text-red-700 text-sm">{selected.dispute.reason}</p>
-                  </div>
-                )}
-              </div>
+            return (
+              <Card
+                key={d.id}
+                className={`hover:shadow-md transition-all duration-200 rounded-2xl border ${
+                  isResolved ? 'border-slate-200/60 bg-white' : 'border-rose-200 bg-rose-50/10'
+                }`}
+              >
+                <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        isResolved ? 'bg-slate-100 text-slate-600' : 'bg-rose-100 text-rose-600 shadow-sm'
+                      }`}>
+                        {isResolved ? <Scale className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5 animate-pulse" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs font-semibold text-slate-400">#{booking.bookingCode || 'N/A'}</span>
+                          <Badge className={`border-0 text-[10px] font-bold ${
+                            isResolved ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                          }`}>
+                            {isResolved ? 'Đã phân định' : 'Chờ phân xử'}
+                          </Badge>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-800 truncate mt-0.5">
+                          {service.name || 'Dịch vụ đã bị xóa'}
+                        </h4>
+                      </div>
+                    </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Quyết định</label>
-                <Textarea value={resolution} onChange={(e) => setResolution(e.target.value)}
-                  placeholder="Mô tả quyết định giải quyết..." rows={3} />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Tỷ lệ hoàn tiền (%)</label>
-                <div className="flex gap-2">
-                  {[0, 25, 50, 75, 100].map((p) => (
-                    <Button key={p} size="sm" variant={refundPercent === p ? 'default' : 'outline'}
-                      onClick={() => setRefundPercent(p)} className="text-xs">
-                      {p}%
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-lg text-xs font-bold border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm gap-1.5"
+                      onClick={() => router.push(`/admin/disputes/${d.id}`)}
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Chi tiết
                     </Button>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              <div className="flex gap-2 justify-end pt-4 border-t">
-                <Button variant="outline" onClick={() => { setSelected(null); setResolution(''); }}>Đóng</Button>
-                <Button className="bg-blue-600 hover:bg-blue-700" disabled={!resolution || actionLoading}
-                  onClick={handleResolve}>
-                  <CheckCircle className="w-4 h-4 mr-1" /> Xác nhận giải quyết
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-xs font-medium space-y-1">
+                    <p className="text-slate-700 leading-relaxed truncate">
+                      <span className="text-slate-400 font-semibold mr-1">Lý do khiếu nại:</span>
+                      &ldquo;{d.reason}&rdquo;
+                    </p>
+                    <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Yêu cầu lúc: {formatDate(d.createdAt)}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                    <span className="truncate">KH: <strong>{customer.fullName || 'Ẩn danh'}</strong></span>
+                    <span className="shrink-0 text-slate-300 mx-2">|</span>
+                    <span className="truncate">Thợ: <strong>{provider.fullName || 'Ẩn danh'}</strong></span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

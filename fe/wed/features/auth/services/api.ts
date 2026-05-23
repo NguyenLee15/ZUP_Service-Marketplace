@@ -141,7 +141,7 @@ export const adminApi = {
   // Users
   getUsers: (params?: Record<string, any>) =>
     api.get("/admin/users", { params }),
-  lockUser: (id: number) => api.patch(`/admin/users/${id}/lock`),
+  lockUser: (id: number, data?: { reason: string }) => api.patch(`/admin/users/${id}/lock`, data),
   unlockUser: (id: number) => api.patch(`/admin/users/${id}/unlock`),
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
 
@@ -211,7 +211,7 @@ export const adminApi = {
   getDisputeDetail: (id: number) => api.get(`/admin/disputes/${id}`),
   resolveDispute: (
     id: number,
-    data: { resolutionAction: string; resolutionReason: string },
+    data: { resolutionAction: string; resolutionReason: string; penaltyAmount?: number },
   ) => api.patch(`/admin/disputes/${id}/resolve`, data),
 
   // Settings — UC10.3

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart } from 'lucide-react';
+import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Wrench } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
@@ -168,21 +168,21 @@ export function CustomerHeader() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-[background-color,border-color,box-shadow,padding] duration-300 ${
+        className={`sticky top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'bg-white/85 backdrop-blur-2xl border-b border-platinum-tint shadow-[var(--brand-shadow-sm)] py-2'
-            : 'bg-white/95 backdrop-blur-md border-b border-platinum-tint py-2 sm:py-3'
-        }`}
+            ? 'bg-white/80 dark:bg-slate-950/80 border-b border-slate-200/40 dark:border-slate-800/40 shadow-lg shadow-sky-600/5 dark:shadow-sky-950/20 py-2.5 sm:py-3.5'
+            : 'bg-white/90 dark:bg-slate-950/90 border-b border-slate-200/20 dark:border-slate-800/20 py-3.5 sm:py-4.5'
+        } backdrop-blur-xl`}
       >
         <div className="mobile-header-width mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex justify-between items-center gap-2 sm:gap-4 h-14 sm:h-16">
             <div className="flex items-center gap-2 shrink-0">
-              <Link href="/" prefetch={false} className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-action-blue flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-[var(--brand-shadow-button)] group-hover:scale-105 transition-transform duration-300">
-                  H
+              <Link href="/" prefetch={false} className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl active:scale-95 transition-transform duration-200">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 dark:shadow-sky-950/40 group-hover:scale-105 transition-transform duration-300">
+                  <Wrench className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <span className="font-bold text-2xl text-midnight-indigo tracking-tight hidden md:block">
-                  Home<span className="text-action-blue">Service</span>
+                <span className="font-sans text-[22px] sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white hidden md:block">
+                  Home<span className="text-sky-600 dark:text-sky-400">Serve</span>
                 </span>
               </Link>
             </div>

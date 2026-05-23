@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/auth.store';
 
 let chatSocket: Socket | null = null;
 let notifSocket: Socket | null = null;
+let trackingSocket: Socket | null = null;
 
 const createSocket = (namespace: string): Socket => {
   const token = useAuthStore.getState().accessToken;
@@ -27,6 +28,12 @@ export const getNotifSocket = (): Socket => {
   return notifSocket;
 };
 
+export const getTrackingSocket = (): Socket => {
+  if (trackingSocket) return trackingSocket;
+  trackingSocket = createSocket('/tracking');
+  return trackingSocket;
+};
+
 export function connectSockets(): void {
   const token = useAuthStore.getState().accessToken;
   if (!token) return;
@@ -43,6 +50,9 @@ export function connectSockets(): void {
 export function disconnectSockets(): void {
   chatSocket?.disconnect();
   notifSocket?.disconnect();
+  trackingSocket?.disconnect();
   chatSocket = null;
   notifSocket = null;
+  trackingSocket = null;
 }
+

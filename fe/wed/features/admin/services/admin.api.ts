@@ -26,8 +26,8 @@ export const adminApi = {
   getUsers: (params?: Record<string, any>) =>
     api.get('/admin/users', { params }),
 
-  lockUser: (id: number) =>
-    api.patch(`/admin/users/${id}/lock`),
+  lockUser: (id: number, data?: { reason: string }) =>
+    api.patch(`/admin/users/${id}/lock`, data),
 
   unlockUser: (id: number) =>
     api.patch(`/admin/users/${id}/unlock`),

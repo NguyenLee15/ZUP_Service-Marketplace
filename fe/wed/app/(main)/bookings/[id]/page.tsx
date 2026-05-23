@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { bookingsApi, reviewsApi } from '@/features/auth/services/api';
 import { useAuthStore } from '@/store/auth.store';
@@ -23,6 +23,9 @@ import {
   History,
   Sparkles,
   Zap,
+  Timer,
+  MessageCircle,
+  Navigation,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { BookingStepper } from '@/app/components/bookings/BookingStepper';
@@ -117,10 +120,36 @@ export default function BookingDetailPage() {
     }).format(p);
   const formatDate = (d: string) => new Date(d).toLocaleString('vi-VN');
 
+  // Auto-completion countdown
+  const countdown = useMemo(() => {
+    if (booking?.status !== BookingStatus.DONE || !booking?.completedAt) return null;
+    const autoAt = booking.autoCompletedAt
+      ? new Date(booking.autoCompletedAt).getTime()
+      : new Date(booking.completedAt).getTime() + 24 * 60 * 60 * 1000;
+    return autoAt;
+  }, [booking?.status, booking?.completedAt, booking?.autoCompletedAt]);
+
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    if (!countdown) return;
+    const tick = () => {
+      const diff = countdown - Date.now();
+      if (diff <= 0) { setTimeLeft('Đã tự động nghiệm thu'); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [countdown]);
+
   if (loading)
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <div className="h-96 bg-muted rounded-xl animate-pulse" />
+        <div className="h-96 glass-panel rounded-2xl animate-pulse" />
       </div>
     );
   if (!booking) return null;
@@ -128,7 +157,7 @@ export default function BookingDetailPage() {
   const isCustomer = user?.id === booking.customerId;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
       {/* Back */}
       <BackButton fallbackHref="/bookings" />
 
@@ -137,7 +166,7 @@ export default function BookingDetailPage() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded bg-muted text-[10px] font-bold text-muted-foreground uppercase">
+              <span className="px-2 py-0.5 rounded-md glass-panel text-[10px] font-bold text-action-blue uppercase tracking-wider">
                 Mã đơn
               </span>
               <span className="text-sm text-foreground/60 font-mono">
@@ -152,15 +181,32 @@ export default function BookingDetailPage() {
         </div>
 
         {/* Stepper Timeline */}
-        <div className="surface-card rounded-[20px] p-2 overflow-hidden">
+        <div className="glass-panel glow-hover rounded-2xl p-2 overflow-hidden">
           <BookingStepper currentStatus={booking.status} />
         </div>
+
+        {/* Auto-completion Countdown */}
+        {booking.status === BookingStatus.DONE && !booking.autoCompletedAt && timeLeft && (
+          <div className="glass-panel rounded-xl p-4 flex items-center gap-3 border-l-4 border-action-blue">
+            <div className="w-10 h-10 rounded-full bg-action-blue/10 flex items-center justify-center">
+              <Timer className="w-5 h-5 text-action-blue" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Tự động nghiệm thu sau
+              </p>
+              <p className="text-lg font-bold text-action-blue font-mono tracking-wider">
+                {timeLeft}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Provider */}
-      <Card className="surface-card rounded-[20px] py-0">
-        <CardContent className="p-4 flex items-start gap-4">
-          <div className="w-14 h-14 rounded-full bg-action-blue flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden">
+      <Card className="glass-panel glow-hover rounded-2xl py-0 border-0">
+        <CardContent className="p-5 flex items-start gap-4">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-action-blue to-glacier-blue flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden shadow-[0_0_15px_rgba(0,107,255,0.3)]">
             {booking.provider?.avatarUrl ? (
               <img
                 src={booking.provider.avatarUrl}
@@ -188,6 +234,15 @@ export default function BookingDetailPage() {
                 {booking.provider?.phone || 'Chưa cập nhật số điện thoại'}
               </span>
             </div>
+            {booking.provider && (
+              <button
+                onClick={() => router.push(`/chat?conversationId=${booking.conversationId || ''}`)}
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-action-blue/10 border border-action-blue/20 text-action-blue text-xs font-semibold hover:bg-action-blue/20 transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                Nhắn tin
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -197,7 +252,7 @@ export default function BookingDetailPage() {
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem
             value="history"
-            className="border-none bg-muted/30 rounded-2xl px-4"
+            className="border-none glass-panel rounded-2xl px-4"
           >
             <AccordionTrigger className="hover:no-underline py-4">
               <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
@@ -206,10 +261,10 @@ export default function BookingDetailPage() {
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-4 space-y-4">
-              <div className="relative pl-4 border-l-2 border-platinum-tint space-y-6">
+              <div className="relative pl-4 border-l-2 border-action-blue/30 space-y-6">
                 {booking.statusHistories.map((h: any, i: number) => (
                   <div key={i} className="relative">
-                    <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full bg-white border-2 border-action-blue" />
+                    <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full bg-card border-2 border-action-blue shadow-[0_0_6px_rgba(0,107,255,0.3)]" />
                     <div className="space-y-0.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-tight text-foreground">
@@ -234,22 +289,22 @@ export default function BookingDetailPage() {
       )}
 
       {/* Address */}
-      <Card>
-        <CardContent className="p-4 space-y-2">
+      <Card className="glass-panel glow-hover rounded-2xl border-0">
+        <CardContent className="p-5 space-y-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="w-4 h-4" />
+            <MapPin className="w-4 h-4 text-action-blue" />
             <span>
               {booking.addressDetail}, {booking.ward}, {booking.district},{' '}
               {booking.province}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="w-4 h-4" />
+            <Clock className="w-4 h-4 text-action-blue" />
             <span>Mong muốn: {formatDate(booking.desiredTime)}</span>
           </div>
           {booking.surveyorName && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="w-4 h-4" />
+              <User className="w-4 h-4 text-action-blue" />
               <span>
                 Người khảo sát: {booking.surveyorName} ({booking.surveyorPhone})
               </span>
@@ -260,24 +315,27 @@ export default function BookingDetailPage() {
 
       {/* Quotation */}
       {booking.quotation && (
-        <Card className="border-platinum-tint bg-pale-gray/30">
+        <Card className="glass-panel glow-hover rounded-2xl border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-action-blue">Báo giá</CardTitle>
+            <CardTitle className="text-sm text-action-blue flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Báo giá
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <div className="flex justify-between">
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between items-center py-2 border-b border-action-blue/10">
               <span className="text-muted-foreground">Giá thực tế</span>
-              <span className="font-bold text-action-blue">
+              <span className="font-bold text-lg text-action-blue">
                 {formatPrice(Number(booking.quotation.actualPrice))}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center py-2 border-b border-action-blue/10">
               <span className="text-muted-foreground">Thời gian dự kiến</span>
-              <span>{booking.quotation.estimatedTime}</span>
+              <span className="font-semibold">{booking.quotation.estimatedTime}</span>
             </div>
             {booking.quotation.note && (
-              <p className="text-muted-foreground mt-1">
-                Ghi chú: {booking.quotation.note}
+              <p className="text-muted-foreground mt-1 text-xs bg-pale-gray/40 p-3 rounded-lg">
+                💬 {booking.quotation.note}
               </p>
             )}
           </CardContent>
@@ -286,18 +344,20 @@ export default function BookingDetailPage() {
 
       {/* Review */}
       {booking.review && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-1 mb-1">
+        <Card className="glass-panel rounded-2xl border-0">
+          <CardContent className="p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Đánh giá của bạn</p>
+            <div className="flex items-center gap-1 mb-2">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-4 h-4 ${i < booking.review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-platinum-tint'}`}
+                  className={`w-5 h-5 ${i < booking.review.rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.4)]' : 'text-platinum-tint'}`}
                 />
               ))}
+              <span className="text-xs text-muted-foreground ml-2">{booking.review.rating}/5</span>
             </div>
             {booking.review.comment && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground bg-pale-gray/30 p-3 rounded-lg">
                 {booking.review.comment}
               </p>
             )}
@@ -332,12 +392,27 @@ export default function BookingDetailPage() {
           </div>
         )}
 
+        {/* Customer: Track provider (CONFIRMED / IN_PROGRESS) */}
+        {isCustomer &&
+          (booking.status === BookingStatus.CONFIRMED ||
+            booking.status === BookingStatus.IN_PROGRESS) && (
+            <Button
+              onClick={() => router.push(`/bookings/${booking.id}/track`)}
+              className="w-full bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white rounded-xl shadow-[0_0_15px_rgba(0,107,255,0.3)] py-5 font-bold text-sm transition-all hover:-translate-y-0.5"
+            >
+              <Navigation className="w-4 h-4 mr-2" /> Theo dõi lộ trình thợ
+            </Button>
+          )}
+
         {/* Customer: Post-Service UX (DONE) */}
         {isCustomer &&
           booking.status === BookingStatus.DONE &&
           !booking.review && (
-            <div className="surface-card flex flex-col gap-3 mt-8 p-6 rounded-[20px]">
+            <div className="glass-panel flex flex-col gap-3 mt-8 p-6 rounded-2xl">
               <div className="text-center mb-2">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                  <CheckCircle className="w-8 h-8 text-white" />
+                </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">
                   Công việc đã hoàn tất
                 </h3>
@@ -360,7 +435,7 @@ export default function BookingDetailPage() {
                   }
                 }}
                 disabled={actionLoading}
-                className="w-full bg-action-blue hover:bg-glacier-blue text-white rounded-xl shadow-[var(--brand-shadow-button)] py-6 font-bold text-base transition-[background-color,box-shadow,transform] hover:-translate-y-0.5"
+                className="w-full bg-action-blue hover:bg-glacier-blue text-white rounded-xl shadow-[0_0_15px_rgba(0,107,255,0.3)] py-6 font-bold text-base transition-[background-color,box-shadow,transform] hover:-translate-y-0.5"
               >
                 <Star className="w-5 h-5 mr-2 fill-white text-white" /> Đánh giá
                 & Nghiệm thu
@@ -411,13 +486,15 @@ export default function BookingDetailPage() {
 
       {/* Cancel/Reject dialog */}
       {showCancel && (
-        <Card className="border-red-200">
-          <CardContent className="p-4 space-y-3">
+        <Card className="glass-panel rounded-2xl border-red-500/20 border-l-4">
+          <CardContent className="p-5 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-red-500/80">Xác nhận hành động</p>
             <Textarea
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               placeholder="Lý do..."
               rows={2}
+              className="bg-card/50"
             />
             <div className="flex gap-2">
               <Button
@@ -462,13 +539,14 @@ export default function BookingDetailPage() {
 
       {/* Review form */}
       {showReview && (
-        <Card>
-          <CardContent className="p-4 space-y-3">
+        <Card className="glass-panel rounded-2xl border-0">
+          <CardContent className="p-5 space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-action-blue">Đánh giá dịch vụ</p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((s) => (
                 <button key={s} onClick={() => setRating(s)}>
                   <Star
-                    className={`w-6 h-6 cursor-pointer transition-colors ${s <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-platinum-tint'}`}
+                    className={`w-7 h-7 cursor-pointer transition-all ${s <= rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.5)]' : 'text-platinum-tint hover:text-yellow-200'}`}
                   />
                 </button>
               ))}
@@ -493,7 +571,7 @@ export default function BookingDetailPage() {
                     onClick={() =>
                       setComment((prev) => (prev ? `${prev}, ${tag}` : tag))
                     }
-                    className="px-3 py-1 rounded-full bg-pale-gray text-action-blue text-[10px] font-bold border border-platinum-tint hover:bg-platinum-tint/70 transition-colors"
+                    className="px-3 py-1.5 rounded-full glass-panel text-action-blue text-[10px] font-bold hover:bg-action-blue/10 transition-colors"
                   >
                     + {tag}
                   </button>
@@ -507,13 +585,13 @@ export default function BookingDetailPage() {
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Nhận xét của bạn về chất lượng dịch vụ..."
                 rows={3}
-                className="pr-12"
+                className="pr-12 bg-card/50"
               />
               <button
                 onClick={() => {
                   const suggestions = [
                     'Dịch vụ rất chuyên nghiệp, thợ đến đúng giờ và xử lý vấn đề rất nhanh gọn. Tôi rất hài lòng!',
-                    'Giá cả hợp lý, thợ thân thiện và có tay nghề cao. Sẽ tiếp tục ủng hộ HomeService.',
+                    'Giá cả hợp lý, thợ thân thiện và có tay nghề cao. Sẽ tiếp tục ủng hộ HomeServe.',
                     'Hỗ trợ nhiệt tình, quy trình làm việc minh bạch. Đánh giá 5 sao cho chất lượng!',
                   ];
                   setComment(
@@ -524,7 +602,7 @@ export default function BookingDetailPage() {
                     description: 'Nội dung đã được tối ưu hóa cho bạn.',
                   });
                 }}
-                className="absolute right-2 bottom-2 p-2 rounded-lg bg-action-blue text-white shadow-[var(--brand-shadow-sm)] hover:scale-105 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="absolute right-2 bottom-2 p-2 rounded-lg bg-gradient-to-r from-action-blue to-glacier-blue text-white shadow-[0_0_10px_rgba(0,107,255,0.3)] hover:scale-105 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 aria-label="Tự động soạn thảo nhận xét"
               >
                 <Zap className="w-4 h-4" />
@@ -544,7 +622,7 @@ export default function BookingDetailPage() {
                   )
                 }
                 disabled={actionLoading}
-                className="flex-1 bg-action-blue hover:bg-glacier-blue text-white"
+                className="flex-1 bg-action-blue hover:bg-glacier-blue text-white shadow-[0_0_12px_rgba(0,107,255,0.25)]"
                 size="sm"
               >
                 Gửi đánh giá
@@ -566,12 +644,12 @@ export default function BookingDetailPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const configs: Record<string, string> = {
-    PENDING: 'bg-yellow-100 text-yellow-700',
-    QUOTED: 'bg-pale-gray text-action-blue',
-    CONFIRMED: 'bg-pale-gray text-glacier-blue',
-    IN_PROGRESS: 'bg-pale-gray text-midnight-indigo',
-    DONE: 'bg-green-100 text-green-700',
-    DISPUTED: 'bg-red-100 text-red-700',
+    PENDING: 'bg-yellow-100/80 text-yellow-700 shadow-[0_0_8px_rgba(234,179,8,0.15)]',
+    QUOTED: 'bg-action-blue/10 text-action-blue shadow-[0_0_8px_rgba(0,107,255,0.15)]',
+    CONFIRMED: 'bg-glacier-blue/10 text-glacier-blue shadow-[0_0_8px_rgba(0,78,186,0.15)]',
+    IN_PROGRESS: 'bg-cyan-100/80 text-cyan-700 shadow-[0_0_8px_rgba(6,182,212,0.2)]',
+    DONE: 'bg-green-100/80 text-green-700 shadow-[0_0_8px_rgba(22,163,74,0.15)]',
+    DISPUTED: 'bg-red-100/80 text-red-700 shadow-[0_0_8px_rgba(220,38,38,0.15)]',
     CANCELLED: 'bg-pale-gray text-slate-blue',
   };
   const labels: Record<string, string> = {
@@ -584,7 +662,7 @@ function StatusBadge({ status }: { status: string }) {
     CANCELLED: 'Đã hủy',
   };
   return (
-    <Badge className={`${configs[status] || configs.PENDING} border-0 text-xs`}>
+    <Badge className={`${configs[status] || configs.PENDING} border-0 text-xs font-bold px-3 py-1`}>
       {labels[status] || status}
     </Badge>
   );

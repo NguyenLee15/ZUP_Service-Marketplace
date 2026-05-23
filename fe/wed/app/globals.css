@@ -189,6 +189,32 @@
 }
 
 @layer components {
+  .glass-panel {
+    background-color: rgba(248, 250, 252, 0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 107, 255, 0.08);
+  }
+
+  :is(.dark *) .glass-panel {
+    background-color: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glow-hover {
+    transition: all 0.3s ease;
+  }
+
+  .glow-hover:hover {
+    box-shadow: 0 0 20px rgba(0, 107, 255, 0.25);
+    border-color: rgba(0, 107, 255, 0.2);
+  }
+
+  :is(.dark *) .glow-hover:hover {
+    box-shadow: 0 0 20px rgba(2, 132, 199, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
   .surface-card {
     background-color: var(--card);
     border: 1px solid color-mix(in oklab, var(--border) 72%, white 28%);

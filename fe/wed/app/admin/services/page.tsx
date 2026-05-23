@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -129,8 +129,17 @@ export default function AdminServicesPage() {
                     return (
                       <tr key={service.id} className="border-b border-border hover:bg-gray-50">
                         <td className="py-3 px-4">
-                          <p className="font-medium text-foreground">{service.name}</p>
-                          <p className="text-xs text-muted-foreground">{service.category?.name}</p>
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <p className="font-medium text-foreground">{service.name}</p>
+                              <p className="text-xs text-muted-foreground">{service.category?.name}</p>
+                            </div>
+                            {service.isSensitive && (
+                              <Badge className="bg-rose-100 text-rose-700 border-0 hover:bg-rose-100/80 font-bold text-[10px] flex items-center gap-1 px-1.5 py-0.5 shrink-0 animate-pulse">
+                                <AlertTriangle className="w-3 h-3" /> AI Warning
+                              </Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-4 text-gray-700">{service.provider?.fullName}</td>
                         <td className="py-3 px-4 font-medium text-foreground">{formatPrice(Number(service.referencePrice))}</td>
@@ -174,6 +183,17 @@ export default function AdminServicesPage() {
               <CardTitle>{selectedService.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {selectedService.isSensitive && (
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 text-sm text-rose-800 animate-pulse">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="font-bold">Nội Dung Nhạy Cảm (AI Auto-Flagged)</h5>
+                    <p className="text-xs text-rose-600 mt-1 leading-relaxed">
+                      Gemini phát hiện dịch vụ này chứa các từ khóa nghi ngờ lừa đảo, nhạy cảm hoặc vi phạm điều khoản của HomeServe. Nhân viên cần rà soát kỹ lưỡng.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Nhà Cung Cấp</p>

@@ -7,20 +7,20 @@ import {
 
 export function CustomerFooter() {
   return (
-    <footer className="bg-white text-muted-foreground pt-10 sm:pt-16 pb-6 sm:pb-8 border-t border-platinum-tint transition-colors duration-300">
+    <footer className="bg-slate-950 text-slate-400 pt-10 sm:pt-16 pb-6 sm:pb-8 border-t border-slate-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
           <div className="space-y-4">
             <Link
               href="/"
               prefetch={false}
-              className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+              className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue group active:scale-95 transition-transform duration-200"
             >
-              <div className="w-8 h-8 rounded-lg bg-action-blue flex items-center justify-center text-white font-bold text-lg">
-                H
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform duration-300">
+                <span className="text-sm font-bold">HS</span>
               </div>
-              <span className="font-bold text-xl text-midnight-indigo tracking-tight">
-                Home<span className="text-action-blue">Service</span>
+              <span className="font-sans text-xl font-bold tracking-tight text-white">
+                Home<span className="text-sky-400">Serve</span>
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mt-4">
@@ -32,7 +32,7 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <h3 className="text-foreground font-semibold text-lg mb-6">
+            <h3 className="text-white font-semibold text-lg mb-6">
               Dịch vụ phổ biến
             </h3>
             <ul className="space-y-3 text-sm">
@@ -85,7 +85,7 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <h3 className="text-foreground font-semibold text-lg mb-6">
+            <h3 className="text-white font-semibold text-lg mb-6">
               Hỗ trợ khách hàng
             </h3>
             <ul className="space-y-3 text-sm">
@@ -126,7 +126,7 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <h3 className="text-foreground font-semibold text-lg mb-6">
+            <h3 className="text-white font-semibold text-lg mb-6">
               Liên hệ
             </h3>
             <ul className="space-y-4 text-sm">
@@ -146,10 +146,10 @@ export function CustomerFooter() {
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-action-blue shrink-0" />
                 <a
-                  href="mailto:support@homeservice.vn"
+                  href="mailto:support@homeserve.vn"
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
-                  support@homeservice.vn
+                  support@homeserve.vn
                 </a>
               </li>
             </ul>
@@ -160,7 +160,7 @@ export function CustomerFooter() {
 
         <div className="pt-6 sm:pt-8 border-t border-platinum-tint flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-            © {new Date().getFullYear()} HomeService Marketplace. Mọi quyền được
+            © {new Date().getFullYear()} HomeServe Marketplace. Mọi quyền được
             bảo lưu.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
