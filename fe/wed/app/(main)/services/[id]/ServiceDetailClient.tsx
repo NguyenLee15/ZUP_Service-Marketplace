@@ -103,7 +103,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 pb-24 animate-in fade-in duration-500">
+    <div className="max-w-5xl mx-auto px-4 py-6 pb-44 animate-in fade-in duration-500 sm:pb-40">
       {/* Back Button */}
       <BackButton fallbackHref="/services" className="mb-6" />
 
