@@ -202,10 +202,12 @@ export function UnifiedServiceCard({
                   onToggleFavorite?.(service);
                 }}
                 className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
-                  isFavorite ? 'bg-red-500 text-white' : 'bg-white/85 text-foreground hover:bg-white'
+                  isFavorite
+                    ? 'bg-rose-500 text-white ring-2 ring-rose-300/35'
+                    : 'border border-white/20 bg-slate-950/55 text-white hover:bg-sky-600 hover:text-white'
                 }`}
               >
-                <Heart className={`h-3 w-3 ${isFavorite ? 'fill-white' : ''}`} />
+                <Heart className={`h-3.5 w-3.5 ${isFavorite ? 'fill-white' : ''}`} />
               </Button>
             )}
             {showCompare && (
@@ -220,7 +222,9 @@ export function UnifiedServiceCard({
                   onAddToComparison?.(service);
                 }}
                 className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
-                  isComparing ? 'bg-action-blue text-white' : 'bg-white/85 text-foreground hover:bg-white'
+                  isComparing
+                    ? 'bg-sky-600 text-white ring-2 ring-sky-300/35'
+                    : 'border border-white/20 bg-slate-950/55 text-white hover:bg-sky-600 hover:text-white'
                 }`}
               >
                 <GitCompare className="h-3 w-3" />
@@ -305,7 +309,7 @@ export function UnifiedServiceCard({
 
         <div className="mt-2 flex min-w-0 items-end justify-between gap-2 pt-1">
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm sm:text-base font-extrabold leading-tight text-foreground tabular-nums">
+            <div className="truncate text-sm sm:text-base font-extrabold leading-tight text-cyan-300 tabular-nums">
               {displayPrice}
             </div>
             <div className="mt-1 flex min-w-0 items-center gap-1 text-[10px] sm:text-[11px] leading-none text-foreground/80">
@@ -320,7 +324,7 @@ export function UnifiedServiceCard({
               href={detailHref}
               prefetch={false}
               onClick={handleDetailClick}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-black text-white shadow-sm transition-[background-color,transform] hover:bg-neutral-800 active:scale-95 sm:h-12 sm:w-12"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-sky-400/20 bg-sky-600 text-white shadow-[0_0_18px_rgba(2,132,199,0.35)] transition-[background-color,transform,box-shadow] hover:bg-cyan-500 active:scale-95 sm:h-12 sm:w-12"
               aria-label={`Đặt ngay dịch vụ ${service.name}`}
             >
               <ShoppingBag className="h-5 w-5" />
