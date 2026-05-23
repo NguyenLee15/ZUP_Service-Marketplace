@@ -486,11 +486,13 @@ export function ServiceDetailClient({ service }: { service: any }) {
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-800/50 p-3 sm:p-4 z-30 shadow-lg">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#070d12]/88 p-3 shadow-[0_-18px_48px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:p-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#101827]/92 px-4 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
           <div className="flex-1">
-            <p className="text-[10px] sm:text-sm text-muted-foreground leading-none mb-1">Giá tham khảo</p>
-            <p className="text-base sm:text-lg font-bold text-action-blue leading-none">
+            <p className="mb-1 text-[10px] font-medium leading-none text-slate-400 sm:text-xs">
+              Giá tham khảo
+            </p>
+            <p className="text-base font-extrabold leading-none text-cyan-300 sm:text-lg">
               {formatPrice(referencePrice)}
             </p>
           </div>
@@ -502,9 +504,10 @@ export function ServiceDetailClient({ service }: { service: any }) {
               }
               router.push(`/bookings/create?serviceId=${service.id}`);
             }}
-            className="h-10 sm:h-12 px-5 sm:px-8 bg-action-blue hover:bg-glacier-blue text-white font-semibold text-sm sm:text-base rounded-xl shadow-[var(--brand-shadow-button)] transition-colors shrink-0"
+            className="h-10 shrink-0 rounded-xl bg-[#0B7CFF] px-5 text-sm font-bold text-white shadow-[0_14px_30px_rgba(11,124,255,0.32)] transition-colors hover:bg-[#19B9F3] sm:h-11 sm:px-7 sm:text-base"
           >
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" /> Đặt lịch
+            <Calendar className="mr-1.5 h-4 w-4 sm:mr-2 sm:h-5 sm:w-5" />{" "}
+            Đặt lịch
           </Button>
         </div>
       </div>
