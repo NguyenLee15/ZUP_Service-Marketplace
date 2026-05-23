@@ -24,18 +24,19 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="relative overflow-hidden surface-warm rounded-[1.5rem] md:rounded-[2rem] py-8 md:py-16">
+    <section className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#071018] py-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:rounded-[2rem] md:py-16">
       {/* Background patterns */}
-      <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(#2563eb_1px,transparent_1px)] bg-[length:40px_40px] opacity-[0.03]" />
+      <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(rgba(34,211,238,0.28)_1px,transparent_1px)] bg-[length:38px_38px] opacity-[0.12]" />
+      <div className="absolute inset-x-0 top-0 z-0 h-40 bg-[radial-gradient(circle_at_50%_0%,rgba(14,165,233,0.22),transparent_62%)] pointer-events-none" />
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6">
         <div className="text-center mb-8 md:mb-14">
-          <Badge className="mb-3 md:mb-5 bg-action-blue text-white border-none px-3 md:px-4 py-1.5 md:py-2 rounded-full font-bold tracking-wide text-[10px] md:text-xs shadow-sm">
+          <Badge className="mb-3 rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold tracking-wide text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.16)] md:mb-5 md:px-4 md:py-2 md:text-xs">
             Quy trình 3 bước
           </Badge>
-          <h2 className="text-2xl md:text-[50px] font-bold brand-heading mb-2 md:mb-4 leading-tight text-balance">
+          <h2 className="mb-2 text-2xl font-bold leading-tight text-slate-100 text-balance md:mb-4 md:text-[50px]">
             Dịch vụ chuyên nghiệp <br className="hidden md:block" />
-            <span className="text-action-blue">chỉ trong vài bước</span>
+            <span className="text-cyan-300">chỉ trong vài bước</span>
           </h2>
         </div>
 
@@ -46,20 +47,20 @@ export function HowItWorks() {
             return (
               <article
                 key={step.number}
-                className="relative group p-4 md:p-7 rounded-[16px] md:rounded-[20px] bg-white/85 border border-white/80 hover:bg-white hover:shadow-[var(--brand-shadow-card)] hover:border-action-blue/20 transition-[background-color,border-color,box-shadow] duration-300"
+                className="group relative rounded-[16px] border border-white/10 bg-[#101827]/88 p-4 shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-[background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-cyan-300/30 hover:bg-[#132033] hover:shadow-[0_22px_52px_rgba(8,145,178,0.14)] md:rounded-[20px] md:p-7"
               >
                 <div className="flex sm:block items-start gap-4 sm:gap-0">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-action-blue rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 mb-0 sm:mb-7 shadow-[var(--brand-shadow-button)] group-hover:-translate-y-1 transition-transform duration-300">
-                    <Icon className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  <div className="mb-0 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0B7CFF] shadow-[0_14px_30px_rgba(11,124,255,0.28)] transition-transform duration-300 group-hover:-translate-y-1 md:h-16 md:w-16 md:rounded-2xl sm:mb-7">
+                    <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5 sm:pt-0">
-                    <h3 className="text-base sm:text-xl md:text-2xl font-bold text-midnight-indigo mb-1 sm:mb-3 relative z-10 tracking-tight">{step.title}</h3>
-                    <p className="text-slate-blue text-xs sm:text-base font-medium leading-relaxed relative z-10">
+                    <h3 className="relative z-10 mb-1 text-base font-bold tracking-tight text-slate-100 sm:mb-3 sm:text-xl md:text-2xl">{step.title}</h3>
+                    <p className="relative z-10 text-xs font-medium leading-relaxed text-slate-400 sm:text-base">
                       {step.description}
                     </p>
                   </div>
                 </div>
-                <span className="absolute top-4 right-4 md:top-6 md:right-6 text-3xl md:text-6xl font-bold text-pale-gray group-hover:text-platinum-tint transition-colors pointer-events-none">
+                <span className="pointer-events-none absolute right-4 top-4 text-3xl font-bold text-slate-700/55 transition-colors group-hover:text-cyan-300/20 md:right-6 md:top-6 md:text-6xl">
                   {step.number}
                 </span>
               </article>
