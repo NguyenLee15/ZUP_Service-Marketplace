@@ -281,6 +281,11 @@ function ServicesSearchContent() {
   };
 
   const activeCategories = categories.filter(c => categoryIds.includes(c.id.toString()));
+  const activeFilterCount =
+    categoryIds.length +
+    (minPrice ? 1 : 0) +
+    (maxPrice ? 1 : 0) +
+    (minRating > 0 ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -328,9 +333,18 @@ function ServicesSearchContent() {
               <div className="flex w-full items-center gap-3 md:w-auto md:pl-4 md:border-l border-border">
                 <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
                   <SheetTrigger asChild>
-                  <Button variant="outline" className="lg:hidden rounded-xl h-12 gap-2 border-platinum-tint hover:bg-pale-gray hover:text-action-blue transition-colors font-bold">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Mở bộ lọc"
+                    className="relative h-12 w-12 rounded-xl border-platinum-tint hover:bg-pale-gray hover:text-action-blue transition-colors"
+                  >
                     <Filter className="w-5 h-5" />
-                    Bộ lọc
+                    {activeFilterCount > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-action-blue px-1 text-[10px] font-bold text-white">
+                        {activeFilterCount > 9 ? '9+' : activeFilterCount}
+                      </span>
+                    )}
                   </Button>
                   </SheetTrigger>
                 <SheetContent side="left" className="w-[min(22rem,calc(100vw_-_1rem))] p-0 border-0 bg-background">
@@ -361,18 +375,7 @@ function ServicesSearchContent() {
 
       <div className="max-w-7xl mx-auto px-0 py-6 sm:px-4 sm:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="hidden lg:block lg:col-span-3">
-            <div className="sticky top-28 space-y-8">
-              <ServiceFilterSidebar 
-                categories={categories}
-                onFilterChange={onFilterChange}
-                onClear={onClearFilters}
-                currentFilters={{ categoryIds, minPrice, maxPrice, minRating }}
-              />
-            </div>
-          </div>
-
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-12">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 sm:gap-6 mb-6">
               <div className="min-w-0 space-y-1">
                 <h2 className="text-2xl sm:text-3xl font-bold brand-heading leading-tight flex items-center gap-3 break-words text-balance">
