@@ -5,14 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { 
   Search, 
-  Star, 
   Sparkles, 
   X, 
   Filter, 
   Map as MapIcon, 
   LayoutGrid, 
-  Mic,
-  Wrench
+  Mic
 } from 'lucide-react';
 import { servicesApi, categoriesApi } from '@/features/auth/services/api';
 import { Button } from '@/components/ui/button';
@@ -269,20 +267,6 @@ function ServicesSearchContent() {
     setIsMobileFilterOpen(false);
   };
 
-  const applyQuickFilter = (updates: Record<string, string>) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value) newParams.set(key, value);
-      else newParams.delete(key);
-    });
-
-    if (updates.sortBy) setSortBy(updates.sortBy);
-    if (updates.minRating) setMinRating(Number(updates.minRating));
-
-    router.push(`/services?${newParams.toString()}`);
-  };
-
   const removeFilter = (key: string, value?: string) => {
     const newParams = new URLSearchParams(searchParams.toString());
     if (key === 'categoryIds' && value) {
@@ -442,38 +426,6 @@ function ServicesSearchContent() {
                     Bản đồ
                   </Button>
                 </div>
-              </div>
-            </div>
-
-            <div className="mb-8 animate-in fade-in slide-in-from-left-4 duration-500">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-6 h-6 rounded-lg bg-action-blue flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                </div>
-                <h4 className="text-[10px] font-bold text-action-blue uppercase tracking-widest">Gợi ý tìm nhanh</h4>
-              </div>
-              <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 sm:flex sm:flex-wrap">
-                {[
-                  { label: 'Sửa khẩn cấp', icon: Wrench, color: 'text-glacier-blue', bg: 'bg-pale-gray', border: 'border-platinum-tint', updates: { keyword: 'sửa khẩn cấp' } },
-                  { label: 'Giá thấp trước', icon: Sparkles, color: 'text-glacier-blue', bg: 'bg-pale-gray', border: 'border-platinum-tint', updates: { sortBy: 'price_asc' } },
-                  { label: 'Thợ 5 sao', icon: Star, color: 'text-midnight-indigo', bg: 'bg-amber-pop/15', border: 'border-amber-pop/30', updates: { minRating: '5', sortBy: 'rating' } },
-                  { label: 'Xem bản đồ', icon: MapIcon, color: 'text-glacier-blue', bg: 'bg-pale-gray', border: 'border-platinum-tint', updates: {} },
-                ].map((chip, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      if (chip.label === 'Xem bản đồ') {
-                        setViewMode('map');
-                        return;
-                      }
-                      applyQuickFilter(chip.updates as Record<string, string>);
-                    }}
-                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-full ${chip.bg} ${chip.border} border ${chip.color} hover:-translate-y-0.5 active:scale-95 transition-transform shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue`}
-                  >
-                    <chip.icon className="w-3.5 h-3.5" />
-                    <span className="text-xs font-bold">{chip.label}</span>
-                  </button>
-                ))}
               </div>
             </div>
 
