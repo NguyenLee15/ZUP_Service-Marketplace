@@ -24,21 +24,21 @@ export function AdminDashboardCard({
   return (
     <Card
       className={cn(
-        "rounded-xl border border-platinum-tint/80 bg-white shadow-[var(--brand-shadow-sm)] dark:border-gray-800 dark:bg-gray-900",
+        "rounded-lg border border-[var(--admin-border)] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
         className,
       )}
     >
       {(title || action) && (
-        <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-platinum-tint/60 px-5 py-4 dark:border-gray-800">
+        <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-slate-50/70 px-4 py-3">
           {title && (
-            <CardTitle className="text-base font-semibold text-midnight-indigo dark:text-white">
+            <CardTitle className="text-sm font-semibold text-slate-900">
               {title}
             </CardTitle>
           )}
           {action}
         </CardHeader>
       )}
-      <CardContent className={cn("p-5", contentClassName)}>
+      <CardContent className={cn("p-4", contentClassName)}>
         {children}
       </CardContent>
     </Card>
@@ -54,11 +54,11 @@ type AdminMetricCardProps = {
 };
 
 const metricAccent = {
-  blue: "bg-blue-50 text-blue-600 dark:bg-blue-950/35 dark:text-blue-300",
+  blue: "bg-slate-900 text-white",
   green:
-    "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/35 dark:text-emerald-300",
-  amber: "bg-amber-50 text-amber-600 dark:bg-amber-950/35 dark:text-amber-300",
-  slate: "bg-pale-gray text-slate-blue dark:bg-gray-800 dark:text-gray-300",
+    "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  amber: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  slate: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
 };
 
 export function AdminMetricCard({
@@ -69,23 +69,23 @@ export function AdminMetricCard({
   accent,
 }: AdminMetricCardProps) {
   return (
-    <AdminDashboardCard contentClassName="flex items-center gap-4 p-5">
+    <AdminDashboardCard contentClassName="flex items-center gap-3 p-4">
       <div
         className={cn(
-          "flex size-11 shrink-0 items-center justify-center rounded-lg",
+          "flex size-10 shrink-0 items-center justify-center rounded-md",
           metricAccent[accent],
         )}
       >
         <Icon className="size-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium text-slate-blue dark:text-gray-400">
+        <p className="truncate text-[12px] font-medium text-slate-500">
           {label}
         </p>
         {loading ? (
           <Skeleton className="mt-2 h-7 w-24 rounded-md" />
         ) : (
-          <p className="mt-1 truncate text-2xl font-semibold text-midnight-indigo dark:text-white">
+          <p className="admin-kpi-number mt-1 truncate text-2xl font-bold text-slate-950">
             {typeof value === "number" ? value.toLocaleString("vi-VN") : value}
           </p>
         )}
@@ -102,17 +102,17 @@ export function AdminStatusBadge({
   children: ReactNode;
 }) {
   const toneClass = {
-    info: "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-800/40 dark:bg-blue-950/30 dark:text-blue-300",
+    info: "border-slate-200 bg-slate-100 text-slate-700",
     success:
-      "border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-300",
+      "border-emerald-200 bg-emerald-50 text-emerald-700",
     warning:
-      "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300",
+      "border-amber-200 bg-amber-50 text-amber-700",
     danger:
-      "border-red-100 bg-red-50 text-red-700 dark:border-red-800/40 dark:bg-red-950/30 dark:text-red-300",
+      "border-rose-200 bg-rose-50 text-rose-700",
   };
 
   return (
-    <Badge variant="outline" className={cn("font-medium", toneClass[tone])}>
+    <Badge variant="outline" className={cn("rounded-full px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.05em]", toneClass[tone])}>
       {children}
     </Badge>
   );
@@ -124,9 +124,9 @@ export function DashboardLoadingState({
   label?: string;
 }) {
   return (
-    <div className="flex h-full min-h-[240px] items-center justify-center text-slate-blue">
+    <div className="flex h-full min-h-[220px] items-center justify-center text-slate-500">
       <div className="flex flex-col items-center gap-3">
-        <div className="size-6 rounded-full border-2 border-action-blue border-t-transparent animate-spin" />
+        <div className="size-6 rounded-full border-2 border-slate-900 border-t-transparent animate-spin" />
         <span className="text-sm font-medium">{label}</span>
       </div>
     </div>
@@ -141,7 +141,7 @@ export function DashboardErrorState({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300">
+    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
@@ -152,7 +152,7 @@ export function DashboardErrorState({
           size="sm"
           variant="outline"
           onClick={onRetry}
-          className="w-fit border-red-200 bg-white text-red-700 transition-colors hover:bg-red-100 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+          className="w-fit rounded-md border-rose-200 bg-white text-rose-700 transition-colors hover:bg-rose-100"
         >
           Tải lại
         </Button>

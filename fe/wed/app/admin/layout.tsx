@@ -56,17 +56,17 @@ export default function AdminLayout({
     <>
     <div className="admin-shell themed-shell flex h-screen text-slate-900 font-sans">
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen border-r border-slate-800 bg-[var(--admin-sidebar)] text-slate-200 transition-[width] duration-300 flex flex-col ${
+        className={`fixed left-0 top-0 z-40 h-screen border-r border-slate-800 bg-[var(--admin-sidebar)] text-slate-200 transition-[width] duration-300 flex flex-col shadow-[8px_0_28px_rgba(15,23,42,0.16)] ${
           sidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4 shrink-0">
           {sidebarOpen ? (
-            <h1 className="text-md font-black tracking-tight text-white uppercase bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+            <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase">
               HomeServe Admin
             </h1>
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white text-xs mx-auto">
+            <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xs mx-auto">
               HS
             </div>
           )}
@@ -89,9 +89,9 @@ export default function AdminLayout({
                 href={item.href}
                 title={!sidebarOpen ? item.label : undefined}
                 aria-label={item.label}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-150 group active:scale-[0.99] ${
+              className={`relative flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors duration-150 group active:scale-[0.99] ${
                   isActive
-                    ? 'bg-slate-800 text-white font-semibold ring-1 ring-emerald-400/35'
+                    ? 'bg-slate-800 text-white font-semibold ring-1 ring-slate-700 before:absolute before:left-0 before:top-2 before:h-[calc(100%-1rem)] before:w-1 before:rounded-r-full before:bg-emerald-400'
                     : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
                 }`}
               >
@@ -107,7 +107,7 @@ export default function AdminLayout({
         <div className="border-t border-slate-800 p-4 shrink-0 space-y-3">
           {sidebarOpen && (
             <div className="flex items-center gap-3 px-1 py-1">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 border border-slate-700 font-bold text-blue-400">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-800 border border-slate-700 font-bold text-emerald-300">
                 {user?.fullName?.charAt(0)?.toUpperCase() || 'A'}
               </div>
               <div className="flex flex-col min-w-0">
@@ -123,7 +123,7 @@ export default function AdminLayout({
             variant="ghost"
             title="Đăng xuất"
             aria-label="Đăng xuất"
-            className="w-full justify-start gap-3 rounded-xl border border-transparent text-slate-400 hover:bg-slate-800 hover:text-white active:scale-95 transition-all px-3 py-2.5 h-auto text-sm font-medium"
+            className="w-full justify-start gap-3 rounded-md border border-transparent text-slate-400 hover:bg-slate-800 hover:text-white active:scale-95 transition-all px-3 py-2.5 h-auto text-sm font-medium"
             onClick={async () => {
               try { await authApi.logout(); } catch {}
               clearStore();
@@ -137,9 +137,9 @@ export default function AdminLayout({
       </aside>
 
       <main className={`flex-grow overflow-auto transition-[margin-left] duration-300 flex flex-col h-screen ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        <header className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-[var(--admin-canvas)]/90 px-8 py-3.5 backdrop-blur-md shrink-0">
+        <header className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-white/86 px-6 py-3 backdrop-blur-md shrink-0 xl:px-8">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-lg font-bold tracking-tight text-slate-900">
               {navItems.find(item => pathname.startsWith(item.href))?.label || 'Quản trị hệ thống'}
             </h2>
             <div className="flex items-center gap-4">
@@ -147,14 +147,14 @@ export default function AdminLayout({
                 <p className="text-sm font-semibold text-slate-800">{user?.fullName || 'Quản trị viên'}</p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'ADMIN'}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-md shadow-blue-500/20 font-black text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 shadow-sm font-black text-white">
                 {user?.fullName?.charAt(0)?.toUpperCase() || 'A'}
               </div>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 bg-[var(--admin-canvas)] p-6 xl:p-8">
+        <div className="flex-1 bg-[var(--admin-canvas)] p-5 xl:p-6">
           {children}
         </div>
       </main>

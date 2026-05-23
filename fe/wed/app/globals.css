@@ -63,11 +63,11 @@
   --color-snow-white: #ffffff;
   --color-warm-canvas: #F3F0EA;
   --color-amber-pop: #FFA600;
-  --admin-canvas: #f1f5f9;
+  --admin-canvas: #f6fafe;
   --admin-surface: #ffffff;
   --admin-sidebar: #0f172a;
   --admin-sidebar-muted: #94a3b8;
-  --admin-border: #dbe4ef;
+  --admin-border: #dfe3e7;
   --admin-success: #10b981;
   --admin-warning: #f59e0b;
   --admin-danger: #e11d48;
@@ -392,11 +392,17 @@
 
   .admin-shell {
     --background: var(--admin-canvas);
-    --foreground: #172033;
+    --foreground: #171c1f;
     --card: var(--admin-surface);
     --border: var(--admin-border);
+    --muted: #eaeef2;
+    --muted-foreground: #45464d;
+    --accent: #e4e9ed;
+    --primary: #0f172a;
+    --ring: #334155;
     background: var(--admin-canvas);
     color: var(--foreground);
+    font-variant-numeric: tabular-nums;
   }
 
   .admin-panel {
@@ -404,6 +410,95 @@
     border: 1px solid var(--admin-border);
     border-radius: 0.5rem;
     box-shadow: rgba(15, 23, 42, 0.04) 0 8px 20px;
+  }
+
+  .admin-shell main {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(246, 250, 254, 0) 220px),
+      var(--admin-canvas);
+  }
+
+  .admin-shell table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    font-size: 13px;
+  }
+
+  .admin-shell thead {
+    background: #f0f4f8;
+  }
+
+  .admin-shell th {
+    color: #475569;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 16px;
+    text-transform: uppercase;
+  }
+
+  .admin-shell th,
+  .admin-shell td {
+    border-bottom: 1px solid var(--admin-border);
+    padding: 10px 12px;
+    vertical-align: middle;
+  }
+
+  .admin-shell tbody tr {
+    transition: background-color 150ms ease;
+  }
+
+  .admin-shell tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .admin-shell button,
+  .admin-shell a,
+  .admin-shell input,
+  .admin-shell select,
+  .admin-shell textarea {
+    border-radius: 0.375rem;
+  }
+
+  .admin-shell input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .admin-shell select,
+  .admin-shell textarea {
+    background-color: #ffffff;
+    border-color: var(--admin-border);
+    color: #171c1f;
+    min-height: 40px;
+  }
+
+  .admin-shell input:focus,
+  .admin-shell select:focus,
+  .admin-shell textarea:focus {
+    border-color: #334155;
+    box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.12);
+  }
+
+  .admin-shell .bg-action-blue {
+    background-color: #0f172a !important;
+  }
+
+  .admin-shell .text-action-blue {
+    color: #0f172a !important;
+  }
+
+  .admin-shell .border-action-blue {
+    border-color: #0f172a !important;
+  }
+
+  .admin-shell .text-midnight-indigo,
+  .admin-shell .text-slate-900,
+  .admin-shell .brand-heading {
+    color: #171c1f !important;
+  }
+
+  .admin-shell .text-slate-blue,
+  .admin-shell .text-muted-foreground {
+    color: #45464d !important;
   }
 
   .admin-kpi-number {
