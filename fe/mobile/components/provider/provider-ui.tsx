@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Colors.light.surface,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.light.border,
     boxShadow: Colors.light.cardShadow,
@@ -305,9 +305,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   metricIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -328,6 +328,7 @@ const styles = StyleSheet.create({
   statusChip: {
     borderWidth: 1,
     borderRadius: 999,
+    minHeight: 36,
   },
   statusChipText: {
     fontSize: 12,
@@ -395,8 +396,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   sectionAction: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderRadius: 999,
   },
   sectionActionText: {

@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { PaperProvider, MD3DarkTheme } from 'react-native-paper';
 import { useAuthStore } from '../features/auth/auth.store';
 import { useSocket } from '../hooks/useSocket';
 import { usePushNotifications } from '../hooks/usePushNotifications';
@@ -43,9 +43,9 @@ export default function RootLayout() {
   }, [isAuthenticated, isLoading, segments]);
 
   const theme = {
-    ...MD3LightTheme,
+    ...MD3DarkTheme,
     colors: {
-      ...MD3LightTheme.colors,
+      ...MD3DarkTheme.colors,
       primary: Colors.light.primary,
       secondary: Colors.light.secondary,
       background: Colors.light.background,
@@ -61,7 +61,7 @@ export default function RootLayout() {
 
   return (
     <PaperProvider theme={theme}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" backgroundColor={Colors.light.background} />
       <Slot />
     </PaperProvider>
   );

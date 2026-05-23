@@ -59,11 +59,11 @@ function parseAiSummary(raw: string | null | undefined): AiParsedSummary | null 
     lines.forEach(line => {
       const trimmed = line.trim();
       if (trimmed.startsWith('✅') || trimmed.startsWith('[+]') || trimmed.startsWith('- ✅')) {
-        evidencePoints.push({ type: 'positive', text: trimmed.replace(/^[-✅\[\+\]\s]+/, '') });
+        evidencePoints.push({ type: 'positive', text: trimmed.replace(/^[-✅[\]+\s]+/, '') });
       } else if (trimmed.startsWith('❌') || trimmed.startsWith('[-]') || trimmed.startsWith('- ❌')) {
-        evidencePoints.push({ type: 'negative', text: trimmed.replace(/^[-❌\[\-\]\s]+/, '') });
+        evidencePoints.push({ type: 'negative', text: trimmed.replace(/^[-❌[\]\s]+/, '') });
       } else if (trimmed.startsWith('⚠') || trimmed.startsWith('[!]') || trimmed.startsWith('- ⚠')) {
-        anomalies.push({ type: 'warning', text: trimmed.replace(/^[-⚠\[!\]\s]+/, '') });
+        anomalies.push({ type: 'warning', text: trimmed.replace(/^[-⚠[!\]\s]+/, '') });
       }
     });
 

@@ -54,9 +54,9 @@ export default function AdminLayout({
 
   return (
     <>
-    <div className="themed-shell flex h-screen bg-[#F8FAFC] text-slate-900 font-sans">
+    <div className="admin-shell themed-shell flex h-screen text-slate-900 font-sans">
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen border-r border-slate-800 bg-[#0F172A] text-slate-200 transition-[width] duration-300 flex flex-col ${
+        className={`fixed left-0 top-0 z-40 h-screen border-r border-slate-800 bg-[var(--admin-sidebar)] text-slate-200 transition-[width] duration-300 flex flex-col ${
           sidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
@@ -89,9 +89,9 @@ export default function AdminLayout({
                 href={item.href}
                 title={!sidebarOpen ? item.label : undefined}
                 aria-label={item.label}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 group active:scale-[0.98] ${
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-150 group active:scale-[0.99] ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 font-semibold'
+                    ? 'bg-slate-800 text-white font-semibold ring-1 ring-emerald-400/35'
                     : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
                 }`}
               >
@@ -137,9 +137,9 @@ export default function AdminLayout({
       </aside>
 
       <main className={`flex-grow overflow-auto transition-[margin-left] duration-300 flex flex-col h-screen ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        <header className="sticky top-0 z-30 bg-[#F8FAFC]/80 backdrop-blur-md border-b border-slate-200/80 px-8 py-4 shrink-0">
+        <header className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-[var(--admin-canvas)]/90 px-8 py-3.5 backdrop-blur-md shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-slate-900 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {navItems.find(item => pathname.startsWith(item.href))?.label || 'Quản trị hệ thống'}
             </h2>
             <div className="flex items-center gap-4">
@@ -154,7 +154,7 @@ export default function AdminLayout({
           </div>
         </header>
 
-        <div className="p-8 flex-1 bg-[#F8FAFC]">
+        <div className="flex-1 bg-[var(--admin-canvas)] p-6 xl:p-8">
           {children}
         </div>
       </main>

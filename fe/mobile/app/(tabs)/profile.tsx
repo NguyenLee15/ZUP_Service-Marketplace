@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   const menuItems = [
     { icon: 'account-edit-outline', label: 'Chỉnh sửa hồ sơ', description: 'Tên, số điện thoại và thông tin liên hệ', route: '/profile/edit' },
     { icon: 'card-account-details-outline', label: 'Xác thực tài khoản', description: 'CCCD và chân dung để mở đầy đủ tính năng', route: '/profile/kyc' },
+    { icon: 'chart-areaspline', label: 'Hiệu suất & doanh thu', description: 'Theo dõi thu nhập ròng, đánh giá và tỉ lệ chốt đơn', route: '/profile/analytics' },
     { icon: 'briefcase-outline', label: 'Dịch vụ của tôi', description: 'Quản lý giá, trạng thái và đánh giá', route: '/services' },
     { icon: 'lock-reset', label: 'Đổi mật khẩu', description: 'Cập nhật mật khẩu đăng nhập', route: '/profile/change-password' },
     { icon: 'bell-outline', label: 'Thông báo', description: 'Xem thông báo đơn hàng và hệ thống', route: '/notifications' },

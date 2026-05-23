@@ -9,7 +9,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { Button, Text, TouchableRipple, useTheme } from "react-native-paper";
+import { Button, Switch, Text, TouchableRipple, useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LineChart, PieChart } from "react-native-chart-kit";
@@ -133,6 +133,7 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [online, setOnline] = useState(false);
   const [message, setMessage] = useState<Message>(null);
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [groupBy, setGroupBy] = useState<"day" | "week" | "month">("week");
@@ -311,6 +312,33 @@ export default function DashboardScreen() {
         <ProviderInlineMessage tone={message.tone} message={message.text} />
       )}
 
+      <ProviderCard
+        style={[
+          styles.onlineCard,
+          online && { borderColor: Colors.light.success, backgroundColor: Colors.light.successBg },
+        ]}
+        contentStyle={styles.onlineContent}
+      >
+        <View style={styles.onlineText}>
+          <View style={[styles.onlineIcon, { backgroundColor: online ? `${Colors.light.success}22` : Colors.light.surfaceVariant }]}>
+            <MaterialCommunityIcons
+              name={online ? "access-point" : "access-point-off"}
+              size={24}
+              color={online ? Colors.light.success : Colors.light.textSecondary}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text variant="titleMedium" style={styles.cardTitle}>
+              {online ? "Đang nhận việc" : "Tạm ngưng nhận việc"}
+            </Text>
+            <Text variant="bodySmall" style={styles.cardDescription}>
+              Bật trạng thái online để hệ thống ưu tiên gợi ý đơn gần vị trí của bạn.
+            </Text>
+          </View>
+        </View>
+        <Switch value={online} onValueChange={setOnline} color={Colors.light.success} />
+      </ProviderCard>
+
       <ProviderCard>
         <View style={styles.filterHeader}>
           <View>
@@ -461,7 +489,7 @@ export default function DashboardScreen() {
                 width={chartWidth}
                 height={200}
                 chartConfig={{
-                  color: (opacity = 1) => `rgba(5, 5, 5, ${opacity})`,
+                  color: (opacity = 1) => `rgba(249, 250, 251, ${opacity})`,
                 }}
                 accessor="population"
                 backgroundColor="transparent"
@@ -641,6 +669,29 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.surface,
     borderWidth: 1,
     borderColor: Colors.light.border,
+  },
+  onlineCard: {
+    borderColor: Colors.light.borderStrong,
+  },
+  onlineContent: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  onlineText: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  onlineIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   kpiRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   cardTitle: { color: Colors.light.text, fontWeight: "700" },

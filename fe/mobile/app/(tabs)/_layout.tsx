@@ -4,6 +4,7 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Colors } from '../../constants/colors';
 
 export default function TabsLayout() {
   const theme = useTheme();
@@ -15,19 +16,30 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         tabBarStyle: {
-          backgroundColor: theme.colors.surface,
+          position: 'absolute',
+          left: 12,
+          right: 12,
+          bottom: 12,
+          backgroundColor: `${Colors.light.surface}F2`,
           borderTopColor: theme.colors.outlineVariant,
           borderTopWidth: 1,
-          height: 64,
+          height: 68,
           paddingBottom: 10,
           paddingTop: 6,
+          borderRadius: 22,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOpacity: 0.28,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
         },
         tabBarItemStyle: {
-          borderRadius: 12,
+          borderRadius: 16,
+          minHeight: 48,
         },
       }}
     >

@@ -223,7 +223,7 @@ export default async function Home() {
       : buildFallbackCategorySections(featuredServices, fetchedCategorySections, categories);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="aether-page min-h-screen bg-background flex flex-col">
       <HomeHeader />
 
       <main id="main-content" className="flex-1">
