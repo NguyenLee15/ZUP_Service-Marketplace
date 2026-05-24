@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Save, Loader2, Percent, BadgeDollarSign, Landmark, ServerCog, Mail, ShieldCheck } from 'lucide-react';
+import { Save, Loader2, Percent, BadgeDollarSign, Landmark } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,8 +82,19 @@ export default function SettingsPage() {
       setCurrentCommission({ rate, minAmount, maxAmount });
       setIsEditing(false);
       toast({ title: 'Đã cập nhật cấu hình hoa hồng' });
-    } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.message || err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' && err !== null
+          ? (
+              err as {
+                response?: { data?: { message?: string } };
+                message?: string;
+              }
+            ).response?.data?.message ||
+            (err as { message?: string }).message
+          : undefined;
+
+      toast({ title: 'Lỗi', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -244,37 +255,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Other Settings */}
-      <Card className="overflow-hidden rounded-lg border-[var(--admin-border)] shadow-sm">
-        <CardHeader className="border-b border-[var(--admin-border)] bg-white px-4 py-3">
-          <CardTitle className="text-sm font-semibold text-slate-950">Module vận hành</CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y divide-[var(--admin-border)] p-0">
-          {[
-            { title: 'Bảo trì hệ thống', desc: 'Tắt hệ thống tạm thời', icon: ServerCog, state: 'Chưa có endpoint', tone: 'slate' },
-            { title: 'Thông báo email', desc: 'Quản lý cài đặt email SMTP', icon: Mail, state: 'Đọc từ backend', tone: 'emerald' },
-            { title: 'Bảo mật', desc: 'Cài đặt bảo mật và quyền hạn', icon: ShieldCheck, state: 'Quản lý tại Nhân viên', tone: 'amber' },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="flex items-center justify-between gap-4 px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-100 text-slate-700">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">{item.title}</p>
-                    <p className="text-xs text-slate-500">{item.desc}</p>
-                  </div>
-                </div>
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.05em] text-slate-500">
-                  {item.state}
-                </span>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
     </div>
   );
 }
