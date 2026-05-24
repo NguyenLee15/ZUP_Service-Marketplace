@@ -15,7 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { getSafeImageSrc } from '@/lib/security/image-sources';
+import { getSafeServiceImageSrc } from '@/lib/security/image-sources';
 import { Service } from '@/types';
 
 interface UnifiedServiceCardProps {
@@ -58,7 +58,7 @@ const formatCompactCount = (value: number) => {
 const HOME_FALLBACK_IMAGES = [
   '/images/service_cleaning.png',
   '/images/service_repair.png',
-  '/placeholder.jpg',
+  '/images/hero_bg.png',
 ];
 
 export function UnifiedServiceCardSkeleton() {
@@ -101,7 +101,7 @@ export function UnifiedServiceCard({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const serviceImages = service.images?.length
-    ? service.images.map((image) => getSafeImageSrc(image.imageUrl))
+    ? service.images.map((image) => getSafeServiceImageSrc(image.imageUrl, service))
     : [];
   const images = serviceImages.length > 0 ? serviceImages : useImageCarousel ? HOME_FALLBACK_IMAGES : [];
   const imageUrl = images[activeImageIndex % Math.max(images.length, 1)];

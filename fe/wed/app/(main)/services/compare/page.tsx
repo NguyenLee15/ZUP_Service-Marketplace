@@ -6,7 +6,7 @@ import { X, CheckCircle2, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { getSafeImageSrc } from '@/lib/security/image-sources';
+import { getSafeServiceImageSrc } from '@/lib/security/image-sources';
 
 export default function ComparePage() {
   const { comparisonList, removeFromComparison, clearComparison } = useServiceStore();
@@ -74,7 +74,7 @@ export default function ComparePage() {
                       <div className="flex flex-col gap-4">
                         <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-pale-gray">
                           {service.images?.[0]?.imageUrl ? (
-                            <Image src={getSafeImageSrc(service.images[0].imageUrl)} alt={service.name} fill className="object-cover" />
+                            <Image src={getSafeServiceImageSrc(service.images[0].imageUrl, service)} alt={service.name} fill className="object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-4xl">🛠️</div>
                           )}

@@ -26,7 +26,7 @@ import { authApi } from "@/features/auth/services/auth.api";
 import { Scale, CheckCircle2, Award, Clock, BarChart3, Sparkles } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
-import { getSafeImageSrc } from "@/lib/security/image-sources";
+import { getSafeServiceImageSrc } from "@/lib/security/image-sources";
 
 export function ServiceDetailClient({ service }: { service: any }) {
   const router = useRouter();
@@ -58,7 +58,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
 
   const images = (service?.images || []).map((image: any) => ({
     ...image,
-    imageUrl: getSafeImageSrc(image.imageUrl),
+    imageUrl: getSafeServiceImageSrc(image.imageUrl, service),
   }));
   const reviews = service?.reviews || [];
   const referencePrice = Number(service.referencePrice || 0);

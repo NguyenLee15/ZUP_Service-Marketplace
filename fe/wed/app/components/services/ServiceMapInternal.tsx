@@ -7,7 +7,7 @@ import { Service } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Star } from 'lucide-react';
-import { getSafeImageSrc } from '@/lib/security/image-sources';
+import { getSafeServiceImageSrc } from '@/lib/security/image-sources';
 
 // Fix Leaflet marker icon issue
 const DefaultIcon = L.icon({
@@ -46,7 +46,7 @@ export default function ServiceMapInternal({ services }: ServiceMapInternalProps
                 <div className="w-48 p-1">
                   <div className="relative h-24 rounded-lg overflow-hidden mb-2">
                     {service.images?.[0]?.imageUrl ? (
-                      <Image src={getSafeImageSrc(service.images[0].imageUrl)} alt={service.name} fill className="object-cover" />
+                      <Image src={getSafeServiceImageSrc(service.images[0].imageUrl, service)} alt={service.name} fill className="object-cover" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">🔧</div>
                     )}

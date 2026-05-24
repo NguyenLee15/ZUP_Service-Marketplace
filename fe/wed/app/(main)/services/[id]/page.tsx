@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { ServiceDetailClient } from './ServiceDetailClient';
 import {
   DEFAULT_SERVICE_IMAGE,
+  getServiceFallbackImage,
   getSafeImageSrc,
   sanitizeServiceImages,
 } from '@/lib/security/image-sources';
@@ -92,7 +93,10 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
   // Truyền dữ liệu vào Client Component để render UI tương tác
   return (
     <ServiceDetailClient
-      service={sanitizeServiceImages(service, DEFAULT_SERVICE_IMAGE)}
+      service={sanitizeServiceImages(
+        service,
+        getServiceFallbackImage(service) || DEFAULT_SERVICE_IMAGE,
+      )}
     />
   );
 }

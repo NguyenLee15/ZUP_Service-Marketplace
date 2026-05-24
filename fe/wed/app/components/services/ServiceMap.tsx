@@ -8,7 +8,7 @@ import { Service } from '@/types';
 import { Star, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getSafeImageSrc } from '@/lib/security/image-sources';
+import { getSafeServiceImageSrc } from '@/lib/security/image-sources';
 
 // Fix Leaflet icon issue
 const DefaultIcon = L.icon({
@@ -59,7 +59,7 @@ export function ServiceMap({ services, userLocation }: ServiceMapProps) {
                 <div className="w-64 p-1">
                   <div className="relative aspect-video rounded-xl overflow-hidden mb-3">
                     {service.images?.[0]?.imageUrl ? (
-                      <Image src={getSafeImageSrc(service.images[0].imageUrl)} alt={service.name} fill className="object-cover" />
+                      <Image src={getSafeServiceImageSrc(service.images[0].imageUrl, service)} alt={service.name} fill className="object-cover" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">🔧</div>
                     )}
