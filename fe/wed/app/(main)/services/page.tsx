@@ -165,7 +165,6 @@ function ServicesSearchContent() {
         limit: 12, 
         sortBy,
         keyword: searchParams.get('keyword') || '',
-        location: searchParams.get('location') || undefined,
         categoryIds: (currentFilters?.categoryIds || categoryIds).join(',') || undefined,
         minPrice: currentFilters?.minPrice || minPrice || undefined,
         maxPrice: currentFilters?.maxPrice || maxPrice || undefined,

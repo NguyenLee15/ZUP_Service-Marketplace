@@ -61,6 +61,10 @@ export class SearchServiceDto {
   @IsOptional()
   province?: string;
 
+  @IsString()
+  @IsOptional()
+  location?: string;
+
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
