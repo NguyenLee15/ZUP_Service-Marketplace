@@ -325,13 +325,8 @@ export class BookingsService {
       });
     }
 
-    // Lấy commission rate mới nhất
-    const commissionConfig = await this.prisma.commissionConfig.findFirst({
-      orderBy: { effectiveFrom: 'desc' },
-    });
-    const commissionRate = commissionConfig
-      ? Number(commissionConfig.rate)
-      : 10;
+    // Snapshot đúng cấu hình admin hiện tại tại thời điểm gửi báo giá.
+    const commissionRate = await this.getCurrentCommissionRate();
 
     // Transaction: tạo quote + update status
     const [quotation, updatedBooking] = await this.prisma.$transaction([
@@ -813,9 +808,13 @@ export class BookingsService {
     }
 
     if (
-      ([BookingStatus.CANCELLED, BookingStatus.DONE, BookingStatus.DISPUTED] as BookingStatus[]).includes(
-        booking.status,
-      )
+      (
+        [
+          BookingStatus.CANCELLED,
+          BookingStatus.DONE,
+          BookingStatus.DISPUTED,
+        ] as BookingStatus[]
+      ).includes(booking.status)
     ) {
       throw new BadRequestException({
         code: ErrorCodes.BOOKING_INVALID_STATE,
@@ -856,6 +855,29 @@ export class BookingsService {
   }
 
   // ===== 12. DEDUCT COMMISSION =====
+
+  private async getCurrentCommissionRate() {
+    const setting = await this.prisma.systemSetting.findUnique({
+      where: { key: 'commission_rate' },
+    });
+
+    if (setting?.value) {
+      try {
+        const parsed = JSON.parse(setting.value) as { rate?: unknown };
+        const rate = Number(parsed.rate);
+        if (Number.isFinite(rate) && rate >= 0) return rate;
+      } catch {
+        this.logger.warn('Invalid commission_rate system setting JSON');
+      }
+    }
+
+    const commissionConfig = await this.prisma.commissionConfig.findFirst({
+      orderBy: { effectiveFrom: 'desc' },
+    });
+    if (commissionConfig) return Number(commissionConfig.rate);
+
+    return 8.5;
+  }
 
   private async deductCommission(bookingId: number, txClient?: any) {
     const tx = txClient || this.prisma;
@@ -1169,10 +1191,7 @@ export class BookingsService {
           body: [
             ['Chi so', 'Gia tri'],
             ['Tong don hang', stats.totalBookings],
-            [
-              'Doanh thu',
-              `${stats.totalRevenue.toLocaleString('vi-VN')} VND`,
-            ],
+            ['Doanh thu', `${stats.totalRevenue.toLocaleString('vi-VN')} VND`],
             [
               'Hoa hong da tru',
               `${stats.commissionPaid.toLocaleString('vi-VN')} VND`,
@@ -1286,7 +1305,10 @@ export class BookingsService {
     ];
 
     worksheet.addRows([
-      { metric: 'Loai bao cao', value: this.providerReportTitle(normalized.reportType) },
+      {
+        metric: 'Loai bao cao',
+        value: this.providerReportTitle(normalized.reportType),
+      },
       { metric: 'Dieu kien loc', value: stats.filterSummary },
       { metric: 'Tong don hang', value: stats.totalBookings },
       { metric: 'Doanh thu', value: stats.totalRevenue },

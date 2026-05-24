@@ -266,9 +266,10 @@ export class AdminController {
   @Patch('settings/commission')
   @Roles('ADMIN')
   async updateCommission(
+    @CurrentUser('id') adminId: number,
     @Body() body: { rate: number; minAmount: number; maxAmount: number },
   ) {
-    await this.adminService.updateCommissionSettings(body);
+    await this.adminService.updateCommissionSettings(adminId, body);
     return { message: 'Đã cập nhật cấu hình hoa hồng' };
   }
 

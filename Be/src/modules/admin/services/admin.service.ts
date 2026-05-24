@@ -386,15 +386,29 @@ export class AdminService {
     return JSON.parse(setting.value);
   }
 
-  async updateCommissionSettings(body: {
-    rate: number;
-    minAmount: number;
-    maxAmount: number;
-  }) {
-    await this.prisma.systemSetting.upsert({
-      where: { key: 'commission_rate' },
-      update: { value: JSON.stringify(body) },
-      create: { key: 'commission_rate', value: JSON.stringify(body) },
+  async updateCommissionSettings(
+    adminId: number,
+    body: {
+      rate: number;
+      minAmount: number;
+      maxAmount: number;
+    },
+  ) {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.systemSetting.upsert({
+        where: { key: 'commission_rate' },
+        update: { value: JSON.stringify(body) },
+        create: { key: 'commission_rate', value: JSON.stringify(body) },
+      });
+
+      await tx.commissionConfig.create({
+        data: {
+          rate: body.rate,
+          reason: `Cập nhật cấu hình: min=${body.minAmount}, max=${body.maxAmount}`,
+          configuredBy: adminId,
+          effectiveFrom: new Date(),
+        },
+      });
     });
   }
 }
