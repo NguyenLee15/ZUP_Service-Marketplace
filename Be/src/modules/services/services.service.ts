@@ -17,12 +17,15 @@ import {
   UpdateServiceDto,
   SearchServiceDto,
 } from './dto/services.dto';
+import { calculateHaversineDistance } from '../../shared/utils/geo';
 
 type SearchServicesResult = {
   data: any[];
   meta: {
     limit: number;
+    locationExpanded?: boolean;
     page: number;
+    radiusKm?: number;
     total: number;
     totalPages: number;
   };
@@ -498,6 +501,9 @@ export class ServicesService {
       minRating: dto.minRating ?? null,
       page,
       province: dto.province?.trim().toLowerCase() ?? '',
+      lat: dto.lat ?? null,
+      lng: dto.lng ?? null,
+      radiusKm: dto.radiusKm ?? null,
       sortBy: dto.sortBy ?? 'newest',
     });
   }
@@ -575,9 +581,57 @@ export class ServicesService {
     });
   }
 
+  private hasLocationFilter(dto: SearchServiceDto) {
+    return Number.isFinite(dto.lat) && Number.isFinite(dto.lng);
+  }
+
+  private getProviderAddressMap(providerIds: number[]) {
+    return this.prisma.userAddress
+      .findMany({
+        where: {
+          userId: { in: providerIds },
+          isDefault: true,
+        },
+        select: {
+          userId: true,
+          province: true,
+          district: true,
+          ward: true,
+          addressDetail: true,
+          latitude: true,
+          longitude: true,
+        },
+      })
+      .then((addresses) => {
+        const addressMap = new Map<number, (typeof addresses)[number]>();
+        for (const address of addresses) {
+          addressMap.set(address.userId, address);
+        }
+        return addressMap;
+      });
+  }
+
+  private compareBySearchSort(a: any, b: any, sortBy?: string) {
+    if (sortBy === 'rating') {
+      return Number(b.avgRating) - Number(a.avgRating);
+    }
+
+    if (sortBy === 'price_asc') {
+      return Number(a.referencePrice) - Number(b.referencePrice);
+    }
+
+    if (sortBy === 'price_desc') {
+      return Number(b.referencePrice) - Number(a.referencePrice);
+    }
+
+    return Number(b.id) - Number(a.id);
+  }
+
   async search(dto: SearchServiceDto): Promise<SearchServicesResult> {
     const page = Math.max(1, dto.page || 1);
     const limit = Math.min(Math.max(1, dto.limit || 20), 50);
+    const isLocationSearch = this.hasLocationFilter(dto);
+    const radiusKm = Math.min(Math.max(1, dto.radiusKm || 10), 50);
     const cacheKey = this.buildSearchCacheKey(dto, page, limit);
     const cached = this.getCachedSearchResult<SearchServicesResult>(cacheKey);
 
@@ -639,38 +693,104 @@ export class ServicesService {
     // Luôn ưu tiên Featured Listing lên đầu
     orderBy.unshift({ featuredListings: { _count: 'desc' } });
 
-    const [data, total] = await Promise.all([
-      this.prisma.service.findMany({
-        where,
-        include: {
-          category: {
-            select: { id: true, name: true, parentId: true, level: true },
-          },
-          provider: { select: { id: true, fullName: true, avatarUrl: true } },
-          images: { orderBy: { displayOrder: 'asc' }, take: 1 },
-          featuredListings: {
-            where: {
-              status: 'ACTIVE',
-              endDate: { gt: new Date() },
-            },
-            take: 1,
-          },
+    const data = await this.prisma.service.findMany({
+      where,
+      include: {
+        category: {
+          select: { id: true, name: true, parentId: true, level: true },
         },
-        orderBy,
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.service.count({ where }),
-    ]);
+        provider: { select: { id: true, fullName: true, avatarUrl: true } },
+        images: { orderBy: { displayOrder: 'asc' }, take: 1 },
+        featuredListings: {
+          where: {
+            status: 'ACTIVE',
+            endDate: { gt: new Date() },
+          },
+          take: 1,
+        },
+      },
+      orderBy,
+      ...(isLocationSearch
+        ? {}
+        : {
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+    });
 
-    const mappedData = (data as any[]).map((s) => ({
+    const totalBeforeLocationFilter = isLocationSearch
+      ? data.length
+      : await this.prisma.service.count({ where });
+
+    let mappedData = (data as any[]).map((s) => ({
       ...s,
       isFeatured: s.featuredListings?.length > 0,
     }));
 
+    let locationExpanded = false;
+    if (isLocationSearch) {
+      const providerIds = [
+        ...new Set(mappedData.map((service) => service.providerId as number)),
+      ];
+      const addressMap = await this.getProviderAddressMap(providerIds);
+
+      const withDistance = mappedData.map((service) => {
+        const address = addressMap.get(service.providerId);
+        if (!address) return service;
+
+        const distanceKm = calculateHaversineDistance(
+          dto.lat as number,
+          dto.lng as number,
+          Number(address.latitude),
+          Number(address.longitude),
+        );
+
+        return {
+          ...service,
+          latitude: Number(address.latitude),
+          longitude: Number(address.longitude),
+          distance: distanceKm,
+          distanceKm,
+          providerAddress: `${address.addressDetail}, ${address.ward}, ${address.district}, ${address.province}`,
+        };
+      });
+
+      mappedData = withDistance
+        .filter((service) => service.distanceKm !== undefined)
+        .sort((a, b) => {
+          const distanceDiff = a.distanceKm - b.distanceKm;
+          if (distanceDiff !== 0) return distanceDiff;
+          if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+          return this.compareBySearchSort(a, b, dto.sortBy);
+        });
+
+      const nearbyData = mappedData.filter(
+        (service) => service.distanceKm <= radiusKm,
+      );
+
+      if (nearbyData.length > 0) {
+        mappedData = nearbyData;
+      } else if (mappedData.length > 0) {
+        locationExpanded = true;
+      }
+    }
+
+    const total = isLocationSearch
+      ? mappedData.length
+      : totalBeforeLocationFilter;
+    const pagedData = isLocationSearch
+      ? mappedData.slice((page - 1) * limit, page * limit)
+      : mappedData;
+
     const result = {
-      data: mappedData,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      data: pagedData,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        ...(isLocationSearch ? { radiusKm, locationExpanded } : {}),
+      },
     };
 
     this.setCachedSearchResult(cacheKey, result);

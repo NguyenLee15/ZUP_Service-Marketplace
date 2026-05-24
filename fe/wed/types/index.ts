@@ -108,6 +108,8 @@ export interface Service {
   provider?: User;
   latitude?: string | number;
   longitude?: string | number;
+  distanceKm?: number;
+  providerAddress?: string;
   aiSummary?: string;
   distance?: number;
   availabilityStatus?: 'AVAILABLE_NOW' | 'AVAILABLE_TODAY' | 'BUSY';

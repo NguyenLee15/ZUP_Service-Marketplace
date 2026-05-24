@@ -28,6 +28,27 @@ const ServiceMap = dynamic(() => import('@/app/components/services/ServiceMap').
   loading: () => <div className="w-full h-[600px] surface-card rounded-[20px] flex items-center justify-center font-bold text-muted-foreground uppercase tracking-widest">Đang tải bản đồ…</div>
 });
 
+const DEFAULT_SEARCH_LOCATION = {
+  lat: 21.0285,
+  lng: 105.8522,
+  label: 'Hà Nội',
+};
+const DEFAULT_RADIUS_KM = 10;
+
+type SearchMeta = {
+  total: number;
+  page: number;
+  totalPages: number;
+  radiusKm?: number;
+  locationExpanded?: boolean;
+};
+
+type UserLocationState = {
+  lat: number;
+  lng: number;
+  source: 'fallback' | 'gps';
+};
+
 export default function ServicesSearchPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-action-blue border-t-transparent rounded-full animate-spin" /></div>}>
@@ -45,10 +66,14 @@ function ServicesSearchContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 0 });
+  const [meta, setMeta] = useState<SearchMeta>({ total: 0, page: 1, totalPages: 0 });
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
-  const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<UserLocationState>({
+    lat: DEFAULT_SEARCH_LOCATION.lat,
+    lng: DEFAULT_SEARCH_LOCATION.lng,
+    source: 'fallback',
+  });
   const [isListening, setIsListening] = useState(false);
   const observerTarget = useRef(null);
 
@@ -75,7 +100,7 @@ function ServicesSearchContent() {
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, source: 'gps' }),
         (err) => {
           // Chỉ log lỗi nếu không phải là do người dùng từ chối quyền
           if (err.code !== err.PERMISSION_DENIED) {
@@ -123,17 +148,6 @@ function ServicesSearchContent() {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   }, []);
 
-  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }, []);
-
   // Handle scroll to show/hide floating filter button
   useEffect(() => {
     const handleScroll = () => {
@@ -165,6 +179,9 @@ function ServicesSearchContent() {
         limit: 12, 
         sortBy,
         keyword: searchParams.get('keyword') || '',
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        radiusKm: DEFAULT_RADIUS_KM,
         categoryIds: (currentFilters?.categoryIds || categoryIds).join(',') || undefined,
         minPrice: currentFilters?.minPrice || minPrice || undefined,
         maxPrice: currentFilters?.maxPrice || maxPrice || undefined,
@@ -172,14 +189,9 @@ function ServicesSearchContent() {
       };
 
       const res = await servicesApi.search(params);
-      let data = res.data.data || [];
-      
-      // Tính distance thật từ GPS nếu có tọa độ
-      data = data.map((s: Service) => ({
+      const data = (res.data.data || []).map((s: Service) => ({
         ...s,
-        distance: userLocation && s.latitude && s.longitude 
-          ? calculateDistance(userLocation.lat, userLocation.lng, Number(s.latitude), Number(s.longitude))
-          : undefined,
+        distance: s.distanceKm ?? s.distance,
       }));
 
       const metaData = res.data.meta || { total: 0, page: 1, totalPages: 0 };
@@ -210,7 +222,7 @@ function ServicesSearchContent() {
       setLoading(false);
       setIsFetchingMore(false);
     }
-  }, [searchParams, sortBy, categoryIds, minPrice, maxPrice, minRating, userLocation, calculateDistance]);
+  }, [searchParams, sortBy, categoryIds, minPrice, maxPrice, minRating, userLocation]);
 
   // Ref ổn định cho handleSearch — tránh re-create observer
   const handleSearchRef = useRef(handleSearch);
@@ -239,7 +251,7 @@ function ServicesSearchContent() {
   // Trigger search khi searchParams hoặc sortBy thay đổi
   useEffect(() => {
     handleSearchRef.current(1);
-  }, [searchParams, sortBy]);
+  }, [searchParams, sortBy, userLocation.lat, userLocation.lng]);
 
   const onFilterChange = (filters: any) => {
     const newParams = new URLSearchParams(searchParams.toString());
@@ -285,6 +297,11 @@ function ServicesSearchContent() {
     (minPrice ? 1 : 0) +
     (maxPrice ? 1 : 0) +
     (minRating > 0 ? 1 : 0);
+  const locationDescription = meta.locationExpanded
+    ? `Không có dịch vụ trong ${meta.radiusKm || DEFAULT_RADIUS_KM} km, đang hiển thị dịch vụ gần nhất`
+    : userLocation.source === 'gps'
+      ? `Tìm dịch vụ trong bán kính ${meta.radiusKm || DEFAULT_RADIUS_KM} km quanh vị trí của bạn`
+      : `Tìm dịch vụ quanh ${DEFAULT_SEARCH_LOCATION.label}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -389,9 +406,7 @@ function ServicesSearchContent() {
                   )}
                 </h2>
                 <p className="text-sm sm:text-base text-muted-foreground font-medium text-pretty">
-                  {searchParams.get('location')
-                    ? `Tìm dịch vụ quanh ${searchParams.get('location')}`
-                    : 'Lọc theo danh mục, giá, đánh giá hoặc chuyển sang bản đồ để so sánh nhanh.'}
+                  {locationDescription}
                 </p>
               </div>
 
@@ -496,7 +511,7 @@ function ServicesSearchContent() {
             )}
 
             {viewMode === 'map' ? (
-              <ServiceMap services={services} userLocation={userLocation} />
+              <ServiceMap services={services} userLocation={userLocation.source === 'gps' ? userLocation : null} />
             ) : loading && !isFetchingMore ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {[...Array(6)].map((_, i) => (
