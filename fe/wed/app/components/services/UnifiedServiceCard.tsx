@@ -55,9 +55,9 @@ const formatCompactCount = (value: number) => {
 };
 
 const HOME_FALLBACK_IMAGES = [
-  'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1621905251189-08b45d6a268e?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1595841696677-6489ff3f8cd1?auto=format&fit=crop&q=80&w=800',
+  '/images/service_cleaning.png',
+  '/images/service_repair.png',
+  '/placeholder.jpg',
 ];
 
 export function UnifiedServiceCardSkeleton() {
