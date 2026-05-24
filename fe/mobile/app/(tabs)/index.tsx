@@ -9,7 +9,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { Button, Switch, Text, TouchableRipple, useTheme } from "react-native-paper";
+import { Button, Text, TouchableRipple, useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LineChart, PieChart } from "react-native-chart-kit";
@@ -133,7 +133,6 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const [online, setOnline] = useState(false);
   const [message, setMessage] = useState<Message>(null);
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [groupBy, setGroupBy] = useState<"day" | "week" | "month">("week");
@@ -313,30 +312,32 @@ export default function DashboardScreen() {
       )}
 
       <ProviderCard
-        style={[
-          styles.onlineCard,
-          online && { borderColor: Colors.light.success, backgroundColor: Colors.light.successBg },
-        ]}
+        style={styles.onlineCard}
         contentStyle={styles.onlineContent}
+        onPress={() => router.push("/services" as any)}
+        accessibilityLabel="Kiểm tra trạng thái nhận đơn"
       >
         <View style={styles.onlineText}>
-          <View style={[styles.onlineIcon, { backgroundColor: online ? `${Colors.light.success}22` : Colors.light.surfaceVariant }]}>
+          <View style={[styles.onlineIcon, { backgroundColor: `${Colors.light.success}18` }]}>
             <MaterialCommunityIcons
-              name={online ? "access-point" : "access-point-off"}
+              name="briefcase-check-outline"
               size={24}
-              color={online ? Colors.light.success : Colors.light.textSecondary}
+              color={Colors.light.success}
             />
           </View>
           <View style={{ flex: 1 }}>
             <Text variant="titleMedium" style={styles.cardTitle}>
-              {online ? "Đang nhận việc" : "Tạm ngưng nhận việc"}
+              {user?.status === "ACTIVE" ? "Sẵn sàng nhận đơn" : "Tài khoản cần kiểm tra"}
             </Text>
             <Text variant="bodySmall" style={styles.cardDescription}>
-              Bật trạng thái online để hệ thống ưu tiên gợi ý đơn gần vị trí của bạn.
+              Hệ thống nhận đơn dựa trên tài khoản, KYC, ví và các dịch vụ đang hoạt động.
             </Text>
           </View>
         </View>
-        <Switch value={online} onValueChange={setOnline} color={Colors.light.success} />
+        <ProviderStatusChip
+          label={user?.status === "ACTIVE" ? "Hoạt động" : "Kiểm tra"}
+          color={user?.status === "ACTIVE" ? Colors.light.success : Colors.light.warning}
+        />
       </ProviderCard>
 
       <ProviderCard>

@@ -24,6 +24,18 @@ import {
   ProviderScreen,
 } from '../components/provider/provider-ui';
 
+type ProviderNotification = {
+  id: number;
+  type?: string;
+  title?: string;
+  content?: string;
+  message?: string;
+  referenceId?: number | string | null;
+  bookingId?: number | string | null;
+  isRead?: boolean;
+  createdAt: string;
+};
+
 const NOTIF_ICON: Record<
   string,
   ComponentProps<typeof MaterialCommunityIcons>['name']
@@ -42,12 +54,34 @@ const NOTIF_ICON: Record<
   SYSTEM: 'bell-outline',
 };
 
+const getNotificationRoute = (notification: ProviderNotification) => {
+  const type = String(notification.type || '').toUpperCase();
+  const referenceId = Number(notification.referenceId || notification.bookingId);
+
+  if (
+    Number.isFinite(referenceId) &&
+    referenceId > 0 &&
+    ['BOOKING', 'QUOTE', 'QUOTATION', 'WORK', 'SURVEYOR', 'SLA'].some((key) =>
+      type.includes(key),
+    )
+  ) {
+    return `/booking/${referenceId}`;
+  }
+
+  if (type.includes('WALLET')) return '/(tabs)/wallet';
+  if (type.includes('KYC')) return '/profile/kyc';
+  if (type.includes('SERVICE')) return '/services';
+  if (type.includes('CHAT')) return '/(tabs)/chat';
+
+  return '';
+};
+
 export default function NotificationsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { setUnreadCount } = useNotificationStore();
 
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<ProviderNotification[]>([]);
   const [message, setMessage] = useState<{
     tone: 'success' | 'error';
     text: string;
@@ -105,7 +139,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const handlePress = async (notification: any) => {
+  const handlePress = async (notification: ProviderNotification) => {
     if (!notification.isRead) {
       try {
         await notificationApi.markRead(notification.id);
@@ -116,8 +150,8 @@ export default function NotificationsScreen() {
         );
       } catch {}
     }
-    const bookingId = notification.referenceId || notification.bookingId;
-    if (bookingId) router.push(`/booking/${bookingId}` as any);
+    const route = getNotificationRoute(notification);
+    if (route) router.push(route as any);
   };
 
   const formatTime = (date: string) => {
@@ -134,8 +168,8 @@ export default function NotificationsScreen() {
     return d.toLocaleDateString('vi-VN');
   };
 
-  const renderNotification = ({ item }: { item: any }) => {
-    const icon = NOTIF_ICON[item.type] || 'bell-outline';
+  const renderNotification = ({ item }: { item: ProviderNotification }) => {
+    const icon = NOTIF_ICON[item.type || ''] || 'bell-outline';
     const isUnread = !item.isRead;
     const body = item.content || item.message;
 
