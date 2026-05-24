@@ -18,8 +18,6 @@ import {
   LogOut,
   WalletCards,
   Search,
-  Bell,
-  CircleHelp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth.store';
@@ -112,21 +110,7 @@ export default function AdminLayout({
           })}
         </nav>
 
-        <div className="border-t border-slate-800 p-4 shrink-0 space-y-3">
-          {sidebarOpen && (
-            <div className="flex items-center gap-3 px-1 py-1">
-              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-800 border border-slate-700 font-bold text-emerald-300">
-                {user?.fullName?.charAt(0)?.toUpperCase() || 'A'}
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-white truncate">{user?.fullName || 'Quản trị viên'}</span>
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                  {user?.role === 'ADMIN' ? 'Super Admin' : 'Staff'}
-                </span>
-              </div>
-            </div>
-          )}
-
+        <div className="border-t border-slate-800 p-4 shrink-0">
           <Button
             variant="ghost"
             title="Đăng xuất"
@@ -161,26 +145,6 @@ export default function AdminLayout({
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  aria-label="Thông báo"
-                  onClick={() => router.push('/admin/disputes')}
-                  className="relative flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Trợ giúp"
-                  onClick={() => router.push('/admin/settings')}
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
-                >
-                  <CircleHelp className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="h-6 w-px bg-[var(--admin-border)]" />
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-slate-800">{user?.fullName || 'Quản trị viên'}</p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'ADMIN'}</p>
