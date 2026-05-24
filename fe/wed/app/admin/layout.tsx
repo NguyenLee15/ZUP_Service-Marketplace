@@ -165,6 +165,7 @@ export default function AdminLayout({
                 <button
                   type="button"
                   aria-label="Thông báo"
+                  onClick={() => router.push('/admin/disputes')}
                   className="relative flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
                 >
                   <Bell className="h-4 w-4" />
@@ -173,6 +174,7 @@ export default function AdminLayout({
                 <button
                   type="button"
                   aria-label="Trợ giúp"
+                  onClick={() => router.push('/admin/settings')}
                   className="flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
                 >
                   <CircleHelp className="h-4 w-4" />

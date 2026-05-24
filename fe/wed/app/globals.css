@@ -418,6 +418,39 @@
       var(--admin-canvas);
   }
 
+  .admin-shell [data-slot='card'] {
+    gap: 0;
+    overflow: hidden;
+    border-color: var(--admin-border);
+    border-radius: 0.5rem;
+    background: #ffffff;
+    padding-block: 0;
+    box-shadow: rgba(15, 23, 42, 0.04) 0 1px 2px;
+  }
+
+  .admin-shell [data-slot='card-header'] {
+    border-bottom: 1px solid var(--admin-border);
+    background: rgba(248, 250, 252, 0.72);
+    padding: 0.75rem 1rem;
+  }
+
+  .admin-shell [data-slot='card-title'] {
+    color: #171c1f;
+    font-size: 0.875rem;
+    font-weight: 650;
+    line-height: 1.25rem;
+  }
+
+  .admin-shell [data-slot='card-content'] {
+    padding: 1rem;
+  }
+
+  .admin-shell h1,
+  .admin-shell h2,
+  .admin-shell h3 {
+    letter-spacing: 0;
+  }
+
   .admin-shell table {
     border-collapse: separate;
     border-spacing: 0;

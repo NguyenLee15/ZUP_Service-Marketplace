@@ -9,7 +9,6 @@ import {
   X,
   Users,
   Wrench,
-  Filter,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -140,10 +139,9 @@ export default function UsersPage() {
               Giám sát và quản lý tài khoản khách hàng và thợ đối tác.
             </p>
         </div>
-          <Button className="h-10 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800">
-            <Users className="mr-2 h-4 w-4" />
-            Thêm người dùng mới
-          </Button>
+          <div className="rounded-md border border-[var(--admin-border)] bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500">
+            Tạo tài khoản nhân viên tại mục Nhân viên
+          </div>
       </div>
 
         <div className="flex gap-8">
@@ -198,14 +196,6 @@ export default function UsersPage() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative w-full sm:w-64">
-            <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <select className="h-10 w-full appearance-none rounded-md border border-[var(--admin-border)] bg-white pl-9 pr-8 text-sm text-slate-700 outline-none focus:border-slate-700">
-              <option>Lọc theo vai trò...</option>
-              <option>Đã xác thực</option>
-              <option>Chưa cập nhật hồ sơ</option>
-            </select>
-          </div>
           <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <Input
