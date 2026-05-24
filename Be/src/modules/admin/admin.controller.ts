@@ -107,6 +107,8 @@ export class AdminController {
   @Post('staffs')
   @Roles('ADMIN')
   async createStaff(
+    @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Body()
     body: {
       fullName: string;
@@ -115,7 +117,7 @@ export class AdminController {
       password: string;
     },
   ) {
-    const user = await this.staffService.createStaff(body);
+    const user = await this.staffService.createStaff(adminId, ip, body);
     return {
       data: {
         id: user.id,
@@ -130,10 +132,12 @@ export class AdminController {
   @Patch('staffs/:id')
   @Roles('ADMIN')
   async updateStaff(
+    @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { fullName?: string; phone?: string; status?: string },
   ) {
-    await this.staffService.updateStaff(id, body);
+    await this.staffService.updateStaff(adminId, ip, id, body);
     return { message: 'Đã cập nhật nhân viên' };
   }
 

@@ -46,12 +46,16 @@ export class StaffAdminService {
     };
   }
 
-  async createStaff(body: {
-    fullName: string;
-    email: string;
-    phone?: string;
-    password: string;
-  }) {
+  async createStaff(
+    adminId: number,
+    ip: string,
+    body: {
+      fullName: string;
+      email: string;
+      phone?: string;
+      password: string;
+    },
+  ) {
     const existing = await this.prisma.user.findUnique({
       where: { email: body.email },
     });
@@ -78,11 +82,12 @@ export class StaffAdminService {
 
       await tx.auditLog.create({
         data: {
-          actorId: 0,
+          actorId: adminId,
           action: 'CREATE_STAFF',
           targetType: 'USER',
           targetId: u.id,
           description: `Tạo tài khoản nhân viên: ${u.email}`,
+          ipAddress: ip,
         },
       });
 
@@ -91,6 +96,8 @@ export class StaffAdminService {
   }
 
   async updateStaff(
+    adminId: number,
+    ip: string,
     id: number,
     body: { fullName?: string; phone?: string; status?: string },
   ) {
@@ -111,11 +118,12 @@ export class StaffAdminService {
 
       await tx.auditLog.create({
         data: {
-          actorId: 0,
+          actorId: adminId,
           action: 'UPDATE_STAFF',
           targetType: 'USER',
           targetId: id,
           description: `Cập nhật thông tin nhân viên: ${JSON.stringify(body)}`,
+          ipAddress: ip,
         },
       });
     });
