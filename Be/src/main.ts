@@ -12,7 +12,26 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
-  app.use(helmet());
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'self'"],
+          formAction: ["'self'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'same-origin' },
+      frameguard: { action: 'sameorigin' },
+      hidePoweredBy: true,
+      noSniff: true,
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    }),
+  );
 
   app.use(compression());
 
