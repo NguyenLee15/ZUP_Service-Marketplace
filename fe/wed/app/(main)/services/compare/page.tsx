@@ -100,12 +100,18 @@ export default function ComparePage() {
                   {/* Empty slots placeholders */}
                   {Array.from({ length: Math.max(0, 3 - comparisonList.length) }).map((_, i) => (
                     <th key={`empty-${i}`} className="p-6 border-b border-r border-white/10 min-w-[300px] bg-slate-900/10">
-                      <div className="h-full min-h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-2xl text-muted-foreground">
+                      <Link
+                        href="/services"
+                        className="group h-full min-h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-2xl text-muted-foreground transition-colors hover:border-cyan-300/45 hover:bg-cyan-300/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                      >
                         <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-2xl shadow-sm mb-4 text-sky-400">
                           +
                         </div>
-                        <p className="font-medium">Thêm dịch vụ</p>
-                      </div>
+                        <p className="font-medium text-slate-200 group-hover:text-cyan-200">Thêm dịch vụ</p>
+                        <span className="mt-2 text-xs font-medium text-slate-500 group-hover:text-slate-300">
+                          Quay lại danh sách để chọn thêm
+                        </span>
+                      </Link>
                     </th>
                   ))}
                 </tr>
