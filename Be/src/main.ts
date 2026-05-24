@@ -54,9 +54,28 @@ async function bootstrap() {
     new TransformInterceptor(),
   );
 
-  // CORS — cho phép FE truy cập
+  const allowedOrigins = (
+    process.env.CORS_ORIGINS ||
+    process.env.FRONTEND_URL ||
+    'http://localhost:3000'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  // CORS — chỉ cho phép các FE origin đã cấu hình
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Not allowed by CORS'), false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

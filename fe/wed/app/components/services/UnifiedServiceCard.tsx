@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { getSafeImageSrc } from '@/lib/security/image-sources';
 import { Service } from '@/types';
 
 interface UnifiedServiceCardProps {
@@ -99,7 +100,9 @@ export function UnifiedServiceCard({
 }: UnifiedServiceCardProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const serviceImages = service.images?.length ? service.images.map((image) => image.imageUrl) : [];
+  const serviceImages = service.images?.length
+    ? service.images.map((image) => getSafeImageSrc(image.imageUrl))
+    : [];
   const images = serviceImages.length > 0 ? serviceImages : useImageCarousel ? HOME_FALLBACK_IMAGES : [];
   const imageUrl = images[activeImageIndex % Math.max(images.length, 1)];
   const detailHref = `/services/${service.id}`;

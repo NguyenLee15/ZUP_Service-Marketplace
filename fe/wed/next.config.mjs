@@ -12,28 +12,7 @@ const withPWA = withPWAInit({
   skipWaiting: true,
 });
 
-const csp = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  "frame-ancestors 'self'",
-  "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://*.vercel-insights.com",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://api.dicebear.com https://lh3.googleusercontent.com https://i.pravatar.cc https://*.tile.openstreetmap.org",
-  "font-src 'self' data:",
-  "connect-src 'self' https://service-marketplace-gold.vercel.app https://*.vercel-insights.com https://vitals.vercel-insights.com wss:",
-  "worker-src 'self' blob:",
-  "manifest-src 'self'",
-  "media-src 'self' data: blob:",
-  "upgrade-insecure-requests",
-].join('; ');
-
 const securityHeaders = [
-  {
-    key: 'Content-Security-Policy',
-    value: csp,
-  },
   {
     key: 'X-Frame-Options',
     value: 'SAMEORIGIN',
@@ -61,6 +40,18 @@ const securityHeaders = [
   {
     key: 'Cross-Origin-Resource-Policy',
     value: 'same-origin',
+  },
+];
+
+const staticAssetHeaders = [
+  ...securityHeaders,
+  {
+    key: 'Access-Control-Allow-Origin',
+    value: 'https://service-marketplace-gold.vercel.app',
+  },
+  {
+    key: 'Access-Control-Allow-Methods',
+    value: 'GET, HEAD, OPTIONS',
   },
 ];
 
@@ -96,6 +87,34 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: staticAssetHeaders,
+      },
+      {
+        source: '/_next/image',
+        headers: securityHeaders,
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          ...securityHeaders,
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
+          },
+        ],
+      },
+      {
+        source: '/workbox-:hash.js',
+        headers: [
+          ...securityHeaders,
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
+          },
+        ],
       },
       {
         source: '/api/:path*',

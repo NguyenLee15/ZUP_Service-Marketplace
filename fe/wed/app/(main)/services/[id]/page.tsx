@@ -1,5 +1,10 @@
 import { Metadata } from 'next';
 import { ServiceDetailClient } from './ServiceDetailClient';
+import {
+  DEFAULT_SERVICE_IMAGE,
+  getSafeImageSrc,
+  sanitizeServiceImages,
+} from '@/lib/security/image-sources';
 
 // Server-side fetch — gọi trực tiếp BE qua env var server-only
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
@@ -33,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `${service.name} - ${service.provider?.fullName} | HomeService`;
   const description = service.description?.substring(0, 150) + '...' || 'Khám phá ngay dịch vụ uy tín trên nền tảng HomeService.';
   const defaultImage = '/images/hero_bg.png';
-  const imageUrl = service.images?.[0]?.imageUrl || defaultImage;
+  const imageUrl = getSafeImageSrc(service.images?.[0]?.imageUrl, defaultImage);
 
   return {
     title,
@@ -85,5 +90,9 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
   }
 
   // Truyền dữ liệu vào Client Component để render UI tương tác
-  return <ServiceDetailClient service={service} />;
+  return (
+    <ServiceDetailClient
+      service={sanitizeServiceImages(service, DEFAULT_SERVICE_IMAGE)}
+    />
+  );
 }

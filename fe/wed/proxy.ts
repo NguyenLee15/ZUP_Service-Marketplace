@@ -7,9 +7,39 @@ const ALLOWED_IMAGE_HOSTS = new Set([
   'i.pravatar.cc',
 ]);
 
+function createCsp(nonce: string) {
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'self'",
+    "form-action 'self'",
+    `script-src 'self' 'nonce-${nonce}' https://accounts.google.com https://www.tiktok.com https://sp.zalo.me`,
+    `style-src 'self' 'nonce-${nonce}' https://accounts.google.com`,
+    "img-src 'self' data: blob: https://res.cloudinary.com https://api.dicebear.com https://lh3.googleusercontent.com https://i.pravatar.cc https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org",
+    "font-src 'self' data:",
+    "connect-src 'self' https://service-marketplace-gold.vercel.app https://accounts.google.com wss:",
+    "frame-src 'self' https://accounts.google.com https://www.facebook.com",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "media-src 'self' data: blob:",
+    'upgrade-insecure-requests',
+  ].join('; ');
+}
+
 export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname !== '/_next/image') {
-    return NextResponse.next();
+    const nonce = btoa(crypto.randomUUID());
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-nonce', nonce);
+
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+    response.headers.set('Content-Security-Policy', createCsp(nonce));
+    return response;
   }
 
   const imageUrl = request.nextUrl.searchParams.get('url');
@@ -33,5 +63,12 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/_next/image',
+  matcher: [
+    /*
+     * Skip API routes and static files. CSP for rendered pages is nonce-based;
+     * static assets still receive the fixed security headers from next.config.
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|manifest.json|sw.js|workbox-.*).*)',
+    '/_next/image',
+  ],
 };

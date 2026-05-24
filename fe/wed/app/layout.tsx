@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Montserrat } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
-import { ThemeProvider } from '@/components/theme-provider'
 import { ClientWidgets } from '@/components/client-widgets'
 import { DeferredTopLoader } from '@/components/navigation/DeferredTopLoader'
 
@@ -68,19 +65,15 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`${montserrat.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[1700] focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-          >
-            Bỏ qua đến nội dung chính
-          </a>
-          <DeferredTopLoader />
-          {children}
-          <ClientWidgets />
-          {process.env.NODE_ENV === 'production' && <Analytics />}
-          {process.env.NODE_ENV === 'production' && <SpeedInsights />}
-        </ThemeProvider>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[1700] focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+        >
+          Bỏ qua đến nội dung chính
+        </a>
+        <DeferredTopLoader />
+        {children}
+        <ClientWidgets />
       </body>
     </html>
   )
