@@ -212,6 +212,9 @@ temp/
 # AI Agent skills & references (chỉ dùng local)
 .agents/
 
+# Skills backup (không cần thiết cho deploy)
+skills-backup/
+
 # Tài liệu nội bộ (specs, jmeter, deploy guides)
 docs/
 
@@ -225,6 +228,12 @@ reports/
 task.md
 implementation_plan.md
 walkthrough.md
+
+# Root package-lock (root không phải npm package)
+/package-lock.json
+
+# Misc scratch files
+ct.txt
 
 # ─────────────────────────────────────────────
 # NHỮNG FILE/FOLDER QUAN TRỌNG — LUÔN COMMIT ✅
