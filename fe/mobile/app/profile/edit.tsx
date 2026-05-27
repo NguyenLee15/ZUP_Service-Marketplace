@@ -2,7 +2,7 @@
  * Profile edit form.
  */
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { Avatar, Button, IconButton, TextInput, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -35,16 +35,47 @@ export default function ProfileEditScreen() {
   }, [user]);
 
   const pickAvatar = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.75,
-    });
-    if (!result.canceled) {
-      setAvatar(result.assets[0]);
-      setMessage(null);
-    }
+    Alert.alert(
+      'Chọn ảnh đại diện',
+      'Vui lòng chọn nguồn ảnh hoặc chụp ảnh mới.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Chụp ảnh mới',
+          onPress: async () => {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert('Quyền truy cập', 'Vui lòng cho phép truy cập camera để chụp ảnh.');
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.75,
+            });
+            if (!result.canceled) {
+              setAvatar(result.assets[0]);
+              setMessage(null);
+            }
+          },
+        },
+        {
+          text: 'Chọn từ Thư viện',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.75,
+            });
+            if (!result.canceled) {
+              setAvatar(result.assets[0]);
+              setMessage(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSubmit = async () => {

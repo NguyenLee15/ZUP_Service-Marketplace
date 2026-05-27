@@ -3,7 +3,7 @@
  */
 import { useEffect, useState } from 'react';
 import type { ComponentProps, Dispatch, SetStateAction } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View, Alert } from 'react-native';
 import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -53,14 +53,43 @@ export default function KycScreen() {
   }, []);
 
   const pickImage = async (setter: ImageSetter) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.75,
-    });
-    if (!result.canceled) {
-      setter(result.assets[0]);
-      setMessage(null);
-    }
+    Alert.alert(
+      'Chọn ảnh',
+      'Vui lòng chọn nguồn ảnh hoặc chụp ảnh mới.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Chụp ảnh mới',
+          onPress: async () => {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert('Quyền truy cập', 'Vui lòng cho phép truy cập camera để chụp ảnh.');
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              quality: 0.75,
+            });
+            if (!result.canceled) {
+              setter(result.assets[0]);
+              setMessage(null);
+            }
+          },
+        },
+        {
+          text: 'Chọn từ Thư viện',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              quality: 0.75,
+            });
+            if (!result.canceled) {
+              setter(result.assets[0]);
+              setMessage(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSubmit = async () => {

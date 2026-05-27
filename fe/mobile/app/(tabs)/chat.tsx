@@ -2,9 +2,11 @@
  * Chat tab - conversation list + unread badges.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Avatar, Badge, Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
+import { routes } from '../../lib/route-utils';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { chatApi } from '../../features/chat/chat.api';
 import { Colors } from '../../constants/colors';
@@ -71,15 +73,14 @@ export default function ChatListScreen() {
         contentStyle={styles.conversationRow}
         accessibilityLabel={`Tin nhắn với ${customer?.fullName || 'khách hàng'}`}
         onPress={() =>
-          router.push({
-            pathname: '/chat-room/[id]' as any,
-            params: {
-              id: item.id,
-              customerName: customer?.fullName || 'Khách hàng',
-              serviceName: contextName,
-              contextType: item.booking ? 'booking' : 'service',
-            },
-          })
+          router.push(
+            routes.chatRoom(
+              String(item.id),
+              customer?.fullName || 'Khách hàng',
+              contextName,
+              item.booking ? 'booking' : 'service'
+            )
+          )
         }
       >
         <View style={styles.avatarContainer}>
@@ -117,7 +118,7 @@ export default function ChatListScreen() {
 
   return (
     <ProviderScreen>
-      <FlatList
+      <FlashList
         data={conversations}
         keyExtractor={item => String(item.id)}
         renderItem={renderConversation}

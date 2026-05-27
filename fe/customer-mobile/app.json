@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "Zup",
+    "slug": "homeservice-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "homeservice-customer",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.homeservice.customer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B7CFF"
+      },
+      "package": "com.homeservice.customer",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ứng dụng cần truy cập ảnh để cập nhật hồ sơ, gửi tranh chấp và đánh giá dịch vụ.",
+          "cameraPermission": "Ứng dụng cần truy cập camera để chụp ảnh minh chứng khi cần hỗ trợ đơn hàng."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0B7CFF"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Ứng dụng cần truy cập FaceID để đăng nhập nhanh chóng và bảo mật hơn."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "proguardRules": "./proguard-rules.pro"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0a178318-4e54-472e-a817-0c6545b46fde"
+      }
+    },
+    "owner": "nguyenlee"
+  }
+}

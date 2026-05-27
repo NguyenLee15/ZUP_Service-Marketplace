@@ -24,6 +24,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 import { bookingApi } from '../../features/booking/booking.api';
 import { useNotificationStore } from '../../features/notification/notification.store';
 import {
@@ -170,6 +171,7 @@ export default function BookingDetailScreen() {
             setMessage(null);
             try {
               await bookingApi.acceptBooking(Number(id));
+              await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               setMessage({
                 tone: 'success',
                 text: 'Đã nhận đơn hàng. Vui lòng cập nhật thợ khảo sát.',
@@ -312,6 +314,7 @@ export default function BookingDetailScreen() {
           setMessage(null);
           try {
             await bookingApi.startWork(Number(id));
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setMessage({
               tone: 'success',
               text: 'Đã bắt đầu thực hiện đơn hàng.',
@@ -351,6 +354,7 @@ export default function BookingDetailScreen() {
         } as any);
       });
       await bookingApi.completeWork(Number(id), formData);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setResultImages([]);
       setMessage({
         tone: 'success',
