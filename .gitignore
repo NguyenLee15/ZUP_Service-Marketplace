@@ -206,6 +206,27 @@ temp/
 .tmp/
 
 # ─────────────────────────────────────────────
+# NON-DEPLOY: Không cần thiết cho Vercel / Render
+# ─────────────────────────────────────────────
+
+# AI Agent skills & references (chỉ dùng local)
+.agents/
+
+# Tài liệu nội bộ (specs, jmeter, deploy guides)
+docs/
+
+# Scripts tiện ích (mockup gen, preflight, k6 perf)
+tools/
+
+# Performance test reports
+reports/
+
+# AI planning artifacts (tự sinh bởi IDE)
+task.md
+implementation_plan.md
+walkthrough.md
+
+# ─────────────────────────────────────────────
 # NHỮNG FILE/FOLDER QUAN TRỌNG — LUÔN COMMIT ✅
 # ─────────────────────────────────────────────
 # ✅ README.md, docker-compose.yml, vercel.json
