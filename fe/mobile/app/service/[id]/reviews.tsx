@@ -2,10 +2,11 @@
  * Service reviews list.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Avatar, IconButton, Text, useTheme } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
 import { serviceApi } from '../../../features/service/service.api';
 import { Colors } from '../../../constants/colors';
 import {
@@ -90,7 +91,7 @@ export default function ServiceReviewsScreen() {
 
   return (
     <ProviderScreen>
-      <FlatList
+      <FlashList
         data={reviews}
         keyExtractor={item => String(item.id)}
         renderItem={renderReview}

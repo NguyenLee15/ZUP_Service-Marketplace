@@ -2,11 +2,12 @@
  * Wallet Tab - Provider wallet, VNPay sandbox and manual transfer requests.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Chip, Modal, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as WebBrowser from 'expo-web-browser';
+import { FlashList } from '@shopify/flash-list';
 import { walletApi } from '../../features/wallet/wallet.api';
 import { Colors } from '../../constants/colors';
 import {
@@ -364,7 +365,7 @@ export default function WalletScreen() {
 
   return (
     <ProviderScreen>
-      <FlatList
+      <FlashList
         data={transactions}
         keyExtractor={item => String(item.id)}
         renderItem={renderTransaction}

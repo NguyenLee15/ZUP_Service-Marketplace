@@ -16,6 +16,7 @@ import { LineChart, PieChart } from "react-native-chart-kit";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useAuthStore } from "../../features/auth/auth.store";
+import { routes } from "../../lib/route-utils";
 import { dashboardApi, bookingApi } from "../../features/booking/booking.api";
 import { BOOKING_STATUS_LABEL } from "../../constants/booking-status";
 import { Colors } from "../../constants/colors";
@@ -293,7 +294,7 @@ export default function DashboardScreen() {
         subtitle={`Xin chào, ${user?.fullName || "nhà cung cấp"}`}
         action={
           <TouchableRipple
-            onPress={() => router.push("/notifications" as any)}
+            onPress={() => router.push(routes.notifications)}
             borderless
             style={styles.iconButton}
             accessibilityLabel="Mở thông báo"
@@ -314,7 +315,7 @@ export default function DashboardScreen() {
       <ProviderCard
         style={styles.onlineCard}
         contentStyle={styles.onlineContent}
-        onPress={() => router.push("/services" as any)}
+        onPress={() => router.push(routes.services)}
         accessibilityLabel="Kiểm tra trạng thái nhận đơn"
       >
         <View style={styles.onlineText}>
@@ -455,7 +456,7 @@ export default function DashboardScreen() {
               color={Colors.light.statusPending}
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/bookings" as any,
+                  pathname: routes.tabs.bookings,
                   params: { status: "PENDING" },
                 })
               }
@@ -465,7 +466,7 @@ export default function DashboardScreen() {
               color={Colors.light.statusInProgress}
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/bookings" as any,
+                  pathname: routes.tabs.bookings,
                   params: { status: "IN_PROGRESS" },
                 })
               }
@@ -475,7 +476,7 @@ export default function DashboardScreen() {
               color={Colors.light.statusDone}
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/bookings" as any,
+                  pathname: routes.tabs.bookings,
                   params: { status: "DONE" },
                 })
               }
@@ -585,7 +586,7 @@ export default function DashboardScreen() {
           <ProviderSectionHeader
             title="Đơn mới cần xử lý"
             actionLabel="Xem tất cả"
-            onAction={() => router.push("/(tabs)/bookings" as any)}
+            onAction={() => router.push(routes.tabs.bookings)}
           />
 
           {recentBookings.length === 0 ? (
@@ -595,14 +596,14 @@ export default function DashboardScreen() {
                 title="Chưa có đơn hàng mới"
                 description="Khi có yêu cầu mới, bạn sẽ thấy chúng ở đây."
                 actionLabel="Xem đơn hàng"
-                onAction={() => router.push("/(tabs)/bookings" as any)}
+                onAction={() => router.push(routes.tabs.bookings)}
               />
             </ProviderCard>
           ) : (
             recentBookings.map((booking) => (
               <ProviderCard
                 key={booking.id}
-                onPress={() => router.push(`/booking/${booking.id}` as any)}
+                onPress={() => router.push(routes.booking.detail(String(booking.id)))}
                 accessibilityLabel={`Mở đơn hàng ${booking.bookingCode}`}
               >
                 <View style={styles.bookingRow}>

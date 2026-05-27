@@ -1,13 +1,193 @@
+# ═══════════════════════════════════════════════════════════════
+#  ROOT .gitignore — HomeServe Monorepo
+#  Cấu trúc: Be/ (NestJS) | fe/wed/ (Next.js) | fe/mobile/ (Expo Provider)
+#                          | fe/customer-mobile/ (Expo Customer)
+# ═══════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────
+# Dependencies (tất cả các package)
+# ─────────────────────────────────────────────
 node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ─────────────────────────────────────────────
+# SECRETS & ENVIRONMENT (TUYỆT ĐỐI KHÔNG COMMIT)
+# ─────────────────────────────────────────────
 .env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.staging
+.env.production
+.env.production.local
+
+# ✅ GIỮ LẠI: các file mẫu (example) — team cần để biết cần set biến gì
+# .env.example       ← KHÔNG ignore
+# .env.prod.example  ← KHÔNG ignore
+# .env.free.example  ← KHÔNG ignore
+# .env.docker.example← KHÔNG ignore
+
+# Deploy env vars (chứa secrets thực tế)
+**/deploy/*-env-vars.txt
+
+# ─────────────────────────────────────────────
+# BUILD OUTPUT
+# ─────────────────────────────────────────────
 dist/
 build/
+out/
+output/
+
+# Next.js
+.next/
+.vercel/
+
+# Expo / React Native
+.expo/
+web-build/
+expo-env.d.ts
+
+# ─────────────────────────────────────────────
+# MOBILE: Signing Keys & Certificates
+# ─────────────────────────────────────────────
+*.keystore
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.certSigningRequest
+*.cer
+credentials.json
+*-credentials.json
+
+# Firebase / Google services (chứa API key)
+google-services.json
+GoogleService-Info.plist
+
+# ─────────────────────────────────────────────
+# MOBILE: Build Artifacts
+# ─────────────────────────────────────────────
+*.apk
+*.aab
+*.ipa
+*.app
+
+# Expo generated native (Managed Workflow)
+# Nếu bare workflow: xóa 2 dòng dưới
+fe/mobile/android/
+fe/mobile/ios/
+fe/customer-mobile/android/
+fe/customer-mobile/ios/
+
+# ─────────────────────────────────────────────
+# BACKEND: NestJS / Prisma
+# ─────────────────────────────────────────────
+Be/dist/
+Be/scratch/
+
+# Prisma generated client (tự sinh khi build)
+# Be/node_modules/.prisma/ đã covered bởi node_modules/ ở trên
+
+# ─────────────────────────────────────────────
+# DOCKER
+# ─────────────────────────────────────────────
+# docker-compose.override.yml  ← tùy chọn
+*.dockerenv
+
+# ─────────────────────────────────────────────
+# CACHE & METRO
+# ─────────────────────────────────────────────
+.cache/
+.metro-cache/
+.metro-health-check*
+.jest-cache/
+.eslintcache
+.stylelintcache
+
+# ─────────────────────────────────────────────
+# TEST & COVERAGE
+# ─────────────────────────────────────────────
 coverage/
+.nyc_output/
+jest_html_reporters.html
+test-results/
+playwright-report/
+*.lcov
+
+# Performance reports (chỉ giữ .gitkeep)
+reports/perf/*.json
+reports/perf/*.html
+!reports/perf/.gitkeep
+
+# ─────────────────────────────────────────────
+# TYPESCRIPT
+# ─────────────────────────────────────────────
 *.tsbuildinfo
+*.d.ts.map
+
+# ─────────────────────────────────────────────
+# PYTHON (tools/)
+# ─────────────────────────────────────────────
 __pycache__/
 *.pyc
-.expo/
-.next/
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+
+# ─────────────────────────────────────────────
+# LOGS
+# ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# ─────────────────────────────────────────────
+# OS
+# ─────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V8
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ─────────────────────────────────────────────
+# IDE / EDITOR
+# ─────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.suo
+*.user
+.project
+.classpath
+
+# ─────────────────────────────────────────────
+# KOTLIN (Android build cache)
+# ─────────────────────────────────────────────
+.kotlin/
+
+# ─────────────────────────────────────────────
+# VERCEL / DEPLOYMENT TOOLS
+# ─────────────────────────────────────────────
 .vercel/
 .v0-trash/
 .snowflake/
@@ -15,14 +195,45 @@ __v0_runtime_loader.js
 __v0_devtools.tsx
 __v0_jsx-dev-runtime.ts
 
-# Local agent skill checkout. Keep out of deploy clones to avoid broken submodule fetches.
-.agents/skills/ui-ux/taste-skill/
+# ─────────────────────────────────────────────
+# MISC
+# ─────────────────────────────────────────────
+*.orig.*
+*.pem
+*.bak
+tmp/
+temp/
+.tmp/
 
-# Environment variables
-.env*.local
-**/deploy/*-env-vars.txt
+# ─────────────────────────────────────────────
+# NON-DEPLOY: Không cần thiết cho Vercel / Render
+# ─────────────────────────────────────────────
 
-# Generated performance reports. Keep only reports/perf/.gitkeep in git.
-reports/perf/*.json
-reports/perf/*.html
-!reports/perf/.gitkeep
+# AI Agent skills & references (chỉ dùng local)
+.agents/
+
+# Tài liệu nội bộ (specs, jmeter, deploy guides)
+docs/
+
+# Scripts tiện ích (mockup gen, preflight, k6 perf)
+tools/
+
+# Performance test reports
+reports/
+
+# AI planning artifacts (tự sinh bởi IDE)
+task.md
+implementation_plan.md
+walkthrough.md
+
+# ─────────────────────────────────────────────
+# NHỮNG FILE/FOLDER QUAN TRỌNG — LUÔN COMMIT ✅
+# ─────────────────────────────────────────────
+# ✅ README.md, docker-compose.yml, vercel.json
+# ✅ Be/: package.json, nest-cli.json, tsconfig*.json, prisma/schema.prisma, Dockerfile
+# ✅ Be/: .env.example, .env.prod.example, .env.free.example, .env.docker.example
+# ✅ fe/wed/: package.json, next.config.mjs, tsconfig.json, toàn bộ app/
+# ✅ fe/mobile/: package.json, app.json, eas.json, metro.config.js, proguard-rules.pro
+# ✅ fe/mobile/: .env.example, assets/, toàn bộ source code
+# ✅ fe/customer-mobile/: tương tự fe/mobile/
+# ✅ .agents/, docs/, tools/ (source code, không phải output)

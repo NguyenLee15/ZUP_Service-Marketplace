@@ -8,6 +8,7 @@ import { Text, Button, useTheme, HelperText } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { authApi } from '../../features/auth/auth.api';
 import { useAuthStore } from '../../features/auth/auth.store';
+import { routes } from '../../lib/route-utils';
 
 const OTP_LENGTH = 6;
 const COOLDOWN_SECONDS = 60;
@@ -104,7 +105,7 @@ export default function OtpScreen() {
         // Forgot password flow — verify OTP rồi chuyển reset password
         await authApi.verifyOtp({ email: params.email, otp: code });
         router.replace({
-          pathname: '/(auth)/reset-password' as any,
+          pathname: routes.auth.resetPassword,
           params: { email: params.email, otp: code },
         });
       }

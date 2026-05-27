@@ -3,10 +3,11 @@
  * Socket.io + message history + typing indicator
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, FlatList, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Text, TextInput, IconButton, useTheme, ActivityIndicator, TouchableRipple } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
 import { Socket } from 'socket.io-client';
 import { chatApi } from '../../features/chat/chat.api';
 import { getChatSocket } from '../../lib/socket';
@@ -34,12 +35,13 @@ export default function ChatRoomScreen() {
   const [loadingReplies, setLoadingReplies] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
-  const flatListRef = useRef<FlatList>(null);
+  const flashListRef = useRef<any>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Kết nối socket + tải lịch sử
   useEffect(() => {
     let mounted = true;
+    let activeSocket: Socket | null = null;
 
     const init = async () => {
       // Tải lịch sử tin nhắn
@@ -55,6 +57,7 @@ export default function ChatRoomScreen() {
       // Kết nối socket
       const socket = await getChatSocket();
       socketRef.current = socket;
+      activeSocket = socket;
 
       socket.emit('joinConversation', { conversationId: Number(id) });
 
@@ -83,6 +86,10 @@ export default function ChatRoomScreen() {
     return () => {
       mounted = false;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (activeSocket) {
+        activeSocket.off('newMessage');
+        activeSocket.off('typing');
+      }
     };
   }, [id]);
 
@@ -177,13 +184,13 @@ export default function ChatRoomScreen() {
       {loading ? (
         <ActivityIndicator style={{ flex: 1 }} />
       ) : (
-        <FlatList
-          ref={flatListRef}
+        <FlashList
+          ref={flashListRef}
           data={messages}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderMessage}
           contentContainerStyle={styles.messageList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={() => flashListRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
             <ProviderEmptyState
               icon="chat-processing-outline"

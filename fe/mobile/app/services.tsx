@@ -2,9 +2,11 @@
  * Services List - Provider's services.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, FAB, IconButton, Switch, Text, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
+import { routes } from '../lib/route-utils';
 import { serviceApi } from '../features/service/service.api';
 import { Colors } from '../constants/colors';
 import {
@@ -137,7 +139,7 @@ export default function ServicesScreen() {
         style={styles.serviceCard}
         accessibilityLabel={`Dịch vụ ${item.name}`}
         onPress={() =>
-          router.push({ pathname: '/service/create', params: { id: item.id, serviceData: JSON.stringify(item) } } as any)
+          router.push(routes.service.create(String(item.id), JSON.stringify(item)))
         }
       >
         <View style={styles.cardHeader}>
@@ -181,7 +183,7 @@ export default function ServicesScreen() {
             mode="text"
             compact
             icon="star-outline"
-            onPress={() => router.push(`/service/${item.id}/reviews` as any)}
+            onPress={() => router.push(routes.service.reviews(String(item.id)))}
           >
             Đánh giá
           </Button>
@@ -190,7 +192,7 @@ export default function ServicesScreen() {
             compact
             icon="pencil-outline"
             onPress={() =>
-              router.push({ pathname: '/service/create', params: { id: item.id, serviceData: JSON.stringify(item) } } as any)
+              router.push(routes.service.create(String(item.id), JSON.stringify(item)))
             }
             style={styles.editButton}
           >
@@ -203,7 +205,7 @@ export default function ServicesScreen() {
 
   return (
     <ProviderScreen>
-      <FlatList
+      <FlashList
         data={filteredServices}
         keyExtractor={item => String(item.id)}
         renderItem={renderService}
@@ -238,10 +240,10 @@ export default function ServicesScreen() {
               ))}
             </View>
 
-            <ProviderSectionHeader
+             <ProviderSectionHeader
               title={`${filteredServices.length} dịch vụ`}
               actionLabel="Tạo mới"
-              onAction={() => router.push('/service/create')}
+              onAction={() => router.push(routes.service.create())}
             />
           </View>
         }
@@ -258,7 +260,7 @@ export default function ServicesScreen() {
                   : 'Đổi bộ lọc để xem các dịch vụ ở trạng thái khác.'
               }
               actionLabel={filter === 'ALL' ? 'Tạo dịch vụ' : 'Xem tất cả'}
-              onAction={() => (filter === 'ALL' ? router.push('/service/create') : setFilter('ALL'))}
+              onAction={() => (filter === 'ALL' ? router.push(routes.service.create()) : setFilter('ALL'))}
             />
           )
         }
@@ -268,7 +270,7 @@ export default function ServicesScreen() {
         icon="plus"
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         color="#fff"
-        onPress={() => router.push('/service/create')}
+        onPress={() => router.push(routes.service.create())}
         accessibilityLabel="Tạo dịch vụ mới"
       />
     </ProviderScreen>

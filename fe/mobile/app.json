@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "HomeService Provider",
+    "name": "Zup Đối Tác",
     "slug": "homeservice-provider",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -31,6 +31,12 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Cho phép sử dụng FaceID để đăng nhập nhanh vào tài khoản Thợ Zup."
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Ứng dụng cần truy cập ảnh để tải lên hình ảnh dịch vụ và biên bản khảo sát.",
@@ -42,6 +48,15 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#1E40AF"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "proguardRules": "./proguard-rules.pro"
+          }
         }
       ]
     ],

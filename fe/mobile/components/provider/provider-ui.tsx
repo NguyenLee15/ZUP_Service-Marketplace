@@ -15,13 +15,8 @@ import { Colors } from '../../constants/colors';
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 type Tone = 'info' | 'success' | 'warning' | 'error' | 'neutral';
 
-const toneColor: Record<Tone, string> = {
-  info: Colors.light.info,
-  success: Colors.light.success,
-  warning: Colors.light.warning,
-  error: Colors.light.error,
-  neutral: Colors.light.textSecondary,
-};
+// Reusable dialog export
+export { ProviderDialog } from './ProviderDialog';
 
 export function ProviderScreen({
   children,
@@ -62,14 +57,15 @@ export function ProviderPageHeader({
   subtitle?: string;
   action?: ReactNode;
 }) {
+  const theme = useTheme();
   return (
     <View style={styles.pageHeader}>
       <View style={{ flex: 1 }}>
-        <Text variant="headlineSmall" style={styles.pageTitle} selectable>
+        <Text variant="headlineSmall" style={[styles.pageTitle, { color: theme.colors.onSurface }]} selectable>
           {title}
         </Text>
         {subtitle && (
-          <Text variant="bodyMedium" style={styles.pageSubtitle} selectable>
+          <Text variant="bodyMedium" style={[styles.pageSubtitle, { color: theme.colors.onSurfaceVariant }]} selectable>
             {subtitle}
           </Text>
         )}
@@ -92,12 +88,21 @@ export function ProviderCard({
   onPress?: () => void;
   accessibilityLabel?: string;
 }) {
+  const theme = useTheme();
   return (
     <Card
       mode="contained"
       onPress={onPress}
       accessibilityLabel={accessibilityLabel}
-      style={[styles.card, style]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.outlineVariant,
+          boxShadow: theme.dark ? '0 10px 30px rgba(0, 0, 0, 0.5)' : '0 10px 30px rgba(15, 23, 42, 0.08)',
+        },
+        style,
+      ]}
     >
       <Card.Content style={[styles.cardContent, contentStyle]}>{children}</Card.Content>
     </Card>
@@ -117,20 +122,30 @@ export function ProviderMetricCard({
   tone?: Tone;
   loading?: boolean;
 }) {
-  const color = toneColor[tone];
+  const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+
+  const color = {
+    info: activeColors.info,
+    success: activeColors.success,
+    warning: activeColors.warning,
+    error: activeColors.error,
+    neutral: activeColors.textSecondary,
+  }[tone];
+
   return (
     <ProviderCard style={styles.metricCard} contentStyle={styles.metricContent}>
       <View style={[styles.metricIcon, { backgroundColor: `${color}16` }]}>
         <MaterialCommunityIcons name={icon} size={22} color={color} />
       </View>
       {loading ? (
-        <View style={styles.metricSkeleton} />
+        <View style={[styles.metricSkeleton, { backgroundColor: theme.colors.surfaceVariant }]} />
       ) : (
-        <Text variant="titleMedium" style={styles.metricValue} numberOfLines={1} selectable>
+        <Text variant="titleMedium" style={[styles.metricValue, { color: theme.colors.onSurface }]} numberOfLines={1} selectable>
           {value}
         </Text>
       )}
-      <Text variant="labelSmall" style={styles.metricLabel} numberOfLines={1}>
+      <Text variant="labelSmall" style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
         {label}
       </Text>
     </ProviderCard>
@@ -139,7 +154,7 @@ export function ProviderMetricCard({
 
 export function ProviderStatusChip({
   label,
-  color = Colors.light.primary,
+  color,
   selected,
   onPress,
 }: {
@@ -148,6 +163,9 @@ export function ProviderStatusChip({
   selected?: boolean;
   onPress?: () => void;
 }) {
+  const theme = useTheme();
+  const chipColor = color || theme.colors.primary;
+
   return (
     <Chip
       compact
@@ -156,9 +174,9 @@ export function ProviderStatusChip({
       onPress={onPress}
       style={[
         styles.statusChip,
-        { backgroundColor: selected ? color : `${color}16`, borderColor: `${color}40` },
+        { backgroundColor: selected ? chipColor : `${chipColor}16`, borderColor: `${chipColor}40` },
       ]}
-      textStyle={[styles.statusChipText, { color: selected ? '#FFFFFF' : color }]}
+      textStyle={[styles.statusChipText, { color: selected ? '#FFFFFF' : chipColor }]}
     >
       {label}
     </Chip>
@@ -174,7 +192,17 @@ export function ProviderInlineMessage({
   tone?: Tone;
   icon?: IconName;
 }) {
-  const color = toneColor[tone];
+  const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+
+  const color = {
+    info: activeColors.info,
+    success: activeColors.success,
+    warning: activeColors.warning,
+    error: activeColors.error,
+    neutral: activeColors.textSecondary,
+  }[tone];
+
   return (
     <View style={[styles.message, { backgroundColor: `${color}12`, borderColor: `${color}33` }]}>
       <MaterialCommunityIcons name={icon || 'information-outline'} size={18} color={color} />
@@ -198,16 +226,18 @@ export function ProviderEmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const theme = useTheme();
+
   return (
     <View style={styles.emptyState}>
-      <View style={styles.emptyIcon}>
-        <MaterialCommunityIcons name={icon} size={34} color={Colors.light.textSecondary} />
+      <View style={[styles.emptyIcon, { backgroundColor: theme.colors.surfaceVariant }]}>
+        <MaterialCommunityIcons name={icon} size={34} color={theme.colors.onSurfaceVariant} />
       </View>
-      <Text variant="titleMedium" style={styles.emptyTitle}>
+      <Text variant="titleMedium" style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
         {title}
       </Text>
       {description && (
-        <Text variant="bodySmall" style={styles.emptyDescription}>
+        <Text variant="bodySmall" style={[styles.emptyDescription, { color: theme.colors.onSurfaceVariant }]}>
           {description}
         </Text>
       )}
@@ -221,10 +251,12 @@ export function ProviderEmptyState({
 }
 
 export function ProviderLoadingState({ label = 'Đang tải…' }: { label?: string }) {
+  const theme = useTheme();
+
   return (
     <View style={styles.loadingState}>
-      <ActivityIndicator color={Colors.light.primary} />
-      <Text variant="bodySmall" style={styles.loadingText}>
+      <ActivityIndicator color={theme.colors.primary} />
+      <Text variant="bodySmall" style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>
         {label}
       </Text>
     </View>
@@ -240,9 +272,11 @@ export function ProviderSectionHeader({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const theme = useTheme();
+
   return (
     <View style={styles.sectionHeader}>
-      <Text variant="titleMedium" style={styles.sectionTitle}>
+      <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
         {title}
       </Text>
       {actionLabel && onAction && (
@@ -252,7 +286,7 @@ export function ProviderSectionHeader({
           accessibilityLabel={actionLabel}
           style={({ pressed }) => [styles.sectionAction, pressed && { opacity: 0.72 }]}
         >
-          <Text variant="labelMedium" style={styles.sectionActionText}>
+          <Text variant="labelMedium" style={[styles.sectionActionText, { color: theme.colors.primary }]}>
             {actionLabel}
           </Text>
         </Pressable>
@@ -279,19 +313,14 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   pageTitle: {
-    color: Colors.light.text,
     fontWeight: '700',
   },
   pageSubtitle: {
-    color: Colors.light.textSecondary,
     marginTop: 2,
   },
   card: {
-    backgroundColor: Colors.light.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.light.border,
-    boxShadow: Colors.light.cardShadow,
   },
   cardContent: {
     padding: 16,
@@ -312,18 +341,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   metricValue: {
-    color: Colors.light.text,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
-  metricLabel: {
-    color: Colors.light.textSecondary,
-  },
+  metricLabel: {},
   metricSkeleton: {
     width: 82,
     height: 22,
     borderRadius: 6,
-    backgroundColor: Colors.light.surfaceVariant,
   },
   statusChip: {
     borderWidth: 1,
@@ -358,16 +383,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.surfaceVariant,
     marginBottom: 12,
   },
   emptyTitle: {
-    color: Colors.light.text,
     fontWeight: '700',
     textAlign: 'center',
   },
   emptyDescription: {
-    color: Colors.light.textSecondary,
     textAlign: 'center',
     marginTop: 4,
     lineHeight: 18,
@@ -382,9 +404,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 40,
   },
-  loadingText: {
-    color: Colors.light.textSecondary,
-  },
+  loadingText: {},
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -392,7 +412,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionTitle: {
-    color: Colors.light.text,
     fontWeight: '700',
   },
   sectionAction: {
@@ -403,7 +422,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   sectionActionText: {
-    color: Colors.light.primary,
     fontWeight: '700',
   },
 });

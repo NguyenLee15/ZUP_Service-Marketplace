@@ -1,0 +1,221 @@
+import { useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Button, Chip, Text } from 'react-native-paper';
+import {
+  CustomerCard,
+  CustomerHeader,
+  EmptyState,
+  InlineMessage,
+  BookingCard,
+} from '../../components/customer/customer-ui';
+import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../constants/booking-status';
+import { Colors } from '../../constants/colors';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { formatCurrency, formatDateTime } from '../../lib/format';
+import { stableKey, toRouteId, routes } from '../../lib/route-utils';
+import { useBookingsList, BookingListItem } from '../../features/booking/hooks/useBookingsList';
+
+const FILTERS = [
+  'ALL',
+  'PENDING',
+  'ACCEPTED',
+  'QUOTED',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'DONE',
+  'CANCELLED',
+  'DISPUTED',
+];
+
+function getFilterLabel(status: string) {
+  return status === 'ALL' ? 'Tất cả' : BOOKING_STATUS_LABEL[status] || status;
+}
+
+function getEmptyState(status: string) {
+  if (status === 'ALL') {
+    return {
+      title: 'Chưa có đơn hàng',
+      description: 'Đơn mới sẽ xuất hiện sau khi bạn đặt dịch vụ.',
+      actionLabel: 'Tìm dịch vụ',
+    };
+  }
+  return {
+    title: 'Không có đơn ở trạng thái này',
+    description: 'Bạn có thể xem tất cả đơn hàng hoặc chọn trạng thái khác.',
+    actionLabel: 'Xem tất cả',
+  };
+}
+
+export default function BookingsScreen() {
+  const router = useRouter();
+  const isOnline = useNetworkStatus();
+  const {
+    status,
+    setStatus,
+    bookings,
+    isInitialLoading,
+    isRefetching,
+    isError,
+    refresh,
+    openSearch,
+  } = useBookingsList();
+
+  const empty = getEmptyState(status);
+  const data = isInitialLoading
+    ? [{ id: 's1' }, { id: 's2' }, { id: 's3' }, { id: 's4' }]
+    : bookings;
+
+  return (
+    <FlashList
+      data={data}
+      keyExtractor={(item: any, index) => stableKey(item.id, `booking-${index}`)}
+      contentContainerStyle={styles.content}
+      contentInsetAdjustmentBehavior="automatic"
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      refreshing={isRefetching}
+      onRefresh={refresh}
+      ListHeaderComponent={
+        <View style={styles.headerContent}>
+          <CustomerHeader
+            title="Đơn hàng"
+            subtitle="Theo dõi lịch hẹn, báo giá và tiến độ dịch vụ"
+            action={
+              <Button mode="contained" compact icon="plus" onPress={openSearch} style={styles.headerButton}>
+                Đặt dịch vụ
+              </Button>
+            }
+          />
+          {isOnline === false ? (
+            <InlineMessage tone="warning" message="Đang ngoại tuyến. Dữ liệu gần nhất vẫn được giữ lại nếu có." />
+          ) : null}
+          <StatusFilters status={status} onChange={setStatus} />
+          {isError ? (
+            <View style={styles.errorBlock}>
+              <InlineMessage tone="error" message="Không thể tải danh sách đơn hàng." />
+              <Button mode="outlined" icon="refresh" onPress={refresh} style={styles.retryButton}>
+                Thử lại
+              </Button>
+            </View>
+          ) : null}
+        </View>
+      }
+      ListEmptyComponent={
+        !isInitialLoading ? (
+          <EmptyState
+            icon="clipboard-text-outline"
+            title={empty.title}
+            description={empty.description}
+            actionLabel={empty.actionLabel}
+            onAction={status === 'ALL' ? openSearch : () => setStatus('ALL')}
+          />
+        ) : null
+      }
+      renderItem={({ item }: any) => {
+        const bookingId = toRouteId(item.id);
+        return isInitialLoading ? (
+          <BookingSkeleton />
+        ) : (
+          <BookingCard
+            booking={item}
+            onPress={() => {
+              if (!bookingId) return;
+              Haptics.selectionAsync().catch(() => {});
+              router.push(routes.booking.detail(bookingId));
+            }}
+          />
+        );
+      }}
+    />
+  );
+}
+
+function StatusFilters({
+  status,
+  onChange,
+}: {
+  status: string;
+  onChange: (status: string) => void;
+}) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+      {FILTERS.map((item) => {
+        const selected = status === item;
+        const color = item === 'ALL' ? Colors.light.primary : BOOKING_STATUS_COLOR[item] || Colors.light.primary;
+        return (
+          <Chip
+            key={item}
+            selected={selected}
+            mode={selected ? 'flat' : 'outlined'}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+              onChange(item);
+            }}
+            accessibilityLabel={`Lọc đơn hàng ${getFilterLabel(item)}`}
+            style={[
+              styles.filterChip,
+              selected
+                ? { backgroundColor: color, borderColor: color }
+                : { backgroundColor: '#FFFFFF', borderColor: Colors.light.border },
+            ]}
+            textStyle={{
+              color: selected ? '#FFFFFF' : Colors.light.textSecondary,
+              fontWeight: selected ? '800' : '700',
+              fontSize: 13,
+            }}
+          >
+            {getFilterLabel(item)}
+          </Chip>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+function BookingSkeleton() {
+  return (
+    <CustomerCard>
+      <View style={styles.cardContent}>
+        <View style={[styles.skeleton, { width: '30%', height: 12 }]} />
+        <View style={[styles.skeleton, { width: '82%', height: 20 }]} />
+        <View style={[styles.skeleton, { width: '64%', height: 14 }]} />
+        <View style={[styles.skeleton, { width: '90%', height: 14 }]} />
+      </View>
+    </CustomerCard>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { padding: 16, paddingBottom: 112 },
+  headerContent: { gap: 14, marginBottom: 12 },
+  headerButton: { borderRadius: 999 },
+  separator: { height: 12 },
+  filterRow: { gap: 8, paddingRight: 16, paddingBottom: 4 },
+  filterChip: { borderRadius: 16, height: 34, justifyContent: 'center' },
+  errorBlock: { gap: 8 },
+  retryButton: { alignSelf: 'flex-start', borderRadius: 12 },
+  cardContent: { gap: 10 },
+  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  codeText: { color: Colors.light.primary, fontWeight: '900' },
+  serviceTitle: { color: Colors.light.text, fontWeight: '900' },
+  subtitle: { color: Colors.light.textSecondary, lineHeight: 19 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaText: { color: Colors.light.textSecondary, flex: 1, lineHeight: 19 },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  nextAction: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 999,
+    backgroundColor: Colors.light.surfaceVariant,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  nextActionText: { flex: 1, fontWeight: '900' },
+  priceText: { color: Colors.light.primary, fontWeight: '900' },
+  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+});

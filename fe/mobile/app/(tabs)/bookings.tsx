@@ -10,6 +10,8 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
+import { routes } from '../../lib/route-utils';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { bookingApi } from '../../features/booking/booking.api';
 import { useNotificationStore } from '../../features/notification/notification.store';
@@ -143,7 +145,7 @@ export default function BookingsScreen() {
     return (
       <ProviderCard
         style={styles.bookingCard}
-        onPress={() => router.push(`/booking/${item.id}` as any)}
+        onPress={() => router.push(routes.booking.detail(String(item.id)))}
         accessibilityLabel={`Mở đơn hàng ${item.bookingCode}`}
       >
         <View style={styles.cardHeader}>
@@ -200,7 +202,7 @@ export default function BookingsScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <FlatList
+      <FlashList
         data={filteredBookings}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderBooking}
@@ -213,7 +215,6 @@ export default function BookingsScreen() {
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.3}
-        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerContent}>

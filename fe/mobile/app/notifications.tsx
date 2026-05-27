@@ -3,7 +3,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import type { ComponentProps } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
   Button,
@@ -12,10 +12,12 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { notificationApi } from '../features/notification/notification.api';
 import { useNotificationStore } from '../features/notification/notification.store';
 import { Colors } from '../constants/colors';
+import { routes } from '../lib/route-utils';
 import {
   ProviderCard,
   ProviderEmptyState,
@@ -65,15 +67,15 @@ const getNotificationRoute = (notification: ProviderNotification) => {
       type.includes(key),
     )
   ) {
-    return `/booking/${referenceId}`;
+    return routes.booking.detail(String(referenceId));
   }
 
-  if (type.includes('WALLET')) return '/(tabs)/wallet';
-  if (type.includes('KYC')) return '/profile/kyc';
-  if (type.includes('SERVICE')) return '/services';
-  if (type.includes('CHAT')) return '/(tabs)/chat';
+  if (type.includes('WALLET')) return routes.tabs.wallet;
+  if (type.includes('KYC')) return routes.profile.kyc;
+  if (type.includes('SERVICE')) return routes.services;
+  if (type.includes('CHAT')) return routes.tabs.chat;
 
-  return '';
+  return null;
 };
 
 export default function NotificationsScreen() {
@@ -151,7 +153,9 @@ export default function NotificationsScreen() {
       } catch {}
     }
     const route = getNotificationRoute(notification);
-    if (route) router.push(route as any);
+    if (route) {
+      router.push(route);
+    }
   };
 
   const formatTime = (date: string) => {
@@ -224,7 +228,7 @@ export default function NotificationsScreen() {
 
   return (
     <ProviderScreen>
-      <FlatList
+      <FlashList
         data={notifications}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderNotification}
