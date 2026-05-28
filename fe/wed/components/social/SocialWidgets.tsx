@@ -32,13 +32,13 @@ export function SocialFloatingWidget() {
       icon: <MessageCircle className="size-5" />,
     },
     facebookUrl && {
-      label: "Facebook HomeService",
+      label: "Facebook Zup",
       href: facebookUrl,
       className: "bg-[#1877f2] text-white hover:bg-[#145dbd]",
       icon: <Facebook className="size-5" />,
     },
     tiktokUrl && {
-      label: "TikTok HomeService",
+      label: "TikTok Zup",
       href: tiktokUrl,
       className: "bg-neutral-950 text-white hover:bg-neutral-800",
       icon: <Play className="size-5" />,
@@ -137,14 +137,14 @@ export function SocialFeedSection() {
           Kết nối cộng đồng
         </p>
         <h3 className="text-lg font-semibold text-midnight-indigo">
-          Theo dõi HomeService trên các kênh chính thức
+          Theo dõi Zup trên các kênh chính thức
         </h3>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {facebookUrl && (
           <div className="overflow-hidden rounded-xl bg-white p-3 shadow-[var(--brand-shadow-sm)]">
             <iframe
-              title="Facebook HomeService"
+              title="Facebook Zup"
               src={`https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(facebookUrl)}&tabs=timeline&width=500&height=260&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true`}
               width="100%"
               height="260"
@@ -169,7 +169,7 @@ export function SocialFeedSection() {
                   rel="noopener noreferrer"
                   href={tiktokVideoUrl}
                 >
-                  Xem video TikTok của HomeService
+                  Xem video TikTok của Zup
                 </a>
               </section>
             </blockquote>
@@ -205,7 +205,7 @@ export function SocialFeedSection() {
           <div
             className="zalo-chat-widget"
             data-oaid={config.zalo.oaId}
-            data-welcome-message="HomeService sẵn sàng hỗ trợ bạn."
+            data-welcome-message="Zup sẵn sàng hỗ trợ bạn."
             data-autopopup="0"
             data-width="320"
             data-height="420"

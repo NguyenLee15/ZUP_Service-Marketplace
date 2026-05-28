@@ -145,8 +145,8 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
     if (navigator.share) {
       navigator
         .share({
-          title: `Hồ sơ Đối tác ${provider.fullName} | HomeService`,
-          text: `Xem các dịch vụ chất lượng cao được cung cấp bởi ${provider.fullName} trên HomeService.`,
+          title: `Hồ sơ Đối tác ${provider.fullName} | Zup`,
+          text: `Xem các dịch vụ chất lượng cao được cung cấp bởi ${provider.fullName} trên Zup.`,
           url: window.location.href,
         })
         .catch(console.error);

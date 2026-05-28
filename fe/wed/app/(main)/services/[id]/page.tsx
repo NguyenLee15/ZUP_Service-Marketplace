@@ -31,13 +31,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!service) {
     return {
-      title: 'Không tìm thấy dịch vụ | HomeService',
+      title: 'Không tìm thấy dịch vụ | Zup',
       description: 'Dịch vụ này không tồn tại hoặc đã bị xóa khỏi hệ thống.',
     };
   }
 
-  const title = `${service.name} - ${service.provider?.fullName} | HomeService`;
-  const description = service.description?.substring(0, 150) + '...' || 'Khám phá ngay dịch vụ uy tín trên nền tảng HomeService.';
+  const title = `${service.name} - ${service.provider?.fullName} | Zup`;
+  const description = service.description?.substring(0, 150) + '...' || 'Khám phá ngay dịch vụ uy tín trên nền tảng Zup.';
   const defaultImage = '/images/hero_bg.png';
   const imageUrl = getSafeImageSrc(service.images?.[0]?.imageUrl, defaultImage);
 
@@ -47,8 +47,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title,
       description,
-      url: `https://homeservice.vn/services/${id}`,
-      siteName: 'HomeService',
+      url: `https://zup.vn/services/${id}`,
+      siteName: 'Zup',
       images: [
         {
           url: imageUrl,

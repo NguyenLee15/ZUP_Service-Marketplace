@@ -89,7 +89,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
             <div>
               <p className="text-sm font-semibold text-foreground mb-1">Quá trình Khiếu Nại</p>
               <p className="text-xs text-muted-foreground">
-                Sau khi bạn gửi khiếu nại, đội hỗ trợ HomeServe sẽ xem xét trong vòng 3-5 ngày làm việc. Vui lòng chuẩn bị bằng chứng rõ ràng.
+                Sau khi bạn gửi khiếu nại, đội hỗ trợ Zup sẽ xem xét trong vòng 3-5 ngày làm việc. Vui lòng chuẩn bị bằng chứng rõ ràng.
               </p>
             </div>
           </div>

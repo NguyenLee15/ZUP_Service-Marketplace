@@ -16,11 +16,11 @@ export function CustomerFooter() {
               prefetch={false}
               className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue group active:scale-95 transition-transform duration-200"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform duration-300">
-                <span className="text-sm font-bold">HS</span>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform duration-300 font-extrabold">
+                <span className="text-sm font-bold">Z</span>
               </div>
               <span className="font-sans text-xl font-bold tracking-tight text-white">
-                Home<span className="text-sky-400">Serve</span>
+                Z<span className="text-sky-400">up</span>
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mt-4">
@@ -146,10 +146,10 @@ export function CustomerFooter() {
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-action-blue shrink-0" />
                 <a
-                  href="mailto:support@homeserve.vn"
+                  href="mailto:support@zup.vn"
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
-                  support@homeserve.vn
+                  support@zup.vn
                 </a>
               </li>
             </ul>
@@ -160,7 +160,7 @@ export function CustomerFooter() {
 
         <div className="pt-6 sm:pt-8 border-t border-platinum-tint flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-            © {new Date().getFullYear()} HomeServe Marketplace. Mọi quyền được
+            © {new Date().getFullYear()} Zup Marketplace. Mọi quyền được
             bảo lưu.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">

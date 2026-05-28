@@ -28,7 +28,7 @@ const trustItems = [
 ];
 
 export function AuthShell({
-  eyebrow = 'HomeServe',
+  eyebrow = 'Zup',
   title,
   description,
   children,
@@ -51,12 +51,12 @@ export function AuthShell({
           <Link
             href="/"
             className="relative z-10 inline-flex w-fit items-center gap-3 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
-            aria-label="Về trang chủ HomeServe"
+            aria-label="Về trang chủ Zup"
           >
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white shadow-lg shadow-sky-500/20">
-              <Wrench className="w-5 h-5 text-white" />
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white shadow-lg shadow-sky-500/20 font-extrabold text-xl">
+              Z
             </div>
-            <span className="text-xl font-bold tracking-tight">Home<span className="text-sky-400">Serve</span></span>
+            <span className="text-xl font-bold tracking-tight">Z<span className="text-sky-400">up</span></span>
           </Link>
 
           <div className="relative z-10 max-w-xl space-y-7 rounded-2xl border border-white/10 bg-slate-950/45 p-8 shadow-[0_8px_32px_rgba(2,132,199,0.22)] backdrop-blur-xl">
@@ -102,12 +102,12 @@ export function AuthShell({
             <Link
               href="/"
               className="inline-flex items-center gap-2.5 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
-              aria-label="Về trang chủ HomeServe"
+              aria-label="Về trang chủ Zup"
             >
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white">
-                <Wrench className="w-5 h-5 text-white" />
+              <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white font-extrabold">
+                Z
               </div>
-              <span className="font-bold text-lg">Home<span className="text-sky-400">Serve</span></span>
+              <span className="font-bold text-lg">Z<span className="text-sky-400">up</span></span>
             </Link>
           </div>
 

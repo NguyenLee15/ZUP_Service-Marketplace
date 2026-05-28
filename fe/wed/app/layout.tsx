@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
-  title: 'HomeService - Tìm Dịch Vụ Tại Nhà Nhanh Chóng',
+  title: 'Zup - Tìm Dịch Vụ Tại Nhà Nhanh Chóng',
   description: 'Nền tảng kết nối thợ gia đình, vệ sinh, sửa chữa, điện nước uy tín và nhanh chóng nhất. Giải pháp công nghệ thông minh cho mọi nhà.',
   manifest: '/manifest.json',
   icons: {
@@ -26,16 +26,16 @@ export const metadata: Metadata = {
     apple: '/icon.svg',
   },
   openGraph: {
-    title: 'HomeService - Nền Tảng Dịch Vụ Tại Nhà Hàng Đầu',
+    title: 'Zup - Nền Tảng Dịch Vụ Tại Nhà Hàng Đầu',
     description: 'Khám phá hàng ngàn dịch vụ gia đình chất lượng, uy tín với sự hỗ trợ của AI.',
-    url: 'https://homeservice.vn',
-    siteName: 'HomeService',
+    url: 'https://zup.vn',
+    siteName: 'Zup',
     images: [
       {
         url: '/images/hero_bg.png',
         width: 1200,
         height: 630,
-        alt: 'HomeService Hero Banner',
+        alt: 'Zup Hero Banner',
       },
     ],
     locale: 'vi_VN',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'HomeService - Tìm Dịch Vụ Nhanh Chóng',
+    title: 'Zup - Tìm Dịch Vụ Nhanh Chóng',
     description: 'Giải quyết mọi sự cố gia đình chỉ với 3 thao tác đơn giản.',
     images: ['/images/hero_bg.png'],
   },

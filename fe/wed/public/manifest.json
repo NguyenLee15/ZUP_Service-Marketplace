@@ -1,6 +1,6 @@
 {
-  "name": "HomeService Marketplace",
-  "short_name": "HomeService",
+  "name": "Zup Marketplace",
+  "short_name": "Zup",
   "description": "Nền tảng đặt thợ dịch vụ tại gia uy tín hàng đầu",
   "start_url": "/",
   "display": "standalone",

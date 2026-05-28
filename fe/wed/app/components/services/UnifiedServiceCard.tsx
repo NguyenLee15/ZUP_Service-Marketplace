@@ -281,7 +281,7 @@ export function UnifiedServiceCard({
           </Link>
           {showDescription && (
             <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground text-pretty break-words [overflow-wrap:anywhere]">
-              {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của HomeServe.'}
+              {service.description || 'Dịch vụ uy tín được cung cấp bởi đối tác chuyên nghiệp của Zup.'}
             </p>
           )}
           <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] sm:text-[11px] leading-tight">
@@ -296,10 +296,10 @@ export function UnifiedServiceCard({
               </Link>
             ) : (
               <p
-                title={service.provider?.fullName || 'Đối tác HomeServe'}
+                title={service.provider?.fullName || 'Đối tác Zup'}
                 className="min-w-0 flex-1 truncate font-medium text-foreground/75"
               >
-                {service.provider?.fullName || 'Đối tác HomeServe'}
+                {service.provider?.fullName || 'Đối tác Zup'}
               </p>
             )}
             {showTrustBadges && (

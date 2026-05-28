@@ -30,7 +30,7 @@ export function Testimonials() {
       <div className="text-center mb-10 md:mb-12">
         <h2 className="text-2xl md:text-[38px] font-bold brand-heading mb-4 leading-tight text-balance">Khách hàng nói gì?</h2>
         <p className="text-slate-blue max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-          Sự hài lòng của khách hàng là minh chứng rõ ràng nhất cho chất lượng dịch vụ trên nền tảng HomeService.
+          Sự hài lòng của khách hàng là minh chứng rõ ràng nhất cho chất lượng dịch vụ trên nền tảng Zup.
         </p>
       </div>
       <div className="grid md:grid-cols-3 gap-6">

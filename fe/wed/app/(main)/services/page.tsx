@@ -310,7 +310,7 @@ function ServicesSearchContent() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4 flex-1">
               <div className="hidden xl:block min-w-[180px]">
-                <p className="text-xs font-bold text-muted-foreground">HomeService</p>
+                <p className="text-xs font-bold text-muted-foreground">Zup</p>
                 <h1 className="text-lg font-bold tracking-tight text-midnight-indigo">Tìm dịch vụ tại nhà</h1>
               </div>
               <div className="relative min-w-0 flex-1 max-w-2xl group">

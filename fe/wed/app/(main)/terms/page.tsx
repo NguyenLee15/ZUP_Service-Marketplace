@@ -1,19 +1,19 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Điều khoản sử dụng - HomeService',
-  description: 'Điều khoản dành cho khách hàng và nhà cung cấp khi sử dụng nền tảng HomeService.',
+  title: 'Điều khoản sử dụng - Zup',
+  description: 'Điều khoản dành cho khách hàng và nhà cung cấp khi sử dụng nền tảng Zup.',
 };
 
 export default function TermsPage() {
   return (
     <section className="mx-auto max-w-3xl rounded-[20px] bg-white p-5 shadow-[var(--brand-shadow-sm)] sm:p-8">
-      <p className="text-sm font-semibold text-action-blue">HomeService</p>
+      <p className="text-sm font-semibold text-action-blue">Zup</p>
       <h1 className="mt-2 text-3xl font-bold leading-tight text-midnight-indigo text-balance">
         Điều khoản sử dụng
       </h1>
       <p className="mt-4 text-muted-foreground leading-relaxed">
-        Khi sử dụng HomeService, người dùng đồng ý cung cấp thông tin chính xác, đặt lịch thiện chí và tuân thủ quy trình xác nhận dịch vụ trên nền tảng.
+        Khi sử dụng Zup, người dùng đồng ý cung cấp thông tin chính xác, đặt lịch thiện chí và tuân thủ quy trình xác nhận dịch vụ trên nền tảng.
       </p>
 
       <div className="mt-8 space-y-6 text-sm leading-relaxed text-slate-blue">
