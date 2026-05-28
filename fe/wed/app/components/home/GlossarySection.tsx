@@ -9,31 +9,31 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// Highly readable definitions. All sentences are kept under 20 words.
+// Highly readable definitions with transitions. All sentences are under 20 words.
 const definitions = [
   {
     term: "Dịch vụ tại nhà (Home Services)",
-    definition: "Là mô hình cung cấp các tiện ích gia đình trực tiếp. Dịch vụ sửa chữa điện tử, dọn dẹp vệ sinh được phục vụ tận nơi. Quy trình diễn ra nhanh chóng tại nhà của khách hàng."
+    definition: "Là mô hình cung cấp các tiện ích gia đình trực tiếp. Do đó, các dịch vụ sửa chữa hay vệ sinh đều được phục vụ tận nơi tiện lợi."
   },
   {
     term: "Thợ xác thực (Verified Providers)",
-    definition: "Tất cả đối tác đều được kiểm duyệt chặt chẽ. Hồ sơ cá nhân (KYC) được xác minh minh bạch. Zup kiểm tra lý lịch tư pháp và đánh giá tay nghề thực tế."
+    definition: "Tất cả đối tác đều được kiểm duyệt chặt chẽ. Ngoài ra, hồ sơ cá nhân (KYC) được xác minh minh bạch nhằm bảo đảm an toàn."
   },
   {
     term: "Đặt lịch thông minh (Smart Booking)",
-    definition: "Quy trình kết nối thợ trực tuyến theo thời gian thực. Hệ thống tự động tìm thợ gần bạn nhất. Giá cả được niêm yết rõ ràng kèm theo đánh giá thực tế."
+    definition: "Quy trình kết nối thợ trực tuyến theo thời gian thực. Hơn nữa, hệ thống tự động tìm thợ gần bạn nhất để tối ưu thời gian."
   }
 ];
 
-// Highly readable direct answers. All sentences are kept under 20 words.
+// Highly readable direct answers with transitions. All sentences are under 20 words.
 const directAnswers = [
   {
     q: "Làm thế nào để đảm bảo giá thợ sửa chữa là minh bạch, không chặt chém?",
-    a: "Zup yêu cầu thợ niêm yết công khai bảng giá tham khảo. Thợ sửa chữa phải gửi phiếu báo giá chi tiết qua hệ thống. Bạn cần xác nhận phiếu báo giá này trước khi thợ làm việc."
+    a: "Zup yêu cầu thợ niêm yết công khai bảng giá tham khảo. Hơn nữa, thợ phải gửi phiếu báo giá chi tiết qua hệ thống. Do đó, bạn hoàn toàn chủ động xác nhận chi phí trước khi thực hiện."
   },
   {
     q: "Quy trình khiếu nại và hoàn tiền hoạt động như thế nào khi chất lượng không đạt?",
-    a: "Zup sẽ tạm giữ số tiền thanh toán giao dịch trong 24 giờ. Đội ngũ kỹ thuật viên của Zup sẽ lập tức xác minh lỗi. Chúng tôi cam kết sửa lại miễn phí hoặc hoàn tiền 100%."
+    a: "Zup sẽ tạm giữ tiền thanh toán giao dịch trong 24 giờ. Ngoài ra, đội ngũ chuyên gia của Zup sẽ lập tức xác minh lỗi. Vì vậy, bạn được cam kết sửa lại miễn phí hoặc hoàn tiền 100%."
   }
 ];
 
@@ -54,7 +54,7 @@ export function GlossarySection() {
               Chất lượng & Tiêu chuẩn vận hành Zup
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
-              Các tài liệu hướng dẫn và thuật ngữ được biên soạn bởi ban kiểm định chất lượng Zup. Quy trình kiểm tra định kỳ nghiêm ngặt nhằm bảo vệ tối đa lợi ích khách hàng.
+              Các tài liệu hướng dẫn và thuật ngữ được biên soạn bởi ban kiểm định chất lượng Zup. Hơn nữa, quy trình kiểm tra định kỳ nghiêm ngặt nhằm bảo vệ tối đa lợi ích khách hàng. Do đó, mọi thông tin đều chính xác tuyệt đối.
             </p>
           </div>
         </div>

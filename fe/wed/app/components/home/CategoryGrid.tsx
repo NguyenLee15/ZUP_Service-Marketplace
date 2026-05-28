@@ -30,7 +30,7 @@ export function CategoryGrid() {
             </p>
           </div>
           <Link href="/services" prefetch={false} className="text-glacier-blue font-bold text-sm inline-flex items-center justify-center gap-2 group px-3.5 py-2 bg-pale-gray rounded-lg hover:bg-action-blue hover:text-white transition-[background-color,color,box-shadow] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue md:shrink-0">
-            Xem tất cả
+            Khám phá tất cả dịch vụ
             <span className="group-hover:translate-x-1 transition-transform">→</span>
           </Link>
         </div>

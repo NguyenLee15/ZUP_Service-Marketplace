@@ -8,6 +8,7 @@ import { HeroSection } from '@/app/components/home/HeroSection';
 import { HowItWorks } from '@/app/components/home/HowItWorks';
 import { CategoryGridSkeleton, ServicesListSkeleton } from '@/app/components/home/HomeSkeleton';
 import { GlossarySection } from '@/app/components/home/GlossarySection';
+import { Testimonials } from '@/app/components/home/Testimonials';
 import { CustomerFooter } from '@/components/layout/CustomerFooter';
 
 import { HomeHeader } from '@/components/layout/HomeHeader';
@@ -261,16 +262,18 @@ export default async function Home() {
             <DeferredRecentlyViewedServices />
           </Suspense>
 
-          {categorySections.map((section) => (
+           {categorySections.map((section) => (
             <FeaturedServices
               key={section.category.id}
               services={section.services}
               title={section.category.name}
               description={section.description}
               href={`/services?categoryIds=${section.category.id}`}
-              actionLabel="Xem thêm"
+              actionLabel={`Xem thêm dịch vụ ${section.category.name}`}
             />
           ))}
+
+          <Testimonials />
 
           <HowItWorks />
 
@@ -281,13 +284,13 @@ export default async function Home() {
                 Zup - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Chào mừng bạn đến với <strong>Zup</strong>, nền tảng công nghệ tiên phong giúp kết nối nhanh chóng giữa khách hàng và các <strong>nhà cung cấp dịch vụ tại nhà</strong> chuyên nghiệp. Chúng tôi tự hào mang đến giải pháp toàn diện hỗ trợ đắc lực cho các hộ gia đình bận rộn trong việc tìm kiếm nhân sự kỹ thuật có tay nghề cao cho mọi nhu cầu phát sinh thường nhật. Từ vệ sinh nhà cửa định kỳ, bảo trì hệ thống điện nước phức tạp, sửa chữa điện lạnh đến chăm sóc cá nhân tinh tế, Zup luôn cam kết mang lại sự an tâm tuyệt đối.
+                Chào mừng bạn đến với <strong>Zup</strong>. Đây là nền tảng công nghệ tiên phong giúp kết nối nhanh chóng giữa khách hàng và các <strong>nhà cung cấp dịch vụ tại nhà</strong> chuyên nghiệp. <strong>Do đó</strong>, chúng tôi tự hào mang đến giải pháp toàn diện hỗ trợ đắc lực cho các hộ gia đình bận rộn. <strong>Ngoài ra</strong>, từ vệ sinh nhà cửa định kỳ đến sửa chữa điện nước phức tạp, Zup luôn cam kết mang lại sự an tâm tuyệt đối cho quý khách.
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Với tiêu chuẩn kiểm duyệt đầu vào cực kỳ khắt khe, mọi đối tác thợ của Zup đều bắt buộc phải hoàn thành quy trình định danh <strong>xác thực thông tin cá nhân (KYC)</strong> và kiểm tra lý lịch pháp lý rõ ràng. Zup thiết lập cơ chế báo giá minh bạch ngay trên ứng dụng nhằm ngăn chặn hoàn toàn tình trạng phát sinh chi phí mập mờ. Đặc biệt, với chính sách tạm giữ thanh toán giao dịch trong 24 giờ và hệ thống giải quyết tranh chấp công bằng, quyền lợi kinh tế của người tiêu dùng luôn được đặt lên hàng đầu.
+                Với tiêu chuẩn kiểm duyệt đầu vào cực kỳ khắt khe, mọi đối tác thợ của Zup đều bắt buộc phải hoàn thành quy trình định danh <strong>xác thực thông tin cá nhân (KYC)</strong>. <strong>Hơn nữa</strong>, Zup thiết lập cơ chế báo giá minh bạch ngay trên ứng dụng. Việc này giúp ngăn chặn hoàn toàn tình trạng phát sinh chi phí mập mờ. <strong>Vì vậy</strong>, quyền lợi kinh tế của người tiêu dùng luôn được bảo vệ tốt nhất.
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Hơn thế nữa, Zup không ngừng đầu tư ứng dụng trí tuệ nhân tạo (AI) giúp tối ưu hóa thuật toán đề xuất nhà cung cấp phù hợp theo khoảng cách địa lý và lịch sử đánh giá thực tế của người dùng. Hãy trải nghiệm sự tiện nghi khác biệt cùng Zup chỉ với vài thao tác đặt lịch đơn giản trên thiết bị của bạn ngay hôm nay để tận hưởng không gian sống trong lành, an toàn và tràn đầy năng lượng tích cực!
+                <strong>Tuy nhiên</strong>, không chỉ dừng lại ở đó, Zup còn đầu tư mạnh mẽ vào ứng dụng trí tuệ nhân tạo (AI). Công cụ này giúp tối ưu hóa thuật toán đề xuất nhà cung cấp phù hợp theo khoảng cách địa lý. <strong>Do đó</strong>, hãy trải nghiệm sự tiện nghi khác biệt cùng Zup ngay hôm nay để tận hưởng không gian sống an toàn!
               </p>
             </div>
           </section>

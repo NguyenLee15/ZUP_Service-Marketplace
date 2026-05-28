@@ -32,7 +32,7 @@ export function FeaturedServices({
   title = 'Dịch vụ tuyển chọn',
   description = 'Những dịch vụ được đánh giá cao nhất từ cộng đồng người dùng',
   href = '/services',
-  actionLabel = 'Khám phá tất cả',
+  actionLabel = 'Xem tất cả dịch vụ nổi bật',
   isSponsored,
 }: FeaturedServicesProps) {
   const { favorites, toggleFavoriteService } = useServiceStore();
