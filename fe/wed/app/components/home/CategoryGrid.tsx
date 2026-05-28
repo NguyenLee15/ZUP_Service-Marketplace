@@ -21,7 +21,7 @@ export function CategoryGrid() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
           <div className="max-w-3xl">
-            <h2 className="text-xl md:text-2xl font-bold brand-heading mb-1.5 leading-tight text-balance">
+            <h2 id="danh-muc-dich-vu" className="text-xl md:text-2xl font-bold brand-heading mb-1.5 leading-tight text-balance">
               Bạn cần trợ giúp gì <br />
               <span className="text-action-blue">ngay hôm nay?</span>
             </h2>

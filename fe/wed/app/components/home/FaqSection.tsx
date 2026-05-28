@@ -20,7 +20,7 @@ export function FaqSection() {
     <section className="pb-10 md:pb-14">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8 md:mb-10">
-          <h2 className="text-2xl md:text-[38px] font-bold brand-heading flex items-center justify-center gap-3 text-balance">
+          <h2 id="cau-hoi-thuong-gap" className="text-2xl md:text-[38px] font-bold brand-heading flex items-center justify-center gap-3 text-balance">
             <HelpCircle className="w-8 h-8 md:w-10 md:h-10 text-action-blue" /> Câu hỏi thường gặp
           </h2>
           <p className="text-slate-blue mt-3 text-base md:text-lg">Giải đáp nhanh những thắc mắc của bạn về dịch vụ</p>

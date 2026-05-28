@@ -7,6 +7,7 @@ import { CustomerFooter } from '@/components/layout/CustomerFooter';
 import { BackButton } from '@/components/navigation/BackButton';
 import { SocketProvider } from '@/components/socket-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -25,6 +26,9 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
         {/* Main Content */}
         <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="mb-4">
+            <Breadcrumbs />
+          </div>
           {showBackButton && (
             <BackButton fallbackHref={fallbackHref} className="mb-4" />
           )}

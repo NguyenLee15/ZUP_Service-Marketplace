@@ -45,11 +45,24 @@ export function HeroSection() {
             ngay tại ngôi nhà bạn
           </span>
         </h1>
-        <p className="text-base sm:text-lg md:text-xl text-white/95 mb-8 sm:mb-10 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
-          Nền tảng kết nối dịch vụ tiện ích số 1 Việt Nam. Nhanh chóng, an toàn và minh bạch.
+        <p className="text-base sm:text-lg md:text-xl text-white/95 mb-6 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
+          Nền tảng kết nối <strong>dịch vụ tiện ích</strong> số 1 Việt Nam. <strong>Nhanh chóng, an toàn</strong> và minh bạch.
         </p>
 
+        <div className="flex flex-wrap justify-center gap-4 mb-8 animate-fade-in duration-500">
+          <a
+            href="/services"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+          >
+            <span>Đặt lịch dịch vụ ngay</span>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+
         <HeroSearchForm />
+
       </div>
     </section>
   );

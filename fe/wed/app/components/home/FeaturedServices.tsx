@@ -15,6 +15,18 @@ interface FeaturedServicesProps {
   isSponsored?: boolean;
 }
 
+function slugify(text: string) {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 export function FeaturedServices({
   services,
   title = 'Dịch vụ tuyển chọn',
@@ -32,7 +44,7 @@ export function FeaturedServices({
       {!isSponsored && (
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-5">
           <div>
-            <h2 className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance">{title}</h2>
+            <h2 id={slugify(title)} className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance">{title}</h2>
             <p className="text-muted-foreground text-base md:text-lg max-w-2xl">{description}</p>
           </div>
           <Link href={href} prefetch={false} className="text-glacier-blue hover:text-glacier-blue font-bold inline-flex items-center justify-center gap-2 bg-pale-gray px-5 py-3 rounded-xl hover:bg-platinum-tint/60 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">

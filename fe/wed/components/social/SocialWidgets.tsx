@@ -18,11 +18,11 @@ function getTikTokVideoId(url?: string) {
 
 export function SocialFloatingWidget() {
   const { config, loading } = usePublicSocialConfig();
-  if (loading || !config?.enabled) return null;
+  if (loading) return null;
 
-  const zaloUrl = buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl);
-  const facebookUrl = config.facebook?.pageUrl || "";
-  const tiktokUrl = config.tiktok?.profileUrl || config.tiktok?.videoUrl || "";
+  const zaloUrl = config?.enabled ? buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl) : "https://zalo.me/0901234567";
+  const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://facebook.com/Nguyenlee150804";
+  const tiktokUrl = config?.enabled ? (config.tiktok?.profileUrl || config.tiktok?.videoUrl || "") : "";
 
   const items = [
     zaloUrl && {
@@ -43,7 +43,7 @@ export function SocialFloatingWidget() {
       className: "bg-neutral-950 text-white hover:bg-neutral-800",
       icon: <Play className="size-5" />,
     },
-    config.zalo?.phone && {
+    config?.enabled && config.zalo?.phone && {
       label: "Gọi hỗ trợ",
       href: `tel:${config.zalo.phone}`,
       className: "bg-emerald-600 text-white hover:bg-emerald-700",
@@ -76,25 +76,29 @@ export function SocialFloatingWidget() {
   );
 }
 
+
 export function FooterSocialLinks() {
   const { config, loading } = usePublicSocialConfig();
-  if (loading || !config?.enabled) return null;
+  if (loading) return null;
 
-  const zaloUrl = buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl);
+  const zaloUrl = config?.enabled ? buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl) : "https://zalo.me/0901234567";
+  const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://facebook.com/Nguyenlee150804";
+  const tiktokUrl = config?.enabled ? (config.tiktok?.profileUrl || config.tiktok?.videoUrl || "") : "";
+
   const links = [
     zaloUrl && {
       label: "Zalo",
       href: zaloUrl,
       icon: <Send className="size-5" />,
     },
-    config.facebook?.pageUrl && {
+    facebookUrl && {
       label: "Facebook",
-      href: config.facebook.pageUrl,
+      href: facebookUrl,
       icon: <Facebook className="size-5" />,
     },
-    (config.tiktok?.profileUrl || config.tiktok?.videoUrl) && {
+    tiktokUrl && {
       label: "TikTok",
-      href: config.tiktok.profileUrl || config.tiktok.videoUrl || "",
+      href: tiktokUrl,
       icon: <Play className="size-5" />,
     },
   ].filter(Boolean) as Array<{ label: string; href: string; icon: ReactNode }>;
@@ -119,14 +123,15 @@ export function FooterSocialLinks() {
   );
 }
 
+
 export function SocialFeedSection() {
   const { config, loading } = usePublicSocialConfig();
-  if (loading || !config?.enabled) return null;
+  if (loading) return null;
 
-  const facebookUrl = config.facebook?.pageUrl || "";
-  const tiktokVideoUrl = config.tiktok?.videoUrl || "";
+  const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://www.facebook.com/Nguyenlee150804";
+  const tiktokVideoUrl = config?.enabled ? (config.tiktok?.videoUrl || "") : "";
   const tiktokVideoId = getTikTokVideoId(tiktokVideoUrl);
-  const zaloUrl = buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl);
+  const zaloUrl = config?.enabled ? buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl) : "https://zalo.me/0901234567";
 
   if (!facebookUrl && !tiktokVideoUrl && !zaloUrl) return null;
 
@@ -200,7 +205,7 @@ export function SocialFeedSection() {
           )
         )}
       </div>
-      {config.zalo?.oaId && (
+      {config?.enabled && config.zalo?.oaId && (
         <>
           <div
             className="zalo-chat-widget"
@@ -218,4 +223,5 @@ export function SocialFeedSection() {
       )}
     </section>
   );
+
 }
