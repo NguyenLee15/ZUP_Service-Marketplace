@@ -284,13 +284,13 @@ export default async function Home() {
                 Zup - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Chào mừng bạn đến với <strong>Zup</strong>. Đây là nền tảng công nghệ tiên phong giúp kết nối nhanh chóng giữa khách hàng và các <strong>nhà cung cấp dịch vụ tại nhà</strong> chuyên nghiệp. <strong>Do đó</strong>, chúng tôi tự hào mang đến giải pháp toàn diện hỗ trợ đắc lực cho các hộ gia đình bận rộn. <strong>Ngoài ra</strong>, từ vệ sinh nhà cửa định kỳ đến sửa chữa điện nước phức tạp, Zup luôn cam kết mang lại sự an tâm tuyệt đối cho quý khách.
+                Chào mừng bạn đến với <strong>Zup</strong>. Đây là nền tảng công nghệ tiên phong kết nối khách hàng và thợ chuyên nghiệp. <strong>Do đó</strong>, chúng tôi tự hào mang đến giải pháp toàn diện cho gia đình bận rộn. <strong>Ngoài ra</strong>, các dịch vụ từ vệ sinh đến sửa chữa đều được cam kết chất lượng hàng đầu.
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Với tiêu chuẩn kiểm duyệt đầu vào cực kỳ khắt khe, mọi đối tác thợ của Zup đều bắt buộc phải hoàn thành quy trình định danh <strong>xác thực thông tin cá nhân (KYC)</strong>. <strong>Hơn nữa</strong>, Zup thiết lập cơ chế báo giá minh bạch ngay trên ứng dụng. Việc này giúp ngăn chặn hoàn toàn tình trạng phát sinh chi phí mập mờ. <strong>Vì vậy</strong>, quyền lợi kinh tế của người tiêu dùng luôn được bảo vệ tốt nhất.
+                <strong>Zup</strong> áp dụng tiêu chuẩn kiểm duyệt đầu vào cực kỳ khắt khe. <strong>Hơn nữa</strong>, mọi đối tác thợ đều phải hoàn thành xác thực thông tin (KYC). <strong>Ngoài ra</strong>, cơ chế báo giá minh bạch giúp ngăn chặn phát sinh chi phí mập mờ. <strong>Vì vậy</strong>, quyền lợi của bạn luôn được bảo vệ tốt nhất.
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                <strong>Tuy nhiên</strong>, không chỉ dừng lại ở đó, Zup còn đầu tư mạnh mẽ vào ứng dụng trí tuệ nhân tạo (AI). Công cụ này giúp tối ưu hóa thuật toán đề xuất nhà cung cấp phù hợp theo khoảng cách địa lý. <strong>Do đó</strong>, hãy trải nghiệm sự tiện nghi khác biệt cùng Zup ngay hôm nay để tận hưởng không gian sống an toàn!
+                <strong>Tuy nhiên</strong>, Zup không chỉ dừng lại ở đó. Chúng tôi còn đầu tư mạnh mẽ vào ứng dụng trí tuệ nhân tạo (AI). Công nghệ này giúp đề xuất thợ phù hợp theo khoảng cách địa lý. <strong>Do đó</strong>, hãy trải nghiệm sự tiện nghi cùng Zup ngay hôm nay!
               </p>
             </div>
           </section>
