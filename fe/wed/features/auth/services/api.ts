@@ -162,7 +162,7 @@ export const adminApi = {
   }) => api.post("/admin/staffs", data),
   updateStaff: (
     id: number,
-    data: { fullName?: string; phone?: string; status?: string },
+    data: { fullName?: string; phone?: string; status?: string; permissions?: string[] },
   ) => api.patch(`/admin/staffs/${id}`, data),
   deleteStaff: (id: number) => api.delete(`/admin/staffs/${id}`),
 

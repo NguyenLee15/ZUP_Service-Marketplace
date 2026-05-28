@@ -35,6 +35,7 @@ export class StaffAdminService {
           emailVerified: true,
           avatarUrl: true,
           createdAt: true,
+          permissions: true,
         },
         orderBy: { id: 'desc' },
         skip: (page - 1) * limit,
@@ -57,6 +58,7 @@ export class StaffAdminService {
       email: string;
       phone?: string;
       password: string;
+      permissions?: string[];
     },
   ) {
     const existing = await this.prisma.user.findUnique({
@@ -80,6 +82,7 @@ export class StaffAdminService {
           role: UserRole.STAFF,
           status: UserStatus.ACTIVE,
           emailVerified: true,
+          permissions: body.permissions || [],
         },
       });
 
@@ -102,11 +105,12 @@ export class StaffAdminService {
     adminId: number,
     ip: string,
     id: number,
-    body: { fullName?: string; phone?: string; status?: string },
+    body: { fullName?: string; phone?: string; status?: string; permissions?: string[] },
   ) {
     const data: Prisma.UserUpdateInput = {};
     if (body.fullName) data.fullName = body.fullName;
     if (body.phone) data.phone = body.phone;
+    if (body.permissions) data.permissions = body.permissions;
     if (this.isUserStatus(body.status)) data.status = body.status;
 
     await this.prisma.$transaction(async (tx) => {

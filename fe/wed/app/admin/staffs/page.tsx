@@ -220,11 +220,11 @@ export default function StaffsPage() {
       const enabledPermissions = Object.entries(permState)
         .filter(([, v]) => v)
         .map(([k]) => k);
-      // NOTE: This is a UI-only feature for now. 
-      // Backend API for staff permissions can be wired here when available.
-      // await adminApi.updateStaffPermissions(permStaff.id, { permissions: enabledPermissions });
-      toast({ title: '✅ Đã lưu phân quyền (UI only)', description: `${enabledPermissions.length} quyền được cấp cho ${permStaff.fullName}` });
+      
+      await adminApi.updateStaff(permStaff.id, { permissions: enabledPermissions });
+      toast({ title: '✅ Đã cập nhật phân quyền thành công!' });
       setPermModalOpen(false);
+      fetchStaffs(keyword);
     } catch (err: any) {
       toast({ title: 'Lỗi', description: err.response?.data?.message || err.message, variant: 'destructive' });
     } finally {

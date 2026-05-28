@@ -17,7 +17,9 @@ import {
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AdminResolveDisputeDto } from './dto/admin.dto';
 import { AdminService } from './services/admin.service';
@@ -29,7 +31,7 @@ import {
 } from '../settings/settings.service';
 
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles('ADMIN', 'STAFF')
 export class AdminController {
   constructor(
@@ -115,6 +117,7 @@ export class AdminController {
       email: string;
       phone?: string;
       password: string;
+      permissions?: string[];
     },
   ) {
     const user = await this.staffService.createStaff(adminId, ip, body);
@@ -135,7 +138,7 @@ export class AdminController {
     @CurrentUser('id') adminId: number,
     @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { fullName?: string; phone?: string; status?: string },
+    @Body() body: { fullName?: string; phone?: string; status?: string; permissions?: string[] },
   ) {
     await this.staffService.updateStaff(adminId, ip, id, body);
     return { message: 'Đã cập nhật nhân viên' };
@@ -155,6 +158,7 @@ export class AdminController {
   // ===== KYC =====
 
   @Get('kyc')
+  @Permissions('kyc_view')
   async getKycRequests(
     @Query('status') status?: string,
     @Query('page') page?: string,
@@ -168,11 +172,13 @@ export class AdminController {
   }
 
   @Get('kyc/:id')
+  @Permissions('kyc_view')
   async getKycRequestById(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.getKycRequestById(id);
   }
 
   @Patch('kyc/:id/approve')
+  @Permissions('kyc_approve')
   async approveKyc(
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -182,6 +188,7 @@ export class AdminController {
   }
 
   @Patch('kyc/:id/reject')
+  @Permissions('kyc_reject')
   async rejectKyc(
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -226,6 +233,7 @@ export class AdminController {
   // ===== DISPUTES =====
 
   @Get('disputes')
+  @Permissions('dispute_view')
   async getDisputes(
     @Query('status') status?: string,
     @Query('page') page?: string,
@@ -239,13 +247,14 @@ export class AdminController {
   }
 
   @Get('disputes/:id')
+  @Permissions('dispute_view')
   async getDisputeDetail(@Param('id', ParseIntPipe) id: number) {
     const data = await this.adminService.getDisputeDetail(id);
     return { data };
   }
 
   @Patch('disputes/:id/resolve')
-  @Roles('ADMIN')
+  @Permissions('dispute_resolve')
   async resolveDispute(
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -258,13 +267,14 @@ export class AdminController {
   // ===== SETTINGS =====
 
   @Get('settings/commission')
+  @Permissions('finance_commission')
   async getCommission() {
     const data = await this.adminService.getCommissionSettings();
     return { data };
   }
 
   @Patch('settings/commission')
-  @Roles('ADMIN')
+  @Permissions('finance_commission')
   async updateCommission(
     @CurrentUser('id') adminId: number,
     @Body() body: { rate: number; minAmount: number; maxAmount: number },
@@ -274,13 +284,14 @@ export class AdminController {
   }
 
   @Get('settings/social')
+  @Permissions('finance_commission')
   async getSocialSettings() {
     const data = await this.settingsService.getPublicSocialConfig();
     return { data };
   }
 
   @Patch('settings/social')
-  @Roles('ADMIN')
+  @Permissions('finance_commission')
   async updateSocialSettings(@Body() body: Partial<PublicSocialConfig>) {
     const data = await this.settingsService.updatePublicSocialConfig(body);
     return { data, message: 'Đã cập nhật cấu hình mạng xã hội' };
@@ -289,18 +300,21 @@ export class AdminController {
   // ===== DASHBOARD =====
 
   @Get('dashboard/stats')
+  @Permissions('finance_revenue')
   async getDashboardStats(@Query() filters: Record<string, string>) {
     const data = await this.dashboardService.getDashboardStats(filters);
     return { data };
   }
 
   @Get('dashboard/chart-data')
+  @Permissions('finance_revenue')
   async getDashboardChartData(@Query() filters: Record<string, string>) {
     const data = await this.dashboardService.getDashboardChartData(filters);
     return { data };
   }
 
   @Get('dashboard/export-pdf')
+  @Permissions('finance_revenue')
   async exportDashboardPdf(
     @Query() filters: Record<string, string>,
     @Res() res: Response,
@@ -309,6 +323,7 @@ export class AdminController {
   }
 
   @Get('dashboard/export-excel')
+  @Permissions('finance_revenue')
   @HttpCode(HttpStatus.OK)
   async exportDashboardExcel(
     @Query() filters: Record<string, string>,

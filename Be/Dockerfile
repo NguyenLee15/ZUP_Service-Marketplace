@@ -29,4 +29,4 @@ ENV PORT=3001
 
 EXPOSE 3001
 
-ENTRYPOINT ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+ENTRYPOINT ["sh", "-c", "npx prisma db push && node dist/src/main"]
