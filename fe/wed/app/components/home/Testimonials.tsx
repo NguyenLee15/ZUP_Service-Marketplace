@@ -41,7 +41,7 @@ export function Testimonials() {
             <div className="flex gap-1 mb-6">
               {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
             </div>
-            <p className="text-midnight-indigo/85 mb-8 text-base leading-relaxed">
+            <p className="text-slate-300 dark:text-slate-200 mb-8 text-base leading-relaxed">
               {t.content}
             </p>
             <div className="flex items-center gap-4">
@@ -49,8 +49,8 @@ export function Testimonials() {
                 {t.initials}
               </div>
               <div>
-                <p className="font-bold text-midnight-indigo text-base">{t.name}</p>
-                <p className="text-sm text-slate-blue">{t.location}</p>
+                <p className="font-bold text-slate-100 dark:text-white text-base">{t.name}</p>
+                <p className="text-sm text-slate-400 dark:text-slate-400">{t.location}</p>
               </div>
             </div>
           </Card>

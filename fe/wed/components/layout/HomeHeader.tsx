@@ -17,7 +17,7 @@ export function HomeHeader() {
               <Wrench className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <span className="hidden text-2xl font-bold tracking-normal text-white md:block">
-              Home<span className="text-cyan-300">Serve</span>
+              ZUP
             </span>
           </Link>
 

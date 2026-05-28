@@ -73,7 +73,16 @@ export function HomeHeaderAuth() {
   }, [authenticated, logout, setUser, user]);
 
   if (!mounted) {
-    return <div className="hidden h-9 w-20 rounded-full bg-white/10 md:block" aria-hidden="true" />;
+    return (
+      <div className="hidden items-center gap-2 md:flex opacity-40" aria-hidden="true">
+        <div className="inline-flex h-9 items-center justify-center rounded-lg border border-cyan-300/30 px-4 text-sm font-medium text-cyan-300/70">
+          Đăng ký
+        </div>
+        <div className="inline-flex h-9 items-center justify-center rounded-lg bg-sky-600/60 px-4 text-sm font-medium text-white/70">
+          Đăng nhập
+        </div>
+      </div>
+    );
   }
 
   if (!authenticated) {

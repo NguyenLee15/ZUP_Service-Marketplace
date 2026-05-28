@@ -283,13 +283,13 @@ export default async function Home() {
               <h2 id="gioi-thieu-zup" className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
                 Zup - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
               </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
                 Chào mừng bạn đến với <strong>Zup</strong>. Đây là nền tảng công nghệ tiên phong kết nối khách hàng và thợ chuyên nghiệp. <strong>Do đó</strong>, chúng tôi tự hào mang đến giải pháp toàn diện cho gia đình bận rộn. <strong>Ngoài ra</strong>, các dịch vụ từ vệ sinh đến sửa chữa đều được cam kết chất lượng hàng đầu.
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
                 <strong>Zup</strong> áp dụng tiêu chuẩn kiểm duyệt đầu vào cực kỳ khắt khe. <strong>Hơn nữa</strong>, mọi đối tác thợ đều phải hoàn thành xác thực thông tin (KYC). <strong>Ngoài ra</strong>, cơ chế báo giá minh bạch giúp ngăn chặn phát sinh chi phí mập mờ. <strong>Vì vậy</strong>, quyền lợi của bạn luôn được bảo vệ tốt nhất.
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
                 <strong>Tuy nhiên</strong>, Zup không chỉ dừng lại ở đó. Chúng tôi còn đầu tư mạnh mẽ vào ứng dụng trí tuệ nhân tạo (AI). Công nghệ này giúp đề xuất thợ phù hợp theo khoảng cách địa lý. <strong>Do đó</strong>, hãy trải nghiệm sự tiện nghi cùng Zup ngay hôm nay!
               </p>
             </div>

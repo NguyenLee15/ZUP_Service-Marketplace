@@ -53,7 +53,7 @@ export function GlossarySection() {
             <h3 className="font-bold text-slate-900 dark:text-white text-base md:text-lg flex flex-wrap items-center gap-2">
               Chất lượng & Tiêu chuẩn vận hành Zup
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-300 max-w-2xl leading-relaxed">
               Các tài liệu hướng dẫn và thuật ngữ được biên soạn bởi ban kiểm định chất lượng Zup. Hơn nữa, quy trình kiểm tra định kỳ nghiêm ngặt nhằm bảo vệ tối đa lợi ích khách hàng. Do đó, mọi thông tin đều chính xác tuyệt đối.
             </p>
           </div>
@@ -99,7 +99,7 @@ export function GlossarySection() {
                 <h3 className="font-bold text-sm text-action-blue mb-1">
                   {item.term}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
                   {item.definition}
                 </p>
               </div>
@@ -128,7 +128,7 @@ export function GlossarySection() {
                 <AccordionTrigger className="text-left font-bold text-slate-900 dark:text-white hover:no-underline py-4 text-sm sm:text-base">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-slate-600 dark:text-slate-400 pb-5 leading-relaxed text-xs sm:text-sm">
+                <AccordionContent className="text-slate-300 dark:text-slate-300 pb-5 leading-relaxed text-xs sm:text-sm">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>
