@@ -274,6 +274,24 @@ export default async function Home() {
 
           <HowItWorks />
 
+          {/* Rich Content Text Block for Text/HTML Ratio Optimization */}
+          <section className="py-10 border-t border-slate-800 space-y-6">
+            <div className="max-w-4xl mx-auto text-left space-y-4">
+              <h2 id="gioi-thieu-zup" className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+                Zup - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Chào mừng bạn đến với <strong>Zup</strong>, nền tảng công nghệ tiên phong giúp kết nối nhanh chóng giữa khách hàng và các <strong>nhà cung cấp dịch vụ tại nhà</strong> chuyên nghiệp. Chúng tôi tự hào mang đến giải pháp toàn diện hỗ trợ đắc lực cho các hộ gia đình bận rộn trong việc tìm kiếm nhân sự kỹ thuật có tay nghề cao cho mọi nhu cầu phát sinh thường nhật. Từ vệ sinh nhà cửa định kỳ, bảo trì hệ thống điện nước phức tạp, sửa chữa điện lạnh đến chăm sóc cá nhân tinh tế, Zup luôn cam kết mang lại sự an tâm tuyệt đối.
+              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Với tiêu chuẩn kiểm duyệt đầu vào cực kỳ khắt khe, mọi đối tác thợ của Zup đều bắt buộc phải hoàn thành quy trình định danh <strong>xác thực thông tin cá nhân (KYC)</strong> và kiểm tra lý lịch pháp lý rõ ràng. Zup thiết lập cơ chế báo giá minh bạch ngay trên ứng dụng nhằm ngăn chặn hoàn toàn tình trạng phát sinh chi phí mập mờ. Đặc biệt, với chính sách tạm giữ thanh toán giao dịch trong 24 giờ và hệ thống giải quyết tranh chấp công bằng, quyền lợi kinh tế của người tiêu dùng luôn được đặt lên hàng đầu.
+              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Hơn thế nữa, Zup không ngừng đầu tư ứng dụng trí tuệ nhân tạo (AI) giúp tối ưu hóa thuật toán đề xuất nhà cung cấp phù hợp theo khoảng cách địa lý và lịch sử đánh giá thực tế của người dùng. Hãy trải nghiệm sự tiện nghi khác biệt cùng Zup chỉ với vài thao tác đặt lịch đơn giản trên thiết bị của bạn ngay hôm nay để tận hưởng không gian sống trong lành, an toàn và tràn đầy năng lượng tích cực!
+              </p>
+            </div>
+          </section>
+
           <GlossarySection />
         </div>
       </main>

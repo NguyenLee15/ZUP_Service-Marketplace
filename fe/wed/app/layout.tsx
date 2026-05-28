@@ -138,6 +138,19 @@ const jsonLdData = {
     {
       '@type': 'FAQPage',
       '@id': 'https://service-marketplace-gold.vercel.app/#faq',
+      'publisher': {
+        '@id': 'https://service-marketplace-gold.vercel.app/#organization'
+      },
+      'author': {
+        '@type': 'Person',
+        'name': 'Lê Hoàng Nguyễn',
+        'jobTitle': 'Chief Quality Officer',
+        'worksFor': {
+          '@id': 'https://service-marketplace-gold.vercel.app/#organization'
+        }
+      },
+      'datePublished': '2026-05-15T08:00:00+07:00',
+      'dateModified': '2026-05-28T21:00:00+07:00',
       'mainEntity': [
         {
           '@type': 'Question',

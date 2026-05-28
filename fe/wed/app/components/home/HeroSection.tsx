@@ -49,15 +49,22 @@ export function HeroSection() {
           Nền tảng kết nối <strong>dịch vụ tiện ích</strong> số 1 Việt Nam. <strong>Nhanh chóng, an toàn</strong> và minh bạch.
         </p>
 
-        <div className="flex flex-wrap justify-center gap-4 mb-8 animate-fade-in duration-500">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 animate-fade-in duration-500">
           <a
             href="/services"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 transition-all duration-200 active:scale-95 group relative overflow-hidden"
           >
-            <span>Đặt lịch dịch vụ ngay</span>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+            <span className="absolute inset-0 bg-white/25 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+            <span className="relative z-10">Đặt lịch dịch vụ ngay</span>
+            <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
             </svg>
+          </a>
+          <a
+            href="#danh-muc-dich-vu"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-cyan-300 hover:text-white font-bold text-sm sm:text-base hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+          >
+            <span>Khám phá danh mục</span>
           </a>
         </div>
 
