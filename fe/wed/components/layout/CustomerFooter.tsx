@@ -127,7 +127,7 @@ export function CustomerFooter() {
 
           <div>
             <h3 className="text-white font-semibold text-lg mb-6">
-              Liên hệ
+              Liên hệ & Hỗ trợ
             </h3>
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
@@ -152,17 +152,60 @@ export function CustomerFooter() {
                   support@zup.vn
                 </a>
               </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-action-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                <a
+                  href="https://zalo.me/0901234567"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue font-semibold text-sky-400"
+                >
+                  Chat Hỗ Trợ Zalo (0901 234 567)
+                </a>
+              </li>
             </ul>
+          </div>
+        </div>
+
+        {/* Security & Payment Trust Badges */}
+        <div className="pt-6 pb-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-col gap-1.5 text-left">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Chứng nhận & An toàn</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-emerald-400 select-none shadow-sm">
+                <span className="text-[9px]">🛡️</span> SSL SECURED
+              </div>
+              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-sky-400 select-none shadow-sm">
+                <span className="text-[9px]">💳</span> VNPAY PARTNER
+              </div>
+              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-amber-500 select-none shadow-sm">
+                <span className="text-[9px]">⭐</span> PCI-DSS COMPLIANT
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5 text-left sm:text-right">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Cổng thanh toán hỗ trợ</span>
+            <div className="flex items-center gap-2">
+              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-bold text-slate-300">VISA</span>
+              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-bold text-slate-300">MASTERCARD</span>
+              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-bold text-slate-300">ATM / VNPAY</span>
+            </div>
           </div>
         </div>
 
         <DeferredSocialFeedSection />
 
         <div className="pt-6 sm:pt-8 border-t border-platinum-tint flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
-          <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-            © {new Date().getFullYear()} Zup Marketplace. Mọi quyền được
-            bảo lưu.
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+              © {new Date().getFullYear()} Zup Marketplace. Mọi quyền được bảo lưu.
+            </p>
+            <p className="text-[11px] text-slate-600" suppressHydrationWarning>
+              Dịch vụ được kiểm định chất lượng nghiêm ngặt. Thông tin cập nhật lần cuối: 28/05/2026.
+            </p>
+          </div>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <Link
               href="/privacy"

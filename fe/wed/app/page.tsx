@@ -7,7 +7,9 @@ import { FeaturedServices } from '@/app/components/home/FeaturedServices';
 import { HeroSection } from '@/app/components/home/HeroSection';
 import { HowItWorks } from '@/app/components/home/HowItWorks';
 import { CategoryGridSkeleton, ServicesListSkeleton } from '@/app/components/home/HomeSkeleton';
+import { GlossarySection } from '@/app/components/home/GlossarySection';
 import { CustomerFooter } from '@/components/layout/CustomerFooter';
+
 import { HomeHeader } from '@/components/layout/HomeHeader';
 import type { Category, Service } from '@/types';
 
@@ -271,6 +273,8 @@ export default async function Home() {
           ))}
 
           <HowItWorks />
+
+          <GlossarySection />
         </div>
       </main>
 
