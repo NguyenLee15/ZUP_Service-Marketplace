@@ -17,7 +17,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { BookingsService } from './bookings.service';
+import { BookingDisputeService } from './booking-dispute.service';
+import { BookingLifecycleService } from './booking-lifecycle.service';
+import { BookingQueryService } from './booking-query.service';
+import { BookingListQueryDto } from './dto/booking-query.dto';
 import {
   CreateBookingDto,
   ConfirmSurveyorDto,
@@ -33,7 +36,11 @@ import {
 @Controller('bookings')
 @UseGuards(JwtAuthGuard)
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly bookingLifecycleService: BookingLifecycleService,
+    private readonly bookingDisputeService: BookingDisputeService,
+    private readonly bookingQueryService: BookingQueryService,
+  ) {}
 
   /** POST /bookings — Customer tạo booking */
   @Post()
@@ -43,7 +50,7 @@ export class BookingsController {
     @CurrentUser('id') userId: number,
     @Body() dto: CreateBookingDto,
   ) {
-    return this.bookingsService.create(userId, dto);
+    return this.bookingLifecycleService.create(userId, dto);
   }
 
   /** GET /bookings — Customer xem danh sách booking */
@@ -51,17 +58,16 @@ export class BookingsController {
   async getMyBookings(
     @CurrentUser('id') userId: number,
     @CurrentUser('role') role: string,
-    @Query('status') status?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: BookingListQueryDto,
   ) {
-    const userRole = role === 'PROVIDER' ? 'provider' : 'customer';
-    return this.bookingsService.getMyBookings(
+    const userRole: 'customer' | 'provider' =
+      role === 'PROVIDER' ? 'provider' : 'customer';
+    return this.bookingQueryService.getMyBookings(
       userId,
-      userRole as 'customer' | 'provider',
-      status,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      userRole,
+      query.status,
+      query.page,
+      query.limit,
     );
   }
 
@@ -71,7 +77,7 @@ export class BookingsController {
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.bookingsService.getById(id, userId);
+    return this.bookingQueryService.getById(id, userId);
   }
 
   /** PATCH /bookings/:id/confirm-quote — Customer đồng ý báo giá */
@@ -82,7 +88,7 @@ export class BookingsController {
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.bookingsService.customerConfirmQuote(userId, id);
+    return this.bookingLifecycleService.customerConfirmQuote(userId, id);
   }
 
   /** PATCH /bookings/:id/reject-quote — Customer từ chối báo giá */
@@ -94,7 +100,7 @@ export class BookingsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: RejectQuoteDto,
   ) {
-    return this.bookingsService.customerRejectQuote(userId, id, dto);
+    return this.bookingLifecycleService.customerRejectQuote(userId, id, dto);
   }
 
   /** PATCH /bookings/:id/accept — Customer nghiệm thu */
@@ -105,7 +111,7 @@ export class BookingsController {
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.bookingsService.customerAccept(userId, id);
+    return this.bookingLifecycleService.customerAccept(userId, id);
   }
 
   /** POST /bookings/:id/dispute — Customer khiếu nại */
@@ -119,7 +125,7 @@ export class BookingsController {
     @Body() dto: DisputeDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.bookingsService.customerDispute(userId, id, dto, files);
+    return this.bookingDisputeService.customerDispute(userId, id, dto, files);
   }
 
   /** PATCH /bookings/:id/cancel — Customer hủy đơn */
@@ -131,7 +137,7 @@ export class BookingsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelBookingDto,
   ) {
-    return this.bookingsService.cancelByCustomer(userId, id, dto);
+    return this.bookingLifecycleService.cancelByCustomer(userId, id, dto);
   }
 
   /** POST /bookings/:id/rebook — UC16.5 Đặt lại nhanh từ booking cũ */
@@ -142,7 +148,7 @@ export class BookingsController {
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.bookingsService.rebook(userId, id);
+    return this.bookingLifecycleService.rebook(userId, id);
   }
 }
 
@@ -152,22 +158,23 @@ export class BookingsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('PROVIDER')
 export class ProviderBookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly bookingLifecycleService: BookingLifecycleService,
+    private readonly bookingQueryService: BookingQueryService,
+  ) {}
 
   /** GET /provider/bookings */
   @Get()
   async getMyBookings(
     @CurrentUser('id') userId: number,
-    @Query('status') status?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: BookingListQueryDto,
   ) {
-    return this.bookingsService.getMyBookings(
+    return this.bookingQueryService.getMyBookings(
       userId,
       'provider',
-      status,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      query.status,
+      query.page,
+      query.limit,
     );
   }
 
@@ -177,7 +184,7 @@ export class ProviderBookingsController {
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.bookingsService.getById(id, userId);
+    return this.bookingQueryService.getById(id, userId);
   }
 
   /** PATCH /provider/bookings/:id/accept */
@@ -186,7 +193,7 @@ export class ProviderBookingsController {
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.bookingsService.acceptByProvider(userId, id);
+    return this.bookingLifecycleService.acceptByProvider(userId, id);
   }
 
   /** PATCH /provider/bookings/:id/decline */
@@ -196,7 +203,7 @@ export class ProviderBookingsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelBookingDto,
   ) {
-    return this.bookingsService.declineByProvider(userId, id, dto);
+    return this.bookingLifecycleService.declineByProvider(userId, id, dto);
   }
 
   /** PATCH /provider/bookings/:id/surveyor */
@@ -206,7 +213,7 @@ export class ProviderBookingsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: ConfirmSurveyorDto,
   ) {
-    return this.bookingsService.confirmSurveyor(userId, id, dto);
+    return this.bookingLifecycleService.confirmSurveyor(userId, id, dto);
   }
 
   /** POST /provider/bookings/:id/quote */
@@ -218,7 +225,7 @@ export class ProviderBookingsController {
     @Body() dto: SendQuoteDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.bookingsService.sendQuote(userId, id, dto, files);
+    return this.bookingLifecycleService.sendQuote(userId, id, dto, files);
   }
 
   /** PATCH /provider/bookings/:id/start */
@@ -227,7 +234,7 @@ export class ProviderBookingsController {
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.bookingsService.startWork(userId, id);
+    return this.bookingLifecycleService.startWork(userId, id);
   }
 
   /** PATCH /provider/bookings/:id/complete */
@@ -238,7 +245,7 @@ export class ProviderBookingsController {
     @Param('id', ParseIntPipe) id: number,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.bookingsService.completeWork(userId, id, files);
+    return this.bookingLifecycleService.completeWork(userId, id, files);
   }
 
   /** PATCH /provider/bookings/:id/cancel */
@@ -248,7 +255,7 @@ export class ProviderBookingsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelBookingDto,
   ) {
-    return this.bookingsService.cancelByProvider(userId, id, dto);
+    return this.bookingLifecycleService.cancelByProvider(userId, id, dto);
   }
 }
 
@@ -258,7 +265,7 @@ export class ProviderBookingsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'STAFF')
 export class AdminDisputesController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(private readonly bookingDisputeService: BookingDisputeService) {}
 
   /** PATCH /admin/disputes/:id/resolve */
   @Patch(':id/resolve')
@@ -266,9 +273,17 @@ export class AdminDisputesController {
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: ResolveDisputeDto,
-    @Req() req: any,
+    @Req()
+    req: {
+      ip?: string;
+      headers: Record<string, string | string[] | undefined>;
+    },
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || '';
-    return this.bookingsService.resolveDispute(adminId, id, dto, ip);
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const ip =
+      req.ip ||
+      (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor) ||
+      '';
+    return this.bookingDisputeService.resolveDispute(adminId, id, dto, ip);
   }
 }

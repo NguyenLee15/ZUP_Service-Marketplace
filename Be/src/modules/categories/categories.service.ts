@@ -8,6 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../shared/redis/redis.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/categories.dto';
+import { Prisma } from '@prisma/client';
 
 const CACHE_KEY = 'categories:tree';
 const CACHE_TTL = 600; // 10 phút
@@ -24,7 +25,7 @@ export class CategoriesService {
   async getTree() {
     const cached = await this.redisService.get(CACHE_KEY);
     if (cached) {
-      return { data: JSON.parse(cached) };
+      return { data: this.parseCategoryTree(cached) };
     }
 
     const categories = await this.prisma.serviceCategory.findMany({
@@ -168,7 +169,10 @@ export class CategoriesService {
 
   // ===== HELPERS =====
 
-  private buildTree(categories: any[], parentId: number | null): any[] {
+  private buildTree(
+    categories: Prisma.ServiceCategoryGetPayload<object>[],
+    parentId: number | null,
+  ): CategoryTreeNode[] {
     return categories
       .filter((c) => c.parentId === parentId)
       .map((c) => ({ ...c, children: this.buildTree(categories, c.id) }));
@@ -204,4 +208,13 @@ export class CategoriesService {
   private async invalidateCache() {
     await this.redisService.del(CACHE_KEY);
   }
+
+  private parseCategoryTree(raw: string): CategoryTreeNode[] {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as CategoryTreeNode[]) : [];
+  }
 }
+
+type CategoryTreeNode = Prisma.ServiceCategoryGetPayload<object> & {
+  children: CategoryTreeNode[];
+};

@@ -84,7 +84,9 @@ export class VnpayService {
     };
   }
 
-  private sortAndEncodeObject(obj: Record<string, string>): Record<string, string> {
+  private sortAndEncodeObject(
+    obj: Record<string, string>,
+  ): Record<string, string> {
     return Object.keys(obj)
       .sort()
       .reduce((result: Record<string, string>, key) => {

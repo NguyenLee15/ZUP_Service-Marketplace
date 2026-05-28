@@ -65,7 +65,7 @@ export default function AdminLayout({
           {sidebarOpen ? (
             <div>
               <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase">
-                HomeServe Admin
+                Zup Admin
               </h1>
               <p className="mt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 Hệ thống quản trị
@@ -73,7 +73,7 @@ export default function AdminLayout({
             </div>
           ) : (
             <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xs mx-auto">
-              HS
+              Z
             </div>
           )}
           <button

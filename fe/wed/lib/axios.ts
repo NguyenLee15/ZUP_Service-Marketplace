@@ -90,6 +90,21 @@ instance.interceptors.response.use(
       }
     }
 
+    // 3. Xử lý Transient Server Errors (502, 503, 504, Timeout) + Auto Retry với Exponential Backoff
+    const isTransient =
+      error.response?.status === 502 ||
+      error.response?.status === 503 ||
+      error.response?.status === 504 ||
+      error.code === 'ECONNABORTED';
+
+    const retryConfig = originalRequest as Record<string, any>;
+    if (isTransient && (!retryConfig._retryCount || retryConfig._retryCount < 3)) {
+      retryConfig._retryCount = (retryConfig._retryCount || 0) + 1;
+      const delay = Math.pow(2, retryConfig._retryCount) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return instance(originalRequest);
+    }
+
     return Promise.reject(error);
   },
 );

@@ -5,8 +5,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JobsService } from '../../shared/jobs/jobs.service';
+import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ReviewsService {
@@ -80,7 +81,7 @@ export class ReviewsService {
 
     // Bắn event kiểm duyệt AI nếu có comment
     if (comment) {
-      await this.jobsService.enqueue('moderate_review', {
+      await this.jobsService.enqueue(JobName.ModerateReview, {
         reviewId: review.id,
         comment,
       });
@@ -95,7 +96,7 @@ export class ReviewsService {
     page = 1,
     limit = 10,
   ) {
-    const where: any = { serviceId, isFlagged: false };
+    const where: Prisma.ReviewWhereInput = { serviceId, isFlagged: false };
     if (rating) where.rating = rating;
 
     const [data, total, stats] = await Promise.all([

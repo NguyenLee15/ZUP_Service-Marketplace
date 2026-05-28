@@ -8,17 +8,21 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
+import { ChatbotSessionService } from './chatbot-session.service';
 import type {
   ChatbotAskRequest,
   ChatbotStreamResultRequest,
-} from './chatbot.service';
+} from './chatbot.types';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('chatbot')
 export class ChatbotController {
-  constructor(private readonly chatbotService: ChatbotService) {}
+  constructor(
+    private readonly chatbotService: ChatbotService,
+    private readonly chatbotSessionService: ChatbotSessionService,
+  ) {}
 
   @Post('ask')
   @UseGuards(OptionalJwtAuthGuard)
@@ -52,7 +56,7 @@ export class ChatbotController {
   @Get('sessions')
   @UseGuards(JwtAuthGuard)
   async listSessions(@CurrentUser('id') userId: number) {
-    return this.chatbotService.listSessions(userId);
+    return this.chatbotSessionService.listSessions(userId);
   }
 
   @Delete('sessions/:id')
@@ -61,7 +65,7 @@ export class ChatbotController {
     @CurrentUser('id') userId: number,
     @Param('id') sessionId: string,
   ) {
-    return this.chatbotService.deleteSession(userId, sessionId);
+    return this.chatbotSessionService.deleteSession(userId, sessionId);
   }
 
   @Get('sessions/:id/messages')
@@ -70,6 +74,10 @@ export class ChatbotController {
     @CurrentUser('id') userId: number,
     @Param('id') sessionId: string,
   ) {
-    return this.chatbotService.getSessionHistory(userId, sessionId);
+    const result = await this.chatbotSessionService.getSessionHistory(
+      userId,
+      sessionId,
+    );
+    return { data: result };
   }
 }

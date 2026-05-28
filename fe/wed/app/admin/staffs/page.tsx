@@ -450,7 +450,7 @@ export default function StaffsPage() {
                 <Input
                   value={formEmail}
                   onChange={(e) => { setFormEmail(e.target.value); validateField('email', e.target.value); }}
-                  placeholder="email@homeserve.vn"
+                  placeholder="email@zup.vn"
                   type="email"
                   disabled={!!editingStaff}
                   className={`rounded-xl h-10 ${formErrors.email ? 'border-red-400' : 'border-slate-200'}`}

@@ -7,7 +7,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -15,6 +15,12 @@ import { RedisService } from '../../shared/redis/redis.service';
 import { resolveWebsocketCorsOrigin } from '../../config/websocket-cors.config';
 import { BookingStatus } from '@prisma/client';
 import { OnEvent } from '@nestjs/event-emitter';
+import {
+  extractSocketToken,
+  isJwtTokenPayload,
+  toAuthenticatedUser,
+} from '../../common/types/auth.types';
+import type { AuthenticatedSocket } from '../../common/types/auth.types';
 
 // ---- Constants ----
 const LOCATION_TTL_SECONDS = 300; // 5 minutes
@@ -55,30 +61,31 @@ export class TrackingGateway
 
   // ========== Connection Lifecycle ==========
 
-  async handleConnection(client: Socket) {
+  handleConnection(client: AuthenticatedSocket) {
     try {
-      const token =
-        client.handshake.auth?.token ||
-        client.handshake.headers?.authorization?.split(' ')[1];
+      const token = extractSocketToken(client);
       if (!token) {
         client.disconnect();
         return;
       }
-      const payload = this.jwtService.verify(token);
-      (client as any).userId = payload.sub;
-      (client as any).role = payload.role;
-      this.logger.log(
-        `[Tracking] User ${payload.sub} (${payload.role}) connected`,
-      );
+      const payload = this.jwtService.verify<Record<string, unknown>>(token);
+      if (!isJwtTokenPayload(payload)) {
+        client.disconnect();
+        return;
+      }
+
+      const user = toAuthenticatedUser(payload);
+      client.data.user = user;
+      this.logger.log(`[Tracking] User ${user.id} (${user.role}) connected`);
     } catch {
       client.disconnect();
     }
   }
 
-  handleDisconnect(client: Socket) {
-    const userId = (client as any).userId;
-    if (userId) {
-      this.logger.log(`[Tracking] User ${userId} disconnected`);
+  handleDisconnect(client: AuthenticatedSocket) {
+    const user = client.data.user;
+    if (user) {
+      this.logger.log(`[Tracking] User ${user.id} disconnected`);
     }
   }
 
@@ -86,7 +93,7 @@ export class TrackingGateway
 
   @SubscribeMessage('updateLocation')
   async handleUpdateLocation(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody()
     data: {
       bookingId: number;
@@ -96,11 +103,11 @@ export class TrackingGateway
       speed?: number;
     },
   ) {
-    const userId = (client as any).userId;
-    const role = (client as any).role;
+    const user = client.data.user;
+    if (!user) return;
 
     // Guard: Only providers can update location
-    if (role !== 'PROVIDER') return;
+    if (user.role !== 'PROVIDER') return;
 
     // Guard: Basic validation
     if (
@@ -119,7 +126,7 @@ export class TrackingGateway
     const booking = await this.prisma.booking.findFirst({
       where: {
         id: data.bookingId,
-        providerId: userId,
+        providerId: user.id,
         status: { in: TRACKABLE_STATUSES },
       },
       select: { id: true, customerId: true },
@@ -157,10 +164,11 @@ export class TrackingGateway
 
   @SubscribeMessage('subscribeTracking')
   async handleSubscribeTracking(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { bookingId: number },
   ) {
-    const userId = (client as any).userId;
+    const userId = client.data.user?.id;
+    if (!userId) return;
 
     if (!data.bookingId) return;
 
@@ -177,7 +185,7 @@ export class TrackingGateway
     if (!booking) return;
 
     // Join tracking room
-    client.join(`track:${data.bookingId}`);
+    await client.join(`track:${data.bookingId}`);
     this.logger.log(
       `[Tracking] Customer ${userId} subscribed to booking ${data.bookingId}`,
     );
@@ -201,14 +209,14 @@ export class TrackingGateway
   // ========== Customer: Unsubscribe from Tracking ==========
 
   @SubscribeMessage('unsubscribeTracking')
-  async handleUnsubscribeTracking(
-    @ConnectedSocket() client: Socket,
+  handleUnsubscribeTracking(
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { bookingId: number },
   ) {
     if (!data.bookingId) return;
-    client.leave(`track:${data.bookingId}`);
+    void client.leave(`track:${data.bookingId}`);
     this.logger.log(
-      `[Tracking] User ${(client as any).userId} unsubscribed from booking ${data.bookingId}`,
+      `[Tracking] User ${client.data.user?.id ?? 'unknown'} unsubscribed from booking ${data.bookingId}`,
     );
   }
 

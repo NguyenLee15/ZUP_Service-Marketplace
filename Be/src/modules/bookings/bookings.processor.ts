@@ -6,6 +6,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NOTIFICATION_EVENTS } from '../../common/events/notification-events';
 
 import { RedisService } from '../../shared/redis/redis.service';
+import { BookingIdPayload, JobName } from '../../shared/jobs/jobs.service';
 
 @Processor('booking-queue')
 export class BookingsProcessor extends WorkerHost {
@@ -19,14 +20,17 @@ export class BookingsProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
+  async process(job: Job<BookingIdPayload, void, JobName>): Promise<void> {
     switch (job.name) {
-      case 'booking.auto-complete':
-        return this.handleAutoComplete(job.data.bookingId);
-      case 'booking.sla-noshow-alert':
-        return this.handleNoshowAlert(job.data.bookingId);
-      case 'booking.sla-stuck-inprogress':
-        return this.handleStuckInProgress(job.data.bookingId);
+      case JobName.BookingAutoComplete:
+        await this.handleAutoComplete(job.data.bookingId);
+        return;
+      case JobName.BookingSlaNoShowAlert:
+        await this.handleNoshowAlert(job.data.bookingId);
+        return;
+      case JobName.BookingSlaStuckInProgress:
+        await this.handleStuckInProgress(job.data.bookingId);
+        return;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
     }

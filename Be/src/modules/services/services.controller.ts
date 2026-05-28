@@ -17,8 +17,11 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { ServicesService } from './services.service';
 import { FeaturedListingsService } from './featured-listings.service';
+import { ProviderPublicService } from './provider-public.service';
+import { ServiceCommandService } from './service-command.service';
+import { ServiceModerationService } from './service-moderation.service';
+import { ServiceSearchService } from './service-search.service';
 import {
   CreateServiceDto,
   UpdateServiceDto,
@@ -27,11 +30,14 @@ import {
   AdminHideDto,
   AiSearchDto,
 } from './dto/services.dto';
+import type { PublicProviderServicesQuery } from './services.service';
 
 @Controller('services')
 export class ServicesController {
   constructor(
-    private readonly servicesService: ServicesService,
+    private readonly commandService: ServiceCommandService,
+    private readonly searchService: ServiceSearchService,
+    private readonly providerPublicService: ProviderPublicService,
     private readonly featuredListingsService: FeaturedListingsService,
   ) {}
 
@@ -46,49 +52,49 @@ export class ServicesController {
   /** GET /services/search */
   @Get('search')
   async search(@Query() dto: SearchServiceDto) {
-    return this.servicesService.search(dto);
+    return this.searchService.search(dto);
   }
 
   /** POST /services/ai-search */
   @Post('ai-search')
   async aiSearch(@Body() dto: AiSearchDto) {
-    return this.servicesService.aiSearch(dto.query);
+    return this.searchService.aiSearch(dto.query);
   }
 
   /** GET /services/:id — public detail */
   @Get(':id')
   async getPublicDetail(@Param('id', ParseIntPipe) id: number) {
-    return this.servicesService.getPublicDetail(id);
+    return this.providerPublicService.getPublicDetail(id);
   }
 
   /** GET /services/:id/reviews */
   @Get(':id/reviews')
   async getReviews(@Param('id', ParseIntPipe) serviceId: number) {
-    return this.servicesService.getPublicDetail(serviceId);
+    return this.providerPublicService.getPublicDetail(serviceId);
   }
 
   /** GET /services/:id/provider-stats — chỉ số hiệu suất NCC */
   @Get(':id/provider-stats')
   async getProviderStats(@Param('id', ParseIntPipe) serviceId: number) {
     // Lấy providerId từ service
-    const detail = await this.servicesService.getPublicDetail(serviceId);
+    const detail = await this.providerPublicService.getPublicDetail(serviceId);
     const providerId = detail.data.providerId;
-    return this.servicesService.getProviderMetrics(providerId);
+    return this.providerPublicService.getProviderMetrics(providerId);
   }
 
   /** GET /services/providers/:id — thông tin cá nhân công khai NCC */
   @Get('providers/:id')
   async getPublicProviderProfile(@Param('id', ParseIntPipe) id: number) {
-    return this.servicesService.getPublicProviderProfile(id);
+    return this.providerPublicService.getPublicProviderProfile(id);
   }
 
   /** GET /services/providers/:id/services — danh sách dịch vụ của thợ */
   @Get('providers/:id/services')
   async getPublicProviderServices(
     @Param('id', ParseIntPipe) id: number,
-    @Query() query: any,
+    @Query() query: PublicProviderServicesQuery,
   ) {
-    return this.servicesService.getPublicProviderServices(id, query);
+    return this.providerPublicService.getPublicProviderServices(id, query);
   }
 
   // ===== PROVIDER =====
@@ -101,7 +107,7 @@ export class ServicesController {
     @CurrentUser('id') providerId: number,
     @Query('status') status?: string,
   ) {
-    return this.servicesService.getMyServices(providerId, status);
+    return this.commandService.getMyServices(providerId, status);
   }
 
   /** POST /services — create service (provider) */
@@ -114,7 +120,7 @@ export class ServicesController {
     @Body() dto: CreateServiceDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.servicesService.create(providerId, dto, files);
+    return this.commandService.create(providerId, dto, files);
   }
 
   /** PATCH /services/:id — update service (provider) */
@@ -128,7 +134,7 @@ export class ServicesController {
     @Body() dto: UpdateServiceDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.servicesService.update(providerId, id, dto, files);
+    return this.commandService.update(providerId, id, dto, files);
   }
 
   /** PATCH /services/:id/submit — DRAFT → PENDING */
@@ -139,7 +145,7 @@ export class ServicesController {
     @CurrentUser('id') providerId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.servicesService.submit(providerId, id);
+    return this.commandService.submit(providerId, id);
   }
 
   /** PATCH /services/:id/hide — ACTIVE → HIDDEN */
@@ -150,7 +156,7 @@ export class ServicesController {
     @CurrentUser('id') providerId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.servicesService.hide(providerId, id);
+    return this.commandService.hide(providerId, id);
   }
 
   /** PATCH /services/:id/show — HIDDEN → ACTIVE */
@@ -161,7 +167,7 @@ export class ServicesController {
     @CurrentUser('id') providerId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.servicesService.show(providerId, id);
+    return this.commandService.show(providerId, id);
   }
 
   /** DELETE /services/:id — UC05.4 Provider xóa dịch vụ */
@@ -172,7 +178,7 @@ export class ServicesController {
     @CurrentUser('id') providerId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.servicesService.deleteByProvider(providerId, id);
+    return this.commandService.deleteByProvider(providerId, id);
   }
 
   /** POST /services/:id/feature — NCC mua featured listing */
@@ -206,7 +212,7 @@ export class ServicesController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'STAFF')
 export class AdminServicesController {
-  constructor(private readonly servicesService: ServicesService) {}
+  constructor(private readonly moderationService: ServiceModerationService) {}
 
   /** GET /admin/services */
   @Get()
@@ -216,7 +222,7 @@ export class AdminServicesController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.servicesService.adminGetAll({
+    return this.moderationService.getAll({
       status,
       categoryId: categoryId ? parseInt(categoryId) : undefined,
       page: page ? parseInt(page) : undefined,
@@ -230,7 +236,7 @@ export class AdminServicesController {
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.servicesService.adminApprove(adminId, id);
+    return this.moderationService.approve(adminId, id);
   }
 
   /** PATCH /admin/services/:id/reject */
@@ -240,7 +246,7 @@ export class AdminServicesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AdminRejectDto,
   ) {
-    return this.servicesService.adminReject(adminId, id, dto.reason);
+    return this.moderationService.reject(adminId, id, dto.reason);
   }
 
   /** PATCH /admin/services/:id/hide */
@@ -250,7 +256,7 @@ export class AdminServicesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AdminHideDto,
   ) {
-    return this.servicesService.adminHide(adminId, id, dto.reason);
+    return this.moderationService.hide(adminId, id, dto.reason);
   }
 
   /** DELETE /admin/services/:id — UC05.4 Admin xóa dịch vụ */
@@ -259,6 +265,6 @@ export class AdminServicesController {
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.servicesService.deleteByAdmin(adminId, id);
+    return this.moderationService.delete(adminId, id);
   }
 }

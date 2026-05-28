@@ -8,6 +8,9 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "verify": "npx prisma validate && npm run typecheck && npm run test && npm run test:e2e && npm run build && npm run lint",
+    "verify:full": "npm run verify && npm run test:integration",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -18,7 +21,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:integration": "jest --config ./test/jest-integration.json --runInBand"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -113,8 +117,5 @@
   },
   "overrides": {
     "uuid": "11.1.1"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   }
 }

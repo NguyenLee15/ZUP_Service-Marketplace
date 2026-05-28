@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
+import { ChatbotSessionService } from './chatbot-session.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 import { AiModule } from '../../shared/ai/ai.module';
@@ -17,6 +18,6 @@ import { ServicesModule } from '../services/services.module';
     ServicesModule,
   ],
   controllers: [ChatbotController],
-  providers: [ChatbotService],
+  providers: [ChatbotService, ChatbotSessionService],
 })
 export class ChatbotModule {}

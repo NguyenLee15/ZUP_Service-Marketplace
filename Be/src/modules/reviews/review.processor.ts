@@ -3,6 +3,7 @@ import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../../shared/ai/ai.service';
+import { JobName, ModerateReviewPayload } from '../../shared/jobs/jobs.service';
 
 @Processor('review_queue')
 export class ReviewProcessor extends WorkerHost {
@@ -15,7 +16,7 @@ export class ReviewProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
+  async process(job: Job<ModerateReviewPayload, void, JobName>): Promise<void> {
     const { reviewId, comment } = job.data;
 
     if (!comment) return;
@@ -36,9 +37,8 @@ export class ReviewProcessor extends WorkerHost {
         this.logger.log(`Review ID ${reviewId} is clean.`);
       }
     } catch (error) {
-      this.logger.error(
-        `Failed to moderate review ID ${reviewId}: ${error.message}`,
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to moderate review ID ${reviewId}: ${message}`);
       throw error;
     }
   }

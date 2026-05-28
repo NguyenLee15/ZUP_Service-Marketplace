@@ -7,12 +7,14 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import helmet from 'helmet';
 import compression from 'compression';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { Express } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
-  app.getHttpAdapter().getInstance().disable('x-powered-by');
+  const expressApp = app.getHttpAdapter().getInstance() as Express;
+  expressApp.disable('x-powered-by');
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -104,4 +106,4 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+void bootstrap();

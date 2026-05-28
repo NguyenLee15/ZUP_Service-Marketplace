@@ -9,22 +9,36 @@ import {
   Patch,
   Param,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { ProviderWalletsService } from './provider-wallets.service';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+import {
+  AdminWalletRequestQueryDto,
+  WalletHistoryQueryDto,
+} from './dto/wallet-query.dto';
+import { WalletAccountService } from './wallet-account.service';
+import { DepositService } from './deposit.service';
+import { WithdrawalService } from './withdrawal.service';
+import { PaymentCallbackService } from './payment-callback.service';
 
 @Controller('provider-wallets')
 export class ProviderWalletsController {
-  constructor(private readonly walletsService: ProviderWalletsService) {}
+  constructor(
+    private readonly walletAccountService: WalletAccountService,
+    private readonly depositService: DepositService,
+    private readonly withdrawalService: WithdrawalService,
+    private readonly paymentCallbackService: PaymentCallbackService,
+  ) {}
 
   @Get('balance')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async getBalance(@CurrentUser('id') userId: number) {
-    return this.walletsService.getBalance(userId);
+    return this.walletAccountService.getBalance(userId);
   }
 
   @Get('history')
@@ -32,15 +46,13 @@ export class ProviderWalletsController {
   @Roles('PROVIDER')
   async getHistory(
     @CurrentUser('id') userId: number,
-    @Query('type') type?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: WalletHistoryQueryDto,
   ) {
-    return this.walletsService.getHistory(
+    return this.walletAccountService.getHistory(
       userId,
-      type,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      query.type,
+      query.page,
+      query.limit,
     );
   }
 
@@ -50,7 +62,7 @@ export class ProviderWalletsController {
   async deposit(
     @CurrentUser('id') userId: number,
     @Body('amount') amount: number,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
     const forwardedFor = req.headers['x-forwarded-for'];
     const ip =
@@ -61,7 +73,7 @@ export class ProviderWalletsController {
           : undefined) ||
       req.ip ||
       '127.0.0.1';
-    return this.walletsService.createDepositRequest(userId, amount, ip);
+    return this.depositService.createDepositRequest(userId, amount, ip);
   }
 
   @Post('manual-deposits')
@@ -73,7 +85,7 @@ export class ProviderWalletsController {
     @Body('transferCode') transferCode?: string,
     @Body('receiptUrl') receiptUrl?: string,
   ) {
-    return this.walletsService.createManualDepositRequest(
+    return this.depositService.createManualDepositRequest(
       userId,
       amount,
       transferCode,
@@ -86,13 +98,12 @@ export class ProviderWalletsController {
   @Roles('PROVIDER')
   async getManualDeposits(
     @CurrentUser('id') userId: number,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() pagination?: PaginationQueryDto,
   ) {
-    return this.walletsService.getManualDepositRequests(
+    return this.depositService.getManualDepositRequests(
       userId,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      pagination?.page ?? 1,
+      pagination?.limit ?? 20,
     );
   }
 
@@ -109,7 +120,7 @@ export class ProviderWalletsController {
       bankAccountHolder: string;
     },
   ) {
-    return this.walletsService.createWithdrawalRequest(userId, body);
+    return this.withdrawalService.createWithdrawalRequest(userId, body);
   }
 
   @Get('withdrawals')
@@ -117,19 +128,18 @@ export class ProviderWalletsController {
   @Roles('PROVIDER')
   async getWithdrawals(
     @CurrentUser('id') userId: number,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() pagination?: PaginationQueryDto,
   ) {
-    return this.walletsService.getWithdrawalRequests(
+    return this.withdrawalService.getWithdrawalRequests(
       userId,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      pagination?.page ?? 1,
+      pagination?.limit ?? 20,
     );
   }
 
   /** VNPay return (FE chỉ hiển thị kết quả) */
   @Get('vnpay/return')
-  async vnpayReturn(@Query() query: Record<string, string>) {
+  vnpayReturn(@Query() query: Record<string, string>) {
     return { data: query };
   }
 
@@ -137,14 +147,14 @@ export class ProviderWalletsController {
   @Get('vnpay/ipn')
   @SkipThrottle()
   async vnpayIpnGet(@Query() query: Record<string, string>) {
-    return this.walletsService.handleIpn(query);
+    return this.paymentCallbackService.handleVnpayIpn(query);
   }
 
   /** Giữ POST để tương thích với cấu hình callback cũ. */
   @Post('vnpay/ipn')
   @SkipThrottle()
   async vnpayIpnPost(@Query() query: Record<string, string>) {
-    return this.walletsService.handleIpn(query);
+    return this.paymentCallbackService.handleVnpayIpn(query);
   }
 }
 
@@ -152,18 +162,14 @@ export class ProviderWalletsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'STAFF')
 export class AdminWalletDepositsController {
-  constructor(private readonly walletsService: ProviderWalletsService) {}
+  constructor(private readonly depositService: DepositService) {}
 
   @Get()
-  async list(
-    @Query('status') status?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.walletsService.adminListManualDepositRequests(
-      status,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+  async list(@Query() query: AdminWalletRequestQueryDto) {
+    return this.depositService.adminListManualDepositRequests(
+      query.status,
+      query.page,
+      query.limit,
     );
   }
 
@@ -173,7 +179,7 @@ export class AdminWalletDepositsController {
     @Param('id') id: string,
     @Body('note') note?: string,
   ) {
-    return this.walletsService.adminApproveManualDeposit(
+    return this.depositService.adminApproveManualDeposit(
       adminId,
       parseInt(id),
       note,
@@ -186,7 +192,7 @@ export class AdminWalletDepositsController {
     @Param('id') id: string,
     @Body('note') note?: string,
   ) {
-    return this.walletsService.adminRejectManualDeposit(
+    return this.depositService.adminRejectManualDeposit(
       adminId,
       parseInt(id),
       note,
@@ -198,18 +204,14 @@ export class AdminWalletDepositsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'STAFF')
 export class AdminWalletWithdrawalsController {
-  constructor(private readonly walletsService: ProviderWalletsService) {}
+  constructor(private readonly withdrawalService: WithdrawalService) {}
 
   @Get()
-  async list(
-    @Query('status') status?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.walletsService.adminListWithdrawalRequests(
-      status,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+  async list(@Query() query: AdminWalletRequestQueryDto) {
+    return this.withdrawalService.adminListWithdrawalRequests(
+      query.status,
+      query.page,
+      query.limit,
     );
   }
 
@@ -219,7 +221,7 @@ export class AdminWalletWithdrawalsController {
     @Param('id') id: string,
     @Body('note') note?: string,
   ) {
-    return this.walletsService.adminApproveWithdrawal(
+    return this.withdrawalService.adminApproveWithdrawal(
       adminId,
       parseInt(id),
       note,
@@ -232,7 +234,7 @@ export class AdminWalletWithdrawalsController {
     @Param('id') id: string,
     @Body('note') note?: string,
   ) {
-    return this.walletsService.adminRejectWithdrawal(
+    return this.withdrawalService.adminRejectWithdrawal(
       adminId,
       parseInt(id),
       note,

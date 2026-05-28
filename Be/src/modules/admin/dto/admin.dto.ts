@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 /**
  * Admin's own DTO for dispute resolution.
  * Không import từ bookings context — giữ bounded context rõ ràng.
- * TypeScript structural typing đảm bảo compatible với BookingsService.resolveDispute().
+ * TypeScript structural typing đảm bảo compatible với BookingDisputeService.resolveDispute().
  */
 export class AdminResolveDisputeDto {
   @IsString()

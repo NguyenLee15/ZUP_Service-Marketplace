@@ -19,7 +19,9 @@
       },
       "package": "com.homeservice.customer",
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
       ]
     },
     "plugins": [
@@ -50,7 +52,8 @@
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
-            "proguardRules": "./proguard-rules.pro"
+            "proguardRules": "./proguard-rules.pro",
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ]
@@ -61,9 +64,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0a178318-4e54-472e-a817-0c6545b46fde"
+        "projectId": "50ab68b6-0e05-47c2-bcf3-d9f8846018b8"
       }
     },
-    "owner": "nguyenlee"
+    "owner": "lee0408"
   }
 }

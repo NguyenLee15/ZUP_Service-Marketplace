@@ -7,16 +7,26 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ChatsService } from './chats.service';
-import { SenderType } from '@prisma/client';
+import { SenderType, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JobsService } from '../../shared/jobs/jobs.service';
+import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { resolveWebsocketCorsOrigin } from '../../config/websocket-cors.config';
 
 import { OnEvent } from '@nestjs/event-emitter';
+import {
+  extractSocketToken,
+  isJwtTokenPayload,
+  toAuthenticatedUser,
+} from '../../common/types/auth.types';
+import type { AuthenticatedSocket } from '../../common/types/auth.types';
+
+interface ConversationEventPayload {
+  conversationId: number;
+}
 
 @WebSocketGateway({
   cors: { origin: resolveWebsocketCorsOrigin(), credentials: true },
@@ -35,84 +45,91 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   @OnEvent('ai.message.created')
-  handleAiMessage(message: any) {
+  handleAiMessage(message: ConversationEventPayload) {
     this.server
       .to(`convo:${message.conversationId}`)
       .emit('newMessage', message);
   }
 
   @OnEvent('chat.message.recalled')
-  handleMessageRecalled(message: any) {
+  handleMessageRecalled(message: ConversationEventPayload) {
     this.server
       .to(`convo:${message.conversationId}`)
       .emit('messageRecalled', message);
   }
 
-  async handleConnection(client: Socket) {
+  async handleConnection(client: AuthenticatedSocket) {
     try {
-      const token =
-        client.handshake.auth?.token ||
-        client.handshake.headers?.authorization?.split(' ')[1];
+      const token = extractSocketToken(client);
       if (!token) {
         client.disconnect();
         return;
       }
-      const payload = this.jwtService.verify(token);
-      (client as any).userId = payload.sub;
-      (client as any).role = payload.role; // Lưu role để định danh
-      this.connectedUsers.set(payload.sub, client.id);
-      client.join(`user:${payload.sub}`);
-      this.logger.log(`User ${payload.sub} connected`);
+      const payload = this.jwtService.verify<Record<string, unknown>>(token);
+      if (!isJwtTokenPayload(payload)) {
+        client.disconnect();
+        return;
+      }
+
+      const user = toAuthenticatedUser(payload);
+      client.data.user = user;
+      this.connectedUsers.set(user.id, client.id);
+      await client.join(`user:${user.id}`);
+      this.logger.log(`User ${user.id} connected`);
     } catch {
       client.disconnect();
     }
   }
 
-  handleDisconnect(client: Socket) {
-    const userId = (client as any).userId;
-    if (userId) {
-      this.connectedUsers.delete(userId);
-      this.logger.log(`User ${userId} disconnected`);
+  handleDisconnect(client: AuthenticatedSocket) {
+    const user = client.data.user;
+    if (user) {
+      this.connectedUsers.delete(user.id);
+      this.logger.log(`User ${user.id} disconnected`);
     }
   }
 
   @SubscribeMessage('joinConversation')
   async handleJoinConversation(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: number },
   ) {
-    const userId = (client as any).userId;
+    const userId = client.data.user?.id;
+    if (!userId) return;
+
     const isMember = await this.chatsService.isMember(
       data.conversationId,
       userId,
     );
     if (!isMember) return;
 
-    client.join(`convo:${data.conversationId}`);
+    await client.join(`convo:${data.conversationId}`);
     await this.chatsService.markAsRead(data.conversationId, userId);
   }
 
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: number; content: string },
   ) {
-    const userId = (client as any).userId;
-    const userRole = (client as any).role;
+    const user = client.data.user;
+    if (!user) return;
 
     const isMember = await this.chatsService.isMember(
       data.conversationId,
-      userId,
+      user.id,
     );
     if (!isMember) return;
 
     // Nếu role là ADMIN/STAFF thì có thể có logic khác, nhưng ở đây chủ yếu là CUSTOMER/PROVIDER
     const senderType =
-      userRole === 'PROVIDER' ? SenderType.PROVIDER : SenderType.CUSTOMER;
+      user.role === UserRole.PROVIDER
+        ? SenderType.PROVIDER
+        : SenderType.CUSTOMER;
 
     const message = await this.chatsService.createMessage(
       data.conversationId,
-      userId,
+      user.id,
       senderType,
       data.content,
     );
@@ -126,11 +143,11 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (convo) {
       const recipientId =
-        userId === convo.customerId ? convo.providerId : convo.customerId;
+        user.id === convo.customerId ? convo.providerId : convo.customerId;
 
       // Nếu recipient là Provider và offline -> Trigger AI
       if (recipientId === convo.providerId && !this.isUserOnline(recipientId)) {
-        await this.jobsService.enqueue('chat.ai-reply', {
+        await this.jobsService.enqueue(JobName.ChatAiReply, {
           conversationId: data.conversationId,
           customerId: convo.customerId,
           providerId: convo.providerId,
@@ -142,10 +159,12 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('typing')
   async handleTyping(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: number },
   ) {
-    const userId = (client as any).userId;
+    const userId = client.data.user?.id;
+    if (!userId) return;
+
     const isMember = await this.chatsService.isMember(
       data.conversationId,
       userId,
@@ -159,10 +178,10 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('revokeMessage')
   async handleRevokeMessage(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { messageId: number },
   ) {
-    const userId = (client as any).userId;
+    const userId = client.data.user?.id;
     if (!userId || !Number.isInteger(Number(data.messageId))) return;
 
     try {

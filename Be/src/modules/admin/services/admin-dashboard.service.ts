@@ -110,35 +110,35 @@ export class AdminDashboardService {
 
     const [statusCounts, quotations, bookings, filterOptions] =
       await Promise.all([
-      this.prisma.booking.groupBy({
-        by: ['status'],
-        where: bookingWhere,
-        _count: { id: true },
-      }),
-      this.prisma.quotation.findMany({
-        where: { booking: { ...bookingWhere, status: BookingStatus.DONE } },
-        select: {
-          actualPrice: true,
-          commissionRateSnapshot: true,
-          booking: { select: { createdAt: true } },
-        },
-        orderBy: { booking: { createdAt: 'asc' } },
-      }),
-      this.prisma.booking.findMany({
-        where: bookingWhere,
-        select: {
-          province: true,
-          service: {
-            select: {
-              id: true,
-              name: true,
-              category: { select: { id: true, name: true } },
+        this.prisma.booking.groupBy({
+          by: ['status'],
+          where: bookingWhere,
+          _count: { id: true },
+        }),
+        this.prisma.quotation.findMany({
+          where: { booking: { ...bookingWhere, status: BookingStatus.DONE } },
+          select: {
+            actualPrice: true,
+            commissionRateSnapshot: true,
+            booking: { select: { createdAt: true } },
+          },
+          orderBy: { booking: { createdAt: 'asc' } },
+        }),
+        this.prisma.booking.findMany({
+          where: bookingWhere,
+          select: {
+            province: true,
+            service: {
+              select: {
+                id: true,
+                name: true,
+                category: { select: { id: true, name: true } },
+              },
             },
           },
-        },
-      }),
-      this.getFilterOptions(),
-    ]);
+        }),
+        this.getFilterOptions(),
+      ]);
 
     const revenueMap = new Map<string, number>();
     for (const item of quotations) {
@@ -166,7 +166,9 @@ export class AdminDashboardService {
         bookings.map((item) => item.province || 'Chưa có tỉnh/thành'),
       ),
       categoryData: this.groupCount(
-        bookings.map((item) => item.service?.category?.name || 'Chưa có danh mục'),
+        bookings.map(
+          (item) => item.service?.category?.name || 'Chưa có danh mục',
+        ),
       ),
       serviceData: this.groupCount(
         bookings.map((item) => item.service?.name || 'Chưa có dịch vụ'),
@@ -244,7 +246,7 @@ export class AdminDashboardService {
       ],
     };
 
-    const pdfDoc = await printer.createPdfKitDocument(docDefinition);
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',

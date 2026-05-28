@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { ErrorCodes } from '../errors/error-codes';
+import { AuthenticatedRequest } from '../types/auth.types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -24,7 +25,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
+    const { user } = context.switchToHttp().getRequest<AuthenticatedRequest>();
     if (!user) {
       throw new ForbiddenException({
         code: ErrorCodes.FORBIDDEN,

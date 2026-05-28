@@ -15,19 +15,21 @@ export class StorageProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
+  async process(job: Job<Record<string, never>, void, string>): Promise<void> {
     switch (job.name) {
       case 'storage.cleanup-orphaned':
-        return this.handleCleanupOrphaned();
+        await this.handleCleanupOrphaned();
+        return;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
     }
   }
 
-  private async handleCleanupOrphaned() {
+  private handleCleanupOrphaned(): Promise<void> {
     this.logger.log('Starting orphaned storage cleanup...');
     // Logic: Quét database và Cloudinary để tìm file thừa
     // Placeholder logic
     this.logger.log('Cleanup finished.');
+    return Promise.resolve();
   }
 }

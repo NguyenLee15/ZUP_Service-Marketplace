@@ -6,7 +6,7 @@ export default registerAs('redis', () => {
   let host = process.env.REDIS_HOST || 'localhost';
   let port = parseInt(process.env.REDIS_PORT || '6379', 10);
   let password = process.env.REDIS_PASSWORD || undefined;
-  let tls: any = undefined;
+  let tls: { rejectUnauthorized: boolean } | undefined = undefined;
 
   if (redisUrlStr) {
     try {

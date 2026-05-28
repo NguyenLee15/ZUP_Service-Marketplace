@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { JobsService } from '../../shared/jobs/jobs.service';
+import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 
 @Injectable()
 export class ServicesCron {
@@ -14,6 +14,6 @@ export class ServicesCron {
   @Cron(CronExpression.EVERY_WEEK)
   async handleAutoHideViolating() {
     this.logger.debug('Adding auto-hide violating services job to queue...');
-    await this.jobsService.enqueue('service.auto-hide-violating', {});
+    await this.jobsService.enqueue(JobName.ServiceAutoHideViolating, {});
   }
 }

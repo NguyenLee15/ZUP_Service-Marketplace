@@ -13,6 +13,7 @@ import {
   CreateAddressDto,
   UpdateAddressDto,
 } from './dto/users.dto';
+import { Prisma } from '@prisma/client';
 
 const MAX_ADDRESSES = 5;
 
@@ -74,7 +75,7 @@ export class UsersService {
     ip?: string,
   ) {
     await this.checkActiveUser(userId);
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
 
     if (dto.fullName) updateData.fullName = dto.fullName;
     if (dto.phone) updateData.phone = dto.phone;

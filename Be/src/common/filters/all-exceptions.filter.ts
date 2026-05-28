@@ -18,37 +18,46 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
     let code: string = ErrorCodes.INTERNAL_ERROR;
     let message = 'Lỗi hệ thống. Vui lòng thử lại sau.';
+    let details: unknown;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        const resp = exceptionResponse as Record<string, any>;
+        const resp = exceptionResponse as Record<string, unknown>;
         // Hỗ trợ format: throw new BadRequestException({ code: '...', message: '...' })
-        code = resp.code || resp.error || this.statusToCode(status);
-        message = resp.message || exception.message;
+        code =
+          this.stringValue(resp.code) ??
+          this.stringValue(resp.error) ??
+          this.statusToCode(status);
+        const responseMessage =
+          this.messageValue(resp.message) ?? exception.message;
+        message = Array.isArray(responseMessage)
+          ? responseMessage.join('; ')
+          : responseMessage;
+        details = resp.details;
 
         // class-validator trả về mảng message
-        if (Array.isArray(message)) {
-          message = message.join('; ');
-        }
       } else {
         code = this.statusToCode(status);
-        message = exceptionResponse;
+        message =
+          typeof exceptionResponse === 'string'
+            ? exceptionResponse
+            : exception.message;
       }
     }
 
     // Logging theo quy tắc ARCHITECTURE.md mục 18.2
-    if (status >= 500) {
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
         `${request.method} ${request.url} ${status} - ${message}`,
         exception instanceof Error ? exception.stack : undefined,
       );
-    } else if (status >= 400) {
+    } else if (status >= HttpStatus.BAD_REQUEST) {
       this.logger.warn(
         `${request.method} ${request.url} ${status} - ${code}: ${message}`,
       );
@@ -59,23 +68,39 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error: {
         code,
         message,
+        ...(details !== undefined && { details }),
       },
     });
   }
 
-  private statusToCode(status: number): string {
+  private statusToCode(status: HttpStatus): string {
     switch (status) {
-      case 400:
+      case HttpStatus.BAD_REQUEST:
         return ErrorCodes.VALIDATION_ERROR;
-      case 401:
+      case HttpStatus.UNAUTHORIZED:
         return ErrorCodes.UNAUTHORIZED;
-      case 403:
+      case HttpStatus.FORBIDDEN:
         return ErrorCodes.FORBIDDEN;
-      case 404:
+      case HttpStatus.NOT_FOUND:
         return ErrorCodes.NOT_FOUND;
-      case 500:
+      case HttpStatus.INTERNAL_SERVER_ERROR:
       default:
         return ErrorCodes.INTERNAL_ERROR;
     }
+  }
+
+  private stringValue(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  private messageValue(value: unknown): string | string[] | undefined {
+    if (typeof value === 'string') return value;
+    if (
+      Array.isArray(value) &&
+      value.every((item) => typeof item === 'string')
+    ) {
+      return value;
+    }
+    return undefined;
   }
 }

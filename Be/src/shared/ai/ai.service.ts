@@ -10,6 +10,10 @@ type GeminiResponse = {
   candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   error?: { message?: string };
 };
+type GeminiModel = {
+  name?: string;
+  supportedGenerationMethods?: string[];
+};
 
 @Injectable()
 export class AiService {
@@ -46,7 +50,7 @@ export class AiService {
     if (!this.apiKey || this.provider !== 'gemini') return;
 
     const startedAt = Date.now();
-    const data = await this.getJson<{ models?: any[] }>(
+    const data = await this.getJson<{ models?: GeminiModel[] }>(
       `${this.baseUrl}/models?key=${this.apiKey}`,
       this.timeoutMs,
       0,
@@ -172,23 +176,35 @@ Tóm tắt ngắn gọn dưới 30 chữ.`;
     const schema = {
       type: 'OBJECT',
       properties: {
-        category: { type: 'STRING', enum: ['Chất lượng dịch vụ', 'Thái độ', 'Giá cả', 'Khác'] },
+        category: {
+          type: 'STRING',
+          enum: ['Chất lượng dịch vụ', 'Thái độ', 'Giá cả', 'Khác'],
+        },
         severity: { type: 'STRING', enum: ['Cao', 'Trung bình', 'Thấp'] },
-        summary: { type: 'STRING' }
+        summary: { type: 'STRING' },
       },
-      required: ['category', 'severity', 'summary']
+      required: ['category', 'severity', 'summary'],
     };
 
     try {
-      const result = await this.generateJson<{ category: string; severity: string; summary: string }>(
-        prompt, 
-        this.timeoutMs * 2,
-        schema
-      );
-      if (!result) return { category: 'Khác', severity: 'Trung bình', summary: 'Không thể phân tích tự động' };
+      const result = await this.generateJson<{
+        category: string;
+        severity: string;
+        summary: string;
+      }>(prompt, this.timeoutMs * 2, schema);
+      if (!result)
+        return {
+          category: 'Khác',
+          severity: 'Trung bình',
+          summary: 'Không thể phân tích tự động',
+        };
       return result;
     } catch {
-      return { category: 'Khác', severity: 'Trung bình', summary: 'Không thể phân tích tự động' };
+      return {
+        category: 'Khác',
+        severity: 'Trung bình',
+        summary: 'Không thể phân tích tự động',
+      };
     }
   }
 
@@ -201,13 +217,13 @@ ${messages.map((message) => `- ${message}`).join('\n')}`;
 
     const schema = {
       type: 'ARRAY',
-      items: { type: 'STRING' }
+      items: { type: 'STRING' },
     };
 
     const result = await this.generateJson<string[]>(
       prompt,
       this.timeoutMs * 2,
-      schema
+      schema,
     );
     return Array.isArray(result) ? result.slice(0, 3) : [];
   }
@@ -221,15 +237,15 @@ Bình luận: "${comment}"`;
     const schema = {
       type: 'OBJECT',
       properties: {
-        isToxic: { type: 'BOOLEAN' }
+        isToxic: { type: 'BOOLEAN' },
       },
-      required: ['isToxic']
+      required: ['isToxic'],
     };
 
     const result = await this.generateJson<{ isToxic?: boolean }>(
       prompt,
       this.timeoutMs * 2,
-      schema
+      schema,
     );
     return result?.isToxic === true;
   }
@@ -247,9 +263,9 @@ Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che
     const schema = {
       type: 'OBJECT',
       properties: {
-        isValid: { type: 'BOOLEAN' }
+        isValid: { type: 'BOOLEAN' },
       },
-      required: ['isValid']
+      required: ['isValid'],
     };
 
     const data = await this.postJson<GeminiResponse>(
@@ -263,9 +279,9 @@ Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che
             ],
           },
         ],
-        generationConfig: { 
+        generationConfig: {
           responseMimeType: 'application/json',
-          responseSchema: schema
+          responseSchema: schema,
         },
       },
       this.timeoutMs * 3,
@@ -283,7 +299,9 @@ Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che
     timeoutMs: number,
     schema?: Record<string, unknown>,
   ): Promise<T | null> {
-    const generationConfig: Record<string, unknown> = { responseMimeType: 'application/json' };
+    const generationConfig: Record<string, unknown> = {
+      responseMimeType: 'application/json',
+    };
     if (schema) {
       generationConfig.responseSchema = schema;
     }
@@ -379,8 +397,11 @@ Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che
           );
           return null;
         }
-        
-        const backoffMs = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 500, 8000);
+
+        const backoffMs = Math.min(
+          1000 * Math.pow(2, attempt) + Math.random() * 500,
+          8000,
+        );
         this.logger.warn(
           `AI request failed (attempt ${attempt + 1}/${retryCount + 1}), retrying in ${Math.round(backoffMs)}ms. Error: ${message}`,
         );
@@ -423,8 +444,11 @@ Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che
             : arrayStart === -1
               ? objectStart
               : Math.min(objectStart, arrayStart);
-        const end = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
-        
+        const end = Math.max(
+          cleaned.lastIndexOf('}'),
+          cleaned.lastIndexOf(']'),
+        );
+
         if (start >= 0 && end >= start) {
           const json = cleaned.slice(start, end + 1);
           return JSON.parse(json) as T;
@@ -433,7 +457,9 @@ Kiểm tra ảnh có phù hợp với dịch vụ không. Nếu ảnh tối, che
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`AI JSON parse failed: ${message}. Raw text: ${text.slice(0, 100)}...`);
+      this.logger.warn(
+        `AI JSON parse failed: ${message}. Raw text: ${text.slice(0, 100)}...`,
+      );
       return null;
     }
   }

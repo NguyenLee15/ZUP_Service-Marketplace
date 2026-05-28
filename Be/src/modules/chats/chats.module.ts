@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ChatsService } from './chats.service';
 import { ChatsGateway } from './chats.gateway';
@@ -14,10 +14,9 @@ import { isRedisQueueEnabled } from '../../config/runtime.config';
     AiModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) =>
-        ({
-          secret: configService.getOrThrow<string>('app.jwtSecret'),
-        }) as any,
+      useFactory: (configService: ConfigService): JwtModuleOptions => ({
+        secret: configService.getOrThrow<string>('app.jwtSecret'),
+      }),
       inject: [ConfigService],
     }),
     ...(isRedisQueueEnabled()

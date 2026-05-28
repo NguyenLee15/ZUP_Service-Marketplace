@@ -46,11 +46,7 @@ export class CloudinaryService {
           (error, result: UploadApiResponse | undefined) => {
             if (error) {
               this.logger.error('Cloudinary upload failed', error);
-              reject(
-                error instanceof Error
-                  ? error
-                  : new Error('Cloudinary upload failed'),
-              );
+              reject(new Error('Cloudinary upload failed'));
               return;
             }
             if (!result) {

@@ -4,20 +4,22 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { BookingsService } from './bookings.service';
+import { ProviderDashboardService } from './provider-dashboard.service';
 
 @Controller('provider/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('PROVIDER')
 export class ProviderDashboardController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly providerDashboardService: ProviderDashboardService,
+  ) {}
 
   @Get('stats')
   async getStats(
     @CurrentUser('id') providerId: number,
     @Query() filters: Record<string, string>,
   ) {
-    const stats = await this.bookingsService.getProviderStats(
+    const stats = await this.providerDashboardService.getProviderStats(
       providerId,
       filters,
     );
@@ -30,7 +32,7 @@ export class ProviderDashboardController {
     @Query() filters: Record<string, string>,
     @Res() res: Response,
   ) {
-    const pdfDoc = await this.bookingsService.exportProviderPdf(
+    const pdfDoc = await this.providerDashboardService.exportProviderPdf(
       providerId,
       filters,
     );
@@ -49,7 +51,7 @@ export class ProviderDashboardController {
     @Query() filters: Record<string, string>,
     @Res() res: Response,
   ) {
-    const workbook = await this.bookingsService.exportProviderExcel(
+    const workbook = await this.providerDashboardService.exportProviderExcel(
       providerId,
       filters,
     );

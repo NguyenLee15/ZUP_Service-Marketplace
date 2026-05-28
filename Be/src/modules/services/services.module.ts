@@ -12,6 +12,11 @@ import { ServicesProcessor } from './services.processor';
 
 import { ServicesCron } from './services.cron';
 import { FeaturedListingsService } from './featured-listings.service';
+import { ProviderPublicService } from './provider-public.service';
+import { ServiceCommandService } from './service-command.service';
+import { ServiceModerationService } from './service-moderation.service';
+import { ServiceSearchService } from './service-search.service';
+import { ServiceSharedService } from './service-shared.service';
 import {
   isCronEnabled,
   isRedisQueueEnabled,
@@ -28,11 +33,23 @@ import {
   ],
   controllers: [ServicesController, AdminServicesController],
   providers: [
+    ServiceSharedService,
+    ServiceCommandService,
+    ServiceModerationService,
+    ServiceSearchService,
+    ProviderPublicService,
     ServicesService,
     ...(isWorkerEnabled() ? [ServicesProcessor] : []),
     ...(isCronEnabled() ? [ServicesCron] : []),
     FeaturedListingsService,
   ],
-  exports: [ServicesService, FeaturedListingsService],
+  exports: [
+    ServicesService,
+    ServiceCommandService,
+    ServiceModerationService,
+    ServiceSearchService,
+    ProviderPublicService,
+    FeaturedListingsService,
+  ],
 })
 export class ServicesModule {}

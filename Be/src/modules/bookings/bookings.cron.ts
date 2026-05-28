@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JobsService } from '../../shared/jobs/jobs.service';
-import { BookingsService } from './bookings.service';
+import { JobName, JobsService } from '../../shared/jobs/jobs.service';
+import { BookingTimeoutService } from './booking-timeout.service';
 
 @Injectable()
 export class BookingsCron {
@@ -11,7 +11,7 @@ export class BookingsCron {
   constructor(
     private prisma: PrismaService,
     private jobsService: JobsService,
-    private bookingsService: BookingsService,
+    private bookingTimeoutService: BookingTimeoutService,
   ) {}
 
   /**
@@ -20,7 +20,7 @@ export class BookingsCron {
   @Cron('*/15 * * * * *')
   async handleProviderAcceptanceTimeout() {
     const expired =
-      await this.bookingsService.expirePendingProviderAcceptances();
+      await this.bookingTimeoutService.expirePendingProviderAcceptances();
     if (expired > 0) {
       this.logger.log(`Expired ${expired} unaccepted provider booking(s).`);
     }
@@ -44,7 +44,7 @@ export class BookingsCron {
     });
 
     for (const booking of overdueBookings) {
-      await this.jobsService.enqueue('booking.auto-complete', {
+      await this.jobsService.enqueue(JobName.BookingAutoComplete, {
         bookingId: booking.id,
       });
     }
@@ -67,7 +67,7 @@ export class BookingsCron {
     });
 
     for (const booking of noshowBookings) {
-      await this.jobsService.enqueue('booking.sla-noshow-alert', {
+      await this.jobsService.enqueue(JobName.BookingSlaNoShowAlert, {
         bookingId: booking.id,
       });
     }
@@ -91,7 +91,7 @@ export class BookingsCron {
     });
 
     for (const booking of stuckBookings) {
-      await this.jobsService.enqueue('booking.sla-stuck-inprogress', {
+      await this.jobsService.enqueue(JobName.BookingSlaStuckInProgress, {
         bookingId: booking.id,
       });
     }

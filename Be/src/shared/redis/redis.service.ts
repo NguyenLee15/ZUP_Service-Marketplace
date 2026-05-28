@@ -45,7 +45,8 @@ export class RedisService implements OnModuleDestroy {
     try {
       return (await this.client.ping()) === 'PONG';
     } catch (error) {
-      this.logger.warn(`Redis ping failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Redis ping failed: ${message}`);
       return false;
     }
   }

@@ -3,6 +3,16 @@ import * as path from 'path';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
+interface GeminiModelsResponse {
+  models?: Array<{
+    name: string;
+    supportedGenerationMethods?: string[];
+  }>;
+  error?: {
+    message?: string;
+  };
+}
+
 async function listModels() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -14,22 +24,23 @@ async function listModels() {
     // Thử với fetch trực tiếp để kiểm tra API Key
     const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
     const response = await fetch(url);
-    const data = await response.json();
+    const data = (await response.json()) as GeminiModelsResponse;
 
     if (data.error) {
-      console.error('API Error:', data.error.message);
+      console.error('API Error:', data.error.message ?? 'Unknown error');
       return;
     }
 
     console.log('Available models:');
-    data.models.forEach((m: any) => {
+    data.models?.forEach((m) => {
       console.log(
-        `- ${m.name} (methods: ${m.supportedGenerationMethods.join(', ')})`,
+        `- ${m.name} (methods: ${(m.supportedGenerationMethods ?? []).join(', ')})`,
       );
     });
   } catch (error) {
-    console.error('Fetch Error:', error.message);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Fetch Error:', message);
   }
 }
 
-listModels();
+void listModels();

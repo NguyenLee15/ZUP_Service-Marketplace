@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import { Sparkles } from 'lucide-react';
 
 import { CategoryGrid } from '@/app/components/home/CategoryGrid';
@@ -5,6 +6,7 @@ import { DeferredRecentlyViewedServices } from '@/app/components/home/DeferredRe
 import { FeaturedServices } from '@/app/components/home/FeaturedServices';
 import { HeroSection } from '@/app/components/home/HeroSection';
 import { HowItWorks } from '@/app/components/home/HowItWorks';
+import { CategoryGridSkeleton, ServicesListSkeleton } from '@/app/components/home/HomeSkeleton';
 import { CustomerFooter } from '@/components/layout/CustomerFooter';
 import { HomeHeader } from '@/components/layout/HomeHeader';
 import type { Category, Service } from '@/types';
@@ -230,7 +232,9 @@ export default async function Home() {
         <HeroSection />
 
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
-          <CategoryGrid />
+          <Suspense fallback={<CategoryGridSkeleton />}>
+            <CategoryGrid />
+          </Suspense>
 
           {sponsoredServices.length > 0 && (
             <section className="space-y-7 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -251,7 +255,9 @@ export default async function Home() {
             </section>
           )}
 
-          <DeferredRecentlyViewedServices />
+          <Suspense fallback={<ServicesListSkeleton />}>
+            <DeferredRecentlyViewedServices />
+          </Suspense>
 
           {categorySections.map((section) => (
             <FeaturedServices

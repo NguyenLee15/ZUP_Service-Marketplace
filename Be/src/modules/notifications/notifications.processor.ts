@@ -7,6 +7,12 @@ import type { ExpoPushMessage } from 'expo-server-sdk';
 type ExpoModule = typeof import('expo-server-sdk');
 type ExpoClient = InstanceType<ExpoModule['Expo']>;
 
+interface PushNotificationPayload {
+  userId: number;
+  title: string;
+  content: string;
+}
+
 @Processor('notification-queue')
 @Injectable()
 export class NotificationProcessor extends WorkerHost {
@@ -18,10 +24,13 @@ export class NotificationProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
+  async process(
+    job: Job<PushNotificationPayload, void, string>,
+  ): Promise<void> {
     switch (job.name) {
       case 'notification.push':
-        return this.handlePushNotification(job.data);
+        await this.handlePushNotification(job.data);
+        return;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
     }
@@ -38,11 +47,7 @@ export class NotificationProcessor extends WorkerHost {
     return this.expo;
   }
 
-  private async handlePushNotification(data: {
-    userId: number;
-    title: string;
-    content: string;
-  }) {
+  private async handlePushNotification(data: PushNotificationPayload) {
     this.logger.log(
       `Pushing notification to user #${data.userId}: ${data.title}`,
     );
@@ -61,16 +66,18 @@ export class NotificationProcessor extends WorkerHost {
       }
 
       const { Expo } = await this.getExpoModule();
-      if (!Expo.isExpoPushToken(user.expoPushToken)) {
+      const expoPushToken = String(user.expoPushToken);
+      const isValidExpoPushToken: boolean = Expo.isExpoPushToken(expoPushToken);
+      if (!isValidExpoPushToken) {
         this.logger.warn(
-          `Invalid expo push token for user #${data.userId}: ${user.expoPushToken}`,
+          `Invalid expo push token for user #${data.userId}: ${expoPushToken}`,
         );
         return;
       }
 
       const messages: ExpoPushMessage[] = [
         {
-          to: user.expoPushToken,
+          to: expoPushToken,
           sound: 'default',
           title: data.title,
           body: data.content,
@@ -80,14 +87,18 @@ export class NotificationProcessor extends WorkerHost {
 
       const expo = await this.getExpoClient();
       const chunks = expo.chunkPushNotifications(messages);
-      const tickets = [];
+      const tickets: unknown[] = [];
 
       for (const chunk of chunks) {
         try {
           const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
           tickets.push(...ticketChunk);
         } catch (error) {
-          this.logger.error(`Error sending push notification chunk: ${error}`);
+          const message =
+            error instanceof Error ? error.message : String(error);
+          this.logger.error(
+            `Error sending push notification chunk: ${message}`,
+          );
         }
       }
       this.logger.log(`Notification delivered to user #${data.userId}`);

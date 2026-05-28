@@ -7,6 +7,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
   extensions = [pgvector(map: "vector")]
 }
 
@@ -391,19 +392,23 @@ model ProviderWallet {
 
 /// Bảng wallet_transactions — vnpay_txn_ref = idempotency key
 model WalletTransaction {
-  id          Int                     @id @default(autoincrement())
-  walletId    Int                     @map("wallet_id")
-  type        WalletTransactionType
-  amount      Decimal                 @db.Decimal(15, 2)
-  bookingId   Int?                    @map("booking_id")
-  status      WalletTransactionStatus @default(PENDING)
-  vnpayTxnRef String?                 @map("vnpay_txn_ref") @db.VarChar(100)
-  createdAt   DateTime                @default(now()) @map("created_at")
-  wallet      ProviderWallet          @relation(fields: [walletId], references: [id])
-  booking     Booking?                @relation(fields: [bookingId], references: [id])
-  disputeId   Int?                    @map("dispute_id")
-  dispute     Dispute?                @relation(fields: [disputeId], references: [id])
+  id             Int                     @id @default(autoincrement())
+  walletId       Int                     @map("wallet_id")
+  type           WalletTransactionType
+  amount         Decimal                 @db.Decimal(15, 2)
+  bookingId      Int?                    @map("booking_id")
+  status         WalletTransactionStatus @default(PENDING)
+  vnpayTxnRef    String?                 @map("vnpay_txn_ref") @db.VarChar(100)
+  idempotencyKey String?                 @unique @map("idempotency_key") @db.VarChar(140)
+  processedAt    DateTime?               @map("processed_at")
+  failureReason  String?                 @map("failure_reason") @db.Text
+  createdAt      DateTime                @default(now()) @map("created_at")
+  wallet         ProviderWallet          @relation(fields: [walletId], references: [id])
+  booking        Booking?                @relation(fields: [bookingId], references: [id])
+  disputeId      Int?                    @map("dispute_id")
+  dispute        Dispute?                @relation(fields: [disputeId], references: [id])
 
+  @@unique([vnpayTxnRef])
   @@index([walletId])
   @@index([bookingId])
   @@map("wallet_transactions")

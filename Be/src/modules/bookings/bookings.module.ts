@@ -21,6 +21,14 @@ import {
 import { TrackingGateway } from './tracking.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BookingStatePolicy } from './booking-state.policy';
+import { BookingLifecycleService } from './booking-lifecycle.service';
+import { BookingDisputeService } from './booking-dispute.service';
+import { BookingQueryService } from './booking-query.service';
+import { ProviderDashboardService } from './provider-dashboard.service';
+import { BookingCommissionService } from './booking-commission.service';
+import { BookingSharedService } from './booking-shared.service';
+import { BookingTimeoutService } from './booking-timeout.service';
 
 @Module({
   imports: [
@@ -29,10 +37,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     AiModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) =>
-        ({
-          secret: configService.getOrThrow<string>('app.jwtSecret'),
-        }) as any,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.getOrThrow<string>('app.jwtSecret'),
+      }),
       inject: [ConfigService],
     }),
     ...(isRedisQueueEnabled()
@@ -50,11 +57,27 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   ],
   providers: [
     BookingsService,
+    BookingCommissionService,
+    BookingSharedService,
+    BookingTimeoutService,
+    BookingStatePolicy,
+    BookingLifecycleService,
+    BookingDisputeService,
+    BookingQueryService,
+    ProviderDashboardService,
     TrackingGateway,
     ...(isCronEnabled() ? [BookingsCron] : []),
     ...(isWorkerEnabled() ? [BookingsProcessor, DisputeProcessor] : []),
   ],
-  exports: [BookingsService],
+  exports: [
+    BookingsService,
+    BookingLifecycleService,
+    BookingDisputeService,
+    BookingQueryService,
+    ProviderDashboardService,
+    BookingCommissionService,
+    BookingSharedService,
+    BookingTimeoutService,
+  ],
 })
 export class BookingsModule {}
-

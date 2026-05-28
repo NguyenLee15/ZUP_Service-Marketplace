@@ -8,6 +8,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { RedisService } from '../../shared/redis/redis.service';
+import { ServiceStatus } from '@prisma/client';
 
 @Injectable()
 export class FeaturedListingsService {
@@ -32,7 +33,9 @@ export class FeaturedListingsService {
       await this.redisService.del('services:featured:20');
       this.logger.log('Cleared featured listings Redis cache');
     } catch (err) {
-      this.logger.warn(`Failed to clear featured cache: ${err.message}`);
+      this.logger.warn(
+        `Failed to clear featured cache: ${this.errorMessage(err)}`,
+      );
     }
   }
 
@@ -185,10 +188,13 @@ export class FeaturedListingsService {
     try {
       const cached = await this.redisService.get(cacheKey);
       if (cached) {
-        return JSON.parse(cached);
+        const parsed: unknown = JSON.parse(cached);
+        return this.isFeaturedResponse(parsed) ? parsed : { data: [] };
       }
     } catch (err) {
-      this.logger.warn(`Failed to read featured listings from Redis: ${err.message}`);
+      this.logger.warn(
+        `Failed to read featured listings from Redis: ${this.errorMessage(err)}`,
+      );
     }
 
     const featured = await this.prisma.featuredListing.findMany({
@@ -211,7 +217,10 @@ export class FeaturedListingsService {
 
     // Chỉ trả về service ACTIVE + chưa bị xóa
     const activeServices = featured
-      .filter((f) => f.service.status === 'ACTIVE' && !f.service.isDeleted)
+      .filter(
+        (f) =>
+          f.service.status === ServiceStatus.ACTIVE && !f.service.isDeleted,
+      )
       .map((f) => ({
         ...f.service,
         isFeatured: true,
@@ -223,7 +232,9 @@ export class FeaturedListingsService {
     try {
       await this.redisService.set(cacheKey, JSON.stringify(result), 600); // Cache TTL: 10 mins
     } catch (err) {
-      this.logger.warn(`Failed to write featured listings to Redis: ${err.message}`);
+      this.logger.warn(
+        `Failed to write featured listings to Redis: ${this.errorMessage(err)}`,
+      );
     }
 
     return result;
@@ -271,5 +282,18 @@ export class FeaturedListingsService {
       where: { key: 'featured_daily_rate' },
     });
     return setting ? Number(setting.value) : this.DEFAULT_DAILY_RATE;
+  }
+
+  private errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  private isFeaturedResponse(value: unknown): value is { data: unknown[] } {
+    return (
+      value !== null &&
+      typeof value === 'object' &&
+      'data' in value &&
+      Array.isArray((value as Record<string, unknown>).data)
+    );
   }
 }

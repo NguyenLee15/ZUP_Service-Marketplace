@@ -5,15 +5,26 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { KycService } from '../../users/kyc.service';
-import { BookingsService } from '../../bookings/bookings.service';
+import { BookingDisputeService } from '../../bookings/booking-dispute.service';
+import { BookingLifecycleService } from '../../bookings/booking-lifecycle.service';
 import { AdminResolveDisputeDto } from '../dto/admin.dto';
+import {
+  BookingStatus,
+  DisputeStatus,
+  KycStatus,
+  Prisma,
+  ServiceStatus,
+  UserRole,
+  UserStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class AdminService {
   constructor(
     private prisma: PrismaService,
     private kycService: KycService,
-    private bookingsService: BookingsService,
+    private bookingLifecycleService: BookingLifecycleService,
+    private bookingDisputeService: BookingDisputeService,
   ) {}
 
   // ... (getUsers, lockUser, unlockUser, deleteUser stay as is)
@@ -21,8 +32,8 @@ export class AdminService {
   // ===== KYC =====
 
   async getKycRequests(status?: string, page: number = 1, limit: number = 20) {
-    const where: any = {};
-    if (status) where.status = status;
+    const where: Prisma.KycProfileWhereInput = {};
+    if (this.isKycStatus(status)) where.status = status;
 
     const [data, total] = await Promise.all([
       this.prisma.kycProfile.findMany({
@@ -82,8 +93,8 @@ export class AdminService {
     page: number = 1,
     limit: number = 20,
   ) {
-    const where: any = {};
-    if (status) where.status = status;
+    const where: Prisma.BookingWhereInput = {};
+    if (this.isBookingStatus(status)) where.status = status;
     if (keyword) {
       where.OR = [
         { bookingCode: { contains: keyword, mode: 'insensitive' } },
@@ -152,14 +163,14 @@ export class AdminService {
   }
 
   async cancelBooking(adminId: number, id: number, reason: string) {
-    return this.bookingsService.cancelByAdmin(adminId, id, { reason });
+    return this.bookingLifecycleService.cancelByAdmin(adminId, id, { reason });
   }
 
   // ===== DISPUTES =====
 
   async getDisputes(status?: string, page: number = 1, limit: number = 20) {
-    const where: any = {};
-    if (status) where.status = status;
+    const where: Prisma.DisputeWhereInput = {};
+    if (this.isDisputeStatus(status)) where.status = status;
 
     const [data, total] = await Promise.all([
       this.prisma.dispute.findMany({
@@ -218,7 +229,7 @@ export class AdminService {
     dto: AdminResolveDisputeDto,
     ip: string,
   ) {
-    return this.bookingsService.resolveDispute(adminId, id, dto, ip);
+    return this.bookingDisputeService.resolveDispute(adminId, id, dto, ip);
   }
 
   async getUsers(
@@ -228,9 +239,9 @@ export class AdminService {
     status?: string,
     keyword?: string,
   ) {
-    const where: any = {};
-    if (role) where.role = role;
-    if (status) where.status = status;
+    const where: Prisma.UserWhereInput = {};
+    if (this.isUserRole(role)) where.role = role;
+    if (this.isUserStatus(status)) where.status = status;
     if (keyword) {
       where.OR = [
         { fullName: { contains: keyword, mode: 'insensitive' } },
@@ -269,7 +280,7 @@ export class AdminService {
     await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id },
-        data: { status: 'LOCKED' },
+        data: { status: UserStatus.LOCKED },
       });
 
       await tx.refreshToken.updateMany({
@@ -277,10 +288,10 @@ export class AdminService {
         data: { revoked: true },
       });
 
-      if (user.role === 'PROVIDER') {
+      if (user.role === UserRole.PROVIDER) {
         await tx.service.updateMany({
-          where: { providerId: id, status: 'ACTIVE' },
-          data: { status: 'HIDDEN' },
+          where: { providerId: id, status: ServiceStatus.ACTIVE },
+          data: { status: ServiceStatus.HIDDEN },
         });
       }
 
@@ -299,7 +310,10 @@ export class AdminService {
 
   async unlockUser(adminId: number, id: number, ip: string) {
     await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id }, data: { status: 'ACTIVE' } });
+      await tx.user.update({
+        where: { id },
+        data: { status: UserStatus.ACTIVE },
+      });
       await tx.auditLog.create({
         data: {
           actorId: adminId,
@@ -324,7 +338,14 @@ export class AdminService {
     const activeBookings = await this.prisma.booking.count({
       where: {
         customerId: id,
-        status: { in: ['PENDING', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS'] },
+        status: {
+          in: [
+            BookingStatus.PENDING,
+            BookingStatus.QUOTED,
+            BookingStatus.CONFIRMED,
+            BookingStatus.IN_PROGRESS,
+          ],
+        },
       },
     });
 
@@ -340,7 +361,7 @@ export class AdminService {
         where: { id },
         data: {
           email: `DELETED_${id}_${user.email}`,
-          status: 'LOCKED',
+          status: UserStatus.LOCKED,
         },
       });
 
@@ -383,7 +404,7 @@ export class AdminService {
         },
       });
     }
-    return JSON.parse(setting.value);
+    return this.parseCommissionSettings(setting.value);
   }
 
   async updateCommissionSettings(
@@ -410,5 +431,57 @@ export class AdminService {
         },
       });
     });
+  }
+
+  private parseCommissionSettings(value: string): {
+    rate: number;
+    minAmount: number;
+    maxAmount: number;
+  } {
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object') {
+      return { rate: 8.5, minAmount: 50000, maxAmount: 5000000 };
+    }
+    const record = parsed as Record<string, unknown>;
+    return {
+      rate: Number(record.rate ?? 8.5),
+      minAmount: Number(record.minAmount ?? 50000),
+      maxAmount: Number(record.maxAmount ?? 5000000),
+    };
+  }
+
+  private isKycStatus(value: unknown): value is KycStatus {
+    return (
+      typeof value === 'string' &&
+      Object.values(KycStatus).includes(value as KycStatus)
+    );
+  }
+
+  private isBookingStatus(value: unknown): value is BookingStatus {
+    return (
+      typeof value === 'string' &&
+      Object.values(BookingStatus).includes(value as BookingStatus)
+    );
+  }
+
+  private isDisputeStatus(value: unknown): value is DisputeStatus {
+    return (
+      typeof value === 'string' &&
+      Object.values(DisputeStatus).includes(value as DisputeStatus)
+    );
+  }
+
+  private isUserRole(value: unknown): value is UserRole {
+    return (
+      typeof value === 'string' &&
+      Object.values(UserRole).includes(value as UserRole)
+    );
+  }
+
+  private isUserStatus(value: unknown): value is UserStatus {
+    return (
+      typeof value === 'string' &&
+      Object.values(UserStatus).includes(value as UserStatus)
+    );
   }
 }

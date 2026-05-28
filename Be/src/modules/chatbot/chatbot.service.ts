@@ -15,7 +15,8 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../../shared/ai/ai.service';
-import { BookingsService } from '../bookings/bookings.service';
+import { BookingLifecycleService } from '../bookings/booking-lifecycle.service';
+import { BookingQueryService } from '../bookings/booking-query.service';
 import { ChatsService } from '../chats/chats.service';
 import { ServicesService } from '../services/services.service';
 import { CreateBookingDto } from '../bookings/dto/bookings.dto';
@@ -26,7 +27,7 @@ const districtCoords: Record<string, { lat: number; lng: number }> = {
   'Quận 1': { lat: 10.7769, lng: 106.7009 },
   'Quận 2': { lat: 10.7872, lng: 106.7498 },
   'Quận 3': { lat: 10.7794, lng: 106.6816 },
-  'Quận 4': { lat: 10.7580, lng: 106.7067 },
+  'Quận 4': { lat: 10.758, lng: 106.7067 },
   'Quận 5': { lat: 10.7541, lng: 106.6631 },
   'Quận 6': { lat: 10.7483, lng: 106.6358 },
   'Quận 7': { lat: 10.7327, lng: 106.7268 },
@@ -42,26 +43,28 @@ const districtCoords: Record<string, { lat: number; lng: number }> = {
   'Quận Tân Bình': { lat: 10.8014, lng: 106.6525 },
   'Quận Tân Phú': { lat: 10.7923, lng: 106.6183 },
   'Quận Bình Tân': { lat: 10.7656, lng: 106.5813 },
-  'Huyện Củ Chi': { lat: 10.9850, lng: 106.4984 },
-  'Huyện Hóc Môn': { lat: 10.8854, lng: 106.5910 },
+  'Huyện Củ Chi': { lat: 10.985, lng: 106.4984 },
+  'Huyện Hóc Môn': { lat: 10.8854, lng: 106.591 },
   'Huyện Nhà Bè': { lat: 10.6661, lng: 106.7317 },
   'Huyện Bình Chánh': { lat: 10.6875, lng: 106.5938 },
   'Huyện Cần Giờ': { lat: 10.5083, lng: 106.8635 },
   // Hà Nội
   'Quận Hoàn Kiếm': { lat: 21.0285, lng: 105.8522 },
-  'Quận Ba Đình': { lat: 21.0362, lng: 105.8290 },
+  'Quận Ba Đình': { lat: 21.0362, lng: 105.829 },
   'Quận Tây Hồ': { lat: 21.0718, lng: 105.8227 },
   'Quận Cầu Giấy': { lat: 21.0358, lng: 105.7952 },
-  'Quận Đống Đa': { lat: 21.0122, lng: 105.8280 },
+  'Quận Đống Đa': { lat: 21.0122, lng: 105.828 },
   'Quận Hai Bà Trưng': { lat: 21.0102, lng: 105.8573 },
-  'Quận Hoàng Mai': { lat: 20.9704, lng: 105.8450 },
+  'Quận Hoàng Mai': { lat: 20.9704, lng: 105.845 },
   'Quận Long Biên': { lat: 21.0428, lng: 105.8943 },
   'Quận Thanh Xuân': { lat: 20.9938, lng: 105.8048 },
 };
 
 const serviceCardInclude = {
   category: { select: { id: true, name: true } },
-  provider: { select: { id: true, fullName: true, avatarUrl: true, status: true } },
+  provider: {
+    select: { id: true, fullName: true, avatarUrl: true, status: true },
+  },
   images: {
     select: { id: true, imageUrl: true },
     orderBy: { displayOrder: 'asc' as const },
@@ -72,6 +75,13 @@ const serviceCardInclude = {
 type ServiceWithRelations = Prisma.ServiceGetPayload<{
   include: typeof serviceCardInclude;
 }>;
+
+type UserAddressRecord = Prisma.UserAddressGetPayload<object>;
+
+type ServiceWithGeo = ServiceWithRelations & {
+  distanceKm?: number;
+  providerAddress?: string;
+};
 
 type IntentName =
   | 'search'
@@ -190,6 +200,27 @@ type SessionContext = {
   isPersistent: boolean;
 };
 
+interface AssistantMessageMetadata {
+  serviceIds?: number[];
+  action?: {
+    id: string;
+    type?: ChatbotActionType;
+  };
+}
+
+export interface ChatbotUiMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  parts: Array<{ type: 'text'; text: string }>;
+  createdAt: string;
+  metadata?: {
+    sessionId: string;
+    services: ChatServiceResult[];
+    action?: ChatbotAction;
+    quickReplies: ChatbotQuickReply[];
+  };
+}
+
 @Injectable()
 export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
@@ -197,7 +228,8 @@ export class ChatbotService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
-    private readonly bookingsService: BookingsService,
+    private readonly bookingLifecycleService: BookingLifecycleService,
+    private readonly bookingQueryService: BookingQueryService,
     private readonly chatsService: ChatsService,
     private readonly servicesService: ServicesService,
   ) {}
@@ -251,7 +283,11 @@ export class ChatbotService {
           });
         } else {
           const intent = this.detectIntent(message);
-          const customerCoords = await this.getCustomerCoords(userId, message, request.pageContext);
+          const customerCoords = await this.getCustomerCoords(
+            userId,
+            message,
+            request.pageContext,
+          );
           response = await this.handleIntent(
             userId,
             session,
@@ -267,18 +303,19 @@ export class ChatbotService {
       await this.persistTurn(session, message, response);
       return response;
     } catch (error) {
-      const messageText = error instanceof Error ? error.message : String(error);
+      const messageText =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(`Chatbot error: ${messageText}`);
 
-      let userFriendlyReply = 'Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.';
-      if (error && typeof error === 'object' && 'response' in error) {
-        const errResp = (error as any).response;
-        if (errResp && typeof errResp === 'object' && 'message' in errResp) {
-          userFriendlyReply = Array.isArray(errResp.message) ? errResp.message[0] : errResp.message;
-        } else if (errResp && typeof errResp === 'string') {
-          userFriendlyReply = errResp;
-        }
-      } else if (error instanceof Error && !(error instanceof Prisma.PrismaClientKnownRequestError)) {
+      let userFriendlyReply =
+        'Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.';
+      const exceptionMessage = this.getExceptionResponseMessage(error);
+      if (exceptionMessage) {
+        userFriendlyReply = exceptionMessage;
+      } else if (
+        error instanceof Error &&
+        !(error instanceof Prisma.PrismaClientKnownRequestError)
+      ) {
         userFriendlyReply = error.message;
       }
 
@@ -294,36 +331,10 @@ export class ChatbotService {
     }
   }
 
-  async listSessions(userId: number) {
-    const sessions = await this.prisma.chatbotSession.findMany({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-      take: 20,
-      select: {
-        id: true,
-        title: true,
-        summary: true,
-        createdAt: true,
-        updatedAt: true,
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: { role: true, content: true, createdAt: true },
-        },
-      },
-    });
-
-    return { data: sessions };
-  }
-
-  async deleteSession(userId: number, sessionId: string) {
-    await this.prisma.chatbotSession.deleteMany({
-      where: { id: sessionId, userId },
-    });
-    return { message: 'Đã xóa phiên chatbot' };
-  }
-
-  async getSessionHistory(userId: number, sessionId: string): Promise<any[]> {
+  async getSessionHistory(
+    userId: number,
+    sessionId: string,
+  ): Promise<ChatbotUiMessage[]> {
     const session = await this.prisma.chatbotSession.findFirst({
       where: { id: sessionId, userId },
       select: { id: true, state: true },
@@ -342,41 +353,43 @@ export class ChatbotService {
     const serviceIds: number[] = [];
     messages.forEach((msg) => {
       if (msg.role === 'assistant' && msg.metadata) {
-        const meta = msg.metadata as any;
-        if (Array.isArray(meta.serviceIds)) {
-          meta.serviceIds.forEach((id: number) => {
-            if (typeof id === 'number') serviceIds.push(id);
-          });
-        }
+        const meta = this.parseAssistantMetadata(msg.metadata);
+        meta?.serviceIds?.forEach((id) => serviceIds.push(id));
       }
     });
 
     // 2. Hydrate services
     const uniqueServiceIds = Array.from(new Set(serviceIds));
-    const services = uniqueServiceIds.length > 0
-      ? await this.prisma.service.findMany({
-          where: {
-            id: { in: uniqueServiceIds },
-            isDeleted: false,
-          },
-          include: serviceCardInclude,
-        })
-      : [];
+    const services =
+      uniqueServiceIds.length > 0
+        ? await this.prisma.service.findMany({
+            where: {
+              id: { in: uniqueServiceIds },
+              isDeleted: false,
+            },
+            include: serviceCardInclude,
+          })
+        : [];
 
     const defaultAddress = await this.getDefaultAddress(userId);
-    const customerCoords = defaultAddress && defaultAddress.latitude && defaultAddress.longitude
-      ? { lat: Number(defaultAddress.latitude), lng: Number(defaultAddress.longitude) }
-      : undefined;
+    const customerCoords =
+      defaultAddress && defaultAddress.latitude && defaultAddress.longitude
+        ? {
+            lat: Number(defaultAddress.latitude),
+            lng: Number(defaultAddress.longitude),
+          }
+        : undefined;
 
-    const providerIds = Array.from(new Set(services.map(s => s.providerId)));
-    const addresses = providerIds.length > 0
-      ? await this.prisma.userAddress.findMany({
-          where: { userId: { in: providerIds } },
-          orderBy: [{ isDefault: 'desc' }, { id: 'desc' }]
-        })
-      : [];
+    const providerIds = Array.from(new Set(services.map((s) => s.providerId)));
+    const addresses =
+      providerIds.length > 0
+        ? await this.prisma.userAddress.findMany({
+            where: { userId: { in: providerIds } },
+            orderBy: [{ isDefault: 'desc' }, { id: 'desc' }],
+          })
+        : [];
 
-    const addressMap = new Map<number, any>();
+    const addressMap = new Map<number, UserAddressRecord>();
     for (const addr of addresses) {
       if (!addressMap.has(addr.userId)) {
         addressMap.set(addr.userId, addr);
@@ -385,8 +398,8 @@ export class ChatbotService {
 
     const serviceMap = new Map<number, ChatServiceResult>();
     services.forEach((s) => {
-      const geoService = s as any;
       const addr = addressMap.get(s.providerId);
+      const geoService: ServiceWithGeo = { ...s };
       if (addr) {
         geoService.providerAddress = `${addr.addressDetail}, ${addr.ward}, ${addr.district}, ${addr.province}`;
         if (customerCoords && addr.latitude && addr.longitude) {
@@ -408,7 +421,7 @@ export class ChatbotService {
     // 4. Map tin nhắn sang UIMessage
     return messages.map((msg) => {
       const role = msg.role === 'user' ? 'user' : 'assistant';
-      const uiMsg: any = {
+      const uiMsg: ChatbotUiMessage = {
         id: `msg-${msg.id}`,
         role,
         parts: [{ type: 'text', text: msg.content }],
@@ -416,17 +429,15 @@ export class ChatbotService {
       };
 
       if (role === 'assistant') {
-        const meta = msg.metadata as any;
+        const meta = this.parseAssistantMetadata(msg.metadata);
         const msgServices: ChatServiceResult[] = [];
-        let msgAction: any = undefined;
+        let msgAction: ChatbotAction | undefined = undefined;
 
         if (meta) {
-          if (Array.isArray(meta.serviceIds)) {
-            meta.serviceIds.forEach((id: number) => {
-              const svc = serviceMap.get(id);
-              if (svc) msgServices.push(svc);
-            });
-          }
+          meta.serviceIds?.forEach((id) => {
+            const svc = serviceMap.get(id);
+            if (svc) msgServices.push(svc);
+          });
 
           if (meta.action && meta.action.id) {
             const act = pendingActions[meta.action.id];
@@ -436,9 +447,10 @@ export class ChatbotService {
               // Action dự phòng nếu đã bị trim/hết hạn
               msgAction = {
                 id: meta.action.id,
-                type: meta.action.type,
+                type: meta.action.type ?? 'VIEW_BOOKING',
                 label: 'Thao tác liên quan',
                 summary: 'Thao tác này đã kết thúc',
+                payload: {},
                 requiresConfirmation: false,
               };
             }
@@ -472,7 +484,9 @@ export class ChatbotService {
 
     const assistantMessage = input.assistantMessage?.trim();
     if (!assistantMessage) {
-      return { data: { persisted: false, reason: 'missing_assistant_message' } };
+      return {
+        data: { persisted: false, reason: 'missing_assistant_message' },
+      };
     }
 
     const existing = await this.prisma.chatbotSession.findFirst({
@@ -496,8 +510,7 @@ export class ChatbotService {
       services: input.services || [],
       quickReplies: input.quickReplies || [],
       action: input.action,
-      confidence:
-        typeof input.confidence === 'number' ? input.confidence : 0.7,
+      confidence: typeof input.confidence === 'number' ? input.confidence : 0.7,
       citations: input.citations || [],
     });
 
@@ -539,16 +552,32 @@ export class ChatbotService {
 
     // Xử lý confirmed action — không cần stream
     if (input.confirmedActionId) {
-      const response = await this.executeConfirmedAction(userId, session, input.confirmedActionId);
+      const response = await this.executeConfirmedAction(
+        userId,
+        session,
+        input.confirmedActionId,
+      );
       await this.persistTurn(session, message, response);
-      return { ...baseResult, ...response, needsAiStream: false, reply: response.reply };
+      return {
+        ...baseResult,
+        ...response,
+        needsAiStream: false,
+        reply: response.reply,
+      };
     }
 
     // Tin nhắn trống
     if (!message) {
-      const reply = 'Bạn muốn tôi tìm dịch vụ, so sánh lựa chọn, tạo lịch đặt hay tra cứu đơn hàng?';
+      const reply =
+        'Bạn muốn tôi tìm dịch vụ, so sánh lựa chọn, tạo lịch đặt hay tra cứu đơn hàng?';
       const quickReplies = this.defaultQuickReplies();
-      const response = this.withSession(session, { reply, services: [], quickReplies, confidence: 0.7, citations: [] });
+      const response = this.withSession(session, {
+        reply,
+        services: [],
+        quickReplies,
+        confidence: 0.7,
+        citations: [],
+      });
       await this.persistTurn(session, message, response);
       return { ...baseResult, reply, quickReplies, needsAiStream: false };
     }
@@ -557,33 +586,80 @@ export class ChatbotService {
     if (this.isCancelDraftMessage(message)) {
       delete session.state.bookingDraft;
       session.state.pendingActions = {};
-      const reply = 'Tôi đã hủy nháp và các thao tác đang chờ xác nhận trong phiên chat này.';
+      const reply =
+        'Tôi đã hủy nháp và các thao tác đang chờ xác nhận trong phiên chat này.';
       const quickReplies = this.defaultQuickReplies();
-      const response = this.withSession(session, { reply, services: [], quickReplies, confidence: 1, citations: [] });
+      const response = this.withSession(session, {
+        reply,
+        services: [],
+        quickReplies,
+        confidence: 1,
+        citations: [],
+      });
       await this.persistTurn(session, message, response);
-      return { ...baseResult, reply, quickReplies, confidence: 1, needsAiStream: false };
+      return {
+        ...baseResult,
+        reply,
+        quickReplies,
+        confidence: 1,
+        needsAiStream: false,
+      };
     }
 
     const intent = this.detectIntent(message);
-    const customerCoords = await this.getCustomerCoords(userId, message, input.pageContext);
+    const customerCoords = await this.getCustomerCoords(
+      userId,
+      message,
+      input.pageContext,
+    );
 
     // Các intent không cần AI stream — xử lý trực tiếp
     if (intent.name !== 'search') {
-      const response = await this.handleIntent(userId, session, message, input.history || [], input.pageContext, intent, customerCoords);
+      const response = await this.handleIntent(
+        userId,
+        session,
+        message,
+        input.history || [],
+        input.pageContext,
+        intent,
+        customerCoords,
+      );
       await this.persistTurn(session, message, response);
-      return { ...baseResult, ...response, needsAiStream: false, reply: response.reply };
+      return {
+        ...baseResult,
+        ...response,
+        needsAiStream: false,
+        reply: response.reply,
+      };
     }
 
     // Intent 'search' — cần AI stream
-    const services = await this.findRelevantServices(message, input.pageContext, customerCoords);
+    const services = await this.findRelevantServices(
+      message,
+      input.pageContext,
+      customerCoords,
+    );
     const serviceCards = services.map((s) => this.toServiceCard(s));
 
     if (services.length === 0) {
-      const reply = 'Tôi chưa tìm thấy dịch vụ phù hợp trong hệ thống. Bạn có thể mô tả cụ thể hơn, ví dụ "máy lạnh chảy nước", "ổ điện bị chập" hoặc "dọn nhà cuối tuần".';
+      const reply =
+        'Tôi chưa tìm thấy dịch vụ phù hợp trong hệ thống. Bạn có thể mô tả cụ thể hơn, ví dụ "máy lạnh chảy nước", "ổ điện bị chập" hoặc "dọn nhà cuối tuần".';
       const quickReplies = this.defaultQuickReplies();
-      const response = this.withSession(session, { reply, services: [], quickReplies, confidence: 0.45, citations: [] });
+      const response = this.withSession(session, {
+        reply,
+        services: [],
+        quickReplies,
+        confidence: 0.45,
+        citations: [],
+      });
       await this.persistTurn(session, message, response);
-      return { ...baseResult, reply, quickReplies, confidence: 0.45, needsAiStream: false };
+      return {
+        ...baseResult,
+        reply,
+        quickReplies,
+        confidence: 0.45,
+        needsAiStream: false,
+      };
     }
 
     const context = this.buildServiceContext(services);
@@ -600,12 +676,23 @@ export class ChatbotService {
       sessionId: session.id,
       services: serviceCards,
       quickReplies: [
-        { label: 'So sánh các dịch vụ', message: 'So sánh các dịch vụ này giúp tôi' },
+        {
+          label: 'So sánh các dịch vụ',
+          message: 'So sánh các dịch vụ này giúp tôi',
+        },
         { label: 'Tạo lịch đặt', message: 'Tôi muốn đặt lịch dịch vụ này' },
-        { label: 'Chat với nhà cung cấp', message: 'Tôi muốn nhắn tin với nhà cung cấp' },
+        {
+          label: 'Chat với nhà cung cấp',
+          message: 'Tôi muốn nhắn tin với nhà cung cấp',
+        },
       ],
       confidence: intent.confidence,
-      citations: serviceCards.map((s) => ({ type: 'service' as const, id: s.id, label: s.name, href: `/services/${s.id}` })),
+      citations: serviceCards.map((s) => ({
+        type: 'service' as const,
+        id: s.id,
+        label: s.name,
+        href: `/services/${s.id}`,
+      })),
     };
   }
 
@@ -638,10 +725,20 @@ export class ChatbotService {
     }
 
     if (intent.name === 'open_chat') {
-      return this.handleOpenProviderChat(userId, session, message, pageContext, customerCoords);
+      return this.handleOpenProviderChat(
+        userId,
+        session,
+        message,
+        pageContext,
+        customerCoords,
+      );
     }
 
-    const services = await this.findRelevantServices(message, pageContext, customerCoords);
+    const services = await this.findRelevantServices(
+      message,
+      pageContext,
+      customerCoords,
+    );
 
     if (intent.name === 'compare') {
       return this.handleCompare(session, services, intent.confidence);
@@ -884,7 +981,7 @@ export class ChatbotService {
       });
     }
 
-    const result = await this.bookingsService.getMyBookings(
+    const result = await this.bookingQueryService.getMyBookings(
       userId,
       'customer',
       undefined,
@@ -965,7 +1062,11 @@ export class ChatbotService {
 
     await this.ensureCustomer(userId);
 
-    const services = await this.findRelevantServices(message, pageContext, customerCoords);
+    const services = await this.findRelevantServices(
+      message,
+      pageContext,
+      customerCoords,
+    );
     const serviceId = this.resolveServiceId(message, pageContext, services);
 
     if (!serviceId) {
@@ -1055,7 +1156,7 @@ export class ChatbotService {
 
     return this.withSession(session, {
       reply: `Tôi sẽ tạo đơn mới dựa trên đơn #${booking.bookingCode} (${booking.service.name}) và thời gian mặc định là ngày mai. Bạn bấm xác nhận để đặt lại.`,
-      services: [this.toServiceCard(booking.service as ServiceWithRelations)],
+      services: [this.toServiceCard(booking.service)],
       quickReplies: [
         { label: 'Tra cứu đơn', message: 'Đơn của tôi tới đâu rồi?' },
       ],
@@ -1107,12 +1208,17 @@ export class ChatbotService {
       if (draft?.desiredTime) {
         const desiredDate = new Date(draft.desiredTime);
         const minDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // Hiện tại + 2 tiếng
-        if (isNaN(desiredDate.getTime()) || desiredDate.getTime() < minDate.getTime()) {
-          throw new BadRequestException('Thời gian đặt lịch không hợp lệ hoặc phải sau ít nhất 2 giờ tính từ thời điểm hiện tại.');
+        if (
+          isNaN(desiredDate.getTime()) ||
+          desiredDate.getTime() < minDate.getTime()
+        ) {
+          throw new BadRequestException(
+            'Thời gian đặt lịch không hợp lệ hoặc phải sau ít nhất 2 giờ tính từ thời điểm hiện tại.',
+          );
         }
       }
       const dto = this.toCreateBookingDto(draft);
-      const result = await this.bookingsService.create(userId, dto);
+      const result = await this.bookingLifecycleService.create(userId, dto);
       const booking = result.data;
       delete session.state.pendingActions?.[actionId];
       delete session.state.bookingDraft;
@@ -1181,7 +1287,10 @@ export class ChatbotService {
 
     if (action.type === 'REBOOK') {
       const bookingId = Number(action.payload.bookingId);
-      const result = await this.bookingsService.rebook(userId, bookingId);
+      const result = await this.bookingLifecycleService.rebook(
+        userId,
+        bookingId,
+      );
       const booking = result.data;
       delete session.state.pendingActions?.[actionId];
 
@@ -1323,7 +1432,9 @@ export class ChatbotService {
     query: string,
     pageContext?: ChatbotPageContext,
     customerCoords?: { lat: number; lng: number },
-  ): Promise<(ServiceWithRelations & { distanceKm?: number; providerAddress?: string })[]> {
+  ): Promise<
+    (ServiceWithRelations & { distanceKm?: number; providerAddress?: string })[]
+  > {
     const results: ServiceWithRelations[] = [];
     const contextServiceId = this.parsePositiveInt(pageContext?.serviceId);
 
@@ -1429,26 +1540,23 @@ export class ChatbotService {
     }
 
     const unique = this.uniqueServices(results);
-    const providerIds = Array.from(new Set(unique.map(s => s.providerId)));
+    const providerIds = Array.from(new Set(unique.map((s) => s.providerId)));
     const addresses = await this.prisma.userAddress.findMany({
       where: {
         userId: { in: providerIds },
       },
-      orderBy: [
-        { isDefault: 'desc' },
-        { id: 'desc' }
-      ]
+      orderBy: [{ isDefault: 'desc' }, { id: 'desc' }],
     });
 
-    const addressMap = new Map<number, any>();
+    const addressMap = new Map<number, UserAddressRecord>();
     for (const addr of addresses) {
       if (!addressMap.has(addr.userId)) {
         addressMap.set(addr.userId, addr);
       }
     }
 
-    const servicesWithGeo = unique.map(service => {
-      const geoService = service as ServiceWithRelations & { distanceKm?: number; providerAddress?: string };
+    const servicesWithGeo = unique.map((service) => {
+      const geoService: ServiceWithGeo = { ...service };
       const addr = addressMap.get(service.providerId);
       if (addr) {
         geoService.providerAddress = `${addr.addressDetail}, ${addr.ward}, ${addr.district}, ${addr.province}`;
@@ -1487,7 +1595,9 @@ export class ChatbotService {
       throw new NotFoundException('Dịch vụ không khả dụng');
     }
     if (service.provider.status !== UserStatus.ACTIVE) {
-      throw new BadRequestException('Nhà cung cấp dịch vụ hiện đang bị khóa hoặc ngưng hoạt động.');
+      throw new BadRequestException(
+        'Nhà cung cấp dịch vụ hiện đang bị khóa hoặc ngưng hoạt động.',
+      );
     }
     return service;
   }
@@ -1829,7 +1939,10 @@ export class ChatbotService {
   }
 
   private toServiceCard(
-    service: ServiceWithRelations & { distanceKm?: number; providerAddress?: string },
+    service: ServiceWithRelations & {
+      distanceKm?: number;
+      providerAddress?: string;
+    },
   ): ChatServiceResult {
     return {
       id: service.id,
@@ -1842,13 +1955,19 @@ export class ChatbotService {
       totalReviews: service.totalReviews || 0,
       categoryName: service.category?.name || 'Khác',
       imageUrl: service.images?.[0]?.imageUrl,
-      distanceKm: service.distanceKm !== undefined ? Number(service.distanceKm) : undefined,
+      distanceKm:
+        service.distanceKm !== undefined
+          ? Number(service.distanceKm)
+          : undefined,
       providerAddress: service.providerAddress,
     };
   }
 
   private buildServiceContext(
-    services: (ServiceWithRelations & { distanceKm?: number; providerAddress?: string })[],
+    services: (ServiceWithRelations & {
+      distanceKm?: number;
+      providerAddress?: string;
+    })[],
   ) {
     return services
       .map((service) => {
@@ -1878,7 +1997,7 @@ export class ChatbotService {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       return { pendingActions: {} };
     }
-    return value as ChatbotSessionState;
+    return this.normalizeSessionState(value);
   }
 
   private trimSessionState(state: ChatbotSessionState): ChatbotSessionState {
@@ -1889,7 +2008,117 @@ export class ChatbotService {
   }
 
   private toJson(value: unknown): Prisma.InputJsonValue {
-    return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+    const parsed: unknown = JSON.parse(JSON.stringify(value));
+    return parsed as Prisma.InputJsonValue;
+  }
+
+  private getExceptionResponseMessage(error: unknown): string | undefined {
+    if (!this.isRecord(error) || !('response' in error)) return undefined;
+    const response = error.response;
+    if (typeof response === 'string') return response;
+    if (!this.isRecord(response) || !('message' in response)) return undefined;
+
+    const message = response.message;
+    if (typeof message === 'string') return message;
+    if (
+      Array.isArray(message) &&
+      message.length > 0 &&
+      typeof message[0] === 'string'
+    ) {
+      return message[0];
+    }
+    return undefined;
+  }
+
+  private parseAssistantMetadata(
+    value: Prisma.JsonValue | null | undefined,
+  ): AssistantMessageMetadata | null {
+    if (!this.isRecord(value)) return null;
+    const metadata: AssistantMessageMetadata = {};
+
+    if (Array.isArray(value.serviceIds)) {
+      const serviceIds = value.serviceIds.filter(
+        (id): id is number => typeof id === 'number',
+      );
+      if (serviceIds.length > 0) metadata.serviceIds = serviceIds;
+    }
+
+    if (this.isRecord(value.action) && typeof value.action.id === 'string') {
+      metadata.action = {
+        id: value.action.id,
+        type: this.isChatbotActionType(value.action.type)
+          ? value.action.type
+          : undefined,
+      };
+    }
+
+    return metadata;
+  }
+
+  private normalizeSessionState(
+    value: Record<string, unknown>,
+  ): ChatbotSessionState {
+    const pendingActions: Record<string, StoredAction> = {};
+    if (this.isRecord(value.pendingActions)) {
+      for (const [id, action] of Object.entries(value.pendingActions)) {
+        if (this.isStoredAction(action)) pendingActions[id] = action;
+      }
+    }
+
+    return {
+      bookingDraft: this.isBookingDraft(value.bookingDraft)
+        ? value.bookingDraft
+        : undefined,
+      pendingActions,
+    };
+  }
+
+  private isStoredAction(value: unknown): value is StoredAction {
+    if (!this.isRecord(value)) return false;
+    return (
+      typeof value.id === 'string' &&
+      this.isChatbotActionType(value.type) &&
+      typeof value.label === 'string' &&
+      typeof value.summary === 'string' &&
+      this.isRecord(value.payload) &&
+      typeof value.requiresConfirmation === 'boolean' &&
+      typeof value.createdAt === 'string'
+    );
+  }
+
+  private isBookingDraft(value: unknown): value is BookingDraft {
+    if (!this.isRecord(value)) return false;
+    return [
+      'serviceId',
+      'description',
+      'desiredTime',
+      'province',
+      'district',
+      'ward',
+      'addressDetail',
+    ].every((key) => {
+      const field = value[key];
+      return (
+        field === undefined ||
+        typeof field === 'string' ||
+        typeof field === 'number'
+      );
+    });
+  }
+
+  private isChatbotActionType(value: unknown): value is ChatbotActionType {
+    return (
+      value === 'CREATE_BOOKING_DRAFT' ||
+      value === 'CONFIRM_CREATE_BOOKING' ||
+      value === 'OPEN_PROVIDER_CHAT' ||
+      value === 'VIEW_BOOKING' ||
+      value === 'REBOOK' ||
+      value === 'CANCEL_BOOKING_DRAFT'
+    );
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
   }
 
   private uniqueServices(services: ServiceWithRelations[]) {

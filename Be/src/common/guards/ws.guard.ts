@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import {
+  AuthenticatedSocket,
+  extractSocketToken,
+  isJwtTokenPayload,
+  toAuthenticatedUser,
+} from '../types/auth.types';
 
 /**
  * WsGuard — xác thực token từ handshake.headers.authorization
@@ -19,8 +24,8 @@ export class WsGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const client: Socket = context.switchToWs().getClient();
-    const token = this.extractToken(client);
+    const client = context.switchToWs().getClient<AuthenticatedSocket>();
+    const token = extractSocketToken(client);
 
     if (!token) {
       this.logger.warn('WebSocket connection rejected: no token');
@@ -28,27 +33,17 @@ export class WsGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token);
-      // Attach user info vào socket data
-      (client as any).user = payload;
+      const payload =
+        await this.jwtService.verifyAsync<Record<string, unknown>>(token);
+      if (!isJwtTokenPayload(payload)) {
+        throw new WsException('Unauthorized');
+      }
+
+      client.data.user = toAuthenticatedUser(payload);
       return true;
     } catch {
       this.logger.warn('WebSocket connection rejected: invalid token');
       throw new WsException('Unauthorized');
     }
-  }
-
-  private extractToken(client: Socket): string | null {
-    const authHeader =
-      client.handshake?.headers?.authorization ||
-      (client.handshake?.auth as any)?.token;
-
-    if (!authHeader) return null;
-
-    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-      return authHeader.slice(7);
-    }
-
-    return typeof authHeader === 'string' ? authHeader : null;
   }
 }

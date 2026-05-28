@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { SenderType, ServiceStatus, UserRole } from '@prisma/client';
+import { Prisma, SenderType, ServiceStatus, UserRole } from '@prisma/client';
 
 import { AiService } from '../../shared/ai/ai.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -51,7 +51,7 @@ export class ChatsService {
     messages: { orderBy: { id: 'desc' as const }, take: 1 },
   };
 
-  private toConversationResponse<T extends { messages?: any[] }>(
+  private toConversationResponse<T extends { messages?: unknown[] }>(
     conversation: T,
   ) {
     return {
@@ -257,7 +257,7 @@ export class ChatsService {
     });
     if (!convo) return { data: [] };
 
-    const where: any = { conversationId };
+    const where: Prisma.MessageWhereInput = { conversationId };
     if (cursor) where.id = { lt: cursor };
 
     const messages = await this.prisma.message.findMany({

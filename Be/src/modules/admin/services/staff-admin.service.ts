@@ -5,13 +5,16 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { Prisma, UserRole, UserStatus } from '@prisma/client';
 
 @Injectable()
 export class StaffAdminService {
   constructor(private prisma: PrismaService) {}
 
   async getStaffs(page: number = 1, limit: number = 20, keyword?: string) {
-    const where: any = { role: { in: ['ADMIN', 'STAFF'] } };
+    const where: Prisma.UserWhereInput = {
+      role: { in: [UserRole.ADMIN, UserRole.STAFF] },
+    };
     if (keyword) {
       where.OR = [
         { fullName: { contains: keyword, mode: 'insensitive' } },
@@ -74,8 +77,8 @@ export class StaffAdminService {
           email: body.email,
           phone: body.phone,
           password: hashedPassword,
-          role: 'STAFF',
-          status: 'ACTIVE',
+          role: UserRole.STAFF,
+          status: UserStatus.ACTIVE,
           emailVerified: true,
         },
       });
@@ -101,15 +104,15 @@ export class StaffAdminService {
     id: number,
     body: { fullName?: string; phone?: string; status?: string },
   ) {
-    const data: any = {};
+    const data: Prisma.UserUpdateInput = {};
     if (body.fullName) data.fullName = body.fullName;
     if (body.phone) data.phone = body.phone;
-    if (body.status) data.status = body.status;
+    if (this.isUserStatus(body.status)) data.status = body.status;
 
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({ where: { id }, data });
 
-      if (body.status === 'LOCKED') {
+      if (body.status === UserStatus.LOCKED) {
         await tx.refreshToken.updateMany({
           where: { userId: id, revoked: false },
           data: { revoked: true },
@@ -142,7 +145,7 @@ export class StaffAdminService {
         where: { id },
         data: {
           email: `DELETED_${id}_${user.email}`,
-          status: 'LOCKED',
+          status: UserStatus.LOCKED,
         },
       });
 
@@ -162,5 +165,12 @@ export class StaffAdminService {
         },
       });
     });
+  }
+
+  private isUserStatus(value: unknown): value is UserStatus {
+    return (
+      typeof value === 'string' &&
+      Object.values(UserStatus).includes(value as UserStatus)
+    );
   }
 }

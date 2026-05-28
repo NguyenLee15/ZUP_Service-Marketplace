@@ -189,7 +189,7 @@ export default function AdminServicesPage() {
                   <div>
                     <h5 className="font-bold">Nội Dung Nhạy Cảm (AI Auto-Flagged)</h5>
                     <p className="text-xs text-rose-600 mt-1 leading-relaxed">
-                      Gemini phát hiện dịch vụ này chứa các từ khóa nghi ngờ lừa đảo, nhạy cảm hoặc vi phạm điều khoản của HomeServe. Nhân viên cần rà soát kỹ lưỡng.
+                      Gemini phát hiện dịch vụ này chứa các từ khóa nghi ngờ lừa đảo, nhạy cảm hoặc vi phạm điều khoản của Zup. Nhân viên cần rà soát kỹ lưỡng.
                     </p>
                   </div>
                 </div>

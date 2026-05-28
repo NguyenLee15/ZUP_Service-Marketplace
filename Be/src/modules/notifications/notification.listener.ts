@@ -51,9 +51,10 @@ export class NotificationListener {
       void this.sendPushNotification(payload, notification.id);
     } catch (error) {
       // Fire-and-forget: log lỗi nhưng không throw để không block caller
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Failed to process notification for user #${payload.userId}: ${error.message}`,
-        error.stack,
+        `Failed to process notification for user #${payload.userId}: ${message}`,
+        error instanceof Error ? error.stack : undefined,
       );
     }
   }
@@ -82,15 +83,17 @@ export class NotificationListener {
       if (!user?.expoPushToken) return;
 
       const { Expo } = await this.getExpoModule();
-      if (!Expo.isExpoPushToken(user.expoPushToken)) {
+      const expoPushToken = String(user.expoPushToken);
+      const isValidExpoPushToken: boolean = Expo.isExpoPushToken(expoPushToken);
+      if (!isValidExpoPushToken) {
         this.logger.warn(
-          `Invalid expo push token for user #${payload.userId}: ${user.expoPushToken}`,
+          `Invalid expo push token for user #${payload.userId}: ${expoPushToken}`,
         );
         return;
       }
 
       const message: ExpoPushMessage = {
-        to: user.expoPushToken,
+        to: expoPushToken,
         sound: 'default',
         title: payload.title,
         body: payload.content,
@@ -108,8 +111,9 @@ export class NotificationListener {
         await expo.sendPushNotificationsAsync(chunk);
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(
-        `Failed to push notification for user #${payload.userId}: ${error.message}`,
+        `Failed to push notification for user #${payload.userId}: ${message}`,
       );
     }
   }

@@ -81,7 +81,7 @@ const throttleLimit = Number(process.env.THROTTLE_LIMIT || 100);
       ? [
           BullModule.forRootAsync({
             imports: [ConfigModule],
-            useFactory: async (configService: ConfigService) => ({
+            useFactory: (configService: ConfigService) => ({
               connection: {
                 host: configService.get('redis.host'),
                 port: configService.get('redis.port'),

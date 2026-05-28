@@ -5,6 +5,12 @@ import { AiService } from '../../shared/ai/ai.service';
 import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SenderType } from '@prisma/client';
+import {
+  ChatAiReplyPayload,
+  JobName,
+  ServiceGenerateEmbeddingPayload,
+  EmptyJobPayload,
+} from '../../shared/jobs/jobs.service';
 
 @Processor('ai-queue')
 export class ServicesProcessor extends WorkerHost {
@@ -18,18 +24,29 @@ export class ServicesProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
+  async process(
+    job: Job<
+      ServiceGenerateEmbeddingPayload | ChatAiReplyPayload | EmptyJobPayload,
+      void,
+      JobName
+    >,
+  ): Promise<void> {
     switch (job.name) {
-      case 'service.generate-embedding':
-        return this.handleGenerateEmbedding(
-          job.data.serviceId,
-          job.data.name,
-          job.data.description,
+      case JobName.ServiceGenerateEmbedding: {
+        const data = job.data as ServiceGenerateEmbeddingPayload;
+        await this.handleGenerateEmbedding(
+          data.serviceId,
+          data.name,
+          data.description,
         );
-      case 'service.auto-hide-violating':
-        return this.handleAutoHideViolating();
-      case 'chat.ai-reply':
-        return this.handleAiChatReply(job.data);
+        return;
+      }
+      case JobName.ServiceAutoHideViolating:
+        await this.handleAutoHideViolating();
+        return;
+      case JobName.ChatAiReply:
+        await this.handleAiChatReply(job.data as ChatAiReplyPayload);
+        return;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
     }
@@ -90,7 +107,7 @@ export class ServicesProcessor extends WorkerHost {
 
     const context =
       services.length > 0
-        ? `Đây là các dịch vụ của nhà cung cấp này: ${services.map((s) => `${s.name} (${s.referencePrice} VNĐ)`).join(', ')}`
+        ? `Đây là các dịch vụ của nhà cung cấp này: ${services.map((s) => `${s.name} (${Number(s.referencePrice)} VNĐ)`).join(', ')}`
         : 'Nhà cung cấp này hiện chưa có thông tin dịch vụ cụ thể.';
 
     // 2. Lấy lịch sử chat ngắn

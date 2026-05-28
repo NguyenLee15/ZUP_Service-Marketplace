@@ -3,6 +3,7 @@ import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../../shared/ai/ai.service';
+import { AnalyzeDisputePayload, JobName } from '../../shared/jobs/jobs.service';
 
 @Processor('dispute_queue')
 export class DisputeProcessor extends WorkerHost {
@@ -15,7 +16,7 @@ export class DisputeProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
+  async process(job: Job<AnalyzeDisputePayload, void, JobName>): Promise<void> {
     const { disputeId, reason } = job.data;
 
     this.logger.log(`Processing dispute analysis for ID: ${disputeId}`);
@@ -41,8 +42,9 @@ export class DisputeProcessor extends WorkerHost {
         );
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Failed to analyze dispute ID ${disputeId}: ${error.message}`,
+        `Failed to analyze dispute ID ${disputeId}: ${message}`,
       );
       throw error;
     }

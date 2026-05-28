@@ -31,7 +31,8 @@ export class HealthController {
       await this.prisma.$queryRaw`SELECT 1`;
       checks.database = { status: 'ok' };
     } catch (error) {
-      checks.database = { status: 'error', message: error.message };
+      const message = error instanceof Error ? error.message : String(error);
+      checks.database = { status: 'error', message };
     }
 
     const redisEnabled =

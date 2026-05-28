@@ -7,11 +7,11 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { JobsService } from '../../shared/jobs/jobs.service';
+import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { hashPassword, comparePassword } from '../../common/utils/hash.util';
 import { generateOtp, generateToken } from '../../common/utils/generate.util';
@@ -70,7 +70,7 @@ export class AuthService {
         email: dto.email,
         phone: dto.phone,
         password: hashedPassword,
-        role: dto.role as UserRole,
+        role: dto.role,
         status: UserStatus.PENDING,
         emailVerified: false,
       },
@@ -91,7 +91,10 @@ export class AuthService {
     });
 
     // 6. Gửi OTP qua JobsService: inline ở free mode, BullMQ ở redis mode
-    await this.jobsService.enqueue('auth.send-otp', { email: dto.email, otp });
+    await this.jobsService.enqueue(JobName.AuthSendOtp, {
+      email: dto.email,
+      otp,
+    });
 
     this.logger.log(`User registered: ${dto.email} (role: ${dto.role})`);
 
@@ -211,7 +214,7 @@ export class AuthService {
       },
     });
 
-    await this.jobsService.enqueue('auth.send-otp', { email, otp });
+    await this.jobsService.enqueue(JobName.AuthSendOtp, { email, otp });
 
     return {
       data: { message: 'OTP đã được gửi lại' },
@@ -307,6 +310,12 @@ export class AuthService {
       }
 
       const { email, name, picture, sub: googleId } = payload;
+      if (!email) {
+        throw new UnauthorizedException({
+          code: ErrorCodes.UNAUTHORIZED,
+          message: 'Google token không có email',
+        });
+      }
 
       // 1. Tìm user theo googleId hoặc email
       let user = await this.prisma.user.findFirst({
@@ -319,7 +328,7 @@ export class AuthService {
         // 2. Nếu chưa có -> Tạo mới (mặc định CUSTOMER, status ACTIVE)
         user = await this.prisma.user.create({
           data: {
-            email: email!,
+            email,
             fullName: name || 'Google User',
             avatarUrl: picture,
             googleId,
@@ -351,7 +360,7 @@ export class AuthService {
       // 5. Tạo token pair
       const tokens = await this.generateTokenPair(
         user.id,
-        user.email!,
+        user.email,
         user.role,
       );
 
@@ -363,8 +372,9 @@ export class AuthService {
         },
         message: 'Đăng nhập Google thành công',
       };
-    } catch (err: any) {
-      this.logger.error(`Google login error: ${err.message}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Google login error: ${message}`);
       if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException({
         code: ErrorCodes.UNAUTHORIZED,
@@ -473,7 +483,7 @@ export class AuthService {
     // Gửi email qua JobsService
     const frontendUrl = this.configService.get<string>('app.frontendUrl');
     const resetLink = `${frontendUrl}/forgot-password?token=${token}`;
-    await this.jobsService.enqueue('auth.send-reset', {
+    await this.jobsService.enqueue(JobName.AuthSendReset, {
       email: dto.email,
       resetLink,
     });
@@ -730,13 +740,14 @@ export class AuthService {
   ) {
     const payload = { sub: userId, email, role };
     const secret = this.configService.getOrThrow<string>('app.jwtSecret');
-    const expiresIn =
-      this.configService.get<string>('app.jwtExpiresIn') || '30m';
+    const expiresIn = (this.configService.get<string>('app.jwtExpiresIn') ||
+      '30m') as JwtSignOptions['expiresIn'];
 
-    const accessToken = this.jwtService.sign(payload, {
+    const signOptions: Parameters<JwtService['sign']>[1] = {
       secret,
       expiresIn,
-    } as any);
+    };
+    const accessToken = this.jwtService.sign(payload, signOptions);
 
     const refreshToken = generateToken(48);
 
@@ -757,7 +768,9 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private sanitizeUser(user: any) {
+  private sanitizeUser<T extends { password?: unknown }>(
+    user: T,
+  ): Omit<T, 'password'> {
     const { password, ...sanitized } = user;
     void password;
     return sanitized;

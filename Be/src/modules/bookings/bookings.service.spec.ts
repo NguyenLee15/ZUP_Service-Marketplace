@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BookingsService } from './bookings.service';
+import { BookingLifecycleService } from './booking-lifecycle.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BookingStatus } from '@prisma/client';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -8,11 +8,44 @@ import { AiService } from '../../shared/ai/ai.service';
 import { RedisService } from '../../shared/redis/redis.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JobsService } from '../../shared/jobs/jobs.service';
+import { BookingStatePolicy } from './booking-state.policy';
+import { BookingCommissionService } from './booking-commission.service';
+import { BookingTimeoutService } from './booking-timeout.service';
+import { BookingSharedService } from './booking-shared.service';
 
-describe('BookingsService', () => {
-  let service: BookingsService;
+type MockPrisma = {
+  booking: {
+    findUnique: jest.Mock;
+    findFirst: jest.Mock;
+    update: jest.Mock;
+  };
+  bookingStatusHistory: {
+    create: jest.Mock;
+  };
+  bookingAttachment: {
+    create: jest.Mock;
+  };
+  notification: {
+    create: jest.Mock;
+  };
+  user: {
+    findUnique: jest.Mock;
+  };
+  $transaction: jest.Mock;
+};
 
-  const mockPrisma: any = {
+type BookingUpdateArg = {
+  data: {
+    status: BookingStatus;
+    completedAt: Date;
+    autoCompletedAt: Date | null;
+  };
+};
+
+describe('BookingLifecycleService', () => {
+  let service: BookingLifecycleService;
+
+  const mockPrisma: MockPrisma = {
     booking: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
@@ -30,7 +63,7 @@ describe('BookingsService', () => {
     user: {
       findUnique: jest.fn(),
     },
-    $transaction: jest.fn((cb) => cb(mockPrisma)),
+    $transaction: jest.fn((cb: (tx: MockPrisma) => unknown) => cb(mockPrisma)),
   };
 
   const mockCloudinary = {
@@ -56,23 +89,45 @@ describe('BookingsService', () => {
     enqueue: jest.fn(),
   };
 
+  const mockBookingStatePolicy = {
+    assertTransition: jest.fn(),
+  };
+
+  const mockBookingCommissionService = {
+    getCurrentCommissionRate: jest.fn().mockResolvedValue(8.5),
+    deductCommission: jest.fn(),
+  };
+
+  const mockBookingTimeoutService = {
+    expirePendingProviderAcceptances: jest.fn(),
+    expireProviderAcceptance: jest.fn(),
+    scheduleProviderAcceptanceTimeout: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     mockPrisma.user.findUnique.mockResolvedValue({ id: 1, status: 'ACTIVE' });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        BookingsService,
+        BookingLifecycleService,
+        BookingSharedService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: CloudinaryService, useValue: mockCloudinary },
         { provide: EventEmitter2, useValue: mockEventEmitter },
         { provide: AiService, useValue: mockAi },
         { provide: RedisService, useValue: mockRedis },
         { provide: JobsService, useValue: mockJobs },
+        { provide: BookingStatePolicy, useValue: mockBookingStatePolicy },
+        {
+          provide: BookingCommissionService,
+          useValue: mockBookingCommissionService,
+        },
+        { provide: BookingTimeoutService, useValue: mockBookingTimeoutService },
       ],
     }).compile();
 
-    service = module.get<BookingsService>(BookingsService);
+    service = module.get<BookingLifecycleService>(BookingLifecycleService);
   });
 
   it('should be defined', () => {
@@ -145,20 +200,19 @@ describe('BookingsService', () => {
           originalname: 'test.jpg',
           buffer: Buffer.from('test'),
           mimetype: 'image/jpeg',
-        } as any,
+        } as Express.Multer.File,
       ];
       const result = await service.completeWork(10, 1, mockFiles);
 
       expect(result.data.status).toBe(BookingStatus.DONE);
-      expect(mockPrisma.booking.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: BookingStatus.DONE,
-            completedAt: expect.any(Date),
-            autoCompletedAt: null,
-          }),
-        }),
-      );
+      const updateMock = mockPrisma.booking.update as jest.Mock<
+        unknown,
+        [BookingUpdateArg]
+      >;
+      const updateArg = updateMock.mock.calls[0]?.[0];
+      expect(updateArg.data.status).toBe(BookingStatus.DONE);
+      expect(updateArg.data.completedAt).toBeInstanceOf(Date);
+      expect(updateArg.data.autoCompletedAt).toBeNull();
     });
   });
 });

@@ -4,11 +4,22 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { OnEvent } from '@nestjs/event-emitter';
 import { resolveWebsocketCorsOrigin } from '../../config/websocket-cors.config';
+import {
+  extractSocketToken,
+  isJwtTokenPayload,
+  toAuthenticatedUser,
+} from '../../common/types/auth.types';
+import type { AuthenticatedSocket } from '../../common/types/auth.types';
+
+interface NotificationCreatedPayload {
+  userId: number;
+  notification: unknown;
+}
 
 @WebSocketGateway({
   cors: { origin: resolveWebsocketCorsOrigin(), credentials: true },
@@ -23,37 +34,41 @@ export class NotificationsGateway
 
   constructor(private jwtService: JwtService) {}
 
-  async handleConnection(client: Socket) {
+  async handleConnection(client: AuthenticatedSocket) {
     try {
-      const token =
-        client.handshake.auth?.token ||
-        client.handshake.headers?.authorization?.split(' ')[1];
+      const token = extractSocketToken(client);
       if (!token) {
         client.disconnect();
         return;
       }
-      const payload = this.jwtService.verify(token);
-      (client as any).userId = payload.sub;
-      this.connectedUsers.set(payload.sub, client.id);
+      const payload = this.jwtService.verify<Record<string, unknown>>(token);
+      if (!isJwtTokenPayload(payload)) {
+        client.disconnect();
+        return;
+      }
+
+      const user = toAuthenticatedUser(payload);
+      client.data.user = user;
+      this.connectedUsers.set(user.id, client.id);
 
       // Join a room specifically for this user to receive their personal notifications
-      client.join(`user-notifications:${payload.sub}`);
-      this.logger.log(`User ${payload.sub} connected to notifications`);
+      await client.join(`user-notifications:${user.id}`);
+      this.logger.log(`User ${user.id} connected to notifications`);
     } catch {
       client.disconnect();
     }
   }
 
-  handleDisconnect(client: Socket) {
-    const userId = (client as any).userId;
-    if (userId) {
-      this.connectedUsers.delete(userId);
-      this.logger.log(`User ${userId} disconnected from notifications`);
+  handleDisconnect(client: AuthenticatedSocket) {
+    const user = client.data.user;
+    if (user) {
+      this.connectedUsers.delete(user.id);
+      this.logger.log(`User ${user.id} disconnected from notifications`);
     }
   }
 
   // Method to emit a notification to a specific user
-  sendNotificationToUser(userId: number, notification: any) {
+  sendNotificationToUser(userId: number, notification: unknown) {
     this.server
       .to(`user-notifications:${userId}`)
       .emit('new_notification', notification);
@@ -61,7 +76,7 @@ export class NotificationsGateway
 
   // Listen to application events
   @OnEvent('notification.created')
-  handleNotificationCreated(payload: { userId: number; notification: any }) {
+  handleNotificationCreated(payload: NotificationCreatedPayload) {
     this.sendNotificationToUser(payload.userId, payload.notification);
   }
 }
