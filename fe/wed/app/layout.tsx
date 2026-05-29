@@ -97,7 +97,10 @@ const jsonLdData = {
       },
       'sameAs': [
         'https://www.facebook.com/Nguyenlee150804',
-        'https://zalo.me/0901234567'
+        'https://zalo.me/0901234567',
+        'https://youtube.com/@zupvn',
+        'https://tiktok.com/@zup.vn',
+        'https://twitter.com/zupvn'
       ]
     },
     {

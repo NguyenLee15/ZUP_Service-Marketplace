@@ -59,6 +59,7 @@ export function FeaturedServices({
           <UnifiedServiceCard
             key={service.id || index}
             service={service}
+            priority={isSponsored && index < 4}
             isFavorite={favorites.includes(service.id)}
             showFavorite
             showDescription={false}
