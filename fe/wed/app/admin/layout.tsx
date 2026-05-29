@@ -63,18 +63,27 @@ export default function AdminLayout({
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4 shrink-0">
           {sidebarOpen ? (
-            <div>
-              <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase">
-                Zup Admin
-              </h1>
-              <p className="mt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                Hệ thống quản trị
-              </p>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/logo.png"
+                alt="ZUP Logo"
+                className="w-8 h-8 rounded-lg object-cover border border-slate-700 shadow-sm shrink-0"
+              />
+              <div>
+                <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase leading-none">
+                  Zup Admin
+                </h1>
+                <p className="mt-1 font-mono text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 leading-none">
+                  Hệ thống quản trị
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xs mx-auto">
-              Z
-            </div>
+            <img
+              src="/logo.png"
+              alt="Z"
+              className="w-8 h-8 rounded-lg object-cover border border-slate-700 mx-auto shadow-sm"
+            />
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

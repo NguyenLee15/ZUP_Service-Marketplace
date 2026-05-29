@@ -53,10 +53,12 @@ export function AuthShell({
             className="relative z-10 inline-flex w-fit items-center gap-3 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
             aria-label="Về trang chủ Zup"
           >
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white shadow-lg shadow-sky-500/20 font-extrabold text-xl">
-              Z
-            </div>
-            <span className="text-xl font-bold tracking-tight">Z<span className="text-sky-400">up</span></span>
+            <img
+              src="/logo.png"
+              alt="ZUP Logo"
+              className="h-10 w-10 rounded-xl object-cover border border-white/10 shadow-lg shadow-sky-500/20 shrink-0"
+            />
+            <span className="text-2xl font-bold tracking-tight text-white select-none">ZUP</span>
           </Link>
 
           <div className="relative z-10 max-w-xl space-y-7 rounded-2xl border border-white/10 bg-slate-950/45 p-8 shadow-[0_8px_32px_rgba(2,132,199,0.22)] backdrop-blur-xl">
@@ -104,10 +106,12 @@ export function AuthShell({
               className="inline-flex items-center gap-2.5 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
               aria-label="Về trang chủ Zup"
             >
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white font-extrabold">
-                Z
-              </div>
-              <span className="font-bold text-lg">Z<span className="text-sky-400">up</span></span>
+              <img
+                src="/logo.png"
+                alt="ZUP Logo"
+                className="h-9 w-9 rounded-xl object-cover border border-white/10 shrink-0"
+              />
+              <span className="font-bold text-lg select-none text-white">ZUP</span>
             </Link>
           </div>
 
@@ -120,8 +124,12 @@ export function AuthShell({
             <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-transparent z-0 pointer-events-none" />
             
             <CardHeader className="relative z-10 space-y-3 px-6 pb-4 pt-7 text-center sm:px-8">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-sky-600/15 border border-sky-400/20 text-cyan-300">
-                <Home className="size-6" />
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-sky-600/15 border border-sky-400/20 text-cyan-300 shrink-0">
+                <img
+                  src="/logo.png"
+                  alt="ZUP"
+                  className="size-10 rounded-lg object-cover"
+                />
               </div>
               <div className="space-y-2">
                 <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">{eyebrow}</p>

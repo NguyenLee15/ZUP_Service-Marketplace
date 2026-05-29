@@ -178,11 +178,13 @@ export function CustomerHeader() {
           <div className="flex justify-between items-center gap-2 sm:gap-4 h-14 sm:h-16">
             <div className="flex items-center gap-2 shrink-0">
               <Link href="/" prefetch={false} className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl active:scale-95 transition-transform duration-200">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-tr from-sky-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform duration-300 font-extrabold text-xl sm:text-2xl">
-                  Z
-                </div>
-                <span className="font-sans text-[22px] sm:text-2xl font-bold tracking-tight text-white hidden md:block">
-                  Z<span className="text-cyan-300">up</span>
+                <img
+                  src="/logo.png"
+                  alt="ZUP Logo"
+                  className="h-8 w-8 rounded-xl object-cover shadow-[0_0_18px_rgba(2,132,199,0.4)] sm:h-10 sm:w-10 border border-white/10"
+                />
+                <span className="hidden text-2xl font-bold tracking-tight text-white md:block select-none">
+                  ZUP
                 </span>
               </Link>
             </div>
