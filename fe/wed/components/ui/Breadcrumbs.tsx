@@ -19,45 +19,51 @@ const routeMap: Record<string, string> = {
 
 export function Breadcrumbs() {
   const pathname = usePathname();
-  if (pathname === '/') return null;
-
+  const isHome = pathname === '/';
   const paths = pathname.split('/').filter(Boolean);
 
   return (
-    <nav className="flex" aria-label="Breadcrumb">
-      <ol className="inline-flex items-center space-x-1 md:space-x-2 text-sm font-medium text-slate-500">
+    <nav className="flex px-4 py-3 bg-white/5 backdrop-blur-sm rounded-[16px] max-w-7xl mx-auto border border-white/10" aria-label="Breadcrumb">
+      <ol className="inline-flex items-center space-x-1 md:space-x-2 text-xs font-semibold text-slate-500">
         <li className="inline-flex items-center">
           <Link
             href="/"
-            className="inline-flex items-center text-slate-400 hover:text-action-blue transition-colors gap-1.5"
+            className="inline-flex items-center text-slate-400 hover:text-cyan-300 transition-colors gap-1.5"
           >
             <Home className="w-3.5 h-3.5" />
             <span>Trang chủ</span>
           </Link>
         </li>
-        {paths.map((path, index) => {
-          const href = `/${paths.slice(0, index + 1).join('/')}`;
-          const isLast = index === paths.length - 1;
-          const label = routeMap[path] || decodeURIComponent(path);
+        {isHome ? (
+          <li className="flex items-center">
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500 mx-1 shrink-0" />
+            <span className="text-cyan-400 font-bold">Tìm kiếm thợ tại nhà</span>
+          </li>
+        ) : (
+          paths.map((path, index) => {
+            const href = `/${paths.slice(0, index + 1).join('/')}`;
+            const isLast = index === paths.length - 1;
+            const label = routeMap[path] || decodeURIComponent(path);
 
-          return (
-            <li key={path} className="flex items-center">
-              <ChevronRight className="w-4 h-4 text-slate-400 mx-1 shrink-0" />
-              {isLast ? (
-                <span className="text-slate-700 font-semibold truncate max-w-[200px] sm:max-w-none">
-                  {label}
-                </span>
-              ) : (
-                <Link
-                  href={href}
-                  className="text-slate-400 hover:text-action-blue transition-colors truncate max-w-[150px] sm:max-w-none"
-                >
-                  {label}
-                </Link>
-              )}
-            </li>
-          );
-        })}
+            return (
+              <li key={path} className="flex items-center">
+                <ChevronRight className="w-3.5 h-3.5 text-slate-500 mx-1 shrink-0" />
+                {isLast ? (
+                  <span className="text-cyan-400 font-bold truncate max-w-[200px] sm:max-w-none">
+                    {label}
+                  </span>
+                ) : (
+                  <Link
+                    href={href}
+                    className="text-slate-400 hover:text-cyan-300 transition-colors truncate max-w-[150px] sm:max-w-none"
+                  >
+                    {label}
+                  </Link>
+                )}
+              </li>
+            );
+          })
+        )}
       </ol>
     </nav>
   );

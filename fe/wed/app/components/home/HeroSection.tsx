@@ -66,6 +66,7 @@ export function HeroSection() {
             <span className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 opacity-55 blur-md group-hover/cta:opacity-85 group-hover/cta:blur-lg transition duration-1000 group-hover/cta:duration-200 animate-[pulse_2s_infinite]" suppressHydrationWarning />
             <a
               href="/services"
+              role="button"
               aria-label="Đặt lịch dịch vụ tại nhà ngay cùng ZUP"
               className="relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base shadow-xl group overflow-hidden transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
@@ -78,6 +79,7 @@ export function HeroSection() {
           </div>
           <a
             href="#danh-muc-dich-vu"
+            role="button"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-cyan-300 hover:text-white font-bold text-sm sm:text-base hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
           >
             <span>Khám phá danh mục</span>

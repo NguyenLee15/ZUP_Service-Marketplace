@@ -11,6 +11,7 @@ import { GlossarySection } from '@/app/components/home/GlossarySection';
 import { Testimonials } from '@/app/components/home/Testimonials';
 import { CustomerFooter } from '@/components/layout/CustomerFooter';
 import { SocialShareWidget } from '@/components/social/SocialShareWidget';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 import { HomeHeader } from '@/components/layout/HomeHeader';
 import type { Category, Service } from '@/types';
@@ -289,6 +290,7 @@ export default async function Home() {
         <HeroSection />
 
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
+          <Breadcrumbs />
           {/* Table of Contents (Mục lục điều hướng nhanh) */}
           <nav id="toc" className="toc surface-card p-5 rounded-2xl border border-white/10 bg-slate-900/20 shadow-md">
             <h2 id="muc-luc-trang-chu" className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
