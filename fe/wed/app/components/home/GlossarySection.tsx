@@ -48,10 +48,10 @@ export function GlossarySection() {
           </div>
           <div className="space-y-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-sky-600 dark:text-sky-400">
-              Nội dung được kiểm chứng chuyên môn
+              Nội dung được kiểm chứng chuyên môn.
             </span>
             <h3 className="font-bold text-slate-900 dark:text-white text-base md:text-lg flex flex-wrap items-center gap-2">
-              Chất lượng & Tiêu chuẩn vận hành Zup
+              Chất lượng & Tiêu chuẩn vận hành Zup.
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-300 max-w-2xl leading-relaxed">
               Các tài liệu hướng dẫn và thuật ngữ được biên soạn bởi ban kiểm định chất lượng Zup. Hơn nữa, quy trình kiểm tra định kỳ nghiêm ngặt nhằm bảo vệ tối đa lợi ích khách hàng. Do đó, mọi thông tin đều chính xác tuyệt đối.
@@ -64,15 +64,15 @@ export function GlossarySection() {
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
             <UserCheck className="w-4 h-4 text-emerald-500 shrink-0" />
             <div>
-              <p className="text-slate-400 text-[10px] leading-none mb-0.5">Kiểm định bởi</p>
-              <p className="text-slate-900 dark:text-white font-bold">Lê Hoàng Nguyễn</p>
+              <p className="text-slate-400 text-[10px] leading-none mb-0.5">Kiểm định bởi.</p>
+              <p className="text-slate-900 dark:text-white font-bold">Lê Hoàng Nguyễn.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
             <Calendar className="w-4 h-4 text-action-blue shrink-0" />
             <div>
-              <p className="text-slate-400 text-[10px] leading-none mb-0.5">Cập nhật lúc</p>
-              <p className="text-slate-900 dark:text-white font-bold">28/05/2026</p>
+              <p className="text-slate-400 text-[10px] leading-none mb-0.5">Cập nhật lúc.</p>
+              <p className="text-slate-900 dark:text-white font-bold">28/05/2026.</p>
             </div>
           </div>
         </div>

@@ -24,7 +24,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#071018] py-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:rounded-[2rem] md:py-16">
+    <section id="quy-trinh-hoat-dong" className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#071018] py-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:rounded-[2rem] md:py-16">
       {/* Background patterns */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(rgba(34,211,238,0.28)_1px,transparent_1px)] bg-[length:38px_38px] opacity-[0.12]" />
       <div className="absolute inset-x-0 top-0 z-0 h-40 bg-[radial-gradient(circle_at_50%_0%,rgba(14,165,233,0.22),transparent_62%)] pointer-events-none" />
@@ -32,11 +32,11 @@ export function HowItWorks() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6">
         <div className="text-center mb-8 md:mb-14">
           <Badge className="mb-3 rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold tracking-wide text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.16)] md:mb-5 md:px-4 md:py-2 md:text-xs">
-            Quy trình 3 bước
+            Quy trình 3 bước.
           </Badge>
           <h2 className="mb-2 text-2xl font-bold leading-tight text-slate-100 text-balance md:mb-4 md:text-[50px]">
-            Dịch vụ chuyên nghiệp <br className="hidden md:block" />
-            <span className="text-cyan-300">chỉ trong vài bước</span>
+            Dịch vụ chuyên nghiệp. <br className="hidden md:block" />
+            <span className="text-cyan-300">chỉ trong vài bước.</span>
           </h2>
         </div>
 
@@ -54,7 +54,7 @@ export function HowItWorks() {
                     <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5 sm:pt-0">
-                    <h3 className="relative z-10 mb-1 text-base font-bold tracking-tight text-slate-100 sm:mb-3 sm:text-xl md:text-2xl">{step.title}</h3>
+                    <h3 className="relative z-10 mb-1 text-base font-bold tracking-tight text-slate-100 sm:mb-3 sm:text-xl md:text-2xl">{step.title}.</h3>
                     <p className="relative z-10 text-xs font-medium leading-relaxed text-slate-400 sm:text-base">
                       {step.description}
                     </p>

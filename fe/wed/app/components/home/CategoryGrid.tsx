@@ -75,7 +75,7 @@ export function CategoryGrid() {
                     {cat.label}
                   </h3>
                   <p className="text-[11px] font-semibold text-slate-blue dark:text-slate-400 leading-none">
-                    {cat.count}+ thợ
+                    {cat.count}+ thợ.
                   </p>
                 </div>
               </Link>

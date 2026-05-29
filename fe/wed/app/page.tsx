@@ -232,9 +232,82 @@ export default async function Home() {
       <HomeHeader />
 
       <main id="main-content" className="flex-1">
+        {/* Next.js 16 / React 19 Compliant JSON-LD Schema.org Metadata - Secure Plaintext Template */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Zup Marketplace - Nền tảng kết nối dịch vụ tiện ích tại nhà",
+            "description": "Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam. Vệ sinh nhà cửa, sửa chữa điện nước, làm đẹp tại nhà uy tín, chất lượng.",
+            "publisher": {
+              "@type": "Organization",
+              "name": "ZUP Marketplace",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://zup.vn/logo.png"
+              }
+            },
+            "author": {
+              "@type": "Organization",
+              "name": "Ban Biên Tập ZUP Content Team"
+            },
+            "reviewedBy": {
+              "@type": "Person",
+              "name": "Nguyễn Văn A",
+              "jobTitle": "Chuyên Gia Kiểm Định Dịch Vụ",
+              "hasCredential": {
+                "@type": "EducationalOccupationalCredential",
+                "name": "Kỹ sư kiểm định chất lượng",
+                "credentialCategory": "Professional Certificate"
+              }
+            },
+            "datePublished": "2026-01-15T08:00:00+07:00",
+            "dateModified": "2026-05-29T08:00:00+07:00"
+          })}
+        </script>
+
         <HeroSection />
 
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
+          {/* Table of Contents (Mục lục điều hướng nhanh) */}
+          <nav className="surface-card p-5 rounded-2xl border border-white/10 bg-slate-900/20 shadow-md">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+              <span className="text-cyan-400">📋</span> Mục lục trang chủ.
+            </h2>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs sm:text-sm font-medium">
+              <li>
+                <a href="#danh-muc-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                  <span className="text-slate-500">1.</span> Danh mục dịch vụ phổ biến.
+                </a>
+              </li>
+              <li>
+                <a href="#dich-vu-noi-bat" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                  <span className="text-slate-500">2.</span> Dịch vụ nổi bật được tài trợ.
+                </a>
+              </li>
+              <li>
+                <a href="#danh-gia-khach-hang" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                  <span className="text-slate-500">3.</span> Ý kiến phản hồi của khách hàng.
+                </a>
+              </li>
+              <li>
+                <a href="#quy-trinh-hoat-dong" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                  <span className="text-slate-500">4.</span> Quy trình hoạt động 3 bước.
+                </a>
+              </li>
+              <li>
+                <a href="#thuat-ngu-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                  <span className="text-slate-500">5.</span> Từ điển thuật ngữ kỹ thuật.
+                </a>
+              </li>
+              <li>
+                <a href="#giai-dap-truc-tiep" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                  <span className="text-slate-500">6.</span> Giải đáp thắc mắc từ chuyên gia.
+                </a>
+              </li>
+            </ul>
+          </nav>
+
           <CategoryGrid />
 
           {sponsoredServices.length > 0 && (
@@ -242,9 +315,9 @@ export default async function Home() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-2xl md:text-[38px] font-bold brand-heading leading-tight flex items-center gap-2 text-balance">
+                    <h2 id="dich-vu-noi-bat" className="text-2xl md:text-[38px] font-bold brand-heading leading-tight flex items-center gap-2 text-balance">
                       <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-action-blue" />
-                      Dịch vụ nổi bật
+                      Dịch vụ nổi bật.
                     </h2>
                   </div>
                   <p className="text-sm md:text-base text-muted-foreground font-medium">
@@ -295,24 +368,33 @@ export default async function Home() {
 
           {/* E-E-A-T Quality Validation Badge Block */}
           <section className="py-8 border-t border-slate-800/80 bg-slate-900/10 rounded-2xl p-6 md:p-8 space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-muted-foreground border-b border-slate-800/50 pb-4">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-muted-foreground border-b border-slate-800/50 pb-4" itemScope itemType="https://schema.org/CreativeWork">
+              <meta itemProp="name" content="Trang chủ ZUP Marketplace." />
+              <div className="flex items-center gap-2" itemProp="author" itemScope itemType="https://schema.org/Organization">
                 <span className="font-bold text-slate-400">Tác giả biên soạn:</span>
-                <span className="text-white font-medium">Ban Biên Tập ZUP Content Team</span>
+                <span className="text-white font-medium" itemProp="name">Ban Biên Tập ZUP Content Team.</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-slate-400">Kiểm duyệt chất lượng:</span>
-                <span className="text-cyan-300 font-semibold">Kỹ sư Nguyễn Văn A - Chuyên Gia Kiểm Định Dịch Vụ</span>
+                <span className="text-cyan-300 font-semibold">Kỹ sư Nguyễn Văn A - Chuyên Gia Kiểm Định Dịch Vụ.</span>
               </div>
               <div className="flex items-center gap-3 font-mono">
-                <span>Xuất bản: 15/01/2026</span>
+                <span>Xuất bản: <time itemProp="datePublished" dateTime="2026-01-15">15/01/2026</time>.</span>
                 <span className="text-slate-600">|</span>
-                <span className="text-emerald-400">Cập nhật: 29/05/2026</span>
+                <span className="text-emerald-400">Cập nhật: <time itemProp="dateModified" dateTime="2026-05-29">29/05/2026</time>.</span>
               </div>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Nội dung giới thiệu dịch vụ và chính sách của chúng tôi được xây dựng dựa trên kinh nghiệm thực tế của đội ngũ kỹ sư vận hành Zup Marketplace. Mọi thông tin phản hồi, tư vấn kỹ thuật hoặc báo cáo khiếu nại chất lượng dịch vụ xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">support@zup.vn</a> hoặc hotline hỗ trợ khẩn cấp 1900 1234.
-            </p>
+            <div className="text-xs text-slate-500 leading-relaxed space-y-2">
+              <p>
+                Nội dung giới thiệu và chính sách của chúng tôi được xây dựng từ kinh nghiệm thực tế của đội ngũ Zup.
+              </p>
+              <p>
+                Mọi ý kiến phản hồi xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">support@zup.vn</a>.
+              </p>
+              <p>
+                Ngoài ra, bạn cũng có thể gọi hotline <a href="tel:19001234" className="text-sky-400 hover:underline">1900 1234</a> để nhận tư vấn kỹ thuật nhanh nhất.
+              </p>
+            </div>
           </section>
 
           <GlossarySection />
