@@ -64,11 +64,13 @@ export default function AdminLayout({
         <div className="flex h-16 items-center justify-between border-b border-slate-800 px-4 shrink-0">
           {sidebarOpen ? (
             <div className="flex items-center gap-2.5">
-              <img
-                src="/logo.png"
-                alt="ZUP Logo"
-                className="w-8 h-8 rounded-lg object-cover border border-slate-700 shadow-sm shrink-0"
-              />
+              <div className="w-8 h-8 overflow-hidden rounded-lg border border-slate-700 shadow-sm shrink-0 flex items-center justify-center bg-slate-950">
+                <img
+                  src="/logo.png"
+                  alt="ZUP Logo"
+                  className="h-full w-full scale-[1.38] object-cover"
+                />
+              </div>
               <div>
                 <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase leading-none">
                   Zup Admin
@@ -79,11 +81,13 @@ export default function AdminLayout({
               </div>
             </div>
           ) : (
-            <img
-              src="/logo.png"
-              alt="Z"
-              className="w-8 h-8 rounded-lg object-cover border border-slate-700 mx-auto shadow-sm"
-            />
+            <div className="w-8 h-8 overflow-hidden rounded-lg border border-slate-700 mx-auto shadow-sm flex items-center justify-center bg-slate-950">
+              <img
+                src="/logo.png"
+                alt="Z"
+                className="h-full w-full scale-[1.38] object-cover"
+              />
+            </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

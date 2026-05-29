@@ -16,11 +16,13 @@ export function CustomerFooter() {
               prefetch={false}
               className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue group active:scale-95 transition-transform duration-200"
             >
-              <img
-                src="/logo.png"
-                alt="ZUP Logo"
-                className="w-8 h-8 rounded-xl object-cover border border-white/10 shadow-[0_0_12px_rgba(2,132,199,0.3)] group-hover:scale-105 transition-transform duration-300"
-              />
+              <div className="w-8 h-8 overflow-hidden rounded-xl border border-white/10 shadow-[0_0_12px_rgba(2,132,199,0.3)] shrink-0 flex items-center justify-center bg-slate-950">
+                <img
+                  src="/logo.png"
+                  alt="ZUP Logo"
+                  className="h-full w-full scale-[1.38] object-cover group-hover:scale-110 transition-transform duration-300"
+                />
+              </div>
               <span className="font-sans text-xl font-bold tracking-tight text-white select-none">
                 ZUP
               </span>

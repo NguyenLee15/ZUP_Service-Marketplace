@@ -53,11 +53,13 @@ export function AuthShell({
             className="relative z-10 inline-flex w-fit items-center gap-3 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
             aria-label="Về trang chủ Zup"
           >
-            <img
-              src="/logo.png"
-              alt="ZUP Logo"
-              className="h-10 w-10 rounded-xl object-cover border border-white/10 shadow-lg shadow-sky-500/20 shrink-0"
-            />
+            <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 shadow-lg shadow-sky-500/20 shrink-0 flex items-center justify-center bg-slate-950">
+              <img
+                src="/logo.png"
+                alt="ZUP Logo"
+                className="h-full w-full scale-[1.38] object-cover"
+              />
+            </div>
             <span className="text-2xl font-bold tracking-tight text-white select-none">ZUP</span>
           </Link>
 
@@ -106,11 +108,13 @@ export function AuthShell({
               className="inline-flex items-center gap-2.5 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
               aria-label="Về trang chủ Zup"
             >
-              <img
-                src="/logo.png"
-                alt="ZUP Logo"
-                className="h-9 w-9 rounded-xl object-cover border border-white/10 shrink-0"
-              />
+              <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 shrink-0 flex items-center justify-center bg-slate-950">
+                <img
+                  src="/logo.png"
+                  alt="ZUP Logo"
+                  className="h-full w-full scale-[1.38] object-cover"
+                />
+              </div>
               <span className="font-bold text-lg select-none text-white">ZUP</span>
             </Link>
           </div>
@@ -125,11 +129,13 @@ export function AuthShell({
             
             <CardHeader className="relative z-10 space-y-3 px-6 pb-4 pt-7 text-center sm:px-8">
               <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-sky-600/15 border border-sky-400/20 text-cyan-300 shrink-0">
-                <img
-                  src="/logo.png"
-                  alt="ZUP"
-                  className="size-10 rounded-lg object-cover"
-                />
+                <div className="w-10 h-10 overflow-hidden rounded-lg flex items-center justify-center bg-slate-950">
+                  <img
+                    src="/logo.png"
+                    alt="ZUP"
+                    className="h-full w-full scale-[1.38] object-cover"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">{eyebrow}</p>
