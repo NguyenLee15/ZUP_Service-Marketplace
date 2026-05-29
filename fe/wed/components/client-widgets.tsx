@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useState, startTransition, type ComponentType } from "react";
 
 type SimpleComponent = ComponentType<Record<string, never>>;
 type ChatComponent = ComponentType<{ initialOpen?: boolean }>;
@@ -46,8 +46,10 @@ export function ClientWidgets() {
 
     if (ChatWidget) return;
 
-    void import("@/components/chatbot/ChatWidget").then((mod) => {
-      setChatWidget(() => mod.ChatWidget);
+    startTransition(() => {
+      void import("@/components/chatbot/ChatWidget").then((mod) => {
+        setChatWidget(() => mod.ChatWidget);
+      });
     });
   }, [ChatWidget]);
 

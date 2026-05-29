@@ -116,7 +116,7 @@ export function GlossarySection() {
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Giải nghĩa các khái niệm kỹ thuật và tiêu chuẩn chất lượng dịch vụ tại nhà trên nền tảng Zup.
+            Zup giải nghĩa rõ ràng các thuật ngữ chuyên ngành. Hơn nữa, thông tin sẽ giúp bạn nắm bắt tiêu chuẩn vận hành dễ dàng. Do đó, hãy tham khảo các khái niệm dưới đây.
           </p>
           <div className="space-y-4">
             {definitions.map((item, index) => (
@@ -144,7 +144,7 @@ export function GlossarySection() {
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Câu trả lời trực tiếp cho các thắc mắc phổ biến về quy chế vận hành và chính sách bảo vệ khách hàng.
+            Các câu hỏi này được chuyên gia giải đáp trực tiếp. Hơn nữa, thông tin sẽ giúp bạn hiểu rõ quy chế và chính sách bảo vệ quyền lợi. Do đó, hãy tham khảo chi tiết bên dưới.
           </p>
           <Accordion type="single" collapsible className="w-full space-y-3">
             {directAnswers.map((item, index) => (
