@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Play } from "lucide-react";
 import {
   DeferredFooterSocialLinks,
   DeferredSocialFeedSection,
@@ -35,7 +35,48 @@ export function CustomerFooter() {
               đến giải pháp nhanh chóng, an toàn và tiện lợi cho mọi nhu cầu sửa
               chữa, dọn dẹp của gia đình bạn.
             </p>
-            <DeferredFooterSocialLinks />
+            <div className="flex items-center gap-3 pt-2">
+              <a
+                href="https://facebook.com/zup.vn"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook ZUP"
+                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-sky-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+              >
+                <Facebook className="size-5" />
+              </a>
+              <a
+                href="https://youtube.com/@zupvn"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube ZUP"
+                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-rose-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+              >
+                <Play className="size-5" />
+              </a>
+              <a
+                href="https://tiktok.com/@zup.vn"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok ZUP"
+                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-neutral-800 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+              >
+                <svg className="size-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.89-.74-3.99-1.72-.08-.07-.15-.15-.22-.23v6.52c-.04 2.87-1.43 5.72-3.93 7.15-2.52 1.45-5.91 1.45-8.43-.01-2.49-1.44-3.87-4.29-3.9-7.17-.03-2.88 1.36-5.73 3.86-7.17 2.1-1.21 4.75-1.39 6.99-.48v4.11c-1.57-.71-3.52-.45-4.79.68-1.28 1.13-1.63 3.09-.85 4.62.77 1.53 2.53 2.44 4.24 2.22 1.71-.22 3.03-1.64 3.07-3.37v-13.9c.01-.15.01-.3.01-.45z"/>
+                </svg>
+              </a>
+              <a
+                href="https://twitter.com/zupvn"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Twitter X ZUP"
+                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-neutral-800 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+              >
+                <svg className="size-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
+            </div>
           </div>
 
           <div>

@@ -10,6 +10,7 @@ import { CategoryGridSkeleton, ServicesListSkeleton } from '@/app/components/hom
 import { GlossarySection } from '@/app/components/home/GlossarySection';
 import { Testimonials } from '@/app/components/home/Testimonials';
 import { CustomerFooter } from '@/components/layout/CustomerFooter';
+import { SocialShareWidget } from '@/components/social/SocialShareWidget';
 
 import { HomeHeader } from '@/components/layout/HomeHeader';
 import type { Category, Service } from '@/types';
@@ -245,7 +246,13 @@ export default async function Home() {
               "logo": {
                 "@type": "ImageObject",
                 "url": "https://zup.vn/logo.png"
-              }
+              },
+              "sameAs": [
+                "https://facebook.com/zup.vn",
+                "https://youtube.com/@zupvn",
+                "https://tiktok.com/@zup.vn",
+                "https://twitter.com/zupvn"
+              ]
             },
             "author": {
               "@type": "Organization",
@@ -399,19 +406,22 @@ export default async function Home() {
                 <span className="text-emerald-400">Cập nhật: <time itemProp="dateModified" dateTime="2026-05-29">29/05/2026</time>.</span>
               </div>
             </div>
-            <div className="text-xs text-slate-500 leading-relaxed space-y-2">
-              <p>
-                Nội dung giới thiệu và chính sách của chúng tôi được xây dựng từ kinh nghiệm thực tế của đội ngũ Zup.
-              </p>
-              <p>
-                Chúng tôi tuân thủ nghiêm ngặt <a href="/fact-check-policy" className="text-sky-400 hover:underline">Chính sách xác minh thông tin</a> và <a href="/editorial-policy" className="text-sky-400 hover:underline">Chính sách biên tập</a> để bảo đảm mọi hướng dẫn kỹ thuật đều chính xác.
-              </p>
-              <p>
-                Mọi ý kiến phản hồi xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">hòm thư support@zup.vn</a>.
-              </p>
-              <p>
-                Ngoài ra, bạn cũng có thể gọi hotline <a href="tel:19001234" className="text-sky-400 hover:underline">1900 1234</a> để nhận tư vấn kỹ thuật nhanh nhất.
-              </p>
+            <div className="flex flex-col md:flex-row gap-6 justify-between items-start">
+              <div className="text-xs text-slate-500 leading-relaxed space-y-2 flex-1">
+                <p>
+                  Nội dung giới thiệu và chính sách của chúng tôi được xây dựng từ kinh nghiệm thực tế của đội ngũ Zup.
+                </p>
+                <p>
+                  Chúng tôi tuân thủ nghiêm ngặt <a href="/fact-check-policy" className="text-sky-400 hover:underline">Chính sách xác minh thông tin</a> và <a href="/editorial-policy" className="text-sky-400 hover:underline">Chính sách biên tập</a> để bảo đảm mọi hướng dẫn kỹ thuật đều chính xác.
+                </p>
+                <p>
+                  Mọi ý kiến phản hồi xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">hòm thư support@zup.vn</a>.
+                </p>
+                <p>
+                  Ngoài ra, bạn cũng có thể gọi hotline <a href="tel:19001234" className="text-sky-400 hover:underline">1900 1234</a> để nhận tư vấn kỹ thuật nhanh nhất.
+                </p>
+              </div>
+              <SocialShareWidget />
             </div>
           </section>
 
