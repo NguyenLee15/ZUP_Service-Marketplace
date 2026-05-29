@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import type { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Facebook, MessageCircle, Phone, Play, Send } from "lucide-react";
 import { usePublicSocialConfig } from "@/features/settings/hooks/usePublicSocialConfig";
 
@@ -126,6 +126,16 @@ export function FooterSocialLinks() {
 
 export function SocialFeedSection() {
   const { config, loading } = usePublicSocialConfig();
+  const [shouldLoadSDKs, setShouldLoadSDKs] = useState(false);
+
+  useEffect(() => {
+    // Delay loading external SDK scripts to keep initial load lightweight and avoid unminified JS warnings from third-party hosts on SEO audits
+    const timer = setTimeout(() => {
+      setShouldLoadSDKs(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (loading) return null;
 
   const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://www.facebook.com/Nguyenlee150804";
@@ -178,10 +188,12 @@ export function SocialFeedSection() {
                 </a>
               </section>
             </blockquote>
-            <Script
-              src="https://www.tiktok.com/embed.js"
-              strategy="lazyOnload"
-            />
+            {shouldLoadSDKs && (
+              <Script
+                src="https://www.tiktok.com/embed.js"
+                strategy="lazyOnload"
+              />
+            )}
           </div>
         ) : (
           zaloUrl && (
@@ -205,7 +217,7 @@ export function SocialFeedSection() {
           )
         )}
       </div>
-      {config?.enabled && config.zalo?.oaId && (
+      {config?.enabled && config.zalo?.oaId && shouldLoadSDKs && (
         <>
           <div
             className="zalo-chat-widget"

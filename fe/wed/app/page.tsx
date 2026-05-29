@@ -383,6 +383,9 @@ export default async function Home() {
               <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
                 <strong>Tuy nhiên</strong>, Zup không chỉ dừng lại ở đó. Chúng tôi còn đầu tư mạnh mẽ vào ứng dụng trí tuệ nhân tạo (AI). Công nghệ này giúp đề xuất thợ phù hợp theo khoảng cách địa lý. <strong>Do đó</strong>, hãy trải nghiệm sự tiện nghi cùng Zup ngay hôm nay!
               </p>
+              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
+                <strong>Ngoài ra</strong>, uy tín của Zup còn được khẳng định qua hàng ngàn đánh giá tích cực từ cộng đồng hàng tháng. Chúng tôi không ngừng cải tiến quy trình công nghệ nhằm mang lại sự hài lòng cao nhất cho bạn. <strong>Vì vậy</strong>, Zup tự tin là người bạn đồng hành tin cậy của mọi ngôi nhà Việt. Hãy để chúng tôi chăm sóc tổ ấm của bạn một cách trọn vẹn, an toàn và chuyên nghiệp nhất.
+              </p>
             </div>
           </section>
 

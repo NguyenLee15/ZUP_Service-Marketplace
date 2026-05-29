@@ -34,6 +34,18 @@ const directAnswers = [
   {
     q: "Quy trình khiếu nại và hoàn tiền hoạt động như thế nào khi chất lượng không đạt?",
     a: "Zup sẽ tạm giữ tiền thanh toán giao dịch trong 24 giờ. Ngoài ra, đội ngũ chuyên gia của Zup sẽ lập tức xác minh lỗi. Vì vậy, bạn được cam kết sửa lại miễn phí hoặc hoàn tiền 100%."
+  },
+  {
+    q: "Quy trình kiểm duyệt và kiểm tra năng lực thợ đối tác của Zup diễn ra như thế nào?",
+    a: "Zup áp dụng quy trình kiểm duyệt 3 bước nghiêm ngặt. Hơn nữa, thợ đối tác phải có chứng chỉ nghề hợp lệ. Ngoài ra, thợ phải vượt qua bài kiểm tra thái độ phục vụ khách hàng."
+  },
+  {
+    q: "Thông tin địa chỉ nhà và số điện thoại cá nhân của tôi có được bảo mật an toàn không?",
+    a: "Hệ thống bảo mật dữ liệu theo tiêu chuẩn mã hóa SSL tiên tiến nhất. Hơn nữa, thông tin chỉ được cung cấp khi bạn xác nhận đơn đặt lịch. Vì vậy, sự riêng tư luôn được bảo vệ."
+  },
+  {
+    q: "Trong trường hợp sự cố khẩn cấp, thợ Zup sẽ mất bao lâu để có mặt và xử lý?",
+    a: "Zup tự động đề xuất thợ ở vị trí gần bạn nhất. Do đó, thợ đối tác sẽ nhận đơn và có mặt chỉ trong vòng 15 đến 30 phút. Hơn nữa, bạn dễ dàng theo dõi hành trình di chuyển."
   }
 ];
 
