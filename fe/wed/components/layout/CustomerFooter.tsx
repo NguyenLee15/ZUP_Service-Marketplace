@@ -58,7 +58,7 @@ export function CustomerFooter() {
                   prefetch={false}
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
-                  Vệ sinh máy lạnh
+                  Đặt lịch Vệ sinh máy lạnh
                 </Link>
               </li>
               <li>
@@ -156,7 +156,7 @@ export function CustomerFooter() {
                   href="mailto:support@zup.vn"
                   className="rounded hover:text-action-blue transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                 >
-                  support@zup.vn
+                  Gửi email hỗ trợ (support@zup.vn)
                 </a>
               </li>
               <li className="flex items-center gap-3">
@@ -181,15 +181,33 @@ export function CustomerFooter() {
           <div className="flex flex-col gap-1.5 text-left">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Chứng nhận & An toàn</span>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-emerald-400 select-none shadow-sm">
+              <a
+                href="https://vi.wikipedia.org/wiki/An_to%C3%A0n_%C4%91i%E1%BB%87n"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-emerald-400 shadow-sm hover:border-emerald-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                title="Quy chuẩn an toàn điện Wikipedia"
+              >
                 <span className="text-[9px]">🛡️</span> SSL SECURED
-              </div>
-              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-sky-400 select-none shadow-sm">
+              </a>
+              <a
+                href="https://online.gov.vn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-sky-400 shadow-sm hover:border-sky-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                title="Trang thông tin Bộ Công Thương đã đăng ký"
+              >
                 <span className="text-[9px]">💳</span> VNPAY PARTNER
-              </div>
-              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-amber-500 select-none shadow-sm">
+              </a>
+              <a
+                href="https://www.iso.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-amber-500 shadow-sm hover:border-amber-600 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                title="Tiêu chuẩn quản lý chất lượng dịch vụ ISO 9001"
+              >
                 <span className="text-[9px]">⭐</span> PCI-DSS COMPLIANT
-              </div>
+              </a>
             </div>
           </div>
           <div className="flex flex-col gap-1.5 text-left sm:text-right">

@@ -289,10 +289,11 @@ export function UnifiedServiceCard({
               <Link
                 href={`/providers/${service.provider.id}`}
                 onClick={(e) => e.stopPropagation()}
-                title={service.provider.fullName}
+                title={`Xem hồ sơ của thợ ${service.provider.fullName}`}
+                aria-label={`Xem hồ sơ của thợ ${service.provider.fullName} cung cấp dịch vụ ${service.name}`}
                 className="min-w-0 flex-1 truncate font-medium text-foreground/75 hover:text-action-blue hover:underline transition-colors"
               >
-                {service.provider.fullName}.
+                Thợ {service.provider.fullName} ({service.name.replace(/\.$/, '')}).
               </Link>
             ) : (
               <p

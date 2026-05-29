@@ -407,7 +407,7 @@ export default async function Home() {
                 Chúng tôi tuân thủ nghiêm ngặt <a href="/fact-check-policy" className="text-sky-400 hover:underline">Chính sách xác minh thông tin</a> và <a href="/editorial-policy" className="text-sky-400 hover:underline">Chính sách biên tập</a> để bảo đảm mọi hướng dẫn kỹ thuật đều chính xác.
               </p>
               <p>
-                Mọi ý kiến phản hồi xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">support@zup.vn</a>.
+                Mọi ý kiến phản hồi xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">hòm thư support@zup.vn</a>.
               </p>
               <p>
                 Ngoài ra, bạn cũng có thể gọi hotline <a href="tel:19001234" className="text-sky-400 hover:underline">1900 1234</a> để nhận tư vấn kỹ thuật nhanh nhất.

@@ -58,7 +58,7 @@ export function HomeHeader() {
                 </Link>
                 <div className="my-1 h-px bg-white/10" />
                 <Link href="/login" className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
-                  Đăng nhập
+                  Đăng nhập thành viên.
                 </Link>
                 <Link href="/register" className="block rounded-lg px-4 py-3 text-sm font-bold text-cyan-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Đăng ký tài khoản

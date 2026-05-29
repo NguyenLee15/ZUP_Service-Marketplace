@@ -319,7 +319,7 @@ export function CustomerHeader() {
                     prefetch={false}
                     className="inline-flex h-9 items-center justify-center rounded-lg bg-action-blue px-4 text-sm font-medium text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                   >
-                    Đăng nhập
+                    Đăng nhập tài khoản.
                   </Link>
                 </div>
               ) : (
@@ -396,7 +396,7 @@ export function CustomerHeader() {
             ) : mounted ? (
               <>
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-foreground/80 hover:bg-pale-gray rounded-xl font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
-                  <User className="w-5 h-5" /> Đăng nhập
+                  <User className="w-5 h-5" /> Đăng nhập ZUP.
                 </Link>
                 <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-action-blue hover:bg-pale-gray rounded-xl font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
                   Đăng ký tài khoản
