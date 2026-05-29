@@ -370,21 +370,21 @@ export default async function Home() {
 
           {/* Rich Content Text Block for Text/HTML Ratio Optimization */}
           <section className="py-10 border-t border-slate-800 space-y-6">
-            <div className="max-w-4xl mx-auto text-left space-y-4">
+            <div className="max-w-4xl mx-auto text-left space-y-5">
               <h2 id="gioi-thieu-zup" className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
                 Zup - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
               </h2>
               <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                Chào mừng bạn đến với <strong>Zup</strong>. Đây là nền tảng công nghệ tiên phong kết nối khách hàng và thợ chuyên nghiệp. <strong>Do đó</strong>, chúng tôi tự hào mang đến giải pháp toàn diện cho gia đình bận rộn. <strong>Ngoài ra</strong>, các dịch vụ từ vệ sinh đến sửa chữa đều được cam kết chất lượng hàng đầu.
+                Chào mừng bạn đến với hệ thống <strong>Zup</strong>. Đây chính là giải pháp công nghệ tiên phong tại Việt Nam. <strong>Do đó</strong>, nền tảng giúp kết nối khách hàng với các đối tác thợ chuyên nghiệp nhất. <strong>Ngoài ra</strong>, quy trình tìm kiếm thợ được tự động hóa tối đa. <strong>Nhờ vậy</strong>, bạn sẽ tiết kiệm được rất nhiều thời gian quý báu của mình. <strong>Đặc biệt là</strong> các dịch vụ từ vệ sinh đến sửa chữa đều được cam kết chất lượng tuyệt đối.
               </p>
               <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                <strong>Zup</strong> áp dụng tiêu chuẩn kiểm duyệt đầu vào cực kỳ khắt khe. <strong>Hơn nữa</strong>, mọi đối tác thợ đều phải hoàn thành xác thực thông tin (KYC). <strong>Ngoài ra</strong>, cơ chế báo giá minh bạch giúp ngăn chặn phát sinh chi phí mập mờ. <strong>Vì vậy</strong>, quyền lợi của bạn luôn được bảo vệ tốt nhất.
+                <strong>Hơn nữa</strong>, Zup luôn đặt tiêu chí an toàn của khách hàng lên hàng đầu. <strong>Do đó</strong>, chúng tôi áp dụng quy trình kiểm duyệt tay nghề thợ vô cùng nghiêm ngặt. <strong>Ngoài ra</strong>, hồ sơ lý lịch của đối tác thợ đều được xác minh rõ ràng. <strong>Vì vậy</strong>, bạn hoàn toàn có thể an tâm khi thợ đến nhà làm việc. <strong>Đặc biệt là</strong> cơ chế báo giá luôn công khai chi tiết trên ứng dụng. <strong>Từ đó</strong>, mọi chi phí phát sinh mập mờ đều bị ngăn chặn triệt để.
               </p>
               <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                <strong>Tuy nhiên</strong>, Zup không chỉ dừng lại ở đó. Chúng tôi còn đầu tư mạnh mẽ vào ứng dụng trí tuệ nhân tạo (AI). Công nghệ này giúp đề xuất thợ phù hợp theo khoảng cách địa lý. <strong>Do đó</strong>, hãy trải nghiệm sự tiện nghi cùng Zup ngay hôm nay!
+                <strong>Tuy nhiên</strong>, sự cải tiến của Zup không chỉ dừng lại ở chất lượng thợ. Chúng tôi còn ứng dụng các mô hình trí tuệ nhân tạo (AI) thông minh. Hệ thống AI này sẽ tự động tìm kiếm thợ dựa trên định vị khoảng cách gần nhất. <strong>Nhờ đó</strong>, thời gian di chuyển của thợ được rút ngắn chỉ từ 15 đến 30 phút. <strong>Vì thế</strong>, các sự cố khẩn cấp sẽ được xử lý kịp thời.
               </p>
               <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                <strong>Ngoài ra</strong>, uy tín của Zup còn được khẳng định qua hàng ngàn đánh giá tích cực từ cộng đồng hàng tháng. Chúng tôi không ngừng cải tiến quy trình công nghệ nhằm mang lại sự hài lòng cao nhất cho bạn. <strong>Vì vậy</strong>, Zup tự tin là người bạn đồng hành tin cậy của mọi ngôi nhà Việt. Hãy để chúng tôi chăm sóc tổ ấm của bạn một cách trọn vẹn, an toàn và chuyên nghiệp nhất.
+                <strong>Ngoài ra</strong>, uy tín của Zup còn được khẳng định mạnh mẽ qua thời gian. Điều này được chứng minh bằng hàng ngàn phản hồi tích cực mỗi tháng. <strong>Do đó</strong>, chúng tôi tự hào là người bạn đồng hành của hàng vạn gia đình Việt. <strong>Hơn nữa</strong>, ban kiểm định luôn lắng nghe ý kiến đóng góp từ phía bạn. <strong>Từ đó</strong>, chất lượng phục vụ ngày càng hoàn thiện và tối ưu hơn. Hãy trải nghiệm sự tiện nghi vượt trội cùng Zup ngay hôm nay!
               </p>
             </div>
           </section>

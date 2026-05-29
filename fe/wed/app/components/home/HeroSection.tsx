@@ -17,6 +17,7 @@ export function HeroSection() {
           alt="Nền tảng kết nối dịch vụ tiện ích tại nhà ZUP uy tín"
           fill
           priority
+          fetchPriority="high"
           sizes="100vw"
           className="object-cover opacity-30 select-none pointer-events-none"
         />
@@ -56,7 +57,7 @@ export function HeroSection() {
           </span>
         </h1>
         <p className="text-base sm:text-lg md:text-xl text-white/95 mb-6 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
-          Nền tảng kết nối <strong>dịch vụ tiện ích</strong> số 1 Việt Nam. <strong>Nhanh chóng, an toàn</strong> và minh bạch.
+          Zup tự hào là nền tảng kết nối <strong>dịch vụ tiện ích</strong> số 1 Việt Nam. <strong>Do đó</strong>, chúng tôi cam kết đem lại các giải pháp <strong>nhanh chóng, an toàn</strong> và minh bạch nhất cho tổ ấm của bạn.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">

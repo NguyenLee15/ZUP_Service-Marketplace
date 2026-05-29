@@ -6,19 +6,19 @@ const steps = [
     icon: Search,
     number: '01',
     title: 'Tìm kiếm nhanh',
-    description: 'Nhập nhu cầu, khu vực và xem ngay danh sách thợ phù hợp để so sánh.',
+    description: 'Bạn hãy nhập nhu cầu và khu vực cần hỗ trợ. Sau đó, hệ thống sẽ đề xuất ngay danh sách các thợ phù hợp nhất để so sánh trực quan.',
   },
   {
     icon: ShieldCheck,
     number: '02',
     title: 'Thợ xác thực',
-    description: 'Mọi đối tác đều được kiểm duyệt về hồ sơ, tay nghề và thái độ phục vụ.',
+    description: 'Tất cả đối tác đều được kiểm duyệt hồ sơ và tay nghề kỹ lưỡng. Hơn nữa, thợ bắt buộc phải vượt qua bài kiểm tra thái độ phục vụ khách hàng.',
   },
   {
     icon: ThumbsUp,
     number: '03',
     title: 'Đặt lịch rõ ràng',
-    description: 'Theo dõi trạng thái đơn, trao đổi với thợ và chỉ xác nhận khi dịch vụ hoàn tất.',
+    description: 'Bạn dễ dàng theo dõi hành trình di chuyển và trao đổi trực tiếp với thợ. Vì thế, bạn chỉ xác nhận thanh toán khi dịch vụ đã hoàn tất.',
   },
 ];
 
