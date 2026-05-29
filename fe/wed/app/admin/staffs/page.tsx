@@ -312,7 +312,7 @@ export default function StaffsPage() {
                           <div className="relative">
                             <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-sm overflow-hidden border border-slate-200">
                               {staff.avatarUrl
-                                ? <img src={staff.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                ? <img src={staff.avatarUrl} alt={`Ảnh đại diện của nhân viên ${staff.fullName}`} className="w-full h-full object-cover" />
                                 : staff.fullName?.charAt(0)?.toUpperCase()
                               }
                             </div>

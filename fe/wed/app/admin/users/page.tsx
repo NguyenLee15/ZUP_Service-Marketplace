@@ -242,7 +242,7 @@ export default function UsersPage() {
                         <td>
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded bg-slate-100 font-semibold text-slate-600 ring-1 ring-slate-200">
-                              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.fullName?.charAt(0)}
+                              {user.avatarUrl ? <img src={user.avatarUrl} alt={`Ảnh đại diện của ${user.fullName || 'người dùng'}`} className="w-full h-full object-cover" /> : user.fullName?.charAt(0)}
                             </div>
                             <div>
                               <p className="font-semibold text-slate-950">{user.fullName}</p>

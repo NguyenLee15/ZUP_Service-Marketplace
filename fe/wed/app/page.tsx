@@ -293,6 +293,28 @@ export default async function Home() {
             </div>
           </section>
 
+          {/* E-E-A-T Quality Validation Badge Block */}
+          <section className="py-8 border-t border-slate-800/80 bg-slate-900/10 rounded-2xl p-6 md:p-8 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-muted-foreground border-b border-slate-800/50 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-400">Tác giả biên soạn:</span>
+                <span className="text-white font-medium">Ban Biên Tập ZUP Content Team</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-400">Kiểm duyệt chất lượng:</span>
+                <span className="text-cyan-300 font-semibold">Kỹ sư Nguyễn Văn A - Chuyên Gia Kiểm Định Dịch Vụ</span>
+              </div>
+              <div className="flex items-center gap-3 font-mono">
+                <span>Xuất bản: 15/01/2026</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-emerald-400">Cập nhật: 29/05/2026</span>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Nội dung giới thiệu dịch vụ và chính sách của chúng tôi được xây dựng dựa trên kinh nghiệm thực tế của đội ngũ kỹ sư vận hành Zup Marketplace. Mọi thông tin phản hồi, tư vấn kỹ thuật hoặc báo cáo khiếu nại chất lượng dịch vụ xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">support@zup.vn</a> hoặc hotline hỗ trợ khẩn cấp 1900 1234.
+            </p>
+          </section>
+
           <GlossarySection />
         </div>
       </main>

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { HeroSearchForm } from '@/app/components/home/HeroSearchForm';
 
 const TRUST_BADGE_USERS = [
@@ -11,10 +12,13 @@ export function HeroSection() {
   return (
     <section className="relative min-h-[560px] sm:min-h-[600px] lg:min-h-[640px] flex items-center justify-center text-white overflow-hidden bg-[#101415]">
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
           src="/images/hero_bg.webp"
-          alt=""
-          className="h-full w-full object-cover opacity-30 select-none pointer-events-none"
+          alt="Nền tảng kết nối dịch vụ tiện ích tại nhà ZUP uy tín"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-30 select-none pointer-events-none"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#101415]/60 via-[#101415]/85 to-[#101415]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(2,132,199,0.22),transparent_34rem),radial-gradient(circle_at_72%_28%,rgba(6,182,212,0.14),transparent_22rem)]" />
