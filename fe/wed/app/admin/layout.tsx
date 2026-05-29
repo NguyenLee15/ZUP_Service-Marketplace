@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -65,9 +66,11 @@ export default function AdminLayout({
           {sidebarOpen ? (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 overflow-hidden rounded-lg border border-slate-700 shadow-sm shrink-0 flex items-center justify-center bg-slate-950">
-                <img
+                <Image
                   src="/logo.png"
-                  alt="ZUP Logo"
+                  alt="ZUP Logo Admin Sidebar - Hệ thống quản trị dịch vụ"
+                  width={32}
+                  height={32}
                   className="h-full w-full scale-[1.38] object-cover"
                 />
               </div>
@@ -82,9 +85,11 @@ export default function AdminLayout({
             </div>
           ) : (
             <div className="w-8 h-8 overflow-hidden rounded-lg border border-slate-700 mx-auto shadow-sm flex items-center justify-center bg-slate-950">
-              <img
+              <Image
                 src="/logo.png"
-                alt="Z"
+                alt="ZUP Logo Admin Icon - Biểu trưng quản trị ZUP"
+                width={32}
+                height={32}
                 className="h-full w-full scale-[1.38] object-cover"
               />
             </div>

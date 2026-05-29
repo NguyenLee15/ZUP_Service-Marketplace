@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu, Wrench } from 'lucide-react';
 
 import { HeaderSearchBar } from '@/components/layout/HeaderSearchBar';
@@ -14,9 +15,12 @@ export function HomeHeader() {
             className="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
           >
             <div className="h-8 w-8 sm:h-10 sm:w-10 overflow-hidden rounded-xl border border-white/10 shadow-[0_0_18px_rgba(2,132,199,0.4)] shrink-0 flex items-center justify-center bg-slate-950">
-              <img
+              <Image
                 src="/logo.png"
-                alt="ZUP Logo"
+                alt="ZUP Logo Header - Nền tảng kết nối dịch vụ tiện ích tại nhà"
+                width={40}
+                height={40}
+                priority
                 className="h-full w-full scale-[1.38] object-cover"
               />
             </div>

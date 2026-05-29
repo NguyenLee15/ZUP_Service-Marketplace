@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Phone, MapPin } from "lucide-react";
 import {
   DeferredFooterSocialLinks,
@@ -17,9 +18,11 @@ export function CustomerFooter() {
               className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue group active:scale-95 transition-transform duration-200"
             >
               <div className="w-8 h-8 overflow-hidden rounded-xl border border-white/10 shadow-[0_0_12px_rgba(2,132,199,0.3)] shrink-0 flex items-center justify-center bg-slate-950">
-                <img
+                <Image
                   src="/logo.png"
-                  alt="ZUP Logo"
+                  alt="ZUP Logo Footer - Hệ thống kết nối thợ chuyên nghiệp uy tín"
+                  width={32}
+                  height={32}
                   className="h-full w-full scale-[1.38] object-cover group-hover:scale-110 transition-transform duration-300"
                 />
               </div>

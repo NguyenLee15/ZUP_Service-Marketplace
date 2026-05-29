@@ -56,9 +56,9 @@ const formatCompactCount = (value: number) => {
 };
 
 const HOME_FALLBACK_IMAGES = [
-  '/images/service_cleaning.png',
-  '/images/service_repair.png',
-  '/images/hero_bg.png',
+  '/images/service_cleaning.webp',
+  '/images/service_repair.webp',
+  '/images/hero_bg.webp',
 ];
 
 export function UnifiedServiceCardSkeleton() {

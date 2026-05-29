@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { CheckCircle2, Home, ShieldCheck, Sparkles, Wrench } from 'lucide-react';
 import {
@@ -54,9 +55,12 @@ export function AuthShell({
             aria-label="Về trang chủ Zup"
           >
             <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 shadow-lg shadow-sky-500/20 shrink-0 flex items-center justify-center bg-slate-950">
-              <img
+              <Image
                 src="/logo.png"
-                alt="ZUP Logo"
+                alt="ZUP Logo Sidebar - Đăng nhập tài khoản dịch vụ"
+                width={40}
+                height={40}
+                priority
                 className="h-full w-full scale-[1.38] object-cover"
               />
             </div>
@@ -109,9 +113,11 @@ export function AuthShell({
               aria-label="Về trang chủ Zup"
             >
               <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 shrink-0 flex items-center justify-center bg-slate-950">
-                <img
+                <Image
                   src="/logo.png"
-                  alt="ZUP Logo"
+                  alt="ZUP Logo Mobile - Ứng dụng đặt thợ tại gia"
+                  width={36}
+                  height={36}
                   className="h-full w-full scale-[1.38] object-cover"
                 />
               </div>
@@ -130,9 +136,11 @@ export function AuthShell({
             <CardHeader className="relative z-10 space-y-3 px-6 pb-4 pt-7 text-center sm:px-8">
               <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-sky-600/15 border border-sky-400/20 text-cyan-300 shrink-0">
                 <div className="w-10 h-10 overflow-hidden rounded-lg flex items-center justify-center bg-slate-950">
-                  <img
+                  <Image
                     src="/logo.png"
-                    alt="ZUP"
+                    alt="ZUP Logo Icon - Đăng ký tài khoản ZUP"
+                    width={40}
+                    height={40}
                     className="h-full w-full scale-[1.38] object-cover"
                   />
                 </div>

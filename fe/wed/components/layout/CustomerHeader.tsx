@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Wrench } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
@@ -179,9 +180,12 @@ export function CustomerHeader() {
             <div className="flex items-center gap-2 shrink-0">
               <Link href="/" prefetch={false} className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-xl active:scale-95 transition-transform duration-200">
                 <div className="h-8 w-8 sm:h-10 sm:w-10 overflow-hidden rounded-xl border border-white/10 shadow-[0_0_18px_rgba(2,132,199,0.4)] shrink-0 flex items-center justify-center bg-slate-950">
-                  <img
+                  <Image
                     src="/logo.png"
-                    alt="ZUP Logo"
+                    alt="ZUP Logo Navigation - Đặt thợ sửa chữa, vệ sinh nhanh chóng"
+                    width={40}
+                    height={40}
+                    priority
                     className="h-full w-full scale-[1.38] object-cover"
                   />
                 </div>

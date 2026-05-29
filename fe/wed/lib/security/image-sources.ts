@@ -5,7 +5,7 @@ const TRUSTED_IMAGE_HOSTS = new Set([
   'i.pravatar.cc',
 ]);
 
-export const DEFAULT_SERVICE_IMAGE = '/images/service_repair.png';
+export const DEFAULT_SERVICE_IMAGE = '/images/service_repair.webp';
 
 export function isTrustedImageSrc(src?: string | null) {
   if (!src) return false;
@@ -39,7 +39,7 @@ export function getServiceFallbackImage(service?: {
     text.includes('diệt côn trùng') ||
     text.includes('giặt')
   ) {
-    return '/images/service_cleaning.png';
+    return '/images/service_cleaning.webp';
   }
 
   if (
@@ -48,7 +48,7 @@ export function getServiceFallbackImage(service?: {
     text.includes('tư vấn') ||
     text.includes('giáo dục')
   ) {
-    return '/images/hero_bg.png';
+    return '/images/hero_bg.webp';
   }
 
   return DEFAULT_SERVICE_IMAGE;
