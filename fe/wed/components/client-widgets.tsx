@@ -69,44 +69,7 @@ export function ClientWidgets() {
     };
   }, [BackToTop, hidden]);
 
-  useEffect(() => {
-    if (hidden || SocialFloatingWidget) return;
-
-    let scheduled = false;
-
-    const loadSocialWidget = () => {
-      void import("@/components/social/SocialWidgets").then((mod) => {
-        setSocialFloatingWidget(() => mod.SocialFloatingWidget);
-      });
-    };
-
-    const scheduleLoad = () => {
-      if (scheduled) return;
-      scheduled = true;
-
-      const win = window as Window & {
-        requestIdleCallback?: (
-          callback: IdleRequestCallback,
-          options?: IdleRequestOptions,
-        ) => number;
-      };
-
-      if (win.requestIdleCallback) {
-        win.requestIdleCallback(loadSocialWidget, { timeout: 2_500 });
-        return;
-      }
-
-      window.setTimeout(loadSocialWidget, 800);
-    };
-
-    window.addEventListener("pointerdown", scheduleLoad, { once: true, passive: true });
-    window.addEventListener("keydown", scheduleLoad, { once: true });
-
-    return () => {
-      window.removeEventListener("pointerdown", scheduleLoad);
-      window.removeEventListener("keydown", scheduleLoad);
-    };
-  }, [SocialFloatingWidget, hidden]);
+  // SocialFloatingWidget has been disabled as requested by the user
 
   if (hidden) return null;
 
