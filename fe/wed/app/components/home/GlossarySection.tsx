@@ -46,6 +46,14 @@ const directAnswers = [
   {
     q: "Trong trường hợp sự cố khẩn cấp, thợ Zup sẽ mất bao lâu để có mặt và xử lý?",
     a: "Zup tự động đề xuất thợ ở vị trí gần bạn nhất. Do đó, thợ đối tác sẽ nhận đơn và có mặt chỉ trong vòng 15 đến 30 phút. Hơn nữa, bạn dễ dàng theo dõi hành trình di chuyển."
+  },
+  {
+    q: "Các linh kiện và phụ tùng thay thế do thợ Zup cung cấp có quy chuẩn chất lượng và nguồn gốc như thế nào?",
+    a: "Zup yêu cầu thợ cam kết chỉ sử dụng linh kiện chính hãng 100%. Hơn nữa, linh kiện thay thế bắt buộc phải có tem nhãn rõ ràng. Do đó, bạn được bảo hành bộ phận thay thế từ 3 đến 6 tháng."
+  },
+  {
+    q: "Zup có cung cấp dịch vụ trong các ngày nghỉ lễ, Tết không và có phát sinh phụ phí gì không?",
+    a: "Hệ thống Zup hoạt động liên tục 24/7 kể cả ngày lễ Tết. Tuy nhiên, giá dịch vụ có thể điều chỉnh nhẹ theo quy định ngày lễ. Vì vậy, thợ sẽ báo giá chi tiết qua app để bạn phê duyệt trước."
   }
 ];
 

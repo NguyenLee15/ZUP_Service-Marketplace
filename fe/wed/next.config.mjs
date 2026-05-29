@@ -63,6 +63,7 @@ const nextConfig = {
   // standalone chỉ cần cho Docker/self-hosted, Vercel dùng Serverless riêng
   ...(isVercel ? {} : { output: 'standalone', outputFileTracingRoot: appDir }),
   poweredByHeader: false,
+  compress: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
@@ -128,6 +129,21 @@ const nextConfig = {
             value: 'no-store, max-age=0',
           },
         ],
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.service-marketplace-gold.vercel.app',
+          },
+        ],
+        destination: 'https://service-marketplace-gold.vercel.app/:path*',
+        permanent: true,
       },
     ];
   },

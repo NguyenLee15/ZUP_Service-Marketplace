@@ -156,7 +156,7 @@ export function SocialFeedSection() {
         </h3>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        {facebookUrl && (
+        {facebookUrl && shouldLoadSDKs && (
           <div className="overflow-hidden rounded-xl bg-white p-3 shadow-[var(--brand-shadow-sm)]">
             <iframe
               title="Facebook Zup"
