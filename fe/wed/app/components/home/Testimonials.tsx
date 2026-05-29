@@ -28,7 +28,7 @@ export function Testimonials() {
   return (
     <section id="danh-gia-khach-hang">
       <div className="text-center mb-10 md:mb-12">
-        <h2 className="text-2xl md:text-[38px] font-bold brand-heading mb-4 leading-tight text-balance">
+        <h2 id="y-kien-khach-hang" className="text-2xl md:text-[38px] font-bold brand-heading mb-4 leading-tight text-balance">
           Khách hàng nói gì?.
         </h2>
         <p className="text-slate-blue max-w-2xl mx-auto text-base md:text-lg leading-relaxed">

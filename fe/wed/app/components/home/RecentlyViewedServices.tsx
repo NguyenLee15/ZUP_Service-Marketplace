@@ -16,7 +16,7 @@ export function RecentlyViewedServices() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl md:text-[38px] font-bold brand-heading leading-tight text-balance">
+            <h2 id="goi-y-cho-ban" className="text-2xl md:text-[38px] font-bold brand-heading leading-tight text-balance">
               Gợi ý dành riêng cho bạn
             </h2>
           </div>

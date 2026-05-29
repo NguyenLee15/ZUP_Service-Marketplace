@@ -80,9 +80,9 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6">
+            <div className="text-white font-semibold text-lg mb-6">
               Dịch vụ phổ biến
-            </h3>
+            </div>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
@@ -133,9 +133,9 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6">
+            <div className="text-white font-semibold text-lg mb-6">
               Hỗ trợ khách hàng
-            </h3>
+            </div>
             <ul className="space-y-3 text-sm">
               <li>
                 <div className="text-muted-foreground cursor-default flex items-center">
@@ -174,9 +174,9 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6">
+            <div className="text-white font-semibold text-lg mb-6">
               Liên hệ & Hỗ trợ
-            </h3>
+            </div>
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-action-blue shrink-0 mt-0.5" />

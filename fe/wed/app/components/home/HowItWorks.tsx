@@ -34,7 +34,7 @@ export function HowItWorks() {
           <Badge className="mb-3 rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold tracking-wide text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.16)] md:mb-5 md:px-4 md:py-2 md:text-xs">
             Quy trình 3 bước.
           </Badge>
-          <h2 className="mb-2 text-2xl font-bold leading-tight text-slate-100 text-balance md:mb-4 md:text-[50px]">
+          <h2 id="quy-trinh-hoat-dong" className="mb-2 text-2xl font-bold leading-tight text-slate-100 text-balance md:mb-4 md:text-[50px]">
             Dịch vụ chuyên nghiệp. <br className="hidden md:block" />
             <span className="text-cyan-300">chỉ trong vài bước.</span>
           </h2>

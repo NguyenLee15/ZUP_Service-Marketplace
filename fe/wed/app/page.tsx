@@ -291,7 +291,7 @@ export default async function Home() {
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
           {/* Table of Contents (Mục lục điều hướng nhanh) */}
           <nav id="toc" className="toc surface-card p-5 rounded-2xl border border-white/10 bg-slate-900/20 shadow-md">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+            <h2 id="muc-luc-trang-chu" className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
               <span className="text-cyan-400">📋</span> Mục lục trang chủ.
             </h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs sm:text-sm font-medium">

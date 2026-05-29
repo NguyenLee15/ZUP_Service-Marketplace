@@ -50,9 +50,9 @@ export function GlossarySection() {
             <span className="text-[10px] font-black uppercase tracking-widest text-sky-600 dark:text-sky-400">
               Nội dung được kiểm chứng chuyên môn.
             </span>
-            <h3 className="font-bold text-slate-900 dark:text-white text-base md:text-lg flex flex-wrap items-center gap-2">
+            <div className="font-bold text-slate-900 dark:text-white text-base md:text-lg flex flex-wrap items-center gap-2">
               Chất lượng & Tiêu chuẩn vận hành Zup.
-            </h3>
+            </div>
             <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-300 max-w-2xl leading-relaxed">
               Các tài liệu hướng dẫn và thuật ngữ được biên soạn bởi ban kiểm định chất lượng Zup. Hơn nữa, quy trình kiểm tra định kỳ nghiêm ngặt nhằm bảo vệ tối đa lợi ích khách hàng. Do đó, mọi thông tin đều chính xác tuyệt đối.
             </p>
