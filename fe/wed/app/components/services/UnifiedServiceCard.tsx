@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Eye,
   GitCompare,
@@ -98,6 +99,7 @@ export function UnifiedServiceCard({
   onQuickView,
   onRecentlyViewed,
 }: UnifiedServiceCardProps) {
+  const router = useRouter();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const serviceImages = service.images?.length
@@ -146,7 +148,13 @@ export function UnifiedServiceCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-        <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block h-full w-full">
+        <div 
+          onClick={() => {
+            handleDetailClick();
+            router.push(detailHref);
+          }} 
+          className="block h-full w-full cursor-pointer"
+        >
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -164,7 +172,7 @@ export function UnifiedServiceCard({
               <Wrench className="h-10 w-10 text-muted-foreground/30" />
             </div>
           )}
-        </Link>
+        </div>
 
         {useImageCarousel && images.length > 1 && (
           <div className="absolute bottom-2 left-0 right-0 z-10 flex justify-center gap-1">
@@ -324,15 +332,19 @@ export function UnifiedServiceCard({
             </div>
           </div>
           {showPrimaryAction && (
-            <Link
-              href={detailHref}
-              prefetch={false}
-              onClick={handleDetailClick}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-sky-400/20 bg-sky-600 text-white shadow-[0_0_18px_rgba(2,132,199,0.35)] transition-[background-color,transform,box-shadow] hover:bg-cyan-500 active:scale-95 sm:h-12 sm:w-12"
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleDetailClick();
+                router.push(detailHref);
+              }}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-sky-400/20 bg-sky-600 text-white shadow-[0_0_18px_rgba(2,132,199,0.35)] transition-[background-color,transform,box-shadow] hover:bg-cyan-500 active:scale-95 sm:h-12 sm:w-12 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               aria-label={`Đặt ngay dịch vụ ${service.name}`}
             >
               <ShoppingBag className="h-5 w-5" />
-            </Link>
+            </button>
           )}
         </div>
       </CardContent>
