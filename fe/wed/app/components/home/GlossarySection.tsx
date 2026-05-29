@@ -94,7 +94,7 @@ export function GlossarySection() {
             {definitions.map((item, index) => (
               <div
                 key={index}
-                className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 hover:shadow-sm transition-all"
+                className="surface-card p-4 rounded-xl hover:border-action-blue/20 transition-all border border-slate-100 dark:border-slate-800"
               >
                 <h3 className="font-bold text-sm text-action-blue mb-1">
                   {item.term}

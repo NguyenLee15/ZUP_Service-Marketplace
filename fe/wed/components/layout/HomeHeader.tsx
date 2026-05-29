@@ -11,12 +11,14 @@ export function HomeHeader() {
         <div className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-4">
           <Link
             href="/"
-            className="flex shrink-0 items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+            className="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] sm:h-10 sm:w-10">
-              <Wrench className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
-            <span className="hidden text-2xl font-bold tracking-normal text-white md:block">
+            <img
+              src="/logo.png"
+              alt="ZUP Logo"
+              className="h-8 w-8 rounded-xl object-cover shadow-[0_0_18px_rgba(2,132,199,0.4)] sm:h-10 sm:w-10 border border-white/10"
+            />
+            <span className="hidden text-2xl font-bold tracking-tight text-white md:block select-none">
               ZUP
             </span>
           </Link>

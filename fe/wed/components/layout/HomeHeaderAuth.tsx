@@ -74,13 +74,19 @@ export function HomeHeaderAuth() {
 
   if (!mounted) {
     return (
-      <div className="hidden items-center gap-2 md:flex opacity-40" aria-hidden="true">
-        <div className="inline-flex h-9 items-center justify-center rounded-lg border border-cyan-300/30 px-4 text-sm font-medium text-cyan-300/70">
+      <div className="hidden items-center gap-2 md:flex">
+        <Link
+          href="/register"
+          className="inline-flex h-9 items-center justify-center rounded-lg border border-cyan-300/50 px-4 text-sm font-medium text-cyan-300 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+        >
           Đăng ký
-        </div>
-        <div className="inline-flex h-9 items-center justify-center rounded-lg bg-sky-600/60 px-4 text-sm font-medium text-white/70">
+        </Link>
+        <Link
+          href="/login"
+          className="inline-flex h-9 items-center justify-center rounded-lg bg-sky-600 px-4 text-sm font-medium text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] transition-colors hover:bg-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+        >
           Đăng nhập
-        </div>
+        </Link>
       </div>
     );
   }

@@ -235,9 +235,7 @@ export default async function Home() {
         <HeroSection />
 
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
-          <Suspense fallback={<CategoryGridSkeleton />}>
-            <CategoryGrid />
-          </Suspense>
+          <CategoryGrid />
 
           {sponsoredServices.length > 0 && (
             <section className="space-y-7 animate-in fade-in slide-in-from-bottom-8 duration-700">
