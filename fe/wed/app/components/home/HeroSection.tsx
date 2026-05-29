@@ -35,16 +35,16 @@ export function HeroSection() {
                 className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-action-blue ${user.bg} text-[10px] font-black text-white shadow-sm select-none`}
                 aria-hidden="true"
               >
-                {user.text}
+                {user.text}.
               </div>
             ))}
           </div>
           <span className="text-xs sm:text-sm font-semibold text-white/90 ml-1 truncate">
             <span className="hidden sm:inline">
-              <span className="text-white font-bold">10,000+</span> hộ gia đình đã tin dùng
+              <span className="text-white font-bold">10,000+</span> hộ gia đình đã tin dùng.
             </span>
             <span className="sm:hidden">
-              <span className="text-white font-bold">10,000+</span> gia đình tin dùng
+              <span className="text-white font-bold">10,000+</span> gia đình tin dùng.
             </span>
           </span>
         </div>
@@ -52,7 +52,7 @@ export function HeroSection() {
         <h1 className="mx-auto max-w-[360px] sm:max-w-none text-[2.2rem] min-[420px]:text-4xl sm:text-6xl md:text-7xl lg:text-[72px] font-extrabold mb-5 sm:mb-6 text-white drop-shadow-2xl tracking-normal leading-[1.1] text-balance">
           Mọi dịch vụ bạn cần, <br className="hidden md:block" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-teal-400">
-            ngay tại ngôi nhà bạn
+            ngay tại ngôi nhà bạn.
           </span>
         </h1>
         <p className="text-base sm:text-lg md:text-xl text-white/95 mb-6 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">

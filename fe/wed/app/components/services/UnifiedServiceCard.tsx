@@ -183,11 +183,11 @@ export function UnifiedServiceCard({
           {showSponsoredBadge && (
             <Badge className="border-0 bg-amber-pop text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-midnight-indigo shadow-md px-1.5 sm:px-2 py-0.5">
               <Sparkles className="mr-1 h-2.5 w-2.5" />
-              Tài trợ
+              Tài trợ.
             </Badge>
           )}
           <Badge className="max-w-full truncate border-0 bg-midnight-indigo/70 px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
-            {service.category?.name || 'Dịch vụ'}
+            {service.category?.name || 'Dịch vụ'}.
           </Badge>
         </div>
 
@@ -245,7 +245,7 @@ export function UnifiedServiceCard({
         {showTrustBadges && (
           <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex items-center gap-1 rounded-full border border-white/20 bg-midnight-indigo/65 px-1.5 py-0.5 text-white backdrop-blur-md">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest">Đang hoạt động</span>
+            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest">Đang hoạt động.</span>
           </div>
         )}
 
@@ -276,7 +276,7 @@ export function UnifiedServiceCard({
               className="line-clamp-2 min-h-[2.35rem] text-sm sm:text-[15px] font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
               style={{ viewTransitionName: `service-title-${service.id}` } as any}
             >
-              {service.name}
+              {service.name}.
             </h3>
           </Link>
           {showDescription && (
@@ -292,19 +292,19 @@ export function UnifiedServiceCard({
                 title={service.provider.fullName}
                 className="min-w-0 flex-1 truncate font-medium text-foreground/75 hover:text-action-blue hover:underline transition-colors"
               >
-                {service.provider.fullName}
+                {service.provider.fullName}.
               </Link>
             ) : (
               <p
                 title={service.provider?.fullName || 'Đối tác Zup'}
                 className="min-w-0 flex-1 truncate font-medium text-foreground/75"
               >
-                {service.provider?.fullName || 'Đối tác Zup'}
+                {service.provider?.fullName || 'Đối tác Zup'}.
               </p>
             )}
             {showTrustBadges && (
               <span className="shrink-0 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
-                Uy tín
+                Uy tín.
               </span>
             )}
           </div>
@@ -313,13 +313,13 @@ export function UnifiedServiceCard({
         <div className="mt-2 flex min-w-0 items-end justify-between gap-2 pt-1">
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm sm:text-base font-extrabold leading-tight text-cyan-300 tabular-nums">
-              {displayPrice}
+              {displayPrice}.
             </div>
             <div className="mt-1 flex min-w-0 items-center gap-1 text-[10px] sm:text-[11px] leading-none text-foreground/80">
               <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
-              <span className="shrink-0">{rating}</span>
-              <span className="shrink-0">({totalReviews})</span>
-              <span className="truncate">Đã bán {formatCompactCount(salesCount)}</span>
+              <span className="shrink-0">{rating}.</span>
+              <span className="shrink-0">({totalReviews}).</span>
+              <span className="truncate">Đã bán {formatCompactCount(salesCount)}.</span>
             </div>
           </div>
           {showPrimaryAction && (

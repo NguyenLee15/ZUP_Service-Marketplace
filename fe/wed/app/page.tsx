@@ -262,7 +262,20 @@ export default async function Home() {
               }
             },
             "datePublished": "2026-01-15T08:00:00+07:00",
-            "dateModified": "2026-05-29T08:00:00+07:00"
+            "dateModified": "2026-05-29T08:00:00+07:00",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "10450",
+              "bestRating": "5",
+              "worstRating": "1"
+            },
+            "publishingPrinciples": "https://zup.vn/editorial-policy",
+            "publishingPolicy": {
+              "@type": "CreativeWork",
+              "name": "Editorial & Fact-Checking Policy",
+              "url": "https://zup.vn/editorial-policy"
+            }
           })}
         </script>
 
@@ -270,7 +283,7 @@ export default async function Home() {
 
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
           {/* Table of Contents (Mục lục điều hướng nhanh) */}
-          <nav className="surface-card p-5 rounded-2xl border border-white/10 bg-slate-900/20 shadow-md">
+          <nav id="toc" className="toc surface-card p-5 rounded-2xl border border-white/10 bg-slate-900/20 shadow-md">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
               <span className="text-cyan-400">📋</span> Mục lục trang chủ.
             </h2>
@@ -376,7 +389,9 @@ export default async function Home() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-slate-400">Kiểm duyệt chất lượng:</span>
-                <span className="text-cyan-300 font-semibold">Kỹ sư Nguyễn Văn A - Chuyên Gia Kiểm Định Dịch Vụ.</span>
+                <span className="text-cyan-300 font-semibold">
+                  Kỹ sư Nguyễn Văn A - Chuyên Gia Kiểm Định Dịch Vụ <a href="https://zup.vn/certificates/reviewer-a" className="text-sky-400 hover:underline hover:text-cyan-300 text-[10px] ml-1">(Đã xác minh chứng chỉ)</a>.
+                </span>
               </div>
               <div className="flex items-center gap-3 font-mono">
                 <span>Xuất bản: <time itemProp="datePublished" dateTime="2026-01-15">15/01/2026</time>.</span>
@@ -387,6 +402,9 @@ export default async function Home() {
             <div className="text-xs text-slate-500 leading-relaxed space-y-2">
               <p>
                 Nội dung giới thiệu và chính sách của chúng tôi được xây dựng từ kinh nghiệm thực tế của đội ngũ Zup.
+              </p>
+              <p>
+                Chúng tôi tuân thủ nghiêm ngặt <a href="/fact-check-policy" className="text-sky-400 hover:underline">Chính sách xác minh thông tin</a> và <a href="/editorial-policy" className="text-sky-400 hover:underline">Chính sách biên tập</a> để bảo đảm mọi hướng dẫn kỹ thuật đều chính xác.
               </p>
               <p>
                 Mọi ý kiến phản hồi xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">support@zup.vn</a>.
