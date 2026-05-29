@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "zup_home_services",
+  "name_for_human": "Zup Marketplace",
+  "description_for_model": "Plugin giúp tìm kiếm thợ sửa chữa điện nước, vệ sinh máy lạnh, dọn dẹp nhà cửa và dịch vụ làm đẹp tại nhà uy tín, giá minh bạch tại Việt Nam.",
+  "description_for_human": "Tìm thợ sửa chữa, vệ sinh nhà cửa chuyên nghiệp xung quanh bạn chỉ trong vài bước.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://service-marketplace-gold.vercel.app/api/openapi.json",
+    "is_user_authenticated": false
+  },
+  "logo_url": "https://service-marketplace-gold.vercel.app/logo.png",
+  "contact_email": "support@zup.vn",
+  "legal_info_url": "https://service-marketplace-gold.vercel.app/terms"
+}

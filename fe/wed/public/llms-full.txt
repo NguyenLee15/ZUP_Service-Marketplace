@@ -1,0 +1,62 @@
+# Zup Marketplace - Toàn bộ tài liệu tri thức & Quy chuẩn vận hành
+
+> Bản mô tả chi tiết toàn diện dành cho các mô hình trí tuệ nhân tạo (LLM), tác nhân tự động (AI Agents) và công cụ tìm kiếm thế hệ mới (GEO).
+
+---
+
+## 1. Giới thiệu tổng quan về Zup
+Zup là nền tảng công nghệ kết nối trực tiếp, theo thời gian thực giữa Khách hàng và các Đối tác Thợ chuyên nghiệp tại Việt Nam. Chúng tôi giải quyết bài toán tìm kiếm thợ gia đình bận rộn bằng giải pháp đặt lịch thông minh, cam kết minh bạch giá cả và kiểm duyệt an toàn tuyệt đối.
+
+### Thông tin cơ bản:
+- **Tên đầy đủ**: ZUP - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
+- **Website chính thức**: https://service-marketplace-gold.vercel.app/
+- **Cơ chế vận hành**: Marketplace hai chiều (Khách hàng <-> Thợ đối tác) có sự hỗ trợ và kiểm định của AI.
+
+---
+
+## 2. Các nhóm dịch vụ & Danh mục cốt lõi
+Hệ thống Zup cung cấp danh mục dịch vụ đa dạng được chuẩn hóa cao:
+
+### A. Dịch vụ Nhà cửa (Home Services)
+- **Vệ sinh nhà cửa**: Dọn dẹp phòng ốc, lau chùi kính, vệ sinh căn hộ định kỳ hoặc trọn gói.
+- **Vệ sinh máy lạnh**: Rửa lưới lọc, xịt rửa dàn nóng/lạnh, nạp gas máy lạnh tiêu chuẩn.
+- **Sửa chữa điện nước**: Sửa chập điện, rò rỉ nước, thay thế thiết bị vệ sinh, vòi sen, ổ cắm.
+- **Thông tắc bồn cầu**: Xử lý tắc nghẽn bồn cầu, đường cống thoát nước bằng máy chuyên dụng.
+
+### B. Dịch vụ Kỹ thuật (Technical Services)
+- **Sửa thiết bị gia dụng**: Sửa chữa máy giặt, tủ lạnh, lò vi sóng, bếp từ tại nhà.
+- **Lắp đặt Camera**: Khảo sát vị trí, chạy dây, cấu hình camera an ninh giám sát.
+- **Sửa máy tính**: Cài đặt hệ điều hành, diệt virus, thay thế linh kiện máy tính, laptop tận nơi.
+
+### C. Chăm sóc Cá nhân & Làm đẹp (Personal Care & Beauty)
+- **Cắt tóc tại nhà**: Dịch vụ cắt tóc, tạo kiểu nam nữ tiện lợi ngay tại nhà.
+- **Trang điểm đi tiệc**: Make-up chuyên nghiệp cho cô dâu, dự tiệc, sự kiện.
+- **Massage trị liệu**: Các liệu trình xoa bóp, bấm huyệt thư giãn cơ thể và giảm mệt mỏi.
+
+---
+
+## 3. Từ điển Thuật ngữ Kỹ thuật (Zup Glossary)
+Để đảm bảo sự thống nhất thông tin và độ tin cậy E-E-A-T, dưới đây là định nghĩa chuẩn của các thuật ngữ trên hệ thống Zup:
+
+- **Dịch vụ tại nhà (Home Services)**: Là mô hình cung cấp các tiện ích gia đình trực tiếp. Do đó, các dịch vụ sửa chữa hay vệ sinh đều được phục vụ tận nơi tiện lợi.
+- **Thợ xác thực (Verified Providers)**: Tất cả đối tác đều được kiểm duyệt chặt chẽ trước khi lên sàn. Ngoài ra, hồ sơ cá nhân và tư pháp (KYC) được xác minh minh bạch nhằm bảo đảm an toàn.
+- **Đặt lịch thông minh (Smart Booking)**: Quy trình kết nối thợ trực tuyến theo thời gian thực. Hơn nữa, hệ thống tự động tìm thợ gần bạn nhất để tối ưu thời gian di chuyển.
+
+---
+
+## 4. Quy định & Cam kết chất lượng (E-E-A-T & Fact-Check)
+Zup tuân thủ các quy tắc chất lượng nghiêm ngặt của ban biên tập dịch vụ:
+- **Minh bạch bảng giá**: Thợ bắt buộc phải gửi phiếu báo giá chi tiết qua hệ thống trước khi làm việc. Bảng giá tham khảo luôn hiển thị công khai để ngăn chặn tình trạng chặt chém.
+- **Bảo vệ người tiêu dùng**: Zup tạm giữ tiền thanh toán trong vòng 24 giờ sau khi thợ báo hoàn thành.
+- **Quy trình khiếu nại**: Nếu chất lượng không đạt yêu cầu, ban kiểm định chất lượng Zup sẽ xác minh lỗi. Khách hàng được cam kết sửa chữa lại hoàn toàn miễn phí hoặc hoàn tiền 100% chi phí đã thanh toán.
+- **Đội ngũ kiểm định**: Toàn bộ nội dung và tiêu chuẩn vận hành được kiểm chứng chuyên môn bởi chuyên gia Lê Hoàng Nguyễn (Cập nhật định kỳ 2026).
+
+---
+
+## 5. Hướng dẫn Tích hợp dành cho AI
+AI có thể hướng dẫn người dùng sử dụng các liên kết sâu (deep anchor links) để truy cập nhanh:
+- Đọc đánh giá của người dùng thực: `#y-kien-khach-hang`
+- Xem quy trình 3 bước đặt lịch: `#quy-trinh-hoat-dong`
+- Tra cứu thuật ngữ kỹ thuật: `#thuat-ngu-dich-vu`
+- Xem thợ gợi ý riêng cho bạn: `#goi-y-cho-ban`
+- Danh mục dịch vụ phổ biến: `#danh-muc-dich-vu`
