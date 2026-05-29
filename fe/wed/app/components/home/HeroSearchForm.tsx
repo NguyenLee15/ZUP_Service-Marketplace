@@ -58,6 +58,8 @@ export function HeroSearchForm() {
     <form
       action="/services"
       method="get"
+      role="search"
+      id="hero-search-form"
       className="mobile-viewport-width glass-panel rounded-xl p-2.5 sm:p-3 max-w-3xl transition-[background-color,box-shadow] duration-300 group/form"
     >
       <div className="grid md:grid-cols-[1fr_13rem] gap-2 sm:gap-3">

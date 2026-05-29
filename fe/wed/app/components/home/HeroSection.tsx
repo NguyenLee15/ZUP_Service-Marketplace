@@ -60,16 +60,21 @@ export function HeroSection() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-          <a
-            href="/services"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 transition-all duration-200 active:scale-95 group relative overflow-hidden"
-          >
-            <span className="absolute inset-0 bg-white/25 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-            <span className="relative z-10">Đặt lịch dịch vụ ngay</span>
-            <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            </svg>
-          </a>
+          <div className="relative group/cta active:scale-95 transition-transform duration-200">
+            {/* Glowing ring pulse background plane */}
+            <span className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 opacity-55 blur-md group-hover/cta:opacity-85 group-hover/cta:blur-lg transition duration-1000 group-hover/cta:duration-200 animate-[pulse_2s_infinite]" suppressHydrationWarning />
+            <a
+              href="/services"
+              aria-label="Đặt lịch dịch vụ tại nhà ngay cùng ZUP"
+              className="relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base shadow-xl group overflow-hidden transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              <span className="absolute inset-0 bg-white/25 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative z-10">Đặt lịch dịch vụ ngay</span>
+              <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
           <a
             href="#danh-muc-dich-vu"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-cyan-300 hover:text-white font-bold text-sm sm:text-base hover:-translate-y-0.5 transition-all duration-200 active:scale-95"

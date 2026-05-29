@@ -200,7 +200,7 @@ export function CustomerHeader() {
                 ? 'opacity-0 pointer-events-none -translate-y-2' 
                 : 'opacity-100 translate-y-0'
             }`}>
-              <form onSubmit={handleSearch} className="relative group">
+              <form onSubmit={handleSearch} role="search" id="header-search-form" className="relative group">
                 <input
                   type="text"
                   name="search"

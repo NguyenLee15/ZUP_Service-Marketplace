@@ -85,7 +85,15 @@ export function GlossarySection() {
             <UserCheck className="w-4 h-4 text-emerald-500 shrink-0" />
             <div>
               <p className="text-slate-400 text-[10px] leading-none mb-0.5">Kiểm định bởi.</p>
-              <p className="text-slate-900 dark:text-white font-bold">Lê Hoàng Nguyễn.</p>
+              <p className="text-slate-900 dark:text-white font-bold">
+                Lê Hoàng Nguyễn (Kỹ sư trưởng kiểm định chất lượng Zup, 10 năm kinh nghiệm chuyên môn)
+                <a
+                  href="https://zup.vn/certificates/chief-engineer-nguyen"
+                  className="text-sky-400 hover:underline hover:text-cyan-300 text-[10px] ml-1.5 font-medium inline-block shrink-0"
+                >
+                  (Xác minh chứng nhận quốc tế)
+                </a>
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
