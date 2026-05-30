@@ -55,6 +55,7 @@ export function Breadcrumbs() {
                 ) : (
                   <Link
                     href={href}
+                    prefetch={false}
                     className="text-slate-400 hover:text-cyan-300 transition-colors truncate max-w-[150px] sm:max-w-none"
                   >
                     {label}
