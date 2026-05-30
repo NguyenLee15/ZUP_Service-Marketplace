@@ -288,7 +288,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
               <div className="rounded-[16px] border border-white/10 bg-white/5 overflow-hidden shadow-sm">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="bg-white/10 text-slate-900 dark:text-white/80 border-b border-white/10">
+                    <tr className="bg-white/10 text-slate-200 border-b border-white/10">
                       <th className="p-3 font-semibold">Tên hạng mục dịch vụ</th>
                       <th className="p-3 font-semibold w-24">Đơn vị</th>
                       <th className="p-3 font-semibold text-right w-32">Đơn giá</th>
@@ -297,8 +297,8 @@ export function ServiceDetailClient({ service }: { service: any }) {
                   <tbody>
                     {service.items.map((item: any) => (
                       <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="p-3 text-slate-800 dark:text-white font-medium">{item.name}</td>
-                        <td className="p-3 text-slate-600 dark:text-white/70">{item.unit}</td>
+                        <td className="p-3 text-slate-100 font-medium">{item.name}</td>
+                        <td className="p-3 text-slate-300">{item.unit}</td>
                         <td className="p-3 text-action-blue font-bold text-right">
                           {formatPrice(Number(item.price))}
                         </td>

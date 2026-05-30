@@ -238,7 +238,7 @@ async function main() {
       totalReviews: 24,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80',
           cloudinaryId: 'seed_ac_clean',
         },
       },
@@ -265,7 +265,7 @@ async function main() {
       totalReviews: 12,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
           cloudinaryId: 'seed_ac_gas',
         },
       },
@@ -292,7 +292,7 @@ async function main() {
       totalReviews: 32,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?w=800&q=80',
           cloudinaryId: 'seed_elec_leak',
         },
       },
@@ -320,7 +320,7 @@ async function main() {
       totalReviews: 18,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&q=80',
           cloudinaryId: 'seed_plumb_clog',
         },
       },
@@ -374,7 +374,7 @@ async function main() {
       totalReviews: 29,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1527515545081-5db817172677?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1558403194-611308249627?w=800&q=80',
           cloudinaryId: 'seed_sofa_clean',
         },
       },
@@ -401,7 +401,7 @@ async function main() {
       totalReviews: 14,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80',
           cloudinaryId: 'seed_cooker_fix',
         },
       },
@@ -428,7 +428,7 @@ async function main() {
       totalReviews: 21,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1588403194-611308249627?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1591405351990-4726e331f141?w=800&q=80',
           cloudinaryId: 'seed_pc_clean',
         },
       },
@@ -455,7 +455,7 @@ async function main() {
       totalReviews: 38,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1527515545081-5db817172677?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
           cloudinaryId: 'seed_massage',
         },
       },
@@ -482,7 +482,7 @@ async function main() {
       totalReviews: 16,
       images: {
         create: {
-          imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80',
           cloudinaryId: 'seed_hair_cut',
         },
       },
