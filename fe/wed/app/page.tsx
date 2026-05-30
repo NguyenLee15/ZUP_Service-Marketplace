@@ -292,42 +292,45 @@ export default async function Home() {
         <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
           <Breadcrumbs />
           {/* Table of Contents (Mục lục điều hướng nhanh) */}
-          <nav id="toc" className="toc surface-card p-5 rounded-2xl border border-white/10 bg-slate-900/20 shadow-md">
-            <h2 id="muc-luc-trang-chu" className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-              <span className="text-cyan-400">📋</span> Mục lục trang chủ.
-            </h2>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs sm:text-sm font-medium">
-              <li>
-                <a href="#danh-muc-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-                  <span className="text-slate-500">1.</span> Danh mục dịch vụ phổ biến.
-                </a>
-              </li>
-              <li>
-                <a href="#dich-vu-noi-bat" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-                  <span className="text-slate-500">2.</span> Dịch vụ nổi bật được tài trợ.
-                </a>
-              </li>
-              <li>
-                <a href="#danh-gia-khach-hang" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-                  <span className="text-slate-500">3.</span> Ý kiến phản hồi của khách hàng.
-                </a>
-              </li>
-              <li>
-                <a href="#quy-trinh-hoat-dong" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-                  <span className="text-slate-500">4.</span> Quy trình hoạt động 3 bước.
-                </a>
-              </li>
-              <li>
-                <a href="#thuat-ngu-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-                  <span className="text-slate-500">5.</span> Từ điển thuật ngữ kỹ thuật.
-                </a>
-              </li>
-              <li>
-                <a href="#giai-dap-truc-tiep" className="text-slate-300 hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-                  <span className="text-slate-500">6.</span> Giải đáp thắc mắc từ chuyên gia.
-                </a>
-              </li>
-            </ul>
+          <nav id="toc" className="glass-panel p-4 rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/10" aria-label="Mục lục trang chủ">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
+                <span className="text-cyan-400 text-sm">📋</span>
+                <span>Điều hướng nhanh:</span>
+              </div>
+              <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm font-semibold">
+                <li>
+                  <a href="#danh-muc-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
+                    1. Nhóm dịch vụ
+                  </a>
+                </li>
+                <li>
+                  <a href="#dich-vu-noi-bat" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
+                    2. Dịch vụ nổi bật
+                  </a>
+                </li>
+                <li>
+                  <a href="#danh-gia-khach-hang" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
+                    3. Ý kiến khách hàng
+                  </a>
+                </li>
+                <li>
+                  <a href="#quy-trinh-hoat-dong" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
+                    4. Quy trình hoạt động
+                  </a>
+                </li>
+                <li>
+                  <a href="#thuat-ngu-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
+                    5. Từ điển kỹ thuật
+                  </a>
+                </li>
+                <li>
+                  <a href="#giai-dap-truc-tiep" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
+                    6. Hỏi đáp chuyên gia
+                  </a>
+                </li>
+              </ul>
+            </div>
           </nav>
 
           <CategoryGrid />

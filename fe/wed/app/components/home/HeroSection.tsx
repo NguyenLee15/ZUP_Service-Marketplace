@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { HeroSearchForm } from '@/app/components/home/HeroSearchForm';
 
 const TRUST_BADGE_USERS = [
   { text: 'T', bg: 'bg-gradient-to-tr from-orange-400 to-amber-500' },
@@ -85,8 +84,6 @@ export function HeroSection() {
             <span>Khám phá danh mục</span>
           </a>
         </div>
-
-        <HeroSearchForm />
 
       </div>
     </section>

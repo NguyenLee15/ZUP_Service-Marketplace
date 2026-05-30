@@ -195,11 +195,7 @@ export function CustomerHeader() {
               </Link>
             </div>
 
-            <div className={`hidden min-w-0 flex-1 max-w-2xl px-1 pr-12 transition-[opacity,transform] duration-300 sm:block sm:px-2 sm:pr-12 md:pr-0 ${
-              isHomePage && !scrolled 
-                ? 'opacity-0 pointer-events-none -translate-y-2' 
-                : 'opacity-100 translate-y-0'
-            }`}>
+            <div className="hidden min-w-0 flex-1 max-w-2xl px-1 pr-12 sm:block sm:px-2 sm:pr-12 md:pr-0">
               <form onSubmit={handleSearch} role="search" id="header-search-form" className="relative group">
                 <input
                   type="text"
