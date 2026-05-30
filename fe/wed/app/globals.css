@@ -219,13 +219,14 @@
   }
 
   .glow-hover:hover {
-    box-shadow: 0 0 20px rgba(0, 107, 255, 0.25);
-    border-color: rgba(0, 107, 255, 0.2);
+    box-shadow: 0 12px 30px -4px rgba(0, 107, 255, 0.16), 0 0 15px rgba(0, 107, 255, 0.12) !important;
+    border-color: rgba(0, 107, 255, 0.38) !important;
   }
 
-  :is(.dark *) .glow-hover:hover {
-    box-shadow: 0 0 20px rgba(2, 132, 199, 0.4);
-    border-color: rgba(255, 255, 255, 0.2);
+  :is(.dark *) .glow-hover:hover,
+  :is(.aether-page *) .glow-hover:hover {
+    box-shadow: 0 12px 32px -4px rgba(2, 132, 199, 0.35), 0 0 16px rgba(6, 182, 212, 0.22) !important;
+    border-color: rgba(34, 211, 238, 0.45) !important;
   }
 
   .surface-card {
