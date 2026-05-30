@@ -104,16 +104,23 @@ describe('Booking flow integration', () => {
       desiredTime: new Date(Date.now() + 86_400_000).toISOString(),
     });
 
-    const bookingId = created.data.id;
+    const bookingId = created.data!.id;
     await lifecycle.acceptByProvider(seed.provider.id, bookingId);
     await lifecycle.confirmSurveyor(seed.provider.id, bookingId, {
       surveyorName: 'Thợ A',
       surveyorPhone: '0900000000',
     });
     await lifecycle.sendQuote(seed.provider.id, bookingId, {
-      actualPrice: 200000,
       estimatedTime: '2 giờ',
       note: 'Báo giá test',
+      items: [
+        {
+          name: 'Sửa điều hòa',
+          unit: 'Lần',
+          price: 200000,
+          quantity: 1,
+        },
+      ],
     });
     await lifecycle.customerConfirmQuote(seed.customer.id, bookingId);
     await lifecycle.startWork(seed.provider.id, bookingId);

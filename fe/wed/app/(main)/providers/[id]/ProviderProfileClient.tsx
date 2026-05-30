@@ -77,10 +77,11 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
         sortBy,
       })
       .then((res) => {
-        const data = res.data.data;
-        setServices(data.list || []);
-        setTotalServicesCount(data.pagination.total || 0);
-        setTotalPages(data.pagination.totalPages || 1);
+        const list = res.data.data || [];
+        const meta = res.data.meta || {};
+        setServices(list);
+        setTotalServicesCount(meta.total || 0);
+        setTotalPages(meta.totalPages || 1);
       })
       .catch((err) => {
         console.error('Failed to fetch provider services:', err);
