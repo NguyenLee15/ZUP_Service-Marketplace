@@ -14,6 +14,7 @@ import { SocialShareWidget } from '@/components/social/SocialShareWidget';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 import { HomeHeader } from '@/components/layout/HomeHeader';
+import { Accordion } from '@/components/ui/accordion';
 import type { Category, Service } from '@/types';
 
 export const revalidate = 60;
@@ -290,24 +291,20 @@ export default async function Home() {
         <HeroSection />
 
         <div className="px-4 md:px-6 py-8 md:py-10 max-w-7xl mx-auto space-y-10 md:space-y-12">
-          {/* Breadcrumb + TOC — gộp 1 hàng tiết kiệm không gian */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <Breadcrumbs />
-            <nav id="toc" aria-label="Mục lục trang chủ">
-              <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold">
-                <li className="hidden sm:flex items-center gap-1.5 text-slate-500 font-black uppercase tracking-wider shrink-0">
-                  <span className="text-cyan-400">📋</span>
-                  <span>Nhanh:</span>
-                </li>
-                <li><a href="#danh-muc-dich-vu" className="text-slate-400 hover:text-cyan-400 transition-colors">Danh mục</a></li>
-                <li><a href="#dich-vu-noi-bat" className="text-slate-400 hover:text-cyan-400 transition-colors">Nổi bật</a></li>
-                <li><a href="#danh-gia-khach-hang" className="text-slate-400 hover:text-cyan-400 transition-colors">Đánh giá</a></li>
-                <li><a href="#quy-trinh-hoat-dong" className="text-slate-400 hover:text-cyan-400 transition-colors">Quy trình</a></li>
-                <li><a href="#thuat-ngu-dich-vu" className="text-slate-400 hover:text-cyan-400 transition-colors">Thuật ngữ</a></li>
-                <li><a href="#giai-dap-truc-tiep" className="text-slate-400 hover:text-cyan-400 transition-colors">Hỏi đáp</a></li>
-              </ul>
-            </nav>
-          </div>
+          {/* TOC nhanh — thanh anchor gọn */}
+          <nav id="toc" aria-label="Mục lục trang chủ">
+            <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold">
+              <li className="flex items-center gap-1.5 text-slate-500 font-black uppercase tracking-wider shrink-0">
+                <span className="text-cyan-400">📋</span>
+                <span>Nhanh:</span>
+              </li>
+              <li><a href="#danh-muc-dich-vu" className="text-slate-400 hover:text-cyan-400 transition-colors">Danh mục</a></li>
+              <li><a href="#dich-vu-noi-bat" className="text-slate-400 hover:text-cyan-400 transition-colors">Nổi bật</a></li>
+              <li><a href="#danh-gia-khach-hang" className="text-slate-400 hover:text-cyan-400 transition-colors">Đánh giá</a></li>
+              <li><a href="#quy-trinh-hoat-dong" className="text-slate-400 hover:text-cyan-400 transition-colors">Quy trình</a></li>
+              <li><a href="#giai-dap-truc-tiep" className="text-slate-400 hover:text-cyan-400 transition-colors">Hỏi đáp</a></li>
+            </ul>
+          </nav>
 
           <CategoryGrid />
 
@@ -380,7 +377,9 @@ export default async function Home() {
             </div>
           </section>
 
-          <GlossarySection />
+          <Accordion type="single" collapsible>
+            <GlossarySection />
+          </Accordion>
         </div>
       </main>
 
