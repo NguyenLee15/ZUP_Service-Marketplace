@@ -59,7 +59,7 @@ const directAnswers = [
 
 export function GlossarySection() {
   return (
-    <section className="pt-8 pb-14 border-t border-slate-800 space-y-8 animate-in fade-in duration-500">
+    <section className="pt-6 pb-10 border-t border-slate-800 space-y-7 animate-in fade-in duration-500">
       {/* E-E-A-T Professional Verification Block */}
       <div className="surface-card p-5 md:p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-gradient-to-r from-sky-500/5 to-teal-500/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start gap-4">

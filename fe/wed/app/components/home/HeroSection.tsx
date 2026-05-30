@@ -9,7 +9,7 @@ const TRUST_BADGE_USERS = [
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[560px] sm:min-h-[600px] lg:min-h-[640px] flex items-center justify-center text-white overflow-hidden bg-[#101415]">
+    <section className="relative min-h-[420px] sm:min-h-[460px] lg:min-h-[500px] flex items-center justify-center text-white overflow-hidden bg-[#101415]">
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/hero_bg.webp"
@@ -26,7 +26,7 @@ export function HeroSection() {
         <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#101415] to-transparent" />
       </div>
 
-      <div className="relative z-10 px-4 md:px-6 max-w-6xl w-full mx-auto flex flex-col items-center text-center pt-8 pb-12 lg:pt-12 lg:pb-16">
+      <div className="relative z-10 px-4 md:px-6 max-w-6xl w-full mx-auto flex flex-col items-center text-center pt-6 pb-8 lg:pt-8 lg:pb-10">
         <div className="mobile-safe-max flex items-center gap-2 mb-5 bg-white/10 backdrop-blur-md border border-white/10 px-3.5 py-1.5 rounded-full shadow-lg shadow-slate-950/20">
           <div className="flex -space-x-2">
             {TRUST_BADGE_USERS.map((user) => (

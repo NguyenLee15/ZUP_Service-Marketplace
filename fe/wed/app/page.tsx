@@ -289,49 +289,25 @@ export default async function Home() {
 
         <HeroSection />
 
-        <div className="px-4 md:px-6 py-14 md:py-16 max-w-7xl mx-auto space-y-14 md:space-y-16">
-          <Breadcrumbs />
-          {/* Table of Contents (Mục lục điều hướng nhanh) */}
-          <nav id="toc" className="glass-panel p-4 rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/10" aria-label="Mục lục trang chủ">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
-                <span className="text-cyan-400 text-sm">📋</span>
-                <span>Điều hướng nhanh:</span>
-              </div>
-              <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm font-semibold">
-                <li>
-                  <a href="#danh-muc-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
-                    1. Nhóm dịch vụ
-                  </a>
+        <div className="px-4 md:px-6 py-8 md:py-10 max-w-7xl mx-auto space-y-10 md:space-y-12">
+          {/* Breadcrumb + TOC — gộp 1 hàng tiết kiệm không gian */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <Breadcrumbs />
+            <nav id="toc" aria-label="Mục lục trang chủ">
+              <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold">
+                <li className="hidden sm:flex items-center gap-1.5 text-slate-500 font-black uppercase tracking-wider shrink-0">
+                  <span className="text-cyan-400">📋</span>
+                  <span>Nhanh:</span>
                 </li>
-                <li>
-                  <a href="#dich-vu-noi-bat" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
-                    2. Dịch vụ nổi bật
-                  </a>
-                </li>
-                <li>
-                  <a href="#danh-gia-khach-hang" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
-                    3. Ý kiến khách hàng
-                  </a>
-                </li>
-                <li>
-                  <a href="#quy-trinh-hoat-dong" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
-                    4. Quy trình hoạt động
-                  </a>
-                </li>
-                <li>
-                  <a href="#thuat-ngu-dich-vu" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
-                    5. Từ điển kỹ thuật
-                  </a>
-                </li>
-                <li>
-                  <a href="#giai-dap-truc-tiep" className="text-slate-300 hover:text-cyan-400 transition-all hover:translate-y-[-1px] inline-block">
-                    6. Hỏi đáp chuyên gia
-                  </a>
-                </li>
+                <li><a href="#danh-muc-dich-vu" className="text-slate-400 hover:text-cyan-400 transition-colors">Danh mục</a></li>
+                <li><a href="#dich-vu-noi-bat" className="text-slate-400 hover:text-cyan-400 transition-colors">Nổi bật</a></li>
+                <li><a href="#danh-gia-khach-hang" className="text-slate-400 hover:text-cyan-400 transition-colors">Đánh giá</a></li>
+                <li><a href="#quy-trinh-hoat-dong" className="text-slate-400 hover:text-cyan-400 transition-colors">Quy trình</a></li>
+                <li><a href="#thuat-ngu-dich-vu" className="text-slate-400 hover:text-cyan-400 transition-colors">Thuật ngữ</a></li>
+                <li><a href="#giai-dap-truc-tiep" className="text-slate-400 hover:text-cyan-400 transition-colors">Hỏi đáp</a></li>
               </ul>
-            </div>
-          </nav>
+            </nav>
+          </div>
 
           <CategoryGrid />
 
@@ -373,61 +349,32 @@ export default async function Home() {
 
           <HowItWorks />
 
-          {/* Rich Content Text Block for Text/HTML Ratio Optimization */}
-          <section className="py-10 border-t border-slate-800 space-y-6">
-            <div className="max-w-4xl mx-auto text-left space-y-5">
-              <h2 id="gioi-thieu-zup" className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
-                Zup - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
-              </h2>
-              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                Chào mừng bạn đến với hệ thống <strong>Zup</strong>. Đây chính là giải pháp công nghệ tiên phong tại Việt Nam. <strong>Do đó</strong>, nền tảng giúp kết nối khách hàng với các đối tác thợ chuyên nghiệp nhất. <strong>Ngoài ra</strong>, quy trình tìm kiếm thợ được tự động hóa tối đa. <strong>Nhờ vậy</strong>, bạn sẽ tiết kiệm được rất nhiều thời gian quý báu của mình. <strong>Đặc biệt là</strong> các dịch vụ từ vệ sinh đến sửa chữa đều được cam kết chất lượng tuyệt đối.
-              </p>
-              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                <strong>Hơn nữa</strong>, Zup luôn đặt tiêu chí an toàn của khách hàng lên hàng đầu. <strong>Do đó</strong>, chúng tôi áp dụng quy trình kiểm duyệt tay nghề thợ vô cùng nghiêm ngặt. <strong>Ngoài ra</strong>, hồ sơ lý lịch của đối tác thợ đều được xác minh rõ ràng. <strong>Vì vậy</strong>, bạn hoàn toàn có thể an tâm khi thợ đến nhà làm việc. <strong>Đặc biệt là</strong> cơ chế báo giá luôn công khai chi tiết trên ứng dụng. <strong>Từ đó</strong>, mọi chi phí phát sinh mập mờ đều bị ngăn chặn triệt để.
-              </p>
-              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                <strong>Tuy nhiên</strong>, sự cải tiến của Zup không chỉ dừng lại ở chất lượng thợ. Chúng tôi còn ứng dụng các mô hình trí tuệ nhân tạo (AI) thông minh. Hệ thống AI này sẽ tự động tìm kiếm thợ dựa trên định vị khoảng cách gần nhất. <strong>Nhờ đó</strong>, thời gian di chuyển của thợ được rút ngắn chỉ từ 15 đến 30 phút. <strong>Vì thế</strong>, các sự cố khẩn cấp sẽ được xử lý kịp thời.
-              </p>
-              <p className="text-sm text-slate-300 dark:text-slate-300 leading-relaxed">
-                <strong>Ngoài ra</strong>, uy tín của Zup còn được khẳng định mạnh mẽ qua thời gian. Điều này được chứng minh bằng hàng ngàn phản hồi tích cực mỗi tháng. <strong>Do đó</strong>, chúng tôi tự hào là người bạn đồng hành của hàng vạn gia đình Việt. <strong>Hơn nữa</strong>, ban kiểm định luôn lắng nghe ý kiến đóng góp từ phía bạn. <strong>Từ đó</strong>, chất lượng phục vụ ngày càng hoàn thiện và tối ưu hơn. Hãy trải nghiệm sự tiện nghi vượt trội cùng Zup ngay hôm nay!
-              </p>
-            </div>
-          </section>
-
-          {/* E-E-A-T Quality Validation Badge Block */}
-          <section className="py-8 border-t border-slate-800/80 bg-slate-900/10 rounded-2xl p-6 md:p-8 space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-muted-foreground border-b border-slate-800/50 pb-4" itemScope itemType="https://schema.org/CreativeWork">
-              <meta itemProp="name" content="Trang chủ ZUP Marketplace." />
-              <div className="flex items-center gap-2" itemProp="author" itemScope itemType="https://schema.org/Organization">
-                <span className="font-bold text-slate-400">Tác giả biên soạn:</span>
-                <span className="text-white font-medium" itemProp="name">Ban Biên Tập ZUP Content Team.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-400">Kiểm duyệt chất lượng:</span>
-                <span className="text-cyan-300 font-semibold">
-                  Kỹ sư Nguyễn Văn A - Chuyên Gia Kiểm Định Dịch Vụ <a href="https://zup.vn/certificates/reviewer-a" className="text-sky-400 hover:underline hover:text-cyan-300 text-[10px] ml-1">(Đã xác minh chứng chỉ)</a>.
+          {/* E-E-A-T Compact Strip — giữ nguyên markup SEO, thu gọn hiển thị */}
+          <section className="border-t border-slate-800/60 pt-6" itemScope itemType="https://schema.org/CreativeWork">
+            <meta itemProp="name" content="Trang chủ ZUP Marketplace — Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam." />
+            <meta itemProp="datePublished" content="2026-01-15" />
+            <meta itemProp="dateModified" content="2026-05-29" />
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
+                <span itemProp="author" itemScope itemType="https://schema.org/Organization">
+                  <span className="text-slate-400 font-semibold">Biên soạn:</span>{' '}
+                  <span className="text-slate-300" itemProp="name">Ban Biên Tập ZUP</span>
                 </span>
-              </div>
-              <div className="flex items-center gap-3 font-mono">
-                <span>Xuất bản: <time itemProp="datePublished" dateTime="2026-01-15">15/01/2026</time>.</span>
-                <span className="text-slate-600">|</span>
-                <span className="text-emerald-400">Cập nhật: <time itemProp="dateModified" dateTime="2026-05-29">29/05/2026</time>.</span>
-              </div>
-            </div>
-            <div className="flex flex-col md:flex-row gap-6 justify-between items-start">
-              <div className="text-xs text-slate-500 leading-relaxed space-y-2 flex-1">
-                <p>
-                  Nội dung giới thiệu và chính sách của chúng tôi được xây dựng từ kinh nghiệm thực tế của đội ngũ Zup.
-                </p>
-                <p>
-                  Chúng tôi tuân thủ nghiêm ngặt <a href="/fact-check-policy" className="text-sky-400 hover:underline">Chính sách xác minh thông tin</a> và <a href="/editorial-policy" className="text-sky-400 hover:underline">Chính sách biên tập</a> để bảo đảm mọi hướng dẫn kỹ thuật đều chính xác.
-                </p>
-                <p>
-                  Mọi ý kiến phản hồi xin vui lòng gửi về hòm thư điện tử <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">hòm thư support@zup.vn</a>.
-                </p>
-                <p>
-                  Ngoài ra, bạn cũng có thể gọi hotline <a href="tel:19001234" className="text-sky-400 hover:underline">1900 1234</a> để nhận tư vấn kỹ thuật nhanh nhất.
-                </p>
+                <span className="hidden sm:inline text-slate-700">·</span>
+                <span>
+                  <span className="text-slate-400 font-semibold">Kiểm định:</span>{' '}
+                  <a href="https://zup.vn/certificates/reviewer-a" className="text-sky-400 hover:underline text-xs">Kỹ sư Nguyễn Văn A ↗</a>
+                </span>
+                <span className="hidden sm:inline text-slate-700">·</span>
+                <span>
+                  <span className="text-slate-400 font-semibold">Cập nhật:</span>{' '}
+                  <time className="text-emerald-400" dateTime="2026-05-29">29/05/2026</time>
+                </span>
+                <span className="hidden sm:inline text-slate-700">·</span>
+                <span className="flex gap-3">
+                  <a href="/editorial-policy" className="text-sky-400 hover:underline">Chính sách biên tập</a>
+                  <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">support@zup.vn</a>
+                </span>
               </div>
               <SocialShareWidget />
             </div>
