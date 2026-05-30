@@ -236,7 +236,13 @@ export default function BookingDetailPage() {
             </div>
             {booking.provider && (
               <button
-                onClick={() => router.push(`/chat?conversationId=${booking.conversationId || ''}`)}
+                onClick={() => {
+                  if (booking.conversationId) {
+                    router.push(`/chat?conversationId=${booking.conversationId}`);
+                  } else {
+                    router.push(`/chat?bookingId=${booking.id}`);
+                  }
+                }}
                 className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-action-blue/10 border border-action-blue/20 text-action-blue text-xs font-semibold hover:bg-action-blue/20 transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5" />

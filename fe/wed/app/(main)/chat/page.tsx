@@ -3,7 +3,7 @@
 import { Suspense, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Bot, RotateCcw, Send, Search, Wrench } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { getChatSocket } from "@/lib/socket";
 import { useAuthStore } from "@/store/auth.store";
@@ -63,8 +63,12 @@ export default function ChatPage() {
 
 function ChatPageContent() {
   const { user } = useAuthStore();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const requestedConversationId = Number(searchParams.get("conversationId") || 0);
+  const requestedBookingId = Number(searchParams.get("bookingId") || 0);
+  const requestedServiceId = Number(searchParams.get("serviceId") || 0);
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<
     number | null
@@ -82,28 +86,49 @@ function ChatPageContent() {
 
   // Fetch conversations on load and select the conversation requested by URL.
   useEffect(() => {
-    chatApi
-      .getConversations()
-      .then((res) => {
+    const resolveAndFetch = async () => {
+      let resolvedId = requestedConversationId;
+
+      if (requestedBookingId > 0 || requestedServiceId > 0) {
+        try {
+          const res = await chatApi.getOrCreateConversation({
+            bookingId: requestedBookingId > 0 ? requestedBookingId : undefined,
+            serviceId: requestedServiceId > 0 ? requestedServiceId : undefined,
+          });
+          const conversation = res.data?.data?.data || res.data?.data;
+          if (conversation?.id) {
+            resolvedId = Number(conversation.id);
+            // Replace the URL with conversationId to clean up query params
+            router.replace(`/chat?conversationId=${resolvedId}`);
+          }
+        } catch (err) {
+          console.error("Failed to get or create conversation:", err);
+        }
+      }
+
+      try {
+        const res = await chatApi.getConversations();
         const data: Conversation[] = Array.isArray(res.data?.data)
           ? res.data.data
           : [];
         setConversations(data);
         setSelectedConversation((current) => {
-          if (requestedConversationId > 0) return requestedConversationId;
+          if (resolvedId > 0) return resolvedId;
           if (current && data.some((conversation) => conversation.id === current)) {
             return current;
           }
           return data[0]?.id ?? null;
         });
         setConversationError("");
-      })
-      .catch(() => {
+      } catch {
         setConversationError(
           "Không thể tải danh sách trò chuyện. Vui lòng thử lại sau.",
         );
-      });
-  }, [requestedConversationId]);
+      }
+    };
+
+    resolveAndFetch();
+  }, [requestedConversationId, requestedBookingId, requestedServiceId, router]);
 
   // Socket setup
   useEffect(() => {
