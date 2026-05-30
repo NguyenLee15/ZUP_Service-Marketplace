@@ -5,8 +5,18 @@ import {
   IsDateString,
   MaxLength,
   IsNumber,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
+
+export class CreateBookingItemDto {
+  @IsInt()
+  serviceItemId: number;
+
+  @IsInt()
+  quantity: number;
+}
 
 export class CreateBookingDto {
   @IsInt()
@@ -32,6 +42,13 @@ export class CreateBookingDto {
 
   @IsDateString()
   desiredTime: string;
+
+  @IsArray()
+  @IsOptional()
+  @Transform(({ value }) => typeof value === 'string' ? JSON.parse(value) : value)
+  @ValidateNested({ each: true })
+  @Type(() => CreateBookingItemDto)
+  items?: CreateBookingItemDto[];
 }
 
 export class ConfirmSurveyorDto {
@@ -44,11 +61,24 @@ export class ConfirmSurveyorDto {
   surveyorPhone: string;
 }
 
-export class SendQuoteDto {
+export class CreateQuotationItemDto {
+  @IsString()
+  @MaxLength(100)
+  name: string;
+
+  @IsString()
+  @MaxLength(20)
+  unit: string;
+
   @IsNumber()
   @Type(() => Number)
-  actualPrice: number;
+  price: number;
 
+  @IsInt()
+  quantity: number;
+}
+
+export class SendQuoteDto {
   @IsString()
   @MaxLength(100)
   estimatedTime: string;
@@ -56,7 +86,15 @@ export class SendQuoteDto {
   @IsString()
   @IsOptional()
   note?: string;
+
+  @IsArray()
+  @IsOptional()
+  @Transform(({ value }) => typeof value === 'string' ? JSON.parse(value) : value)
+  @ValidateNested({ each: true })
+  @Type(() => CreateQuotationItemDto)
+  items?: CreateQuotationItemDto[];
 }
+
 
 export class CancelBookingDto {
   @IsString()

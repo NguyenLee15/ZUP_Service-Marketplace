@@ -1220,6 +1220,9 @@ export class ChatbotService {
       const dto = this.toCreateBookingDto(draft);
       const result = await this.bookingLifecycleService.create(userId, dto);
       const booking = result.data;
+      if (!booking) {
+        throw new BadRequestException('Không thể tạo đặt lịch');
+      }
       delete session.state.pendingActions?.[actionId];
       delete session.state.bookingDraft;
 
@@ -1292,6 +1295,9 @@ export class ChatbotService {
         bookingId,
       );
       const booking = result.data;
+      if (!booking) {
+        throw new BadRequestException('Không thể đặt lại đơn');
+      }
       delete session.state.pendingActions?.[actionId];
 
       return this.withSession(session, {

@@ -23,6 +23,7 @@ export class ProviderPublicService {
           },
         },
         images: { orderBy: { displayOrder: 'asc' } },
+        items: true,
         reviews: {
           include: {
             customer: { select: { id: true, fullName: true, avatarUrl: true } },

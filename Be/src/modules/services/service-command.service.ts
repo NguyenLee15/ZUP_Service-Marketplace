@@ -35,15 +35,29 @@ export class ServiceCommandService {
       });
     }
 
-    const service = await this.prisma.service.create({
-      data: {
-        providerId,
-        categoryId: dto.categoryId,
-        name: dto.name,
-        description: dto.description,
-        referencePrice: dto.referencePrice,
-        status: ServiceStatus.DRAFT,
-      },
+    const service = await this.prisma.$transaction(async (tx) => {
+      const createdService = await tx.service.create({
+        data: {
+          providerId,
+          categoryId: dto.categoryId,
+          name: dto.name,
+          description: dto.description,
+          referencePrice: dto.referencePrice,
+          status: ServiceStatus.DRAFT,
+        },
+      });
+
+      if (dto.items && dto.items.length > 0) {
+        const serviceItems = dto.items.map((item) => ({
+          serviceId: createdService.id,
+          name: item.name,
+          unit: item.unit,
+          price: item.price,
+        }));
+        await tx.serviceItem.createMany({ data: serviceItems });
+      }
+
+      return createdService;
     });
 
     if (files && files.length > 0) {
@@ -64,8 +78,16 @@ export class ServiceCommandService {
       await this.prisma.serviceImage.createMany({ data: images });
     }
 
+    const serviceWithItems = await this.prisma.service.findUnique({
+      where: { id: service.id },
+      include: {
+        items: true,
+        images: { orderBy: { displayOrder: 'asc' } },
+      },
+    });
+
     return {
-      data: service,
+      data: serviceWithItems,
       message: 'Tạo dịch vụ nháp thành công',
     };
   }
@@ -93,9 +115,30 @@ export class ServiceCommandService {
       updateData.status = ServiceStatus.PENDING;
     }
 
-    const updated = await this.prisma.service.update({
-      where: { id: serviceId },
-      data: updateData,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedService = await tx.service.update({
+        where: { id: serviceId },
+        data: updateData,
+      });
+
+      if (dto.items) {
+        // Delete all old service items and insert new ones
+        await tx.serviceItem.deleteMany({
+          where: { serviceId },
+        });
+
+        if (dto.items.length > 0) {
+          const serviceItems = dto.items.map((item) => ({
+            serviceId,
+            name: item.name,
+            unit: item.unit,
+            price: item.price,
+          }));
+          await tx.serviceItem.createMany({ data: serviceItems });
+        }
+      }
+
+      return updatedService;
     });
 
     if (files && files.length > 0) {
@@ -129,7 +172,15 @@ export class ServiceCommandService {
       );
     }
 
-    return { data: updated, message: 'Cập nhật dịch vụ thành công' };
+    const serviceWithItems = await this.prisma.service.findUnique({
+      where: { id: serviceId },
+      include: {
+        items: true,
+        images: { orderBy: { displayOrder: 'asc' } },
+      },
+    });
+
+    return { data: serviceWithItems, message: 'Cập nhật dịch vụ thành công' };
   }
 
   async submit(providerId: number, serviceId: number) {

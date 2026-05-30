@@ -6,8 +6,24 @@ import {
   MaxLength,
   Max,
   Min,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+export class CreateServiceItemDto {
+  @IsString()
+  @MaxLength(100)
+  name: string;
+
+  @IsString()
+  @MaxLength(20)
+  unit: string;
+
+  @IsNumber()
+  @Type(() => Number)
+  price: number;
+}
 
 export class CreateServiceDto {
   @IsInt()
@@ -23,6 +39,12 @@ export class CreateServiceDto {
   @IsNumber()
   @Type(() => Number)
   referencePrice: number;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateServiceItemDto)
+  items?: CreateServiceItemDto[];
 }
 
 export class UpdateServiceDto {
@@ -43,7 +65,14 @@ export class UpdateServiceDto {
   @IsOptional()
   @Type(() => Number)
   referencePrice?: number;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateServiceItemDto)
+  items?: CreateServiceItemDto[];
 }
+
 
 export class SearchServiceDto {
   @IsString()

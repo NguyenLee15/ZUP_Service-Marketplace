@@ -277,6 +277,8 @@ model Service {
   reviews          Review[]
   featuredListings FeaturedListing[]
   conversations    Conversation[]
+  items            ServiceItem[]
+
 
   @@index([categoryId, status])
   @@index([providerId])
@@ -330,6 +332,8 @@ model Booking {
   review             Review?
   dispute            Dispute?
   walletTransactions WalletTransaction[]
+  bookingItems       BookingItem[]
+
 
   @@index([customerId, status])
   @@index([providerId, status])
@@ -347,6 +351,8 @@ model Quotation {
   estimatedTime          String  @map("estimated_time") @db.VarChar(100)
   note                   String? @db.Text
   booking                Booking @relation(fields: [bookingId], references: [id])
+  quotationItems         QuotationItem[]
+
 
   @@map("quotations")
 }
@@ -644,3 +650,42 @@ model FeaturedListing {
   @@index([serviceId])
   @@map("featured_listings")
 }
+
+model ServiceItem {
+  id        Int           @id @default(autoincrement())
+  serviceId Int           @map("service_id")
+  name      String        @db.VarChar(100)
+  unit      String        @db.VarChar(20)
+  price     Decimal       @db.Decimal(15, 2)
+  service   Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  bookingItems BookingItem[]
+
+  @@map("service_items")
+}
+
+model BookingItem {
+  id            Int          @id @default(autoincrement())
+  bookingId     Int          @map("booking_id")
+  serviceItemId Int?         @map("service_item_id")
+  name          String       @db.VarChar(100)
+  unit          String       @db.VarChar(20)
+  quantity      Int          @default(1)
+  priceSnapshot Decimal      @map("price_snapshot") @db.Decimal(15, 2)
+  booking       Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceItem   ServiceItem? @relation(fields: [serviceItemId], references: [id], onDelete: SetNull)
+
+  @@map("booking_items")
+}
+
+model QuotationItem {
+  id          Int       @id @default(autoincrement())
+  quotationId Int       @map("quotation_id")
+  name        String    @db.VarChar(100)
+  unit        String    @db.VarChar(20)
+  price       Decimal   @db.Decimal(15, 2)
+  quantity    Int       @default(1)
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@map("quotation_items")
+}
+

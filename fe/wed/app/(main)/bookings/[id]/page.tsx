@@ -313,30 +313,115 @@ export default function BookingDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Quotation */}
-      {booking.quotation && (
+      {/* Chi tiết hạng mục yêu cầu đặt lịch */}
+      {booking.bookingItems && booking.bookingItems.length > 0 && (
         <Card className="glass-panel glow-hover rounded-2xl border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-action-blue flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold text-action-blue flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              Báo giá
+              Chi tiết các hạng mục yêu cầu đặt lịch
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between items-center py-2 border-b border-action-blue/10">
-              <span className="text-muted-foreground">Giá thực tế</span>
-              <span className="font-bold text-lg text-action-blue">
-                {formatPrice(Number(booking.quotation.actualPrice))}
-              </span>
+          <CardContent className="p-4 space-y-2">
+            <div className="rounded-xl border border-white/5 bg-white/5 overflow-hidden">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-white/5 text-muted-foreground border-b border-white/10">
+                    <th className="p-2.5 font-semibold">Tên hạng mục dịch vụ</th>
+                    <th className="p-2.5 font-semibold text-center w-24">Số lượng</th>
+                    <th className="p-2.5 font-semibold text-right w-24">Tạm tính</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {booking.bookingItems.map((item: any) => (
+                    <tr key={item.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="p-2.5 text-foreground font-medium">{item.name}</td>
+                      <td className="p-2.5 text-center text-foreground/80">{item.quantity} {item.unit}</td>
+                      <td className="p-2.5 text-right text-foreground font-bold">
+                        {formatPrice(Number(item.priceSnapshot) * item.quantity)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-action-blue/10">
-              <span className="text-muted-foreground">Thời gian dự kiến</span>
-              <span className="font-semibold">{booking.quotation.estimatedTime}</span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Báo giá và các hạng mục chi tiết sau khảo sát */}
+      {booking.quotation && (
+        <Card className="glass-panel rounded-2xl border-0 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-action-blue/10 via-transparent to-transparent pointer-events-none" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-action-blue flex items-center gap-2 font-bold">
+              <Zap className="w-4 h-4 text-cyan-300 fill-cyan-300/20" />
+              Bảng báo giá thực tế sau khảo sát
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3 text-sm">
+            {booking.quotation.quotationItems && booking.quotation.quotationItems.length > 0 ? (
+              <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-white/10 text-slate-900 dark:text-white/80 border-b border-white/15">
+                      <th className="p-2.5 font-semibold">Chi tiết hạng mục sửa chữa thực tế</th>
+                      <th className="p-2.5 font-semibold text-center w-24">Số lượng</th>
+                      <th className="p-2.5 font-semibold text-right w-24">Thành tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {booking.quotation.quotationItems.map((item: any) => {
+                      const originallyOrdered = booking.bookingItems?.some(
+                        (bItem: any) => bItem.name.toLowerCase().trim() === item.name.toLowerCase().trim()
+                      );
+                      return (
+                        <tr
+                          key={item.id}
+                          className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
+                            !originallyOrdered
+                              ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-l-2 border-l-amber-500'
+                              : ''
+                          }`}
+                        >
+                          <td className="p-2.5 font-medium">
+                            {item.name}
+                            {!originallyOrdered && (
+                              <span className="ml-1.5 inline-block text-[9px] px-1 py-0.2 bg-amber-500/20 rounded font-bold uppercase tracking-wider">
+                                Phát sinh
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2.5 text-center">{item.quantity} {item.unit}</td>
+                          <td className="p-2.5 text-right font-bold text-action-blue">
+                            {formatPrice(Number(item.price) * item.quantity)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+
+            <div className="space-y-2 mt-4 pt-2 border-t border-white/10">
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground text-xs">Tổng chi phí thực tế:</span>
+                <span className="font-extrabold text-xl text-action-blue">
+                  {formatPrice(Number(booking.quotation.actualPrice))}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground text-xs">Thời gian thực hiện dự kiến:</span>
+                <span className="font-semibold text-xs text-foreground/90">{booking.quotation.estimatedTime}</span>
+              </div>
             </div>
+
             {booking.quotation.note && (
-              <p className="text-muted-foreground mt-1 text-xs bg-pale-gray/40 p-3 rounded-lg">
-                💬 {booking.quotation.note}
-              </p>
+              <div className="text-muted-foreground mt-2 text-xs bg-pale-gray/40 dark:bg-white/5 p-3 rounded-xl border border-white/5">
+                <span className="font-semibold text-foreground block mb-1">💬 Ghi chú từ thợ:</span>
+                {booking.quotation.note}
+              </div>
             )}
           </CardContent>
         </Card>

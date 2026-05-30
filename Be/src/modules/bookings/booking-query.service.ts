@@ -27,7 +27,10 @@ export class BookingQueryService {
         provider: {
           select: { id: true, fullName: true, avatarUrl: true, phone: true },
         },
-        quotation: true,
+        quotation: {
+          include: { quotationItems: true },
+        },
+        bookingItems: true,
         attachments: true,
         statusHistories: { orderBy: { id: 'asc' } },
         dispute: { include: { evidences: true } },

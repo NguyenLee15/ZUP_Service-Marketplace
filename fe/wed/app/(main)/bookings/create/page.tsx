@@ -77,6 +77,7 @@ function CreateBookingContent() {
   const [addressDetail, setAddressDetail] = useState('');
   const [desiredTime, setDesiredTime] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [selectedItems, setSelectedItems] = useState<Record<number, { serviceItemId: number; quantity: number; name: string; price: number; unit: string }>>({});
   const defaultAddress = addresses.find((address) => address.isDefault);
   const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), province);
   const wardOptions = withCurrentOption(getWardOptions(province, addressOptions), ward);
@@ -199,6 +200,11 @@ function CreateBookingContent() {
     e.preventDefault();
     setLoading(true);
     try {
+      const itemsPayload = Object.values(selectedItems).map((it) => ({
+        serviceItemId: it.serviceItemId,
+        quantity: it.quantity,
+      }));
+
       await bookingsApi.create({
         serviceId: Number(serviceId),
         description,
@@ -207,6 +213,7 @@ function CreateBookingContent() {
         ward,
         addressDetail,
         desiredTime: new Date(desiredTime).toISOString(),
+        items: itemsPayload.length > 0 ? itemsPayload : undefined,
       });
       toast({ title: 'Đặt dịch vụ thành công', description: 'Nhà cung cấp sẽ liên hệ bạn sớm.' });
       router.push('/bookings');
@@ -258,8 +265,140 @@ function CreateBookingContent() {
             }}
             error={fieldErrors.description}
           />
-
         </div>
+
+        {/* Chọn các dịch vụ con kèm theo */}
+        {service?.items && service.items.length > 0 && (
+          <div className="glass-panel glow-hover space-y-3 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">
+            <div>
+              <Label className="font-semibold text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-action-blue" />
+                Chọn hạng mục dịch vụ cần làm
+              </Label>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Tích chọn những hạng mục bạn cần thợ thực hiện. Có thể tùy chỉnh số lượng.
+              </p>
+            </div>
+            
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {service.items.map((item: any) => {
+                const isSelected = !!selectedItems[item.id];
+                const qty = selectedItems[item.id]?.quantity || 1;
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                      isSelected
+                        ? 'border-action-blue bg-action-blue/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedItems((prev) => ({
+                              ...prev,
+                              [item.id]: {
+                                serviceItemId: item.id,
+                                quantity: 1,
+                                name: item.name,
+                                price: Number(item.price),
+                                unit: item.unit,
+                              },
+                            }));
+                          } else {
+                            setSelectedItems((prev) => {
+                              const next = { ...prev };
+                              delete next[item.id];
+                              return next;
+                            });
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-action-blue focus:ring-action-blue focus:ring-offset-0 cursor-pointer"
+                      />
+                      <div className="min-w-0 cursor-pointer" onClick={() => {
+                        setSelectedItems((prev) => {
+                          if (isSelected) {
+                            const next = { ...prev };
+                            delete next[item.id];
+                            return next;
+                          } else {
+                            return {
+                              ...prev,
+                              [item.id]: {
+                                serviceItemId: item.id,
+                                quantity: 1,
+                                name: item.name,
+                                price: Number(item.price),
+                                unit: item.unit,
+                              },
+                            };
+                          }
+                        });
+                      }}
+                      >
+                        <p className="text-xs font-semibold text-white truncate">{item.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {formatPrice(Number(item.price))} / {item.unit}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isSelected && (
+                      <div className="flex items-center gap-2 ml-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedItems((prev) => ({
+                              ...prev,
+                              [item.id]: {
+                                ...prev[item.id],
+                                quantity: Math.max(1, qty - 1),
+                              },
+                            }));
+                          }}
+                          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors"
+                        >
+                          -
+                        </button>
+                        <span className="text-xs font-bold w-6 text-center text-white">{qty}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedItems((prev) => ({
+                              ...prev,
+                              [item.id]: {
+                                ...prev[item.id],
+                                quantity: qty + 1,
+                              },
+                            }));
+                          }}
+                          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {Object.keys(selectedItems).length > 0 && (
+              <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                <span className="text-muted-foreground font-semibold">Tạm tính dịch vụ con:</span>
+                <span className="text-sm font-bold text-cyan-300">
+                  {formatPrice(
+                    Object.values(selectedItems).reduce((sum, it) => sum + it.price * it.quantity, 0)
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="glass-panel glow-hover space-y-4 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

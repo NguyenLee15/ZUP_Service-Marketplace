@@ -75,7 +75,6 @@ export default function BookingDetailScreen() {
   const [message, setMessage] = useState<MessageState>(null);
 
   const [showQuoteModal, setShowQuoteModal] = useState(false);
-  const [quotePrice, setQuotePrice] = useState('');
   const [quoteEstimatedTime, setQuoteEstimatedTime] = useState('');
   const [quoteNote, setQuoteNote] = useState('');
   const [quoteError, setQuoteError] = useState('');
@@ -84,6 +83,13 @@ export default function BookingDetailScreen() {
   const [surveyImages, setSurveyImages] = useState<
     ImagePicker.ImagePickerAsset[]
   >([]);
+  const [quoteItems, setQuoteItems] = useState<
+    { name: string; unit: string; price: number; quantity: number }[]
+  >([]);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemUnit, setNewItemUnit] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState('');
+  const [newItemQty, setNewItemQty] = useState('1');
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -116,6 +122,70 @@ export default function BookingDetailScreen() {
       void fetchBooking();
     }
   }, [bookingSignal, fetchBooking, id]);
+
+  useEffect(() => {
+    if (showQuoteModal && booking) {
+      if (booking.bookingItems && booking.bookingItems.length > 0) {
+        setQuoteItems(
+          booking.bookingItems.map((item: any) => ({
+            name: item.name,
+            unit: item.unit,
+            price: Number(item.priceSnapshot),
+            quantity: item.quantity,
+          })),
+        );
+      } else {
+        setQuoteItems([
+          {
+            name: booking.service?.name || 'Dịch vụ',
+            unit: 'Lượt',
+            price: Number(booking.service?.referencePrice || 0),
+            quantity: 1,
+          },
+        ]);
+      }
+    }
+  }, [showQuoteModal, booking]);
+
+  const handleUpdateItemQty = (index: number, newQty: number) => {
+    if (newQty < 1) return;
+    setQuoteItems((prev) =>
+      prev.map((item, idx) =>
+        idx === index ? { ...item, quantity: newQty } : item,
+      ),
+    );
+  };
+
+  const handleRemoveQuoteItem = (index: number) => {
+    setQuoteItems((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleAddNewItem = () => {
+    const name = newItemName.trim();
+    const unit = newItemUnit.trim();
+    const price = Number(newItemPrice.replace(/[^0-9]/g, ''));
+    const qty = Number(newItemQty) || 1;
+
+    if (!name) {
+      setQuoteError('Vui lòng nhập tên hạng mục phát sinh.');
+      return;
+    }
+    if (!unit) {
+      setQuoteError('Vui lòng nhập đơn vị tính.');
+      return;
+    }
+    if (isNaN(price) || price <= 0) {
+      setQuoteError('Vui lòng nhập đơn giá hợp lệ.');
+      return;
+    }
+
+    setQuoteItems((prev) => [...prev, { name, unit, price, quantity: qty }]);
+    setNewItemName('');
+    setNewItemUnit('');
+    setNewItemPrice('');
+    setNewItemQty('1');
+    setQuoteError('');
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -259,8 +329,8 @@ export default function BookingDetailScreen() {
   };
 
   const handleSendQuote = async () => {
-    if (!quotePrice.trim()) {
-      setQuoteError('Vui lòng nhập giá thực tế.');
+    if (quoteItems.length === 0) {
+      setQuoteError('Vui lòng thêm ít nhất một hạng mục báo giá.');
       return;
     }
     if (!quoteEstimatedTime.trim()) {
@@ -276,9 +346,9 @@ export default function BookingDetailScreen() {
     setQuoteError('');
     try {
       const formData = new FormData();
-      formData.append('actualPrice', quotePrice.replace(/[^0-9]/g, ''));
       formData.append('estimatedTime', quoteEstimatedTime.trim());
       if (quoteNote.trim()) formData.append('note', quoteNote.trim());
+      formData.append('items', JSON.stringify(quoteItems));
       surveyImages.forEach((img, index) => {
         formData.append('surveyImages', {
           uri: img.uri,
@@ -289,10 +359,10 @@ export default function BookingDetailScreen() {
 
       await bookingApi.sendQuote(Number(id), formData);
       setShowQuoteModal(false);
-      setQuotePrice('');
       setQuoteEstimatedTime('');
       setQuoteNote('');
       setSurveyImages([]);
+      setQuoteItems([]);
       setMessage({ tone: 'success', text: 'Đã gửi báo giá cho khách hàng.' });
       await fetchBooking();
     } catch (err: any) {
@@ -513,6 +583,33 @@ export default function BookingDetailScreen() {
           <Text variant="bodySmall" style={styles.mutedText}>
             {booking.service?.category?.name || 'Chưa có danh mục'}
           </Text>
+          {booking.bookingItems && booking.bookingItems.length > 0 && (
+            <View style={styles.itemsContainer}>
+              <Text variant="labelMedium" style={styles.itemsHeader}>
+                Hạng mục yêu cầu chi tiết:
+              </Text>
+              {booking.bookingItems.map((item: any) => (
+                <View key={item.id} style={styles.itemBadgeRow}>
+                  <View style={styles.itemBadgeTextContainer}>
+                    <Text variant="bodyMedium" style={styles.itemBadgeName}>
+                      {item.name}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.itemBadgeUnit}>
+                      Đơn giá: {formatPrice(Number(item.priceSnapshot))} / {item.unit}
+                    </Text>
+                  </View>
+                  <View style={styles.itemBadgeRight}>
+                    <Text variant="bodyMedium" style={styles.itemBadgeQty}>
+                      x{item.quantity}
+                    </Text>
+                    <Text variant="bodyMedium" style={styles.itemBadgeTotal}>
+                      {formatPrice(Number(item.priceSnapshot) * item.quantity)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
         </ProviderCard>
 
         <ProviderCard>
@@ -584,6 +681,51 @@ export default function BookingDetailScreen() {
                 <Text variant="bodySmall" style={styles.noteText}>
                   {booking.quotation.note}
                 </Text>
+              </View>
+            )}
+            {booking.quotation.quotationItems && booking.quotation.quotationItems.length > 0 && (
+              <View style={styles.itemsContainer}>
+                <Text variant="labelMedium" style={styles.itemsHeader}>
+                  Hạng mục báo giá chi tiết:
+                </Text>
+                {booking.quotation.quotationItems.map((item: any) => {
+                  const isExtra = !booking.bookingItems?.some(
+                    (bi: any) => bi.name.toLowerCase() === item.name.toLowerCase()
+                  );
+                  return (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.itemBadgeRow,
+                        isExtra && styles.extraItemBadgeRow,
+                      ]}
+                    >
+                      <View style={styles.itemBadgeTextContainer}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <Text variant="bodyMedium" style={styles.itemBadgeName}>
+                            {item.name}
+                          </Text>
+                          {isExtra && (
+                            <View style={styles.extraBadge}>
+                              <Text style={styles.extraBadgeText}>Phát sinh</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text variant="bodySmall" style={styles.itemBadgeUnit}>
+                          {formatPrice(Number(item.price))} / {item.unit}
+                        </Text>
+                      </View>
+                      <View style={styles.itemBadgeRight}>
+                        <Text variant="bodyMedium" style={styles.itemBadgeQty}>
+                          x{item.quantity}
+                        </Text>
+                        <Text variant="bodyMedium" style={styles.itemBadgeTotal}>
+                          {formatPrice(Number(item.price) * item.quantity)}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             )}
           </ProviderCard>
@@ -847,24 +989,119 @@ export default function BookingDetailScreen() {
           ]}
         >
           <Text variant="titleMedium" style={styles.modalTitle}>
-            Gửi báo giá
+            Gửi báo giá khảo sát
           </Text>
           {quoteError ? (
             <ProviderInlineMessage tone="error" message={quoteError} />
           ) : null}
-          <TextInput
-            label="Giá thực tế (VNĐ)"
-            value={quotePrice}
-            onChangeText={(value) => {
-              setQuotePrice(value);
-              setQuoteError('');
-            }}
-            mode="outlined"
-            keyboardType="numeric"
-            left={
-              <TextInput.Icon icon="cash" accessibilityLabel="Giá thực tế" />
-            }
-          />
+
+          {/* Danh sách các hạng mục chi tiết */}
+          <Text variant="labelMedium" style={{ color: Colors.light.textSecondary, fontWeight: '700', marginTop: 4 }}>
+            Chi tiết hạng mục báo giá:
+          </Text>
+          <ScrollView style={styles.modalItemsScroll} contentContainerStyle={{ gap: 8 }}>
+            {quoteItems.map((item, index) => (
+              <View key={index} style={styles.modalItemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text variant="bodyMedium" style={{ fontWeight: '700', color: Colors.light.text }}>
+                    {item.name}
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: Colors.light.textTertiary }}>
+                    {formatPrice(item.price)} / {item.unit}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <IconButton
+                    icon="minus-circle-outline"
+                    size={22}
+                    onPress={() => handleUpdateItemQty(index, item.quantity - 1)}
+                    style={{ margin: 0 }}
+                  />
+                  <Text variant="bodyMedium" style={{ fontWeight: '700', minWidth: 20, textAlign: 'center', color: Colors.light.text }}>
+                    {item.quantity}
+                  </Text>
+                  <IconButton
+                    icon="plus-circle-outline"
+                    size={22}
+                    onPress={() => handleUpdateItemQty(index, item.quantity + 1)}
+                    style={{ margin: 0 }}
+                  />
+                  <IconButton
+                    icon="trash-can-outline"
+                    iconColor={Colors.light.error}
+                    size={20}
+                    onPress={() => handleRemoveQuoteItem(index)}
+                    style={{ margin: 0 }}
+                  />
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Form thêm hạng mục phát sinh */}
+          <View style={styles.addItemSection}>
+            <Text variant="labelMedium" style={{ color: Colors.light.primaryLight, fontWeight: '700' }}>
+              + Thêm hạng mục phát sinh:
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+              <TextInput
+                label="Tên hạng mục"
+                value={newItemName}
+                onChangeText={setNewItemName}
+                mode="outlined"
+                style={{ flex: 2 }}
+                dense
+              />
+              <TextInput
+                label="Đơn vị"
+                value={newItemUnit}
+                onChangeText={setNewItemUnit}
+                mode="outlined"
+                style={{ flex: 1 }}
+                dense
+                placeholder="mét, cái"
+              />
+            </View>
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, alignItems: 'center' }}>
+              <TextInput
+                label="Đơn giá (đ)"
+                value={newItemPrice}
+                onChangeText={setNewItemPrice}
+                mode="outlined"
+                keyboardType="numeric"
+                style={{ flex: 2 }}
+                dense
+              />
+              <TextInput
+                label="Số lượng"
+                value={newItemQty}
+                onChangeText={setNewItemQty}
+                mode="outlined"
+                keyboardType="numeric"
+                style={{ flex: 1 }}
+                dense
+              />
+              <Button
+                mode="contained"
+                onPress={handleAddNewItem}
+                style={{ borderRadius: 8, height: 40, justifyContent: 'center' }}
+                contentStyle={{ height: 40 }}
+              >
+                Thêm
+              </Button>
+            </View>
+          </View>
+
+          {/* Tổng cộng thực tế */}
+          <View style={styles.modalTotalRow}>
+            <Text variant="bodyMedium" style={styles.mutedText}>
+              Tổng cộng thực tế:
+            </Text>
+            <Text variant="titleMedium" style={styles.modalTotalText}>
+              {formatPrice(quoteItems.reduce((sum, item) => sum + item.price * item.quantity, 0))}
+            </Text>
+          </View>
+
           <TextInput
             label="Thời gian dự kiến"
             value={quoteEstimatedTime}
@@ -883,7 +1120,7 @@ export default function BookingDetailScreen() {
             }
           />
           <TextInput
-            label="Ghi chú"
+            label="Ghi chú thêm"
             value={quoteNote}
             onChangeText={setQuoteNote}
             mode="outlined"
@@ -909,7 +1146,7 @@ export default function BookingDetailScreen() {
             onPress={handleSendQuote}
             loading={actionLoading}
             disabled={
-              actionLoading || !quotePrice.trim() || !quoteEstimatedTime.trim()
+              actionLoading || quoteItems.length === 0 || !quoteEstimatedTime.trim()
             }
             style={styles.primaryButton}
             contentStyle={styles.actionContent}
@@ -1146,6 +1383,99 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     color: Colors.light.text,
+    fontWeight: '800',
+  },
+  itemsContainer: {
+    marginTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.border,
+    paddingTop: 12,
+    gap: 8,
+  },
+  itemsHeader: {
+    color: Colors.light.textSecondary,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  itemBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    backgroundColor: Colors.light.surfaceVariant,
+    borderRadius: 8,
+    gap: 8,
+  },
+  extraItemBadgeRow: {
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.light.warning,
+    backgroundColor: Colors.light.warningBg,
+  },
+  itemBadgeTextContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  itemBadgeName: {
+    color: Colors.light.text,
+    fontWeight: '700',
+  },
+  itemBadgeUnit: {
+    color: Colors.light.textTertiary,
+  },
+  itemBadgeRight: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  itemBadgeQty: {
+    color: Colors.light.textSecondary,
+    fontWeight: '600',
+  },
+  itemBadgeTotal: {
+    color: Colors.light.primaryLight,
+    fontWeight: '700',
+  },
+  extraBadge: {
+    backgroundColor: Colors.light.warning,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  extraBadgeText: {
+    color: Colors.light.background,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  modalItemsScroll: {
+    maxHeight: 180,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: 12,
+    padding: 8,
+  },
+  modalItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  addItemSection: {
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: 12,
+    padding: 10,
+    gap: 4,
+  },
+  modalTotalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  modalTotalText: {
+    color: Colors.light.primary,
     fontWeight: '800',
   },
 });

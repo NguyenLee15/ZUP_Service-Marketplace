@@ -59,26 +59,83 @@ export class BookingLifecycleService {
       });
     }
 
+    let bookingItemsData: Array<{
+      serviceItemId: number;
+      name: string;
+      unit: string;
+      quantity: number;
+      priceSnapshot: any;
+    }> = [];
+    if (dto.items && dto.items.length > 0) {
+      const itemIds = dto.items.map((it) => it.serviceItemId);
+      const serviceItems = await this.prisma.serviceItem.findMany({
+        where: {
+          id: { in: itemIds },
+          serviceId: dto.serviceId,
+        },
+      });
+
+      if (serviceItems.length !== dto.items.length) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Một số hạng mục dịch vụ con không hợp lệ hoặc không thuộc dịch vụ này',
+        });
+      }
+
+      bookingItemsData = dto.items.map((it) => {
+        const matchingItem = serviceItems.find((s) => s.id === it.serviceItemId);
+        if (!matchingItem) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: `Không tìm thấy hạng mục ID ${it.serviceItemId}`,
+          });
+        }
+        return {
+          serviceItemId: it.serviceItemId,
+          name: matchingItem.name,
+          unit: matchingItem.unit,
+          quantity: it.quantity,
+          priceSnapshot: matchingItem.price,
+        };
+      });
+    }
+
     const bookingCode = generateBookingCode();
     const providerResponseDeadline = new Date(
       Date.now() + PROVIDER_ACCEPTANCE_TIMEOUT_MS,
     );
 
-    const booking = await this.prisma.booking.create({
-      data: {
-        bookingCode,
-        customerId,
-        providerId: service.providerId,
-        serviceId: dto.serviceId,
-        description: dto.description,
-        province: dto.province,
-        district: dto.district,
-        ward: dto.ward,
-        addressDetail: dto.addressDetail,
-        desiredTime: new Date(dto.desiredTime),
-        status: BookingStatus.PENDING,
-        providerResponseDeadline,
-      },
+    const booking = await this.prisma.$transaction(async (tx) => {
+      const createdBooking = await tx.booking.create({
+        data: {
+          bookingCode,
+          customerId,
+          providerId: service.providerId,
+          serviceId: dto.serviceId,
+          description: dto.description,
+          province: dto.province,
+          district: dto.district,
+          ward: dto.ward,
+          addressDetail: dto.addressDetail,
+          desiredTime: new Date(dto.desiredTime),
+          status: BookingStatus.PENDING,
+          providerResponseDeadline,
+        },
+      });
+
+      if (bookingItemsData.length > 0) {
+        const finalBookingItems = bookingItemsData.map((it) => ({
+          bookingId: createdBooking.id,
+          serviceItemId: it.serviceItemId,
+          name: it.name,
+          unit: it.unit,
+          quantity: it.quantity,
+          priceSnapshot: it.priceSnapshot,
+        }));
+        await tx.bookingItem.createMany({ data: finalBookingItems });
+      }
+
+      return createdBooking;
     });
 
     await this.shared.addStatusHistory(
@@ -105,7 +162,12 @@ export class BookingLifecycleService {
     );
     this.bookingTimeoutService.scheduleProviderAcceptanceTimeout(booking.id);
 
-    return { data: booking, message: 'Đặt dịch vụ thành công' };
+    const bookingWithItems = await this.prisma.booking.findUnique({
+      where: { id: booking.id },
+      include: { bookingItems: true },
+    });
+
+    return { data: bookingWithItems, message: 'Đặt dịch vụ thành công' };
   }
 
   async acceptByProvider(providerId: number, bookingId: number) {
@@ -281,6 +343,19 @@ export class BookingLifecycleService {
       });
     }
 
+    if (!dto.items || dto.items.length === 0) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Vui lòng cung cấp danh sách hạng mục báo giá chi tiết',
+      });
+    }
+
+    const items = dto.items;
+
+    const actualPrice = items.reduce((sum, item) => {
+      return sum + Number(item.price) * item.quantity;
+    }, 0);
+
     const commissionRate =
       await this.bookingCommissionService.getCurrentCommissionRate();
 
@@ -288,21 +363,35 @@ export class BookingLifecycleService {
       booking.status,
       BookingStatus.QUOTED,
     );
-    const [quotation, updatedBooking] = await this.prisma.$transaction([
-      this.prisma.quotation.create({
+
+    const [quotation, updatedBooking] = await this.prisma.$transaction(async (tx) => {
+      const createdQuotation = await tx.quotation.create({
         data: {
           bookingId,
-          actualPrice: dto.actualPrice,
+          actualPrice: actualPrice,
           commissionRateSnapshot: commissionRate,
           estimatedTime: dto.estimatedTime,
           note: dto.note,
         },
-      }),
-      this.prisma.booking.update({
+      });
+
+      const quotationItems = items.map((item) => ({
+        quotationId: createdQuotation.id,
+        name: item.name,
+        unit: item.unit,
+        price: item.price,
+        quantity: item.quantity,
+      }));
+
+      await tx.quotationItem.createMany({ data: quotationItems });
+
+      const updated = await tx.booking.update({
         where: { id: bookingId },
         data: { status: BookingStatus.QUOTED },
-      }),
-    ]);
+      });
+
+      return [createdQuotation, updated];
+    });
 
     if (files && files.length > 0) {
       for (const file of files) {
@@ -328,12 +417,17 @@ export class BookingLifecycleService {
       booking.customerId,
       'QUOTE_RECEIVED',
       'Bạn nhận được báo giá',
-      `Đơn #${booking.bookingCode}: Báo giá ${dto.actualPrice.toLocaleString('vi-VN')}₫`,
+      `Đơn #${booking.bookingCode}: Báo giá ${actualPrice.toLocaleString('vi-VN')}₫`,
       bookingId,
     );
 
+    const quotationWithItems = await this.prisma.quotation.findUnique({
+      where: { id: quotation.id },
+      include: { quotationItems: true },
+    });
+
     return {
-      data: { quotation, booking: updatedBooking },
+      data: { quotation: quotationWithItems, booking: updatedBooking },
       message: 'Đã gửi báo giá',
     };
   }
