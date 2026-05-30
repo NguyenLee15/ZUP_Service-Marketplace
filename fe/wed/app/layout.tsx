@@ -204,10 +204,6 @@ export default async function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
-        <meta
-          http-equiv="Content-Security-Policy"
-          content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; frame-src 'self' https:;"
-        />
       </head>
       <body className={`${montserrat.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`} suppressHydrationWarning>
         <JsonLd data={jsonLdData} nonce={nonce} />

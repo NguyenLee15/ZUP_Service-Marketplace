@@ -165,7 +165,7 @@ export function UnifiedServiceCard({
               priority={priority}
               quality={65}
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              style={{ viewTransitionName: `service-image-${service.id}` } as any}
+
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
@@ -282,7 +282,7 @@ export function UnifiedServiceCard({
             <h3
               title={service.name}
               className="line-clamp-2 min-h-[2.35rem] text-sm sm:text-[15px] font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
-              style={{ viewTransitionName: `service-title-${service.id}` } as any}
+
             >
               {service.name}.
             </h3>

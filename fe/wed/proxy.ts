@@ -15,7 +15,11 @@ function createCsp(nonce: string) {
     "frame-ancestors 'self'",
     "form-action 'self'",
     `script-src 'self' 'nonce-${nonce}' https://accounts.google.com https://www.tiktok.com https://sp.zalo.me`,
-    `style-src 'self' 'nonce-${nonce}' https://accounts.google.com`,
+    // 'unsafe-inline' is required for style-src because framer-motion, sonner, leaflet,
+    // recharts and radix-ui all inject dynamic inline styles via JS at runtime.
+    // Nonces only work on <style> tags, NOT on style="" attributes set by JavaScript.
+    // script-src remains nonce-protected (the important XSS guard).
+    `style-src 'self' 'unsafe-inline' https://accounts.google.com`,
     "img-src 'self' data: blob: https://res.cloudinary.com https://api.dicebear.com https://lh3.googleusercontent.com https://i.pravatar.cc https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org",
     "font-src 'self' data:",
     "connect-src 'self' https://service-marketplace-gold.vercel.app https://accounts.google.com wss:",
