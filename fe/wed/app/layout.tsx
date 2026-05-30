@@ -4,6 +4,7 @@ import './globals.css'
 import { ClientWidgets } from '@/components/client-widgets'
 import { DeferredTopLoader } from '@/components/navigation/DeferredTopLoader'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { headers } from 'next/headers'
 
 
 const montserrat = Montserrat({
@@ -192,11 +193,14 @@ const jsonLdData = {
   ]
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') || undefined;
+
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
@@ -206,7 +210,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${montserrat.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`} suppressHydrationWarning>
-        <JsonLd data={jsonLdData} />
+        <JsonLd data={jsonLdData} nonce={nonce} />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[1700] focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"

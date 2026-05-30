@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { Sparkles } from 'lucide-react';
+import { headers } from 'next/headers';
 
 import { CategoryGrid } from '@/app/components/home/CategoryGrid';
 import { DeferredRecentlyViewedServices } from '@/app/components/home/DeferredRecentlyViewedServices';
@@ -219,6 +220,9 @@ function buildFallbackCategorySections(
 }
 
 export default async function Home() {
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') || undefined;
+
   const [featuredServices, sponsoredServices, categories] = await Promise.all([
     fetchHomeServices('/services/search', { limit: 8, sortBy: 'rating' }),
     fetchHomeServices('/services/featured'),
@@ -236,7 +240,7 @@ export default async function Home() {
 
       <main id="main-content" className="flex-1">
         {/* Next.js 16 / React 19 Compliant JSON-LD Schema.org Metadata - Secure Plaintext Template */}
-        <script type="application/ld+json">
+        <script type="application/ld+json" nonce={nonce}>
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebPage",

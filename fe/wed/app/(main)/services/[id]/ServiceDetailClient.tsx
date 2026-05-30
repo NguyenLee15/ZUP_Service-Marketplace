@@ -122,9 +122,6 @@ export function ServiceDetailClient({ service }: { service: any }) {
               height={450}
               priority
               className="w-full h-full object-cover"
-              style={
-                { viewTransitionName: `service-image-${service.id}` } as any
-              }
             />
           </div>
           {images.length > 1 && (
@@ -183,9 +180,6 @@ export function ServiceDetailClient({ service }: { service: any }) {
             </div>
             <h1
               className="text-xl sm:text-2xl font-bold text-foreground leading-tight"
-              style={
-                { viewTransitionName: `service-title-${service.id}` } as any
-              }
             >
               {service.name}
             </h1>

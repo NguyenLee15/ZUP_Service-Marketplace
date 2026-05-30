@@ -552,7 +552,6 @@ function ServicesSearchContent() {
                     <div 
                       key={`${service.id}-${index}`} 
                       className="group animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both"
-                      style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <UnifiedServiceCard
                         service={service}
