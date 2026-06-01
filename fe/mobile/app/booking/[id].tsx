@@ -1,8 +1,8 @@
 /**
  * Booking Detail - provider actions by booking status.
  */
-import { useCallback, useEffect, useState } from 'react';
-import type { ComponentProps, Dispatch, SetStateAction } from 'react';
+import { useCallback, useEffect, useState } from "react";
+import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import {
   Alert,
   Image,
@@ -10,7 +10,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
-} from 'react-native';
+} from "react-native";
 import {
   ActivityIndicator,
   Button,
@@ -20,18 +20,18 @@ import {
   Text,
   TextInput,
   useTheme,
-} from 'react-native-paper';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import * as Haptics from 'expo-haptics';
-import { bookingApi } from '../../features/booking/booking.api';
-import { useNotificationStore } from '../../features/notification/notification.store';
+} from "react-native-paper";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as Haptics from "expo-haptics";
+import { bookingApi } from "../../features/booking/booking.api";
+import { useNotificationStore } from "../../features/notification/notification.store";
 import {
   BOOKING_STATUS_LABEL,
   type BookingStatus,
-} from '../../constants/booking-status';
-import { Colors } from '../../constants/colors';
+} from "../../constants/booking-status";
+import { Colors } from "../../constants/colors";
 import {
   ProviderCard,
   ProviderEmptyState,
@@ -41,13 +41,21 @@ import {
   ProviderScreen,
   ProviderSectionHeader,
   ProviderStatusChip,
-} from '../../components/provider/provider-ui';
+} from "../../components/provider/provider-ui";
 
 type ImageSetter = Dispatch<SetStateAction<ImagePicker.ImagePickerAsset[]>>;
 type MessageState = {
-  tone: 'success' | 'warning' | 'error' | 'info';
+  tone: "success" | "warning" | "error" | "info";
   text: string;
 } | null;
+
+type BookingTimelineItem = {
+  id?: number | string;
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  note?: string | null;
+  createdAt?: string | Date | null;
+};
 
 const statusColor = (status: string): string => {
   const map: Record<string, string> = {
@@ -73,27 +81,28 @@ export default function BookingDetailScreen() {
   const [actionLoading, setActionLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState<MessageState>(null);
+  const [timeline, setTimeline] = useState<BookingTimelineItem[]>([]);
 
   const [showQuoteModal, setShowQuoteModal] = useState(false);
-  const [quoteEstimatedTime, setQuoteEstimatedTime] = useState('');
-  const [quoteNote, setQuoteNote] = useState('');
-  const [quoteError, setQuoteError] = useState('');
-  const [surveyorName, setSurveyorName] = useState('');
-  const [surveyorPhone, setSurveyorPhone] = useState('');
+  const [quoteEstimatedTime, setQuoteEstimatedTime] = useState("");
+  const [quoteNote, setQuoteNote] = useState("");
+  const [quoteError, setQuoteError] = useState("");
+  const [surveyorName, setSurveyorName] = useState("");
+  const [surveyorPhone, setSurveyorPhone] = useState("");
   const [surveyImages, setSurveyImages] = useState<
     ImagePicker.ImagePickerAsset[]
   >([]);
   const [quoteItems, setQuoteItems] = useState<
     { name: string; unit: string; price: number; quantity: number }[]
   >([]);
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemUnit, setNewItemUnit] = useState('');
-  const [newItemPrice, setNewItemPrice] = useState('');
-  const [newItemQty, setNewItemQty] = useState('1');
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemUnit, setNewItemUnit] = useState("");
+  const [newItemPrice, setNewItemPrice] = useState("");
+  const [newItemQty, setNewItemQty] = useState("1");
 
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
-  const [cancelError, setCancelError] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelError, setCancelError] = useState("");
 
   const [resultImages, setResultImages] = useState<
     ImagePicker.ImagePickerAsset[]
@@ -101,12 +110,17 @@ export default function BookingDetailScreen() {
 
   const fetchBooking = useCallback(async () => {
     try {
-      const res = await bookingApi.getById(Number(id));
-      setBooking(res.data?.data);
+      const [detailRes, timelineRes] = await Promise.all([
+        bookingApi.getById(Number(id)),
+        bookingApi.getTimeline(Number(id)).catch(() => null),
+      ]);
+      setBooking(detailRes.data?.data);
+      const timelineData = timelineRes?.data?.data;
+      setTimeline(Array.isArray(timelineData) ? timelineData : []);
     } catch {
       setMessage({
-        tone: 'error',
-        text: 'Không thể tải thông tin đơn hàng. Kéo xuống để thử lại.',
+        tone: "error",
+        text: "Không thể tải thông tin đơn hàng. Kéo xuống để thử lại.",
       });
     } finally {
       setLoading(false);
@@ -137,8 +151,8 @@ export default function BookingDetailScreen() {
       } else {
         setQuoteItems([
           {
-            name: booking.service?.name || 'Dịch vụ',
-            unit: 'Lượt',
+            name: booking.service?.name || "Dịch vụ",
+            unit: "Lượt",
             price: Number(booking.service?.referencePrice || 0),
             quantity: 1,
           },
@@ -163,28 +177,28 @@ export default function BookingDetailScreen() {
   const handleAddNewItem = () => {
     const name = newItemName.trim();
     const unit = newItemUnit.trim();
-    const price = Number(newItemPrice.replace(/[^0-9]/g, ''));
+    const price = Number(newItemPrice.replace(/[^0-9]/g, ""));
     const qty = Number(newItemQty) || 1;
 
     if (!name) {
-      setQuoteError('Vui lòng nhập tên hạng mục phát sinh.');
+      setQuoteError("Vui lòng nhập tên hạng mục phát sinh.");
       return;
     }
     if (!unit) {
-      setQuoteError('Vui lòng nhập đơn vị tính.');
+      setQuoteError("Vui lòng nhập đơn vị tính.");
       return;
     }
     if (isNaN(price) || price <= 0) {
-      setQuoteError('Vui lòng nhập đơn giá hợp lệ.');
+      setQuoteError("Vui lòng nhập đơn giá hợp lệ.");
       return;
     }
 
     setQuoteItems((prev) => [...prev, { name, unit, price, quantity: qty }]);
-    setNewItemName('');
-    setNewItemUnit('');
-    setNewItemPrice('');
-    setNewItemQty('1');
-    setQuoteError('');
+    setNewItemName("");
+    setNewItemUnit("");
+    setNewItemPrice("");
+    setNewItemQty("1");
+    setQuoteError("");
   };
 
   const onRefresh = useCallback(async () => {
@@ -195,14 +209,14 @@ export default function BookingDetailScreen() {
   }, [fetchBooking]);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(price || 0);
 
   const pickImages = async (setter: ImageSetter, max = 5) => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       allowsMultipleSelection: true,
       quality: 0.75,
       selectionLimit: max,
@@ -230,29 +244,31 @@ export default function BookingDetailScreen() {
 
   const handleAcceptBooking = () => {
     Alert.alert(
-      'Nhận đơn hàng?',
-      'Sau khi nhận đơn, bạn có thể cập nhật thợ khảo sát và gửi báo giá cho khách.',
+      "Nhận đơn hàng?",
+      "Sau khi nhận đơn, bạn có thể cập nhật thợ khảo sát và gửi báo giá cho khách.",
       [
-        { text: 'Để sau', style: 'cancel' },
+        { text: "Để sau", style: "cancel" },
         {
-          text: 'Nhận đơn',
+          text: "Nhận đơn",
           onPress: async () => {
             setActionLoading(true);
             setMessage(null);
             try {
               await bookingApi.acceptBooking(Number(id));
-              await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              await Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Success,
+              );
               setMessage({
-                tone: 'success',
-                text: 'Đã nhận đơn hàng. Vui lòng cập nhật thợ khảo sát.',
+                tone: "success",
+                text: "Đã nhận đơn hàng. Vui lòng cập nhật thợ khảo sát.",
               });
               await fetchBooking();
             } catch (err: any) {
               setMessage({
-                tone: 'error',
+                tone: "error",
                 text:
                   err?.response?.data?.error?.message ||
-                  'Không thể nhận đơn hàng.',
+                  "Không thể nhận đơn hàng.",
               });
             } finally {
               setActionLoading(false);
@@ -265,28 +281,28 @@ export default function BookingDetailScreen() {
 
   const handleDeclineBooking = () => {
     Alert.alert(
-      'Từ chối đơn hàng?',
-      'Khách hàng sẽ được thông báo để tìm thợ khác.',
+      "Từ chối đơn hàng?",
+      "Khách hàng sẽ được thông báo để tìm thợ khác.",
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: "Hủy", style: "cancel" },
         {
-          text: 'Từ chối',
-          style: 'destructive',
+          text: "Từ chối",
+          style: "destructive",
           onPress: async () => {
             setActionLoading(true);
             setMessage(null);
             try {
               await bookingApi.declineBooking(Number(id), {
-                reason: 'Nhà cung cấp từ chối nhận đơn',
+                reason: "Nhà cung cấp từ chối nhận đơn",
               });
-              setMessage({ tone: 'success', text: 'Đã từ chối đơn hàng.' });
+              setMessage({ tone: "success", text: "Đã từ chối đơn hàng." });
               await fetchBooking();
             } catch (err: any) {
               setMessage({
-                tone: 'error',
+                tone: "error",
                 text:
                   err?.response?.data?.error?.message ||
-                  'Không thể từ chối đơn hàng.',
+                  "Không thể từ chối đơn hàng.",
               });
             } finally {
               setActionLoading(false);
@@ -300,8 +316,8 @@ export default function BookingDetailScreen() {
   const handleConfirmSurveyor = async () => {
     if (!surveyorName.trim() || !surveyorPhone.trim()) {
       setMessage({
-        tone: 'warning',
-        text: 'Vui lòng nhập đầy đủ tên và số điện thoại thợ khảo sát.',
+        tone: "warning",
+        text: "Vui lòng nhập đầy đủ tên và số điện thoại thợ khảo sát.",
       });
       return;
     }
@@ -314,14 +330,14 @@ export default function BookingDetailScreen() {
         surveyorPhone: surveyorPhone.trim(),
       });
       setMessage({
-        tone: 'success',
-        text: 'Đã cập nhật thông tin thợ khảo sát.',
+        tone: "success",
+        text: "Đã cập nhật thông tin thợ khảo sát.",
       });
       await fetchBooking();
     } catch (err: any) {
       setMessage({
-        tone: 'error',
-        text: err?.response?.data?.error?.message || 'Thao tác thất bại.',
+        tone: "error",
+        text: err?.response?.data?.error?.message || "Thao tác thất bại.",
       });
     } finally {
       setActionLoading(false);
@@ -330,44 +346,44 @@ export default function BookingDetailScreen() {
 
   const handleSendQuote = async () => {
     if (quoteItems.length === 0) {
-      setQuoteError('Vui lòng thêm ít nhất một hạng mục báo giá.');
+      setQuoteError("Vui lòng thêm ít nhất một hạng mục báo giá.");
       return;
     }
     if (!quoteEstimatedTime.trim()) {
-      setQuoteError('Vui lòng nhập thời gian dự kiến.');
+      setQuoteError("Vui lòng nhập thời gian dự kiến.");
       return;
     }
     if (quoteEstimatedTime.trim().length > 100) {
-      setQuoteError('Thời gian dự kiến tối đa 100 ký tự.');
+      setQuoteError("Thời gian dự kiến tối đa 100 ký tự.");
       return;
     }
 
     setActionLoading(true);
-    setQuoteError('');
+    setQuoteError("");
     try {
       const formData = new FormData();
-      formData.append('estimatedTime', quoteEstimatedTime.trim());
-      if (quoteNote.trim()) formData.append('note', quoteNote.trim());
-      formData.append('items', JSON.stringify(quoteItems));
+      formData.append("estimatedTime", quoteEstimatedTime.trim());
+      if (quoteNote.trim()) formData.append("note", quoteNote.trim());
+      formData.append("items", JSON.stringify(quoteItems));
       surveyImages.forEach((img, index) => {
-        formData.append('surveyImages', {
+        formData.append("surveyImages", {
           uri: img.uri,
           name: `survey_${index}.jpg`,
-          type: 'image/jpeg',
+          type: "image/jpeg",
         } as any);
       });
 
       await bookingApi.sendQuote(Number(id), formData);
       setShowQuoteModal(false);
-      setQuoteEstimatedTime('');
-      setQuoteNote('');
+      setQuoteEstimatedTime("");
+      setQuoteNote("");
       setSurveyImages([]);
       setQuoteItems([]);
-      setMessage({ tone: 'success', text: 'Đã gửi báo giá cho khách hàng.' });
+      setMessage({ tone: "success", text: "Đã gửi báo giá cho khách hàng." });
       await fetchBooking();
     } catch (err: any) {
       setQuoteError(
-        err?.response?.data?.error?.message || 'Gửi báo giá thất bại.',
+        err?.response?.data?.error?.message || "Gửi báo giá thất bại.",
       );
     } finally {
       setActionLoading(false);
@@ -375,25 +391,27 @@ export default function BookingDetailScreen() {
   };
 
   const handleStart = () => {
-    Alert.alert('Xác nhận', 'Bắt đầu thực hiện đơn hàng?', [
-      { text: 'Hủy', style: 'cancel' },
+    Alert.alert("Xác nhận", "Bắt đầu thực hiện đơn hàng?", [
+      { text: "Hủy", style: "cancel" },
       {
-        text: 'Bắt đầu',
+        text: "Bắt đầu",
         onPress: async () => {
           setActionLoading(true);
           setMessage(null);
           try {
             await bookingApi.startWork(Number(id));
-            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            await Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Success,
+            );
             setMessage({
-              tone: 'success',
-              text: 'Đã bắt đầu thực hiện đơn hàng.',
+              tone: "success",
+              text: "Đã bắt đầu thực hiện đơn hàng.",
             });
             await fetchBooking();
           } catch (err: any) {
             setMessage({
-              tone: 'error',
-              text: err?.response?.data?.error?.message || 'Thao tác thất bại.',
+              tone: "error",
+              text: err?.response?.data?.error?.message || "Thao tác thất bại.",
             });
           } finally {
             setActionLoading(false);
@@ -406,8 +424,8 @@ export default function BookingDetailScreen() {
   const handleComplete = async () => {
     if (resultImages.length === 0) {
       setMessage({
-        tone: 'warning',
-        text: 'Vui lòng chụp hoặc chọn ảnh kết quả công việc.',
+        tone: "warning",
+        text: "Vui lòng chụp hoặc chọn ảnh kết quả công việc.",
       });
       return;
     }
@@ -417,24 +435,24 @@ export default function BookingDetailScreen() {
     try {
       const formData = new FormData();
       resultImages.forEach((img, index) => {
-        formData.append('resultImages', {
+        formData.append("resultImages", {
           uri: img.uri,
           name: `result_${index}.jpg`,
-          type: 'image/jpeg',
+          type: "image/jpeg",
         } as any);
       });
       await bookingApi.completeWork(Number(id), formData);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setResultImages([]);
       setMessage({
-        tone: 'success',
-        text: 'Đã báo hoàn thành. Đang chờ khách hàng nghiệm thu.',
+        tone: "success",
+        text: "Đã báo hoàn thành. Đang chờ khách hàng nghiệm thu.",
       });
       await fetchBooking();
     } catch (err: any) {
       setMessage({
-        tone: 'error',
-        text: err?.response?.data?.error?.message || 'Thao tác thất bại.',
+        tone: "error",
+        text: err?.response?.data?.error?.message || "Thao tác thất bại.",
       });
     } finally {
       setActionLoading(false);
@@ -443,23 +461,23 @@ export default function BookingDetailScreen() {
 
   const handleCancel = async () => {
     if (!cancelReason.trim()) {
-      setCancelError('Vui lòng nhập lý do hủy.');
+      setCancelError("Vui lòng nhập lý do hủy.");
       return;
     }
 
     setActionLoading(true);
-    setCancelError('');
+    setCancelError("");
     try {
       await bookingApi.cancelBooking(Number(id), {
         reason: cancelReason.trim(),
       });
       setShowCancelModal(false);
-      setCancelReason('');
-      setMessage({ tone: 'success', text: 'Đã hủy đơn hàng.' });
+      setCancelReason("");
+      setMessage({ tone: "success", text: "Đã hủy đơn hàng." });
       await fetchBooking();
     } catch (err: any) {
       setCancelError(
-        err?.response?.data?.error?.message || 'Hủy đơn thất bại.',
+        err?.response?.data?.error?.message || "Hủy đơn thất bại.",
       );
     } finally {
       setActionLoading(false);
@@ -492,21 +510,21 @@ export default function BookingDetailScreen() {
   const statusLabel =
     BOOKING_STATUS_LABEL[booking.status as BookingStatus] || booking.status;
   const isAwaitingProviderAcceptance =
-    booking.status === 'PENDING' && !booking.providerAcceptedAt;
+    booking.status === "PENDING" && !booking.providerAcceptedAt;
   const canHandlePendingWorkflow =
-    booking.status === 'PENDING' && Boolean(booking.providerAcceptedAt);
+    booking.status === "PENDING" && Boolean(booking.providerAcceptedAt);
   const responseDeadline = booking.providerResponseDeadline
-    ? new Date(booking.providerResponseDeadline).toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
+    ? new Date(booking.providerResponseDeadline).toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       })
     : null;
   const hasBottomActions = [
-    'PENDING',
-    'QUOTED',
-    'CONFIRMED',
-    'IN_PROGRESS',
+    "PENDING",
+    "QUOTED",
+    "CONFIRMED",
+    "IN_PROGRESS",
   ].includes(booking.status);
 
   return (
@@ -562,26 +580,31 @@ export default function BookingDetailScreen() {
             />
             <Text variant="bodySmall" style={styles.mutedText}>
               {booking.desiredTime
-                ? new Date(booking.desiredTime).toLocaleString('vi-VN')
-                : 'Chưa có lịch'}
+                ? new Date(booking.desiredTime).toLocaleString("vi-VN")
+                : "Chưa có lịch"}
             </Text>
           </View>
           {isAwaitingProviderAcceptance && (
             <ProviderInlineMessage
               tone="warning"
               icon="timer-sand"
-              message={`Đơn mới cần nhận trong 1 phút${responseDeadline ? `, hạn phản hồi ${responseDeadline}` : ''}.`}
+              message={`Đơn mới cần nhận trong 1 phút${responseDeadline ? `, hạn phản hồi ${responseDeadline}` : ""}.`}
             />
           )}
         </ProviderCard>
 
+        <ProviderBookingTimeline
+          timeline={timeline}
+          fallbackStatus={booking.status}
+        />
+
         <ProviderCard>
           <ProviderSectionHeader title="Dịch vụ" />
           <Text variant="titleMedium" style={styles.cardTitle} selectable>
-            {booking.service?.name || 'Dịch vụ'}
+            {booking.service?.name || "Dịch vụ"}
           </Text>
           <Text variant="bodySmall" style={styles.mutedText}>
-            {booking.service?.category?.name || 'Chưa có danh mục'}
+            {booking.service?.category?.name || "Chưa có danh mục"}
           </Text>
           {booking.bookingItems && booking.bookingItems.length > 0 && (
             <View style={styles.itemsContainer}>
@@ -595,7 +618,8 @@ export default function BookingDetailScreen() {
                       {item.name}
                     </Text>
                     <Text variant="bodySmall" style={styles.itemBadgeUnit}>
-                      Đơn giá: {formatPrice(Number(item.priceSnapshot))} / {item.unit}
+                      Đơn giá: {formatPrice(Number(item.priceSnapshot))} /{" "}
+                      {item.unit}
                     </Text>
                   </View>
                   <View style={styles.itemBadgeRight}>
@@ -616,12 +640,12 @@ export default function BookingDetailScreen() {
           <ProviderSectionHeader title="Khách hàng" />
           <InfoRow
             icon="account-outline"
-            text={booking.customer?.fullName || 'Khách hàng'}
+            text={booking.customer?.fullName || "Khách hàng"}
             selectable
           />
           <InfoRow
             icon="phone-outline"
-            text={booking.customer?.phone || 'Chưa có số điện thoại'}
+            text={booking.customer?.phone || "Chưa có số điện thoại"}
             selectable
           />
           <InfoRow
@@ -634,7 +658,7 @@ export default function BookingDetailScreen() {
                 booking.province,
               ]
                 .filter(Boolean)
-                .join(', ') || 'Chưa có địa chỉ'
+                .join(", ") || "Chưa có địa chỉ"
             }
             selectable
           />
@@ -642,8 +666,8 @@ export default function BookingDetailScreen() {
             icon="calendar-outline"
             text={
               booking.desiredTime
-                ? new Date(booking.desiredTime).toLocaleString('vi-VN')
-                : 'Chưa có lịch'
+                ? new Date(booking.desiredTime).toLocaleString("vi-VN")
+                : "Chưa có lịch"
             }
           />
           {booking.note && (
@@ -683,55 +707,78 @@ export default function BookingDetailScreen() {
                 </Text>
               </View>
             )}
-            {booking.quotation.quotationItems && booking.quotation.quotationItems.length > 0 && (
-              <View style={styles.itemsContainer}>
-                <Text variant="labelMedium" style={styles.itemsHeader}>
-                  Hạng mục báo giá chi tiết:
-                </Text>
-                {booking.quotation.quotationItems.map((item: any) => {
-                  const isExtra = !booking.bookingItems?.some(
-                    (bi: any) => bi.name.toLowerCase() === item.name.toLowerCase()
-                  );
-                  return (
-                    <View
-                      key={item.id}
-                      style={[
-                        styles.itemBadgeRow,
-                        isExtra && styles.extraItemBadgeRow,
-                      ]}
-                    >
-                      <View style={styles.itemBadgeTextContainer}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <Text variant="bodyMedium" style={styles.itemBadgeName}>
-                            {item.name}
+            {booking.quotation.quotationItems &&
+              booking.quotation.quotationItems.length > 0 && (
+                <View style={styles.itemsContainer}>
+                  <Text variant="labelMedium" style={styles.itemsHeader}>
+                    Hạng mục báo giá chi tiết:
+                  </Text>
+                  {booking.quotation.quotationItems.map((item: any) => {
+                    const isExtra = !booking.bookingItems?.some(
+                      (bi: any) =>
+                        bi.name.toLowerCase() === item.name.toLowerCase(),
+                    );
+                    return (
+                      <View
+                        key={item.id}
+                        style={[
+                          styles.itemBadgeRow,
+                          isExtra && styles.extraItemBadgeRow,
+                        ]}
+                      >
+                        <View style={styles.itemBadgeTextContainer}>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 6,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Text
+                              variant="bodyMedium"
+                              style={styles.itemBadgeName}
+                            >
+                              {item.name}
+                            </Text>
+                            {isExtra && (
+                              <View style={styles.extraBadge}>
+                                <Text style={styles.extraBadgeText}>
+                                  Phát sinh
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text
+                            variant="bodySmall"
+                            style={styles.itemBadgeUnit}
+                          >
+                            {formatPrice(Number(item.price))} / {item.unit}
                           </Text>
-                          {isExtra && (
-                            <View style={styles.extraBadge}>
-                              <Text style={styles.extraBadgeText}>Phát sinh</Text>
-                            </View>
-                          )}
                         </View>
-                        <Text variant="bodySmall" style={styles.itemBadgeUnit}>
-                          {formatPrice(Number(item.price))} / {item.unit}
-                        </Text>
+                        <View style={styles.itemBadgeRight}>
+                          <Text
+                            variant="bodyMedium"
+                            style={styles.itemBadgeQty}
+                          >
+                            x{item.quantity}
+                          </Text>
+                          <Text
+                            variant="bodyMedium"
+                            style={styles.itemBadgeTotal}
+                          >
+                            {formatPrice(Number(item.price) * item.quantity)}
+                          </Text>
+                        </View>
                       </View>
-                      <View style={styles.itemBadgeRight}>
-                        <Text variant="bodyMedium" style={styles.itemBadgeQty}>
-                          x{item.quantity}
-                        </Text>
-                        <Text variant="bodyMedium" style={styles.itemBadgeTotal}>
-                          {formatPrice(Number(item.price) * item.quantity)}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
+                    );
+                  })}
+                </View>
+              )}
           </ProviderCard>
         )}
 
-        {booking.status === 'DISPUTED' && booking.dispute && (
+        {booking.status === "DISPUTED" && booking.dispute && (
           <ProviderCard style={styles.disputeCard}>
             <ProviderInlineMessage
               tone="error"
@@ -804,12 +851,12 @@ export default function BookingDetailScreen() {
               style={styles.primaryButton}
               icon="check"
             >
-              {actionLoading ? 'Đang xử lý…' : 'Xác nhận thợ khảo sát'}
+              {actionLoading ? "Đang xử lý…" : "Xác nhận thợ khảo sát"}
             </Button>
           </ProviderCard>
         )}
 
-        {booking.status === 'IN_PROGRESS' && (
+        {booking.status === "IN_PROGRESS" && (
           <ProviderCard contentStyle={styles.formSection}>
             <ProviderSectionHeader title="Ảnh kết quả công việc" />
             <View style={styles.dualButtonRow}>
@@ -869,7 +916,7 @@ export default function BookingDetailScreen() {
             },
           ]}
         >
-          {booking.status === 'PENDING' && (
+          {booking.status === "PENDING" && (
             <>
               {isAwaitingProviderAcceptance ? (
                 <>
@@ -927,7 +974,7 @@ export default function BookingDetailScreen() {
               )}
             </>
           )}
-          {booking.status === 'QUOTED' && (
+          {booking.status === "QUOTED" && (
             <Button
               mode="outlined"
               onPress={() => setShowCancelModal(true)}
@@ -943,7 +990,7 @@ export default function BookingDetailScreen() {
               Hủy đơn
             </Button>
           )}
-          {booking.status === 'CONFIRMED' && (
+          {booking.status === "CONFIRMED" && (
             <Button
               mode="contained"
               onPress={handleStart}
@@ -953,10 +1000,10 @@ export default function BookingDetailScreen() {
               icon="play-circle-outline"
               contentStyle={styles.actionContent}
             >
-              {actionLoading ? 'Đang xử lý…' : 'Bắt đầu thực hiện'}
+              {actionLoading ? "Đang xử lý…" : "Bắt đầu thực hiện"}
             </Button>
           )}
-          {booking.status === 'IN_PROGRESS' && (
+          {booking.status === "IN_PROGRESS" && (
             <Button
               mode="contained"
               onPress={handleComplete}
@@ -970,7 +1017,7 @@ export default function BookingDetailScreen() {
               icon="check-circle-outline"
               contentStyle={styles.actionContent}
             >
-              {actionLoading ? 'Đang xử lý…' : 'Hoàn thành'}
+              {actionLoading ? "Đang xử lý…" : "Hoàn thành"}
             </Button>
           )}
         </View>
@@ -981,7 +1028,7 @@ export default function BookingDetailScreen() {
           visible={showQuoteModal}
           onDismiss={() => {
             setShowQuoteModal(false);
-            setQuoteError('');
+            setQuoteError("");
           }}
           contentContainerStyle={[
             styles.modal,
@@ -996,34 +1043,64 @@ export default function BookingDetailScreen() {
           ) : null}
 
           {/* Danh sách các hạng mục chi tiết */}
-          <Text variant="labelMedium" style={{ color: Colors.light.textSecondary, fontWeight: '700', marginTop: 4 }}>
+          <Text
+            variant="labelMedium"
+            style={{
+              color: Colors.light.textSecondary,
+              fontWeight: "700",
+              marginTop: 4,
+            }}
+          >
             Chi tiết hạng mục báo giá:
           </Text>
-          <ScrollView style={styles.modalItemsScroll} contentContainerStyle={{ gap: 8 }}>
+          <ScrollView
+            style={styles.modalItemsScroll}
+            contentContainerStyle={{ gap: 8 }}
+          >
             {quoteItems.map((item, index) => (
               <View key={index} style={styles.modalItemRow}>
                 <View style={{ flex: 1 }}>
-                  <Text variant="bodyMedium" style={{ fontWeight: '700', color: Colors.light.text }}>
+                  <Text
+                    variant="bodyMedium"
+                    style={{ fontWeight: "700", color: Colors.light.text }}
+                  >
                     {item.name}
                   </Text>
-                  <Text variant="bodySmall" style={{ color: Colors.light.textTertiary }}>
+                  <Text
+                    variant="bodySmall"
+                    style={{ color: Colors.light.textTertiary }}
+                  >
                     {formatPrice(item.price)} / {item.unit}
                   </Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
                   <IconButton
                     icon="minus-circle-outline"
                     size={22}
-                    onPress={() => handleUpdateItemQty(index, item.quantity - 1)}
+                    onPress={() =>
+                      handleUpdateItemQty(index, item.quantity - 1)
+                    }
                     style={{ margin: 0 }}
                   />
-                  <Text variant="bodyMedium" style={{ fontWeight: '700', minWidth: 20, textAlign: 'center', color: Colors.light.text }}>
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      fontWeight: "700",
+                      minWidth: 20,
+                      textAlign: "center",
+                      color: Colors.light.text,
+                    }}
+                  >
                     {item.quantity}
                   </Text>
                   <IconButton
                     icon="plus-circle-outline"
                     size={22}
-                    onPress={() => handleUpdateItemQty(index, item.quantity + 1)}
+                    onPress={() =>
+                      handleUpdateItemQty(index, item.quantity + 1)
+                    }
                     style={{ margin: 0 }}
                   />
                   <IconButton
@@ -1040,10 +1117,13 @@ export default function BookingDetailScreen() {
 
           {/* Form thêm hạng mục phát sinh */}
           <View style={styles.addItemSection}>
-            <Text variant="labelMedium" style={{ color: Colors.light.primaryLight, fontWeight: '700' }}>
+            <Text
+              variant="labelMedium"
+              style={{ color: Colors.light.primaryLight, fontWeight: "700" }}
+            >
               + Thêm hạng mục phát sinh:
             </Text>
-            <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+            <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
               <TextInput
                 label="Tên hạng mục"
                 value={newItemName}
@@ -1062,7 +1142,14 @@ export default function BookingDetailScreen() {
                 placeholder="mét, cái"
               />
             </View>
-            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, alignItems: 'center' }}>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 6,
+                marginTop: 6,
+                alignItems: "center",
+              }}
+            >
               <TextInput
                 label="Đơn giá (đ)"
                 value={newItemPrice}
@@ -1084,7 +1171,11 @@ export default function BookingDetailScreen() {
               <Button
                 mode="contained"
                 onPress={handleAddNewItem}
-                style={{ borderRadius: 8, height: 40, justifyContent: 'center' }}
+                style={{
+                  borderRadius: 8,
+                  height: 40,
+                  justifyContent: "center",
+                }}
                 contentStyle={{ height: 40 }}
               >
                 Thêm
@@ -1098,7 +1189,12 @@ export default function BookingDetailScreen() {
               Tổng cộng thực tế:
             </Text>
             <Text variant="titleMedium" style={styles.modalTotalText}>
-              {formatPrice(quoteItems.reduce((sum, item) => sum + item.price * item.quantity, 0))}
+              {formatPrice(
+                quoteItems.reduce(
+                  (sum, item) => sum + item.price * item.quantity,
+                  0,
+                ),
+              )}
             </Text>
           </View>
 
@@ -1107,7 +1203,7 @@ export default function BookingDetailScreen() {
             value={quoteEstimatedTime}
             onChangeText={(value) => {
               setQuoteEstimatedTime(value);
-              setQuoteError('');
+              setQuoteError("");
             }}
             mode="outlined"
             maxLength={100}
@@ -1146,12 +1242,14 @@ export default function BookingDetailScreen() {
             onPress={handleSendQuote}
             loading={actionLoading}
             disabled={
-              actionLoading || quoteItems.length === 0 || !quoteEstimatedTime.trim()
+              actionLoading ||
+              quoteItems.length === 0 ||
+              !quoteEstimatedTime.trim()
             }
             style={styles.primaryButton}
             contentStyle={styles.actionContent}
           >
-            {actionLoading ? 'Đang gửi…' : 'Gửi báo giá'}
+            {actionLoading ? "Đang gửi…" : "Gửi báo giá"}
           </Button>
           <Button mode="text" onPress={() => setShowQuoteModal(false)}>
             Đóng
@@ -1164,7 +1262,7 @@ export default function BookingDetailScreen() {
           visible={showCancelModal}
           onDismiss={() => {
             setShowCancelModal(false);
-            setCancelError('');
+            setCancelError("");
           }}
           contentContainerStyle={[
             styles.modal,
@@ -1185,7 +1283,7 @@ export default function BookingDetailScreen() {
             value={cancelReason}
             onChangeText={(value) => {
               setCancelReason(value);
-              setCancelError('');
+              setCancelError("");
             }}
             mode="outlined"
             multiline
@@ -1208,7 +1306,7 @@ export default function BookingDetailScreen() {
             ]}
             contentStyle={styles.actionContent}
           >
-            {actionLoading ? 'Đang xử lý…' : 'Xác nhận hủy'}
+            {actionLoading ? "Đang xử lý…" : "Xác nhận hủy"}
           </Button>
           <Button mode="text" onPress={() => setShowCancelModal(false)}>
             Đóng
@@ -1224,7 +1322,7 @@ function InfoRow({
   text,
   selectable,
 }: {
-  icon: ComponentProps<typeof MaterialCommunityIcons>['name'];
+  icon: ComponentProps<typeof MaterialCommunityIcons>["name"];
   text: string;
   selectable?: boolean;
 }) {
@@ -1246,6 +1344,66 @@ function InfoRow({
   );
 }
 
+function ProviderBookingTimeline({
+  timeline,
+  fallbackStatus,
+}: {
+  timeline: BookingTimelineItem[];
+  fallbackStatus?: string;
+}) {
+  const rows =
+    timeline.length > 0
+      ? timeline
+      : fallbackStatus
+        ? [{ toStatus: fallbackStatus }]
+        : [];
+
+  if (rows.length === 0) return null;
+
+  return (
+    <ProviderCard>
+      <ProviderSectionHeader title="Timeline trạng thái" />
+      <View style={styles.timelineList}>
+        {rows.map((item, index) => {
+          const status =
+            item.toStatus || item.fromStatus || fallbackStatus || "PENDING";
+          const label = BOOKING_STATUS_LABEL[status as BookingStatus] || status;
+          const color = statusColor(status);
+          const createdAt = item.createdAt
+            ? new Date(item.createdAt).toLocaleString("vi-VN")
+            : "";
+
+          return (
+            <View
+              key={`${status}-${item.id || index}`}
+              style={styles.timelineRow}
+            >
+              <View style={[styles.timelineDot, { backgroundColor: color }]} />
+              <View style={styles.timelineContent}>
+                <View style={styles.timelineHeader}>
+                  <Text variant="bodyMedium" style={styles.timelineTitle}>
+                    {label}
+                  </Text>
+                  {createdAt ? (
+                    <Text variant="labelSmall" style={styles.timelineTime}>
+                      {createdAt}
+                    </Text>
+                  ) : null}
+                </View>
+                {item.note ? (
+                  <Text variant="bodySmall" style={styles.timelineNote}>
+                    {item.note}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    </ProviderCard>
+  );
+}
+
 const styles = StyleSheet.create({
   content: {
     padding: 16,
@@ -1259,14 +1417,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statusTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
   },
   statusMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   mutedText: {
@@ -1274,17 +1432,17 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     color: Colors.light.text,
-    fontWeight: '800',
+    fontWeight: "800",
     marginTop: 2,
   },
   cardTitle: {
     color: Colors.light.text,
-    fontWeight: '800',
+    fontWeight: "800",
     marginTop: 8,
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 8,
     marginTop: 10,
   },
@@ -1292,6 +1450,45 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.light.text,
     lineHeight: 20,
+  },
+  timelineList: {
+    gap: 14,
+    marginTop: 8,
+  },
+  timelineRow: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "flex-start",
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 5,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  timelineHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  timelineTitle: {
+    flex: 1,
+    color: Colors.light.text,
+    fontWeight: "800",
+  },
+  timelineTime: {
+    color: Colors.light.textSecondary,
+  },
+  timelineNote: {
+    color: Colors.light.textSecondary,
+    marginTop: 4,
+    lineHeight: 18,
   },
   noteBox: {
     marginTop: 12,
@@ -1304,16 +1501,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
     marginTop: 10,
   },
   priceText: {
     color: Colors.light.primary,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
   disputeCard: {
     borderColor: `${Colors.light.error}40`,
@@ -1329,10 +1526,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.surfaceVariant,
   },
   imageTile: {
-    position: 'relative',
+    position: "relative",
   },
   removeImageButton: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
     right: -8,
     margin: 0,
@@ -1344,7 +1541,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   dualButtonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   flexButton: {
@@ -1355,11 +1552,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   actionBar: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     padding: 16,
     paddingBottom: 28,
@@ -1383,7 +1580,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     color: Colors.light.text,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   itemsContainer: {
     marginTop: 14,
@@ -1394,13 +1591,13 @@ const styles = StyleSheet.create({
   },
   itemsHeader: {
     color: Colors.light.textSecondary,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 4,
   },
   itemBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 8,
     paddingHorizontal: 10,
     backgroundColor: Colors.light.surfaceVariant,
@@ -1418,22 +1615,22 @@ const styles = StyleSheet.create({
   },
   itemBadgeName: {
     color: Colors.light.text,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   itemBadgeUnit: {
     color: Colors.light.textTertiary,
   },
   itemBadgeRight: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     gap: 2,
   },
   itemBadgeQty: {
     color: Colors.light.textSecondary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   itemBadgeTotal: {
     color: Colors.light.primaryLight,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   extraBadge: {
     backgroundColor: Colors.light.warning,
@@ -1444,7 +1641,7 @@ const styles = StyleSheet.create({
   extraBadgeText: {
     color: Colors.light.background,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   modalItemsScroll: {
     maxHeight: 180,
@@ -1454,9 +1651,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   modalItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 6,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
@@ -1469,13 +1666,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   modalTotalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginVertical: 4,
   },
   modalTotalText: {
     color: Colors.light.primary,
-    fontWeight: '800',
+    fontWeight: "800",
   },
 });

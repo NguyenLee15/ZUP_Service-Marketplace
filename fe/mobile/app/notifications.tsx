@@ -1,30 +1,32 @@
 /**
  * Notifications screen - provider updates.
  */
-import { useCallback, useEffect, useState } from 'react';
-import type { ComponentProps } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from "react";
+import type { ComponentProps } from "react";
+import { RefreshControl, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
   Button,
+  Chip,
   IconButton,
   Text,
+  TextInput,
   useTheme,
-} from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { FlashList } from '@shopify/flash-list';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { notificationApi } from '../features/notification/notification.api';
-import { useNotificationStore } from '../features/notification/notification.store';
-import { Colors } from '../constants/colors';
-import { routes } from '../lib/route-utils';
+} from "react-native-paper";
+import { useRouter } from "expo-router";
+import { FlashList } from "@shopify/flash-list";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { notificationApi } from "../features/notification/notification.api";
+import { useNotificationStore } from "../features/notification/notification.store";
+import { Colors } from "../constants/colors";
+import { routes } from "../lib/route-utils";
 import {
   ProviderCard,
   ProviderEmptyState,
   ProviderInlineMessage,
   ProviderPageHeader,
   ProviderScreen,
-} from '../components/provider/provider-ui';
+} from "../components/provider/provider-ui";
 
 type ProviderNotification = {
   id: number;
@@ -40,40 +42,42 @@ type ProviderNotification = {
 
 const NOTIF_ICON: Record<
   string,
-  ComponentProps<typeof MaterialCommunityIcons>['name']
+  ComponentProps<typeof MaterialCommunityIcons>["name"]
 > = {
-  NEW_BOOKING: 'clipboard-alert-outline',
-  PROVIDER_ACCEPTED_BOOKING: 'clipboard-check-outline',
-  PROVIDER_DECLINED_BOOKING: 'clipboard-remove-outline',
-  PROVIDER_ACCEPTANCE_TIMEOUT: 'timer-off-outline',
-  BOOKING_ACCEPTANCE_EXPIRED: 'timer-off-outline',
-  BOOKING: 'clipboard-text-outline',
-  QUOTATION: 'file-document-outline',
-  WALLET: 'wallet-outline',
-  KYC: 'card-account-details-outline',
-  SERVICE: 'briefcase-outline',
-  CHAT: 'chat-outline',
-  SYSTEM: 'bell-outline',
+  NEW_BOOKING: "clipboard-alert-outline",
+  PROVIDER_ACCEPTED_BOOKING: "clipboard-check-outline",
+  PROVIDER_DECLINED_BOOKING: "clipboard-remove-outline",
+  PROVIDER_ACCEPTANCE_TIMEOUT: "timer-off-outline",
+  BOOKING_ACCEPTANCE_EXPIRED: "timer-off-outline",
+  BOOKING: "clipboard-text-outline",
+  QUOTATION: "file-document-outline",
+  WALLET: "wallet-outline",
+  KYC: "card-account-details-outline",
+  SERVICE: "briefcase-outline",
+  CHAT: "chat-outline",
+  SYSTEM: "bell-outline",
 };
 
 const getNotificationRoute = (notification: ProviderNotification) => {
-  const type = String(notification.type || '').toUpperCase();
-  const referenceId = Number(notification.referenceId || notification.bookingId);
+  const type = String(notification.type || "").toUpperCase();
+  const referenceId = Number(
+    notification.referenceId || notification.bookingId,
+  );
 
   if (
     Number.isFinite(referenceId) &&
     referenceId > 0 &&
-    ['BOOKING', 'QUOTE', 'QUOTATION', 'WORK', 'SURVEYOR', 'SLA'].some((key) =>
+    ["BOOKING", "QUOTE", "QUOTATION", "WORK", "SURVEYOR", "SLA"].some((key) =>
       type.includes(key),
     )
   ) {
     return routes.booking.detail(String(referenceId));
   }
 
-  if (type.includes('WALLET')) return routes.tabs.wallet;
-  if (type.includes('KYC')) return routes.profile.kyc;
-  if (type.includes('SERVICE')) return routes.services;
-  if (type.includes('CHAT')) return routes.tabs.chat;
+  if (type.includes("WALLET")) return routes.tabs.wallet;
+  if (type.includes("KYC")) return routes.profile.kyc;
+  if (type.includes("SERVICE")) return routes.services;
+  if (type.includes("CHAT")) return routes.tabs.chat;
 
   return null;
 };
@@ -83,33 +87,48 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { setUnreadCount } = useNotificationStore();
 
-  const [notifications, setNotifications] = useState<ProviderNotification[]>([]);
+  const [notifications, setNotifications] = useState<ProviderNotification[]>(
+    [],
+  );
   const [message, setMessage] = useState<{
-    tone: 'success' | 'error';
+    tone: "success" | "error";
     text: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">(
+    "all",
+  );
+  const [typeFilter, setTypeFilter] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const fetchNotifications = useCallback(async (p = 1, reset = false) => {
-    try {
-      const res = await notificationApi.getAll({ page: p, limit: 20 });
-      const data = res.data?.data || [];
-      if (reset || p === 1) setNotifications(data);
-      else setNotifications((prev) => [...prev, ...data]);
-      setHasMore(data.length === 20);
-      setPage(p);
-    } catch {
-      setMessage({
-        tone: 'error',
-        text: 'Không thể tải thông báo. Kéo xuống để thử lại.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchNotifications = useCallback(
+    async (p = 1, reset = false) => {
+      try {
+        const res = await notificationApi.getAll({
+          page: p,
+          limit: 20,
+          isRead: readFilter === "all" ? undefined : readFilter === "read",
+          type: typeFilter.trim() || undefined,
+        });
+        const data = res.data?.data || [];
+        if (reset || p === 1) setNotifications(data);
+        else setNotifications((prev) => [...prev, ...data]);
+        setHasMore(data.length === 20);
+        setPage(p);
+      } catch {
+        setMessage({
+          tone: "error",
+          text: "Không thể tải thông báo. Kéo xuống để thử lại.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [readFilter, typeFilter],
+  );
 
   useEffect(() => {
     fetchNotifications(1, true);
@@ -130,14 +149,34 @@ export default function NotificationsScreen() {
       );
       setUnreadCount(0);
       setMessage({
-        tone: 'success',
-        text: 'Đã đánh dấu tất cả thông báo là đã đọc.',
+        tone: "success",
+        text: "Đã đánh dấu tất cả thông báo là đã đọc.",
       });
     } catch {
       setMessage({
-        tone: 'error',
-        text: 'Chưa thể đánh dấu tất cả là đã đọc.',
+        tone: "error",
+        text: "Chưa thể đánh dấu tất cả là đã đọc.",
       });
+    }
+  };
+
+  const handleDelete = async (notification: ProviderNotification) => {
+    setDeletingId(notification.id);
+    try {
+      await notificationApi.delete(notification.id);
+      setNotifications((prev) =>
+        prev.filter((item) => item.id !== notification.id),
+      );
+      if (!notification.isRead) {
+        setUnreadCount(
+          Math.max(0, notifications.filter((item) => !item.isRead).length - 1),
+        );
+      }
+      setMessage({ tone: "success", text: "Đã xóa thông báo." });
+    } catch {
+      setMessage({ tone: "error", text: "Chưa thể xóa thông báo." });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -163,24 +202,24 @@ export default function NotificationsScreen() {
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
     const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return 'Vừa xong';
+    if (diffMin < 1) return "Vừa xong";
     if (diffMin < 60) return `${diffMin} phút trước`;
     const diffH = Math.floor(diffMin / 60);
     if (diffH < 24) return `${diffH} giờ trước`;
     const diffD = Math.floor(diffH / 24);
     if (diffD < 7) return `${diffD} ngày trước`;
-    return d.toLocaleDateString('vi-VN');
+    return d.toLocaleDateString("vi-VN");
   };
 
   const renderNotification = ({ item }: { item: ProviderNotification }) => {
-    const icon = NOTIF_ICON[item.type || ''] || 'bell-outline';
+    const icon = NOTIF_ICON[item.type || ""] || "bell-outline";
     const isUnread = !item.isRead;
     const body = item.content || item.message;
 
     return (
       <ProviderCard
         onPress={() => handlePress(item)}
-        accessibilityLabel={item.title || item.message || 'Thông báo'}
+        accessibilityLabel={item.title || item.message || "Thông báo"}
         style={isUnread ? styles.unreadCard : undefined}
         contentStyle={styles.notificationContent}
       >
@@ -221,6 +260,16 @@ export default function NotificationsScreen() {
             {formatTime(item.createdAt)}
           </Text>
         </View>
+        <IconButton
+          icon="trash-can-outline"
+          size={18}
+          loading={deletingId === item.id}
+          disabled={deletingId === item.id}
+          iconColor={Colors.light.error}
+          onPress={() => handleDelete(item)}
+          accessibilityLabel="Xóa thông báo"
+          style={styles.deleteButton}
+        />
         {isUnread && <View style={styles.unreadDot} />}
       </ProviderCard>
     );
@@ -274,6 +323,38 @@ export default function NotificationsScreen() {
                 Đọc tất cả
               </Button>
             )}
+            <View style={styles.filterCard}>
+              <View style={styles.filterChips}>
+                {[
+                  { key: "all", label: "Tất cả" },
+                  { key: "unread", label: "Chưa đọc" },
+                  { key: "read", label: "Đã đọc" },
+                ].map((item) => (
+                  <Chip
+                    key={item.key}
+                    selected={readFilter === item.key}
+                    onPress={() => {
+                      setReadFilter(item.key as typeof readFilter);
+                      setPage(1);
+                    }}
+                    style={styles.filterChip}
+                  >
+                    {item.label}
+                  </Chip>
+                ))}
+              </View>
+              <TextInput
+                mode="outlined"
+                dense
+                label="Lọc theo loại"
+                value={typeFilter}
+                onChangeText={(value) => {
+                  setTypeFilter(value);
+                  setPage(1);
+                }}
+                placeholder="BOOKING, WALLET..."
+              />
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -305,23 +386,39 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   markAllButton: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
+    borderRadius: 999,
+  },
+  filterCard: {
+    gap: 10,
+    padding: 12,
+    backgroundColor: Colors.light.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  filterChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  filterChip: {
     borderRadius: 999,
   },
   unreadCard: {
     borderColor: `${Colors.light.primary}50`,
   },
   notificationContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
   },
   iconBg: {
     width: 42,
     height: 42,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   notificationText: {
     flex: 1,
@@ -329,10 +426,10 @@ const styles = StyleSheet.create({
   },
   notificationTitle: {
     color: Colors.light.text,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   unreadTitle: {
-    fontWeight: '800',
+    fontWeight: "800",
   },
   notificationMessage: {
     color: Colors.light.textSecondary,
@@ -349,6 +446,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: Colors.light.primary,
     marginTop: 8,
+  },
+  deleteButton: {
+    margin: -8,
   },
   loading: {
     marginTop: 40,

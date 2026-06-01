@@ -14,13 +14,13 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://service-marketplace-qq3u.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://service-marketplace-prod-free.onrender.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://service-marketplace-qq3u.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://service-marketplace-prod-free.onrender.com"
       }
     }
   },
