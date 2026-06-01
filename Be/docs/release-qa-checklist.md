@@ -4,8 +4,8 @@
 
 - BE Render: `https://service-marketplace-prod-free.onrender.com`
 - Web Vercel: `https://service-marketplace-gold.vercel.app`
-- Customer Android preview: https://expo.dev/accounts/lee0408/projects/homeservice-customer/builds/c3e6a36e-7d5c-4acd-9ceb-bbde10a14cca
-- Provider Android preview: https://expo.dev/accounts/lee0408/projects/homeservice-provider/builds/f2f3d321-9e27-40cc-80be-6f2e5df84ab7
+- Customer Android preview: https://expo.dev/accounts/lee0408/projects/homeservice-customer/builds/b9dfa167-1f90-4272-a9e5-99e018fab276
+- Provider Android preview: https://expo.dev/accounts/lee0408/projects/homeservice-provider/builds/ecc63c80-9c3d-41da-807b-cbf8a01dee0c
 
 ## Test Accounts
 
