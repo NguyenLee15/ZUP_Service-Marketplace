@@ -52,6 +52,8 @@ export const bookingsApi = {
 
   getById: (id: number) => api.get(`/bookings/${id}`),
 
+  getTimeline: (id: number) => api.get(`/bookings/${id}/timeline`),
+
   confirmQuote: (id: number) => api.patch(`/bookings/${id}/confirm-quote`),
 
   rejectQuote: (id: number, reason: string) =>
@@ -108,6 +110,12 @@ export const notificationsApi = {
   getUnreadCount: () => api.get("/notifications/unread-count"),
   markRead: (id: number) => api.patch(`/notifications/${id}/read`),
   markAllRead: () => api.patch("/notifications/read-all"),
+  delete: (id: number) => api.delete(`/notifications/${id}`),
+};
+
+export const chatbotApi = {
+  updateSessionTitle: (id: string, title: string) =>
+    api.patch(`/chatbot/sessions/${id}/title`, { title }),
 };
 
 export const chatsApi = {
@@ -141,7 +149,8 @@ export const adminApi = {
   // Users
   getUsers: (params?: Record<string, any>) =>
     api.get("/admin/users", { params }),
-  lockUser: (id: number, data?: { reason: string }) => api.patch(`/admin/users/${id}/lock`, data),
+  lockUser: (id: number, data?: { reason: string }) =>
+    api.patch(`/admin/users/${id}/lock`, data),
   unlockUser: (id: number) => api.patch(`/admin/users/${id}/unlock`),
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
 
@@ -152,6 +161,7 @@ export const adminApi = {
   deleteCategory: (id: number) => api.delete(`/categories/${id}`),
 
   // Staffs — UC07
+  getPermissions: () => api.get("/admin/permissions"),
   getStaffs: (params?: Record<string, any>) =>
     api.get("/admin/staffs", { params }),
   createStaff: (data: {
@@ -162,7 +172,12 @@ export const adminApi = {
   }) => api.post("/admin/staffs", data),
   updateStaff: (
     id: number,
-    data: { fullName?: string; phone?: string; status?: string; permissions?: string[] },
+    data: {
+      fullName?: string;
+      phone?: string;
+      status?: string;
+      permissions?: string[];
+    },
   ) => api.patch(`/admin/staffs/${id}`, data),
   deleteStaff: (id: number) => api.delete(`/admin/staffs/${id}`),
 
@@ -188,6 +203,7 @@ export const adminApi = {
   getBookings: (params?: Record<string, any>) =>
     api.get("/admin/bookings", { params }),
   getBookingDetail: (id: number) => api.get(`/admin/bookings/${id}`),
+  getBookingTimeline: (id: number) => api.get(`/admin/bookings/${id}/timeline`),
   cancelBooking: (id: number, reason: string) =>
     api.patch(`/admin/bookings/${id}/cancel`, { reason }),
 
@@ -211,8 +227,18 @@ export const adminApi = {
   getDisputeDetail: (id: number) => api.get(`/admin/disputes/${id}`),
   resolveDispute: (
     id: number,
-    data: { resolutionAction: string; resolutionReason: string; penaltyAmount?: number },
+    data: {
+      resolutionAction: string;
+      resolutionReason: string;
+      penaltyAmount?: number;
+    },
   ) => api.patch(`/admin/disputes/${id}/resolve`, data),
+
+  // Audit logs
+  getAuditLogs: (params?: Record<string, any>) =>
+    api.get("/admin/audit-logs", { params }),
+  exportAuditLogs: (params?: Record<string, any>) =>
+    api.get("/admin/audit-logs/export", { params, responseType: "blob" }),
 
   // Settings — UC10.3
   getCommission: () => api.get("/admin/settings/commission"),

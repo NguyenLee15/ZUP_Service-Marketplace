@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  useChat,
-} from "@ai-sdk/react";
+import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import {
   Bot,
@@ -15,6 +13,7 @@ import {
   Clock,
   Loader2,
   MessageSquare,
+  Pencil,
   Send,
   ShieldCheck,
   Sparkles,
@@ -25,6 +24,7 @@ import {
 } from "lucide-react";
 import { z } from "zod/v4";
 import api from "@/lib/axios";
+import { chatbotApi } from "@/features/auth/services/api";
 import { useAuthStore } from "@/store/auth.store";
 
 const chatServiceSchema = z.object({
@@ -112,9 +112,14 @@ function renderMarkdown(text: string) {
         if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
           const content = trimmed.substring(2);
           return (
-            <div key={lineIdx} className="flex items-start gap-1.5 pl-1.5 py-0.5 text-sm">
+            <div
+              key={lineIdx}
+              className="flex items-start gap-1.5 pl-1.5 py-0.5 text-sm"
+            >
               <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-              <span className="flex-1 text-slate-800">{parseInlineStyles(content)}</span>
+              <span className="flex-1 text-slate-800">
+                {parseInlineStyles(content)}
+              </span>
             </div>
           );
         }
@@ -125,16 +130,26 @@ function renderMarkdown(text: string) {
           const num = numMatch[1];
           const content = numMatch[2];
           return (
-            <div key={lineIdx} className="flex items-start gap-1.5 pl-1.5 py-0.5 text-sm">
-              <span className="font-semibold text-blue-600 shrink-0 text-xs mt-0.5">{num}.</span>
-              <span className="flex-1 text-slate-800">{parseInlineStyles(content)}</span>
+            <div
+              key={lineIdx}
+              className="flex items-start gap-1.5 pl-1.5 py-0.5 text-sm"
+            >
+              <span className="font-semibold text-blue-600 shrink-0 text-xs mt-0.5">
+                {num}.
+              </span>
+              <span className="flex-1 text-slate-800">
+                {parseInlineStyles(content)}
+              </span>
             </div>
           );
         }
 
         // Standard text lines
         return (
-          <p key={lineIdx} className="text-sm min-h-[1rem] leading-relaxed text-slate-800">
+          <p
+            key={lineIdx}
+            className="text-sm min-h-[1rem] leading-relaxed text-slate-800"
+          >
             {parseInlineStyles(line)}
           </p>
         );
@@ -163,10 +178,17 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const [metaMap, setMetaMap] = useState<Record<string, ChatbotMessageMeta>>(
     {},
   );
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [coords, setCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [sessionTitle, setSessionTitle] = useState("Customer AI Assistant");
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState("");
+  const [titleSaving, setTitleSaving] = useState(false);
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
@@ -189,9 +211,11 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
       (error) => {
         console.error("Lỗi lấy vị trí:", error);
         setIsLocating(false);
-        alert("Không thể lấy vị trí hiện tại. Vui lòng cấp quyền truy cập GPS cho trang web.");
+        alert(
+          "Không thể lấy vị trí hiện tại. Vui lòng cấp quyền truy cập GPS cho trang web.",
+        );
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000 },
     );
   };
 
@@ -217,6 +241,29 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
     }
   }, [sessionId]);
 
+  useEffect(() => {
+    if (!sessionId || !accessToken) return;
+
+    const fetchSessionTitle = async () => {
+      try {
+        const response = await api.get("/chatbot/sessions");
+        const sessions = response.data?.data;
+        const current = Array.isArray(sessions)
+          ? sessions.find(
+              (session: any) => String(session.id) === String(sessionId),
+            )
+          : null;
+        if (current?.title) {
+          setSessionTitle(String(current.title));
+        }
+      } catch {
+        // Title is cosmetic; keep the default if session list cannot load.
+      }
+    };
+
+    void fetchSessionTitle();
+  }, [sessionId, accessToken]);
+
   // Tạo transport dùng DefaultChatTransport
   const transport = useMemo(
     () =>
@@ -240,50 +287,49 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
     [sessionId, pageContext, coords],
   );
 
-  const {
-    messages,
-    sendMessage,
-    setMessages,
-    status,
-  } = useChat<ChatbotUIMessage>({
-    transport,
-    messageMetadataSchema: chatbotMessageMetaSchema,
-    messages: [
-      {
-        id: "welcome",
-        role: "assistant",
-        parts: [
-          {
-            type: "text",
-            text: "Xin chào, tôi là Customer AI Assistant. Tôi có thể tìm dịch vụ, so sánh lựa chọn, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
-          },
-        ],
-      } as ChatbotUIMessage,
-    ],
-    onFinish: ({ message }) => {
-      if (message.metadata?.sessionId) {
-        setSessionId(message.metadata.sessionId);
-      }
-    },
-    onError: (err) => {
-      console.error("[ChatWidget] useChat error:", err);
-    },
-  });
+  const { messages, sendMessage, setMessages, status } =
+    useChat<ChatbotUIMessage>({
+      transport,
+      messageMetadataSchema: chatbotMessageMetaSchema,
+      messages: [
+        {
+          id: "welcome",
+          role: "assistant",
+          parts: [
+            {
+              type: "text",
+              text: "Xin chào, tôi là Customer AI Assistant. Tôi có thể tìm dịch vụ, so sánh lựa chọn, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
+            },
+          ],
+        } as ChatbotUIMessage,
+      ],
+      onFinish: ({ message }) => {
+        if (message.metadata?.sessionId) {
+          setSessionId(message.metadata.sessionId);
+        }
+      },
+      onError: (err) => {
+        console.error("[ChatWidget] useChat error:", err);
+      },
+    });
 
   const isLoading = status === "streaming" || status === "submitted";
 
   // Khôi phục lịch sử chat từ API khi có sessionId và accessToken
   useEffect(() => {
-    if (!sessionId || !accessToken || messages.length > 1 || historyLoading) return;
+    if (!sessionId || !accessToken || messages.length > 1 || historyLoading)
+      return;
 
     const fetchHistory = async () => {
       setHistoryLoading(true);
       try {
-        const response = await api.get(`/chatbot/history?sessionId=${sessionId}`);
+        const response = await api.get(
+          `/chatbot/history?sessionId=${sessionId}`,
+        );
         const historyData = response.data?.data;
         if (Array.isArray(historyData) && historyData.length > 0) {
           setMessages(historyData);
-          
+
           // Hydrate metaMap
           const newMetaMap: Record<string, ChatbotMessageMeta> = {};
           historyData.forEach((msg: any) => {
@@ -302,7 +348,6 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
 
     fetchHistory();
   }, [sessionId, accessToken, setMessages, messages.length]);
-
 
   // Auto-scroll
   useEffect(() => {
@@ -334,6 +379,26 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
     if (!trimmed || isLoading) return;
     setInput("");
     sendMessage({ text: trimmed });
+  };
+
+  const startEditingTitle = () => {
+    setTitleInput(sessionTitle);
+    setEditingTitle(true);
+  };
+
+  const saveSessionTitle = async () => {
+    const nextTitle = titleInput.trim().slice(0, 120);
+    if (!sessionId || !nextTitle) return;
+    setTitleSaving(true);
+    try {
+      await chatbotApi.updateSessionTitle(sessionId, nextTitle);
+      setSessionTitle(nextTitle);
+      setEditingTitle(false);
+    } catch (err) {
+      console.error("Failed to update chatbot session title:", err);
+    } finally {
+      setTitleSaving(false);
+    }
   };
 
   const confirmAction = async (action: AssistantAction) => {
@@ -375,11 +440,19 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
         data.action.href
       ) {
         if (data.action.type === "OPEN_PROVIDER_CHAT") {
-          if (!data.action.href.startsWith("/chat") || !data.action.href.includes("conversationId=")) {
-            throw new Error("Thông tin cuộc trò chuyện không hợp lệ hoặc thiếu conversationId.");
+          if (
+            !data.action.href.startsWith("/chat") ||
+            !data.action.href.includes("conversationId=")
+          ) {
+            throw new Error(
+              "Thông tin cuộc trò chuyện không hợp lệ hoặc thiếu conversationId.",
+            );
           }
         }
-        if (data.action.href.startsWith("/chat") || data.action.href.startsWith("/bookings")) {
+        if (
+          data.action.href.startsWith("/chat") ||
+          data.action.href.startsWith("/bookings")
+        ) {
           setIsOpen(false);
           router.push(data.action.href);
           return;
@@ -406,13 +479,14 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
         {
           id: msgId,
           role: "assistant",
-          parts: [
-            { type: "text", text: data?.reply || "Đã xử lý thao tác." },
-          ],
+          parts: [{ type: "text", text: data?.reply || "Đã xử lý thao tác." }],
         } as ChatbotUIMessage,
       ]);
     } catch (err: any) {
-      const errMsg = err?.response?.data?.message || err?.message || "Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.";
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.";
       setMessages((prev) => [
         ...prev,
         {
@@ -454,9 +528,51 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                   <Bot className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="truncate text-sm font-semibold text-slate-950">
-                    Customer AI Assistant
-                  </h3>
+                  {editingTitle ? (
+                    <div className="flex min-w-0 items-center gap-1">
+                      <input
+                        value={titleInput}
+                        onChange={(event) =>
+                          setTitleInput(event.target.value.slice(0, 120))
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") void saveSessionTitle();
+                          if (event.key === "Escape") setEditingTitle(false);
+                        }}
+                        autoFocus
+                        className="h-7 min-w-0 rounded-md border border-slate-200 px-2 text-sm font-semibold text-slate-950 outline-none focus:border-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={saveSessionTitle}
+                        disabled={titleSaving || !titleInput.trim()}
+                        aria-label="Lưu tên phiên chat"
+                        className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+                      >
+                        {titleSaving ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Check className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex min-w-0 items-center gap-1">
+                      <h3 className="truncate text-sm font-semibold text-slate-950">
+                        {sessionTitle}
+                      </h3>
+                      {sessionId && accessToken && (
+                        <button
+                          type="button"
+                          onClick={startEditingTitle}
+                          aria-label="Đổi tên phiên chat"
+                          className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                     {isLoading
@@ -487,7 +603,11 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                 disabled={isLocating}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50 shrink-0"
               >
-                {isLocating ? <Loader2 className="h-3 w-3 animate-spin" /> : "📍 Chia sẻ"}
+                {isLocating ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  "📍 Chia sẻ"
+                )}
               </button>
             </div>
           ) : (
@@ -502,7 +622,10 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
             </div>
           )}
 
-          <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4" aria-live="polite">
+          <div
+            className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4"
+            aria-live="polite"
+          >
             {historyLoading && (
               <div className="flex items-center justify-center gap-2 py-4 text-xs text-slate-500 font-medium">
                 <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
@@ -545,7 +668,9 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                         {meta.services.map((service) => (
                           <div
                             key={service.id}
-                            onClick={() => router.push(`/services/${service.id}`)}
+                            onClick={() =>
+                              router.push(`/services/${service.id}`)
+                            }
                             className="group block cursor-pointer rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-[border-color,box-shadow] hover:border-blue-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                           >
                             <div className="flex gap-3">
@@ -569,7 +694,9 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                                   <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-600" />
                                 </div>
                                 <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
-                                  <span className="truncate max-w-[120px]">{service.categoryName}</span>
+                                  <span className="truncate max-w-[120px]">
+                                    {service.categoryName}
+                                  </span>
                                   <span>·</span>
                                   <Link
                                     href={`/providers/${service.providerId}`}
@@ -583,13 +710,15 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                                   {service.distanceKm !== undefined && (
                                     <>
                                       <span>·</span>
-                                      <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium border shrink-0 ${
-                                        service.distanceKm < 3
-                                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                          : service.distanceKm <= 8
-                                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                                          : "bg-slate-100 text-slate-600 border-slate-200"
-                                      }`}>
+                                      <span
+                                        className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium border shrink-0 ${
+                                          service.distanceKm < 3
+                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                            : service.distanceKm <= 8
+                                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                                              : "bg-slate-100 text-slate-600 border-slate-200"
+                                        }`}
+                                      >
                                         {service.distanceKm.toFixed(1)} km
                                       </span>
                                     </>
@@ -624,42 +753,58 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                         <div className="flex items-start gap-2">
                           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
                           <div className="min-w-0">
-                            <p className="font-semibold">
-                              {meta.action.label}
-                            </p>
+                            <p className="font-semibold">{meta.action.label}</p>
                             <p className="mt-1 text-xs leading-relaxed text-blue-800">
                               {meta.action.summary}
                             </p>
                           </div>
                         </div>
-                        {meta.action.type === "CREATE_BOOKING_DRAFT" && !(meta.action.payload as any)?.draft?.desiredTime && (
-                          <div className="mt-3 space-y-1 rounded-lg border border-blue-100 bg-white p-2 shadow-sm">
-                            <label className="block text-[11px] font-medium text-slate-600">
-                              📅 Chọn thời gian mong muốn đặt lịch:
-                            </label>
-                            <input
-                              type="datetime-local"
-                              min={(() => {
-                                const localDate = new Date(Date.now() + 2 * 60 * 60 * 1000);
-                                const tzOffset = localDate.getTimezoneOffset() * 60000;
-                                const localISOTime = new Date(localDate.getTime() - tzOffset).toISOString().slice(0, 16);
-                                return localISOTime;
-                              })()}
-                              className="w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  const dateObj = new Date(e.target.value);
-                                  const day = String(dateObj.getDate()).padStart(2, "0");
-                                  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-                                  const year = dateObj.getFullYear();
-                                  const hours = String(dateObj.getHours()).padStart(2, "0");
-                                  const minutes = String(dateObj.getMinutes()).padStart(2, "0");
-                                  handleSendMessage(`Tôi muốn đặt vào ngày ${day}/${month}/${year} lúc ${hours}:${minutes}`);
-                                }
-                              }}
-                            />
-                          </div>
-                        )}
+                        {meta.action.type === "CREATE_BOOKING_DRAFT" &&
+                          !(meta.action.payload as any)?.draft?.desiredTime && (
+                            <div className="mt-3 space-y-1 rounded-lg border border-blue-100 bg-white p-2 shadow-sm">
+                              <label className="block text-[11px] font-medium text-slate-600">
+                                📅 Chọn thời gian mong muốn đặt lịch:
+                              </label>
+                              <input
+                                type="datetime-local"
+                                min={(() => {
+                                  const localDate = new Date(
+                                    Date.now() + 2 * 60 * 60 * 1000,
+                                  );
+                                  const tzOffset =
+                                    localDate.getTimezoneOffset() * 60000;
+                                  const localISOTime = new Date(
+                                    localDate.getTime() - tzOffset,
+                                  )
+                                    .toISOString()
+                                    .slice(0, 16);
+                                  return localISOTime;
+                                })()}
+                                className="w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    const dateObj = new Date(e.target.value);
+                                    const day = String(
+                                      dateObj.getDate(),
+                                    ).padStart(2, "0");
+                                    const month = String(
+                                      dateObj.getMonth() + 1,
+                                    ).padStart(2, "0");
+                                    const year = dateObj.getFullYear();
+                                    const hours = String(
+                                      dateObj.getHours(),
+                                    ).padStart(2, "0");
+                                    const minutes = String(
+                                      dateObj.getMinutes(),
+                                    ).padStart(2, "0");
+                                    handleSendMessage(
+                                      `Tôi muốn đặt vào ngày ${day}/${month}/${year} lúc ${hours}:${minutes}`,
+                                    );
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
                         <div className="mt-3 flex flex-wrap gap-2">
                           {!accessToken ? (
                             <Link

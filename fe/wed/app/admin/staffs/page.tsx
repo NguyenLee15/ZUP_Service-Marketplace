@@ -1,85 +1,102 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-  Plus, Edit2, Trash2, X, Mail, Phone, Shield, Search, Loader2,
-  Lock, Unlock, Settings2, CheckCircle2, ShieldCheck, Gavel,
-  Wallet, FolderTree, Eye, FileCheck, Bot, ListChecks, Banknote, Percent
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-import { adminApi } from '@/features/auth/services/api';
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  Mail,
+  Phone,
+  Shield,
+  Search,
+  Loader2,
+  Lock,
+  Settings2,
+  ShieldCheck,
+  Gavel,
+  Wallet,
+  FolderTree,
+  ListChecks,
+  Percent,
+  Users,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { adminApi } from "@/features/auth/services/api";
 
-// --- Permission modules definition ---
-const PERMISSION_MODULES = [
-  {
-    key: 'kyc',
-    label: 'Module KYC',
-    icon: ShieldCheck,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    permissions: [
-      { key: 'kyc_view', label: 'Xem danh sách' },
-      { key: 'kyc_approve', label: 'Duyệt hồ sơ' },
-      { key: 'kyc_reject', label: 'Từ chối hồ sơ' },
-    ],
+type AdminPermissionItem = {
+  value: string;
+  label: string;
+  description?: string;
+  group?: string;
+};
+
+type AdminPermissionGroup = {
+  group: string;
+  permissions: AdminPermissionItem[];
+};
+
+const permissionVisuals: Record<
+  string,
+  { icon: React.ElementType; color: string; bgColor: string }
+> = {
+  "Người dùng": { icon: Users, color: "text-sky-600", bgColor: "bg-sky-50" },
+  "Nhân viên": {
+    icon: Shield,
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
   },
-  {
-    key: 'dispute',
-    label: 'Module Tranh chấp',
-    icon: Gavel,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    permissions: [
-      { key: 'dispute_view', label: 'Xem khiếu nại' },
-      { key: 'dispute_resolve', label: 'Xử lý phán quyết' },
-      { key: 'dispute_ai', label: 'Sử dụng trợ lý AI' },
-    ],
+  KYC: { icon: ShieldCheck, color: "text-blue-600", bgColor: "bg-blue-50" },
+  "Đơn hàng": {
+    icon: ListChecks,
+    color: "text-indigo-600",
+    bgColor: "bg-indigo-50",
   },
-  {
-    key: 'service',
-    label: 'Dịch vụ & Danh mục',
+  "Khiếu nại": { icon: Gavel, color: "text-rose-600", bgColor: "bg-rose-50" },
+  "Dịch vụ": {
     icon: FolderTree,
-    color: 'text-emerald-600',
-    bgColor: 'bg-emerald-50',
-    permissions: [
-      { key: 'service_manage', label: 'Quản lý dịch vụ' },
-      { key: 'category_manage', label: 'Quản lý danh mục' },
-      { key: 'provider_approve', label: 'Duyệt thợ mới' },
-    ],
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
   },
-  {
-    key: 'finance',
-    label: 'Module Tài chính',
-    icon: Wallet,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-50',
-    permissions: [
-      { key: 'finance_revenue', label: 'Xem doanh thu' },
-      { key: 'finance_wallet', label: 'Đối soát ví' },
-      { key: 'finance_commission', label: 'Cấu hình hoa hồng' },
-    ],
+  Ví: { icon: Wallet, color: "text-amber-600", bgColor: "bg-amber-50" },
+  "Tài chính": {
+    icon: Percent,
+    color: "text-orange-600",
+    bgColor: "bg-orange-50",
   },
-];
+  "Cài đặt & Audit": {
+    icon: Settings2,
+    color: "text-slate-600",
+    bgColor: "bg-slate-100",
+  },
+};
+
+function unwrapPermissionGroups(payload: any): AdminPermissionGroup[] {
+  const data = payload?.data;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
 
 export default function StaffsPage() {
   const { toast } = useToast();
   const [staffs, setStaffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [keyword, setKeyword] = useState('');
+  const [keyword, setKeyword] = useState("");
   const [meta, setMeta] = useState<any>({});
 
   // Create/Edit Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<any>(null);
   const [formLoading, setFormLoading] = useState(false);
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formPassword, setFormPassword] = useState('');
+  const [formName, setFormName] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [formPassword, setFormPassword] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Permission Modal
@@ -87,26 +104,33 @@ export default function StaffsPage() {
   const [permStaff, setPermStaff] = useState<any>(null);
   const [permState, setPermState] = useState<Record<string, boolean>>({});
   const [permSaving, setPermSaving] = useState(false);
+  const [permissionGroups, setPermissionGroups] = useState<
+    AdminPermissionGroup[]
+  >([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(true);
+  const [permissionsError, setPermissionsError] = useState("");
 
   const validateField = (name: string, value: string) => {
     const newErrors = { ...formErrors };
-    if (name === 'fullName') {
-      if (!value) newErrors.fullName = 'Họ tên không được để trống';
-      else if (value.length < 2) newErrors.fullName = 'Họ tên quá ngắn';
+    if (name === "fullName") {
+      if (!value) newErrors.fullName = "Họ tên không được để trống";
+      else if (value.length < 2) newErrors.fullName = "Họ tên quá ngắn";
       else delete newErrors.fullName;
     }
-    if (name === 'email' && !editingStaff) {
-      if (!value) newErrors.email = 'Email không được để trống';
-      else if (!/\S+@\S+\.\S+/.test(value)) newErrors.email = 'Email không hợp lệ';
+    if (name === "email" && !editingStaff) {
+      if (!value) newErrors.email = "Email không được để trống";
+      else if (!/\S+@\S+\.\S+/.test(value))
+        newErrors.email = "Email không hợp lệ";
       else delete newErrors.email;
     }
-    if (name === 'phone') {
-      if (value && !/^0\d{9}$/.test(value)) newErrors.phone = 'SĐT không hợp lệ (10 số, bắt đầu bằng 0)';
+    if (name === "phone") {
+      if (value && !/^0\d{9}$/.test(value))
+        newErrors.phone = "SĐT không hợp lệ (10 số, bắt đầu bằng 0)";
       else delete newErrors.phone;
     }
-    if (name === 'password' && !editingStaff) {
-      if (!value) newErrors.password = 'Mật khẩu không được để trống';
-      else if (value.length < 6) newErrors.password = 'Ít nhất 6 ký tự';
+    if (name === "password" && !editingStaff) {
+      if (!value) newErrors.password = "Mật khẩu không được để trống";
+      else if (value.length < 6) newErrors.password = "Ít nhất 6 ký tự";
       else delete newErrors.password;
     }
     setFormErrors(newErrors);
@@ -119,40 +143,89 @@ export default function StaffsPage() {
       setStaffs(res.data.data || []);
       setMeta(res.data.meta || {});
     } catch {
-      toast({ title: 'Lỗi', description: 'Không thể tải danh sách nhân viên', variant: 'destructive' });
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách nhân viên",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchStaffs(); }, []);
+  const fetchPermissionGroups = async () => {
+    setPermissionsLoading(true);
+    setPermissionsError("");
+    try {
+      const res = await adminApi.getPermissions();
+      const groups = unwrapPermissionGroups(res.data);
+      if (!groups.length) {
+        throw new Error("BE không trả về permission matrix");
+      }
+      setPermissionGroups(groups);
+    } catch (err: any) {
+      const message =
+        err.response?.data?.error?.message ||
+        err.message ||
+        "Không thể tải danh sách quyền";
+      setPermissionsError(message);
+      setPermissionGroups([]);
+    } finally {
+      setPermissionsLoading(false);
+    }
+  };
 
-  const handleSearch = () => { fetchStaffs(keyword); };
+  useEffect(() => {
+    fetchStaffs();
+    fetchPermissionGroups();
+  }, []);
+
+  const handleSearch = () => {
+    fetchStaffs(keyword);
+  };
 
   const openCreateModal = () => {
     setEditingStaff(null);
-    setFormName(''); setFormEmail(''); setFormPhone(''); setFormPassword('');
+    setFormName("");
+    setFormEmail("");
+    setFormPhone("");
+    setFormPassword("");
     setFormErrors({});
     setIsModalOpen(true);
   };
 
   const openEditModal = (staff: any) => {
     setEditingStaff(staff);
-    setFormName(staff.fullName || '');
-    setFormEmail(staff.email || '');
-    setFormPhone(staff.phone || '');
-    setFormPassword('');
+    setFormName(staff.fullName || "");
+    setFormEmail(staff.email || "");
+    setFormPhone(staff.phone || "");
+    setFormPassword("");
     setFormErrors({});
     setIsModalOpen(true);
   };
 
   const openPermModal = (staff: any) => {
+    if (permissionsLoading) {
+      toast({
+        title: "Đang tải danh sách quyền",
+        description: "Vui lòng thử lại sau vài giây.",
+      });
+      return;
+    }
+    if (permissionsError || permissionGroups.length === 0) {
+      toast({
+        title: "Không thể mở phân quyền",
+        description: permissionsError || "Danh sách quyền đang trống.",
+        variant: "destructive",
+      });
+      return;
+    }
     setPermStaff(staff);
     // Initialize permissions from staff.permissions or empty
     const initial: Record<string, boolean> = {};
-    PERMISSION_MODULES.forEach(mod => {
-      mod.permissions.forEach(p => {
-        initial[p.key] = staff.permissions?.includes(p.key) || false;
+    permissionGroups.forEach((mod) => {
+      mod.permissions.forEach((p) => {
+        initial[p.value] = staff.permissions?.includes(p.value) || false;
       });
     });
     setPermState(initial);
@@ -168,7 +241,7 @@ export default function StaffsPage() {
           fullName: formName,
           phone: formPhone,
         });
-        toast({ title: 'Đã cập nhật nhân viên' });
+        toast({ title: "Đã cập nhật nhân viên" });
       } else {
         await adminApi.createStaff({
           fullName: formName,
@@ -176,40 +249,54 @@ export default function StaffsPage() {
           phone: formPhone,
           password: formPassword,
         });
-        toast({ title: 'Đã thêm nhân viên mới' });
+        toast({ title: "Đã thêm nhân viên mới" });
       }
       setIsModalOpen(false);
       fetchStaffs(keyword);
     } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.message || err.message, variant: 'destructive' });
+      toast({
+        title: "Lỗi",
+        description: err.response?.data?.message || err.message,
+        variant: "destructive",
+      });
     } finally {
       setFormLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Bạn chắc chắn muốn xóa nhân viên này?')) return;
+    if (!confirm("Bạn chắc chắn muốn xóa nhân viên này?")) return;
     try {
       await adminApi.deleteStaff(id);
-      toast({ title: 'Đã xóa nhân viên' });
+      toast({ title: "Đã xóa nhân viên" });
       fetchStaffs(keyword);
     } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.message || err.message, variant: 'destructive' });
+      toast({
+        title: "Lỗi",
+        description: err.response?.data?.message || err.message,
+        variant: "destructive",
+      });
     }
   };
 
   const handleToggleStatus = async (staff: any) => {
     try {
-      if (staff.status === 'ACTIVE') {
-        await adminApi.lockUser(staff.id, { reason: 'Khóa tài khoản nhân viên bởi quản trị viên' });
-        toast({ title: 'Đã khóa tài khoản nhân viên' });
+      if (staff.status === "ACTIVE") {
+        await adminApi.lockUser(staff.id, {
+          reason: "Khóa tài khoản nhân viên bởi quản trị viên",
+        });
+        toast({ title: "Đã khóa tài khoản nhân viên" });
       } else {
         await adminApi.unlockUser(staff.id);
-        toast({ title: 'Đã mở khóa tài khoản' });
+        toast({ title: "Đã mở khóa tài khoản" });
       }
       fetchStaffs(keyword);
     } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.message, variant: 'destructive' });
+      toast({
+        title: "Lỗi",
+        description: err.response?.data?.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -220,20 +307,30 @@ export default function StaffsPage() {
       const enabledPermissions = Object.entries(permState)
         .filter(([, v]) => v)
         .map(([k]) => k);
-      
-      await adminApi.updateStaff(permStaff.id, { permissions: enabledPermissions });
-      toast({ title: '✅ Đã cập nhật phân quyền thành công!' });
+
+      await adminApi.updateStaff(permStaff.id, {
+        permissions: enabledPermissions,
+      });
+      toast({ title: "✅ Đã cập nhật phân quyền thành công!" });
       setPermModalOpen(false);
       fetchStaffs(keyword);
     } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.message || err.message, variant: 'destructive' });
+      toast({
+        title: "Lỗi",
+        description: err.response?.data?.message || err.message,
+        variant: "destructive",
+      });
     } finally {
       setPermSaving(false);
     }
   };
 
-  const countActivePerms = () => Object.values(permState).filter(Boolean).length;
-  const totalPerms = PERMISSION_MODULES.reduce((acc, m) => acc + m.permissions.length, 0);
+  const countActivePerms = () =>
+    Object.values(permState).filter(Boolean).length;
+  const totalPerms = permissionGroups.reduce(
+    (acc, m) => acc + m.permissions.length,
+    0,
+  );
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-6 pb-10">
@@ -244,7 +341,8 @@ export default function StaffsPage() {
             Quản Lý Nhân Viên
           </h3>
           <p className="mt-1 text-sm text-slate-500">
-            {meta.total || staffs.length} nhân viên trong hệ thống • Phân quyền module chi tiết
+            {meta.total || staffs.length} nhân viên trong hệ thống • Phân quyền
+            module chi tiết
           </p>
         </div>
         <Button
@@ -264,11 +362,15 @@ export default function StaffsPage() {
             placeholder="Tìm theo tên hoặc email..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="pl-10 h-10 rounded-xl border-slate-200 focus:border-slate-400 bg-white"
           />
         </div>
-        <Button onClick={handleSearch} variant="outline" className="rounded-xl border-slate-200 h-10 px-4">
+        <Button
+          onClick={handleSearch}
+          variant="outline"
+          className="rounded-xl border-slate-200 h-10 px-4"
+        >
           <Search className="w-4 h-4" />
         </Button>
       </div>
@@ -283,8 +385,12 @@ export default function StaffsPage() {
           ) : staffs.length === 0 ? (
             <div className="text-center py-16">
               <Shield className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-              <p className="font-semibold text-slate-600 text-sm">Chưa có nhân viên nào</p>
-              <p className="text-xs text-slate-400 mt-1">Nhấn "Thêm nhân viên" để bắt đầu</p>
+              <p className="font-semibold text-slate-600 text-sm">
+                Chưa có nhân viên nào
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Nhấn "Thêm nhân viên" để bắt đầu
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -304,35 +410,52 @@ export default function StaffsPage() {
                   {staffs.map((staff, idx) => (
                     <tr
                       key={staff.id}
-                      className={`group hover:bg-slate-50/80 transition-colors ${staff.status === 'LOCKED' ? 'opacity-60' : ''}`}
+                      className={`group hover:bg-slate-50/80 transition-colors ${staff.status === "LOCKED" ? "opacity-60" : ""}`}
                     >
-                      <td className="py-3 px-4 text-slate-400 font-mono text-xs">{idx + 1}</td>
+                      <td className="py-3 px-4 text-slate-400 font-mono text-xs">
+                        {idx + 1}
+                      </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="relative">
                             <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-sm overflow-hidden border border-slate-200">
-                              {staff.avatarUrl
-                                ? <img src={staff.avatarUrl} alt={`Ảnh đại diện của nhân viên ${staff.fullName}`} className="w-full h-full object-cover" />
-                                : staff.fullName?.charAt(0)?.toUpperCase()
-                              }
+                              {staff.avatarUrl ? (
+                                <img
+                                  src={staff.avatarUrl}
+                                  alt={`Ảnh đại diện của nhân viên ${staff.fullName}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                staff.fullName?.charAt(0)?.toUpperCase()
+                              )}
                             </div>
-                            <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
-                              staff.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-slate-300'
-                            }`} />
+                            <div
+                              className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                                staff.status === "ACTIVE"
+                                  ? "bg-emerald-400"
+                                  : "bg-slate-300"
+                              }`}
+                            />
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-800 text-sm">{staff.fullName}</p>
-                            <p className="text-[11px] text-slate-400 font-mono">ID: {staff.id}</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {staff.fullName}
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-mono">
+                              ID: {staff.id}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <Badge className={`border-0 text-[10px] font-bold ${
-                          staff.role === 'ADMIN'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {staff.role === 'ADMIN' ? 'Admin' : 'Nhân viên'}
+                        <Badge
+                          className={`border-0 text-[10px] font-bold ${
+                            staff.role === "ADMIN"
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {staff.role === "ADMIN" ? "Admin" : "Nhân viên"}
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
@@ -343,22 +466,28 @@ export default function StaffsPage() {
                           </p>
                           <p className="text-xs text-slate-400 flex items-center gap-1.5">
                             <Phone className="w-3 h-3" />
-                            {staff.phone || '—'}
+                            {staff.phone || "—"}
                           </p>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => staff.role !== 'ADMIN' && handleToggleStatus(staff)}
-                          className={staff.role === 'ADMIN' ? '' : 'cursor-pointer'}
-                          disabled={staff.role === 'ADMIN'}
+                          onClick={() =>
+                            staff.role !== "ADMIN" && handleToggleStatus(staff)
+                          }
+                          className={
+                            staff.role === "ADMIN" ? "" : "cursor-pointer"
+                          }
+                          disabled={staff.role === "ADMIN"}
                         >
-                          <Badge className={`border-0 text-[10px] font-bold ${
-                            staff.status === 'ACTIVE'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {staff.status === 'ACTIVE' ? (
+                          <Badge
+                            className={`border-0 text-[10px] font-bold ${
+                              staff.status === "ACTIVE"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {staff.status === "ACTIVE" ? (
                               <span className="flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                 Hoạt động
@@ -373,7 +502,7 @@ export default function StaffsPage() {
                         </button>
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-400">
-                        {new Date(staff.createdAt).toLocaleDateString('vi-VN')}
+                        {new Date(staff.createdAt).toLocaleDateString("vi-VN")}
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -384,12 +513,16 @@ export default function StaffsPage() {
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          {staff.role !== 'ADMIN' && (
+                          {staff.role !== "ADMIN" && (
                             <>
                               <button
                                 onClick={() => openPermModal(staff)}
+                                disabled={
+                                  permissionsLoading ||
+                                  Boolean(permissionsError)
+                                }
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
-                                title="Phân quyền"
+                                title={permissionsError || "Phân quyền"}
                               >
                                 <Settings2 className="w-3.5 h-3.5" />
                               </button>
@@ -420,10 +553,12 @@ export default function StaffsPage() {
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-slate-800">
-                  {editingStaff ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+                  {editingStaff ? "Chỉnh sửa nhân viên" : "Thêm nhân viên mới"}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  {editingStaff ? `ID: ${editingStaff.id}` : 'Nhân viên mới sẽ có vai trò STAFF'}
+                  {editingStaff
+                    ? `ID: ${editingStaff.id}`
+                    : "Nhân viên mới sẽ có vai trò STAFF"}
                 </p>
               </div>
               <button
@@ -436,52 +571,93 @@ export default function StaffsPage() {
 
             <form onSubmit={handleSubmitForm} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">Họ Tên *</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  Họ Tên *
+                </label>
                 <Input
                   value={formName}
-                  onChange={(e) => { setFormName(e.target.value); validateField('fullName', e.target.value); }}
+                  onChange={(e) => {
+                    setFormName(e.target.value);
+                    validateField("fullName", e.target.value);
+                  }}
                   placeholder="Nguyễn Văn A"
-                  className={`rounded-xl h-10 ${formErrors.fullName ? 'border-red-400' : 'border-slate-200'}`}
+                  className={`rounded-xl h-10 ${formErrors.fullName ? "border-red-400" : "border-slate-200"}`}
                 />
-                {formErrors.fullName && <p className="text-red-500 text-[10px] mt-1">{formErrors.fullName}</p>}
+                {formErrors.fullName && (
+                  <p className="text-red-500 text-[10px] mt-1">
+                    {formErrors.fullName}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">Email *</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  Email *
+                </label>
                 <Input
                   value={formEmail}
-                  onChange={(e) => { setFormEmail(e.target.value); validateField('email', e.target.value); }}
+                  onChange={(e) => {
+                    setFormEmail(e.target.value);
+                    validateField("email", e.target.value);
+                  }}
                   placeholder="email@zup.vn"
                   type="email"
                   disabled={!!editingStaff}
-                  className={`rounded-xl h-10 ${formErrors.email ? 'border-red-400' : 'border-slate-200'}`}
+                  className={`rounded-xl h-10 ${formErrors.email ? "border-red-400" : "border-slate-200"}`}
                 />
-                {formErrors.email && <p className="text-red-500 text-[10px] mt-1">{formErrors.email}</p>}
+                {formErrors.email && (
+                  <p className="text-red-500 text-[10px] mt-1">
+                    {formErrors.email}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">Số Điện Thoại</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  Số Điện Thoại
+                </label>
                 <Input
                   value={formPhone}
-                  onChange={(e) => { setFormPhone(e.target.value); validateField('phone', e.target.value); }}
+                  onChange={(e) => {
+                    setFormPhone(e.target.value);
+                    validateField("phone", e.target.value);
+                  }}
                   placeholder="09xxxxxxxx"
-                  className={`rounded-xl h-10 ${formErrors.phone ? 'border-red-400' : 'border-slate-200'}`}
+                  className={`rounded-xl h-10 ${formErrors.phone ? "border-red-400" : "border-slate-200"}`}
                 />
-                {formErrors.phone && <p className="text-red-500 text-[10px] mt-1">{formErrors.phone}</p>}
+                {formErrors.phone && (
+                  <p className="text-red-500 text-[10px] mt-1">
+                    {formErrors.phone}
+                  </p>
+                )}
               </div>
               {!editingStaff && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Mật khẩu *</label>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                    Mật khẩu *
+                  </label>
                   <Input
                     value={formPassword}
-                    onChange={(e) => { setFormPassword(e.target.value); validateField('password', e.target.value); }}
+                    onChange={(e) => {
+                      setFormPassword(e.target.value);
+                      validateField("password", e.target.value);
+                    }}
                     placeholder="Mật khẩu ban đầu"
                     type="password"
-                    className={`rounded-xl h-10 ${formErrors.password ? 'border-red-400' : 'border-slate-200'}`}
+                    className={`rounded-xl h-10 ${formErrors.password ? "border-red-400" : "border-slate-200"}`}
                   />
-                  {formErrors.password && <p className="text-red-500 text-[10px] mt-1">{formErrors.password}</p>}
+                  {formErrors.password && (
+                    <p className="text-red-500 text-[10px] mt-1">
+                      {formErrors.password}
+                    </p>
+                  )}
                 </div>
               )}
               <div className="flex gap-3 justify-end pt-4 border-t border-slate-100">
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-xl"
+                >
                   Hủy
                 </Button>
                 <Button
@@ -489,8 +665,10 @@ export default function StaffsPage() {
                   disabled={formLoading || Object.keys(formErrors).length > 0}
                   className="rounded-xl bg-slate-900 hover:bg-slate-800"
                 >
-                  {formLoading && <Loader2 className="w-4 h-4 animate-spin mr-1.5" />}
-                  {editingStaff ? 'Cập nhật' : 'Thêm nhân viên'}
+                  {formLoading && (
+                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                  )}
+                  {editingStaff ? "Cập nhật" : "Thêm nhân viên"}
                 </Button>
               </div>
             </form>
@@ -510,7 +688,10 @@ export default function StaffsPage() {
                   Phân quyền chi tiết
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Cấp quyền truy cập module cho <strong className="text-slate-600">{permStaff.fullName}</strong>
+                  Cấp quyền truy cập module cho{" "}
+                  <strong className="text-slate-600">
+                    {permStaff.fullName}
+                  </strong>
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -529,42 +710,62 @@ export default function StaffsPage() {
             {/* Content */}
             <div className="p-6 max-h-[65vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {PERMISSION_MODULES.map((mod) => {
-                  const Icon = mod.icon;
-                  const moduleActive = mod.permissions.some(p => permState[p.key]);
+                {permissionGroups.map((mod) => {
+                  const visuals = permissionVisuals[mod.group] || {
+                    icon: Shield,
+                    color: "text-slate-600",
+                    bgColor: "bg-slate-100",
+                  };
+                  const Icon = visuals.icon;
+                  const moduleActive = mod.permissions.some(
+                    (p) => permState[p.value],
+                  );
 
                   return (
                     <div
-                      key={mod.key}
+                      key={mod.group}
                       className={`rounded-xl border p-5 transition-all ${
                         moduleActive
-                          ? 'border-slate-300 bg-white shadow-sm'
-                          : 'border-slate-200 bg-slate-50/50'
+                          ? "border-slate-300 bg-white shadow-sm"
+                          : "border-slate-200 bg-slate-50/50"
                       }`}
                     >
                       <div className="flex items-center gap-3 mb-4">
-                        <div className={`w-8 h-8 rounded-lg ${mod.bgColor} flex items-center justify-center`}>
-                          <Icon className={`w-4 h-4 ${mod.color}`} />
+                        <div
+                          className={`w-8 h-8 rounded-lg ${visuals.bgColor} flex items-center justify-center`}
+                        >
+                          <Icon className={`w-4 h-4 ${visuals.color}`} />
                         </div>
-                        <h4 className="font-bold text-sm text-slate-800">{mod.label}</h4>
+                        <h4 className="font-bold text-sm text-slate-800">
+                          {mod.group}
+                        </h4>
                       </div>
                       <div className="space-y-3">
                         {mod.permissions.map((perm) => (
                           <label
-                            key={perm.key}
-                            className="flex items-center gap-3 cursor-pointer group"
+                            key={perm.value}
+                            className="flex items-start gap-3 cursor-pointer group"
                           >
                             <input
                               type="checkbox"
-                              checked={permState[perm.key] || false}
-                              onChange={(e) => setPermState(prev => ({
-                                ...prev,
-                                [perm.key]: e.target.checked,
-                              }))}
-                              className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                              checked={permState[perm.value] || false}
+                              onChange={(e) =>
+                                setPermState((prev) => ({
+                                  ...prev,
+                                  [perm.value]: e.target.checked,
+                                }))
+                              }
+                              className="mt-0.5 w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                             />
-                            <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
-                              {perm.label}
+                            <span>
+                              <span className="block text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
+                                {perm.label}
+                              </span>
+                              {perm.description && (
+                                <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-400">
+                                  {perm.description}
+                                </span>
+                              )}
                             </span>
                           </label>
                         ))}
@@ -593,7 +794,9 @@ export default function StaffsPage() {
                   disabled={permSaving}
                   className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
                 >
-                  {permSaving && <Loader2 className="w-4 h-4 animate-spin mr-1.5" />}
+                  {permSaving && (
+                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                  )}
                   Lưu phân quyền
                 </Button>
               </div>
