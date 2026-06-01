@@ -8,10 +8,12 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Express } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
+  const configService = app.get(ConfigService);
 
   const expressApp = app.getHttpAdapter().getInstance() as Express;
   expressApp.disable('x-powered-by');
@@ -56,14 +58,15 @@ async function bootstrap() {
     new TransformInterceptor(),
   );
 
-  const allowedOrigins = (
-    process.env.CORS_ORIGINS ||
-    process.env.FRONTEND_URL ||
-    'http://localhost:3000'
-  )
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const allowedOrigins = configService.get<string[]>('app.corsOrigins', []);
+  const corsCredentials = configService.get<boolean>(
+    'app.corsCredentials',
+    true,
+  );
+  const corsAllowedHeaders = configService.get<string[]>(
+    'app.corsAllowedHeaders',
+    ['Content-Type', 'Authorization', 'x-request-id'],
+  );
 
   // CORS — chỉ cho phép các FE origin đã cấu hình
   app.enableCors({
@@ -78,9 +81,9 @@ async function bootstrap() {
 
       callback(new Error('Not allowed by CORS'), false);
     },
-    credentials: true,
+    credentials: corsCredentials,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: corsAllowedHeaders,
   });
 
   // Swagger API Documentation (Chỉ bật ở dev/staging)

@@ -1,4 +1,14 @@
 import { registerAs } from '@nestjs/config';
+import {
+  parseBoolean,
+  parseCorsAllowedHeaders,
+  parseCorsOrigins,
+} from './cors.config';
+
+function parseNumber(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
 function getSecret(name: string, developmentFallback: string) {
   const value = process.env[name];
@@ -12,7 +22,7 @@ function getSecret(name: string, developmentFallback: string) {
 }
 
 export default registerAs('app', () => ({
-  port: parseInt(process.env.PORT || '3001', 10),
+  port: parseNumber(process.env.PORT, 3001),
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: getSecret('JWT_SECRET', 'development-jwt-secret-change-me'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30m',
@@ -22,4 +32,12 @@ export default registerAs('app', () => ({
   ),
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  throttleTtl: parseNumber(process.env.THROTTLE_TTL, 60000),
+  throttleLimit: parseNumber(process.env.THROTTLE_LIMIT, 100),
+  corsOrigins: parseCorsOrigins(
+    process.env.CORS_ORIGINS || process.env.FRONTEND_URL,
+    process.env.NODE_ENV,
+  ),
+  corsCredentials: parseBoolean(process.env.CORS_CREDENTIALS, true),
+  corsAllowedHeaders: parseCorsAllowedHeaders(process.env.CORS_ALLOWED_HEADERS),
 }));

@@ -16,6 +16,7 @@ export interface AuthenticatedUserPayload {
 
 export type AuthenticatedRequest = Omit<Request, 'user'> & {
   user?: AuthenticatedUserPayload | null;
+  requestId?: string;
 };
 
 export interface AuthenticatedSocketData {

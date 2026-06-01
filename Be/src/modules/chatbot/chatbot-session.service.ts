@@ -72,6 +72,25 @@ export class ChatbotSessionService {
     return { message: 'Đã xóa phiên chatbot' };
   }
 
+  async updateSessionTitle(userId: number, sessionId: string, title: string) {
+    const session = await this.prisma.chatbotSession.findFirst({
+      where: { id: sessionId, userId },
+      select: { id: true },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Không tìm thấy phiên trò chuyện');
+    }
+
+    const data = await this.prisma.chatbotSession.update({
+      where: { id: sessionId },
+      data: { title },
+      select: { id: true, title: true, updatedAt: true },
+    });
+
+    return { data, message: 'Đã cập nhật tiêu đề phiên chatbot' };
+  }
+
   async getSessionHistory(
     userId: number,
     sessionId: string,

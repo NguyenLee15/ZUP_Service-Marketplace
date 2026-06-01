@@ -32,6 +32,7 @@ export class AuthController {
    * Đăng ký tài khoản mới (Customer hoặc Provider)
    */
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -41,6 +42,7 @@ export class AuthController {
    * Xác thực OTP 6 chữ số gửi qua email
    */
   @Post('verify-otp')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async verifyOtp(@Body() dto: VerifyOtpDto) {
     return this.authService.verifyOtp(dto);
@@ -62,6 +64,7 @@ export class AuthController {
    * Đăng nhập — trả accessToken + refreshToken
    */
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -72,6 +75,7 @@ export class AuthController {
    * Đăng nhập/Đăng ký bằng Google
    */
   @Post('google')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async googleLogin(@Body() dto: GoogleAuthDto) {
     return this.authService.googleLogin(dto.credential);
@@ -82,6 +86,7 @@ export class AuthController {
    * Làm mới access token bằng refresh token (rotation)
    */
   @Post('refresh')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto.refreshToken);
@@ -114,6 +119,7 @@ export class AuthController {
    * Đặt lại mật khẩu bằng token từ email
    */
   @Post('reset-password')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
@@ -124,6 +130,7 @@ export class AuthController {
    * Đổi mật khẩu (cần đăng nhập)
    */
   @Post('change-password')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async changePassword(

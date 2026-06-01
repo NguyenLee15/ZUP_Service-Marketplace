@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { BookingsService } from './bookings.service';
 import {
   BookingsController,
   ProviderBookingsController,
@@ -56,7 +55,6 @@ import { BookingTimeoutService } from './booking-timeout.service';
     ProviderDashboardController,
   ],
   providers: [
-    BookingsService,
     BookingCommissionService,
     BookingSharedService,
     BookingTimeoutService,
@@ -70,7 +68,6 @@ import { BookingTimeoutService } from './booking-timeout.service';
     ...(isWorkerEnabled() ? [BookingsProcessor, DisputeProcessor] : []),
   ],
   exports: [
-    BookingsService,
     BookingLifecycleService,
     BookingDisputeService,
     BookingQueryService,

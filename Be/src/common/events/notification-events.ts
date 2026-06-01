@@ -1,6 +1,6 @@
 /**
  * Notification event constants and payload types.
- * Shared contract giữa producers (BookingsService, processors...)
+ * Shared contract giữa producers (booking services, processors...)
  * và consumer (NotificationListener).
  */
 export const NOTIFICATION_EVENTS = {

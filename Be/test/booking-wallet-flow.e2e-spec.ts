@@ -10,6 +10,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../src/common/guards/permissions.guard';
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import {
@@ -166,6 +167,8 @@ describe('Booking/wallet production flow (e2e)', () => {
       .overrideGuard(JwtAuthGuard)
       .useClass(TestAuthGuard)
       .overrideGuard(RolesGuard)
+      .useClass(AllowRolesGuard)
+      .overrideGuard(PermissionsGuard)
       .useClass(AllowRolesGuard)
       .compile();
 

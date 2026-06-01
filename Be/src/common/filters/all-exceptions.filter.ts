@@ -9,6 +9,8 @@ import {
 import { Request, Response } from 'express';
 import { ErrorCodes } from '../errors/error-codes';
 
+type RequestWithId = Request & { requestId?: string };
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger('ExceptionFilter');
@@ -16,7 +18,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<RequestWithId>();
 
     let status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
     let code: string = ErrorCodes.INTERNAL_ERROR;
@@ -63,12 +65,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     }
 
+    const errorDetails =
+      request.requestId || details !== undefined
+        ? {
+            ...(details !== undefined && { details }),
+            ...(request.requestId && { requestId: request.requestId }),
+          }
+        : undefined;
+
     response.status(status).json({
       success: false,
       error: {
         code,
         message,
-        ...(details !== undefined && { details }),
+        ...(errorDetails !== undefined && { details: errorDetails }),
       },
     });
   }

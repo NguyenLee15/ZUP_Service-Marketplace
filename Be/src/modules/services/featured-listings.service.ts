@@ -3,12 +3,14 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { RedisService } from '../../shared/redis/redis.service';
-import { ServiceStatus } from '@prisma/client';
+import { FeaturedListingStatus, Prisma, ServiceStatus } from '@prisma/client';
+import { paginationMeta } from '../../common/dto/pagination.dto';
+import { AdminFeaturedListingsQueryDto } from './dto/services.dto';
 
 @Injectable()
 export class FeaturedListingsService {
@@ -77,7 +79,7 @@ export class FeaturedListingsService {
     const existingFeatured = await this.prisma.featuredListing.findFirst({
       where: {
         serviceId,
-        status: 'ACTIVE',
+        status: FeaturedListingStatus.ACTIVE,
         endDate: { gt: new Date() },
       },
     });
@@ -100,6 +102,12 @@ export class FeaturedListingsService {
       throw new NotFoundException({
         code: ErrorCodes.NOT_FOUND,
         message: 'Ví không tồn tại. Vui lòng liên hệ quản trị viên.',
+      });
+    }
+    if (wallet.isRestricted) {
+      throw new ForbiddenException({
+        code: ErrorCodes.FORBIDDEN,
+        message: 'Ví đang bị hạn chế, không thể mua đẩy Top',
       });
     }
     if (Number(wallet.balance) < totalCost) {
@@ -141,7 +149,7 @@ export class FeaturedListingsService {
           endDate,
           dailyRate,
           totalCost,
-          status: 'ACTIVE',
+          status: FeaturedListingStatus.ACTIVE,
         },
         include: {
           service: {
@@ -199,7 +207,7 @@ export class FeaturedListingsService {
 
     const featured = await this.prisma.featuredListing.findMany({
       where: {
-        status: 'ACTIVE',
+        status: FeaturedListingStatus.ACTIVE,
         endDate: { gt: new Date() },
       },
       include: {
@@ -255,17 +263,127 @@ export class FeaturedListingsService {
     return { data: listings };
   }
 
-  /**
-   * Cron: Hết hạn featured listings mỗi giờ
-   */
-  @Cron(CronExpression.EVERY_HOUR)
+  async adminListFeaturedListings(query: AdminFeaturedListingsQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const where: Prisma.FeaturedListingWhereInput = {};
+
+    if (query.status) where.status = query.status;
+    if (query.serviceId) where.serviceId = query.serviceId;
+    if (query.providerId) where.providerId = query.providerId;
+
+    const [data, total] = await Promise.all([
+      this.prisma.featuredListing.findMany({
+        where,
+        include: {
+          service: { select: { id: true, name: true, status: true } },
+          provider: {
+            select: { id: true, fullName: true, email: true, phone: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.featuredListing.count({ where }),
+    ]);
+
+    return { data, meta: paginationMeta(total, page, limit) };
+  }
+
+  async adminCancelFeaturedListing(adminId: number, id: number) {
+    const listing = await this.prisma.featuredListing.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        serviceId: true,
+        status: true,
+        service: { select: { name: true } },
+      },
+    });
+
+    if (!listing) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Featured listing không tồn tại',
+      });
+    }
+    if (listing.status !== FeaturedListingStatus.ACTIVE) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Chỉ có thể hủy featured listing đang hoạt động',
+      });
+    }
+
+    const data = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.featuredListing.update({
+        where: { id },
+        data: { status: FeaturedListingStatus.CANCELLED },
+        include: {
+          service: { select: { id: true, name: true } },
+          provider: { select: { id: true, fullName: true, email: true } },
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'CANCEL_FEATURED_LISTING',
+          targetType: 'FEATURED_LISTING',
+          targetId: id,
+          description: `Hủy đẩy Top dịch vụ #${listing.serviceId} (${listing.service.name})`,
+          ipAddress: 'System',
+        },
+      });
+
+      return updated;
+    });
+
+    await this.clearFeaturedCache();
+    return { data, message: 'Đã hủy đẩy Top dịch vụ' };
+  }
+
+  async getFeaturedDailyRate() {
+    const dailyRate = await this.getDailyRate();
+    return { data: { dailyRate } };
+  }
+
+  async updateFeaturedDailyRate(adminId: number, dailyRate: number) {
+    const setting = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.systemSetting.upsert({
+        where: { key: 'featured_daily_rate' },
+        create: { key: 'featured_daily_rate', value: String(dailyRate) },
+        update: { value: String(dailyRate) },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'UPDATE_FEATURED_RATE',
+          targetType: 'SYSTEM_SETTING',
+          targetId: updated.id,
+          description: `Cập nhật giá đẩy Top: ${dailyRate.toLocaleString('vi-VN')}đ/ngày`,
+          ipAddress: 'System',
+        },
+      });
+
+      return updated;
+    });
+
+    await this.clearFeaturedCache();
+    return {
+      data: { dailyRate: Number(setting.value) },
+      message: 'Đã cập nhật giá đẩy Top',
+    };
+  }
+
   async expireListings() {
     const result = await this.prisma.featuredListing.updateMany({
       where: {
-        status: 'ACTIVE',
+        status: FeaturedListingStatus.ACTIVE,
         endDate: { lte: new Date() },
       },
-      data: { status: 'EXPIRED' },
+      data: { status: FeaturedListingStatus.EXPIRED },
     });
 
     if (result.count > 0) {

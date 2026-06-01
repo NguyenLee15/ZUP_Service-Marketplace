@@ -13,10 +13,26 @@ import {
   UploadedFiles,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { BookingStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { AdminPermission } from '../../common/constants/admin-permissions';
+import {
+  ApiErrorResponses,
+  ApiSuccessResponse,
+} from '../../common/decorators/api-contract.decorator';
 import { BookingDisputeService } from './booking-dispute.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 import { BookingQueryService } from './booking-query.service';
@@ -35,6 +51,9 @@ import {
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard)
+@ApiTags('bookings')
+@ApiBearerAuth()
+@ApiErrorResponses()
 export class BookingsController {
   constructor(
     private readonly bookingLifecycleService: BookingLifecycleService,
@@ -44,6 +63,8 @@ export class BookingsController {
 
   /** POST /bookings — Customer tạo booking */
   @Post()
+  @ApiOperation({ summary: 'Customer creates a booking' })
+  @ApiSuccessResponse('Booking created')
   @UseGuards(RolesGuard)
   @Roles('CUSTOMER')
   async create(
@@ -55,6 +76,9 @@ export class BookingsController {
 
   /** GET /bookings — Customer xem danh sách booking */
   @Get()
+  @ApiOperation({ summary: 'List current user bookings' })
+  @ApiQuery({ name: 'status', enum: BookingStatus, required: false })
+  @ApiSuccessResponse('Booking list')
   async getMyBookings(
     @CurrentUser('id') userId: number,
     @CurrentUser('role') role: string,
@@ -72,6 +96,15 @@ export class BookingsController {
   }
 
   /** GET /bookings/:id — Xem chi tiết booking */
+  @Get(':id/timeline')
+  @ApiOperation({ summary: 'Get current user booking timeline' })
+  async getTimeline(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.bookingQueryService.getTimeline(id, userId);
+  }
+
   @Get(':id')
   async getById(
     @CurrentUser('id') userId: number,
@@ -116,6 +149,21 @@ export class BookingsController {
 
   /** POST /bookings/:id/dispute — Customer khiếu nại */
   @Post(':id/dispute')
+  @ApiOperation({ summary: 'Customer opens a booking dispute' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        reason: { type: 'string' },
+        evidences: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+      required: ['reason'],
+    },
+  })
   @UseGuards(RolesGuard)
   @Roles('CUSTOMER')
   @UseInterceptors(FilesInterceptor('evidences', 5))
@@ -157,6 +205,9 @@ export class BookingsController {
 @Controller('provider/bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('PROVIDER')
+@ApiTags('provider-bookings')
+@ApiBearerAuth()
+@ApiErrorResponses()
 export class ProviderBookingsController {
   constructor(
     private readonly bookingLifecycleService: BookingLifecycleService,
@@ -165,6 +216,7 @@ export class ProviderBookingsController {
 
   /** GET /provider/bookings */
   @Get()
+  @ApiQuery({ name: 'status', enum: BookingStatus, required: false })
   async getMyBookings(
     @CurrentUser('id') userId: number,
     @Query() query: BookingListQueryDto,
@@ -179,6 +231,15 @@ export class ProviderBookingsController {
   }
 
   /** GET /provider/bookings/:id */
+  @Get(':id/timeline')
+  @ApiOperation({ summary: 'Get provider booking timeline' })
+  async getTimeline(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.bookingQueryService.getTimeline(id, userId);
+  }
+
   @Get(':id')
   async getById(
     @CurrentUser('id') userId: number,
@@ -189,6 +250,7 @@ export class ProviderBookingsController {
 
   /** PATCH /provider/bookings/:id/accept */
   @Patch(':id/accept')
+  @ApiOperation({ summary: 'Provider accepts a pending booking' })
   async acceptBooking(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -218,6 +280,23 @@ export class ProviderBookingsController {
 
   /** POST /provider/bookings/:id/quote */
   @Post(':id/quote')
+  @ApiOperation({ summary: 'Provider sends quotation after survey' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        estimatedTime: { type: 'string' },
+        note: { type: 'string' },
+        items: { type: 'string', description: 'JSON quotation item array' },
+        surveyImages: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+      required: ['estimatedTime', 'items'],
+    },
+  })
   @UseInterceptors(FilesInterceptor('surveyImages', 5))
   async sendQuote(
     @CurrentUser('id') userId: number,
@@ -239,6 +318,20 @@ export class ProviderBookingsController {
 
   /** PATCH /provider/bookings/:id/complete */
   @Patch(':id/complete')
+  @ApiOperation({ summary: 'Provider marks work complete with result images' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        resultImages: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+      required: ['resultImages'],
+    },
+  })
   @UseInterceptors(FilesInterceptor('resultImages', 10))
   async completeWork(
     @CurrentUser('id') userId: number,
@@ -262,8 +355,12 @@ export class ProviderBookingsController {
 // ===== Admin Dispute Controller =====
 
 @Controller('admin/disputes')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles('ADMIN', 'STAFF')
+@Permissions(AdminPermission.DISPUTE_RESOLVE)
+@ApiTags('admin-disputes')
+@ApiBearerAuth()
+@ApiErrorResponses()
 export class AdminDisputesController {
   constructor(private readonly bookingDisputeService: BookingDisputeService) {}
 

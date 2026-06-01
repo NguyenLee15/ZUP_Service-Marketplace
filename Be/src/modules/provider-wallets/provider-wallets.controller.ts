@@ -8,16 +8,35 @@ import {
   UseGuards,
   Patch,
   Param,
+  ParseIntPipe,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { WalletRequestStatus, WalletTransactionType } from '@prisma/client';
 import type { Request } from 'express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { AdminPermission } from '../../common/constants/admin-permissions';
+import {
+  ApiErrorResponses,
+  ApiSuccessResponse,
+} from '../../common/decorators/api-contract.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import {
+  AdminWalletActionDto,
   AdminWalletRequestQueryDto,
+  CreateWithdrawalRequestDto,
+  DepositRequestDto,
+  ManualDepositRequestDto,
   WalletHistoryQueryDto,
 } from './dto/wallet-query.dto';
 import { WalletAccountService } from './wallet-account.service';
@@ -26,6 +45,8 @@ import { WithdrawalService } from './withdrawal.service';
 import { PaymentCallbackService } from './payment-callback.service';
 
 @Controller('provider-wallets')
+@ApiTags('provider-wallets')
+@ApiErrorResponses()
 export class ProviderWalletsController {
   constructor(
     private readonly walletAccountService: WalletAccountService,
@@ -35,6 +56,9 @@ export class ProviderWalletsController {
   ) {}
 
   @Get('balance')
+  @ApiOperation({ summary: 'Get provider wallet balance' })
+  @ApiBearerAuth()
+  @ApiSuccessResponse('Wallet balance')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async getBalance(@CurrentUser('id') userId: number) {
@@ -42,6 +66,8 @@ export class ProviderWalletsController {
   }
 
   @Get('history')
+  @ApiQuery({ name: 'type', enum: WalletTransactionType, required: false })
+  @ApiSuccessResponse('Wallet transaction history')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async getHistory(
@@ -57,11 +83,13 @@ export class ProviderWalletsController {
   }
 
   @Post('deposit')
+  @ApiOperation({ summary: 'Create VNPay wallet deposit request' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async deposit(
     @CurrentUser('id') userId: number,
-    @Body('amount') amount: number,
+    @Body() body: DepositRequestDto,
     @Req() req: Request,
   ) {
     const forwardedFor = req.headers['x-forwarded-for'];
@@ -73,23 +101,23 @@ export class ProviderWalletsController {
           : undefined) ||
       req.ip ||
       '127.0.0.1';
-    return this.depositService.createDepositRequest(userId, amount, ip);
+    return this.depositService.createDepositRequest(userId, body.amount, ip);
   }
 
   @Post('manual-deposits')
+  @ApiOperation({ summary: 'Create manual wallet deposit request' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async createManualDeposit(
     @CurrentUser('id') userId: number,
-    @Body('amount') amount: number,
-    @Body('transferCode') transferCode?: string,
-    @Body('receiptUrl') receiptUrl?: string,
+    @Body() body: ManualDepositRequestDto,
   ) {
     return this.depositService.createManualDepositRequest(
       userId,
-      amount,
-      transferCode,
-      receiptUrl,
+      body.amount,
+      body.transferCode,
+      body.receiptUrl,
     );
   }
 
@@ -108,17 +136,13 @@ export class ProviderWalletsController {
   }
 
   @Post('withdrawals')
+  @ApiOperation({ summary: 'Create wallet withdrawal request' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async createWithdrawal(
     @CurrentUser('id') userId: number,
-    @Body()
-    body: {
-      amount: number;
-      bankName: string;
-      bankAccountNumber: string;
-      bankAccountHolder: string;
-    },
+    @Body() body: CreateWithdrawalRequestDto,
   ) {
     return this.withdrawalService.createWithdrawalRequest(userId, body);
   }
@@ -159,12 +183,17 @@ export class ProviderWalletsController {
 }
 
 @Controller('admin/wallet-deposits')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles('ADMIN', 'STAFF')
+@Permissions(AdminPermission.WALLET_DEPOSIT_MANAGE)
+@ApiTags('admin-wallet-deposits')
+@ApiBearerAuth()
+@ApiErrorResponses()
 export class AdminWalletDepositsController {
   constructor(private readonly depositService: DepositService) {}
 
   @Get()
+  @ApiQuery({ name: 'status', enum: WalletRequestStatus, required: false })
   async list(@Query() query: AdminWalletRequestQueryDto) {
     return this.depositService.adminListManualDepositRequests(
       query.status,
@@ -176,37 +205,42 @@ export class AdminWalletDepositsController {
   @Patch(':id/approve')
   async approve(
     @CurrentUser('id') adminId: number,
-    @Param('id') id: string,
-    @Body('note') note?: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body?: AdminWalletActionDto,
   ) {
     return this.depositService.adminApproveManualDeposit(
       adminId,
-      parseInt(id),
-      note,
+      id,
+      body?.note,
     );
   }
 
   @Patch(':id/reject')
   async reject(
     @CurrentUser('id') adminId: number,
-    @Param('id') id: string,
-    @Body('note') note?: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body?: AdminWalletActionDto,
   ) {
     return this.depositService.adminRejectManualDeposit(
       adminId,
-      parseInt(id),
-      note,
+      id,
+      body?.note,
     );
   }
 }
 
 @Controller('admin/wallet-withdrawals')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles('ADMIN', 'STAFF')
+@Permissions(AdminPermission.WALLET_WITHDRAWAL_MANAGE)
+@ApiTags('admin-wallet-withdrawals')
+@ApiBearerAuth()
+@ApiErrorResponses()
 export class AdminWalletWithdrawalsController {
   constructor(private readonly withdrawalService: WithdrawalService) {}
 
   @Get()
+  @ApiQuery({ name: 'status', enum: WalletRequestStatus, required: false })
   async list(@Query() query: AdminWalletRequestQueryDto) {
     return this.withdrawalService.adminListWithdrawalRequests(
       query.status,
@@ -218,26 +252,26 @@ export class AdminWalletWithdrawalsController {
   @Patch(':id/approve')
   async approve(
     @CurrentUser('id') adminId: number,
-    @Param('id') id: string,
-    @Body('note') note?: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body?: AdminWalletActionDto,
   ) {
     return this.withdrawalService.adminApproveWithdrawal(
       adminId,
-      parseInt(id),
-      note,
+      id,
+      body?.note,
     );
   }
 
   @Patch(':id/reject')
   async reject(
     @CurrentUser('id') adminId: number,
-    @Param('id') id: string,
-    @Body('note') note?: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body?: AdminWalletActionDto,
   ) {
     return this.withdrawalService.adminRejectWithdrawal(
       adminId,
-      parseInt(id),
-      note,
+      id,
+      body?.note,
     );
   }
 }

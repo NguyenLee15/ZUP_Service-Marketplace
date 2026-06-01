@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ProviderWalletsService } from './provider-wallets.service';
 import {
   AdminWalletDepositsController,
   AdminWalletWithdrawalsController,
@@ -22,7 +21,6 @@ import { WalletSharedService } from './wallet-shared.service';
     AdminWalletWithdrawalsController,
   ],
   providers: [
-    ProviderWalletsService,
     WalletAccountService,
     DepositService,
     WithdrawalService,
@@ -32,6 +30,12 @@ import { WalletSharedService } from './wallet-shared.service';
     PaymentCallbackService,
     ...(isCronEnabled() ? [VnpayReconciliationCron] : []),
   ],
-  exports: [ProviderWalletsService],
+  exports: [
+    WalletAccountService,
+    DepositService,
+    WithdrawalService,
+    WalletLedgerService,
+    PaymentCallbackService,
+  ],
 })
 export class ProviderWalletsModule {}

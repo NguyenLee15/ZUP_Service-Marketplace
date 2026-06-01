@@ -178,6 +178,22 @@ export class DepositService {
         });
       }
 
+      const claimed = await tx.manualDepositRequest.updateMany({
+        where: { id, status: 'PENDING' },
+        data: {
+          status: 'APPROVED',
+          adminNote: note?.trim() || null,
+          processedBy: adminId,
+          processedAt: new Date(),
+        },
+      });
+      if (claimed.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Yêu cầu này đã được xử lý',
+        });
+      }
+
       const wallet = await this.shared.getOrCreateWallet(
         tx,
         request.providerId,
@@ -194,14 +210,8 @@ export class DepositService {
         },
       );
 
-      const updatedRequest = await tx.manualDepositRequest.update({
+      const updatedRequest = await tx.manualDepositRequest.findUniqueOrThrow({
         where: { id },
-        data: {
-          status: 'APPROVED',
-          adminNote: note?.trim() || null,
-          processedBy: adminId,
-          processedAt: new Date(),
-        },
         include: {
           provider: {
             select: { id: true, fullName: true, email: true, phone: true },
@@ -240,46 +250,74 @@ export class DepositService {
   }
 
   async adminRejectManualDeposit(adminId: number, id: number, note?: string) {
-    const request = await this.prisma.manualDepositRequest.findUnique({
-      where: { id },
-    });
-    if (!request) {
-      throw new NotFoundException({
-        code: ErrorCodes.NOT_FOUND,
-        message: 'Yêu cầu nạp tiền không tồn tại',
-      });
-    }
-    if (request.status !== 'PENDING') {
-      throw new BadRequestException({
-        code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Yêu cầu này đã được xử lý',
-      });
-    }
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.shared.expireStaleManualDeposits(tx);
 
-    const updated = await this.prisma.manualDepositRequest.update({
-      where: { id },
-      data: {
-        status: 'REJECTED',
-        adminNote: note?.trim() || null,
-        processedBy: adminId,
-        processedAt: new Date(),
-      },
-      include: {
-        provider: {
-          select: { id: true, fullName: true, email: true, phone: true },
+      const request = await tx.manualDepositRequest.findUnique({
+        where: { id },
+      });
+      if (!request) {
+        throw new NotFoundException({
+          code: ErrorCodes.NOT_FOUND,
+          message: 'Yêu cầu nạp tiền không tồn tại',
+        });
+      }
+      if (request.status !== 'PENDING') {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Yêu cầu này đã được xử lý',
+        });
+      }
+
+      const claimed = await tx.manualDepositRequest.updateMany({
+        where: { id, status: 'PENDING' },
+        data: {
+          status: 'REJECTED',
+          adminNote: note?.trim() || null,
+          processedBy: adminId,
+          processedAt: new Date(),
         },
-        processor: { select: { id: true, fullName: true, email: true } },
-      },
-    });
+      });
+      if (claimed.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Yêu cầu này đã được xử lý',
+        });
+      }
 
-    await this.prisma.notification.create({
-      data: {
-        userId: request.providerId,
-        type: 'MANUAL_DEPOSIT_REJECTED',
-        title: 'Yêu cầu nạp tiền bị từ chối',
-        content: note?.trim() || 'Admin chưa xác nhận được giao dịch nạp tiền.',
-        referenceId: id,
-      },
+      const rejected = await tx.manualDepositRequest.findUniqueOrThrow({
+        where: { id },
+        include: {
+          provider: {
+            select: { id: true, fullName: true, email: true, phone: true },
+          },
+          processor: { select: { id: true, fullName: true, email: true } },
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: request.providerId,
+          type: 'MANUAL_DEPOSIT_REJECTED',
+          title: 'Yêu cầu nạp tiền bị từ chối',
+          content:
+            note?.trim() || 'Admin chưa xác nhận được giao dịch nạp tiền.',
+          referenceId: id,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'MANUAL_DEPOSIT_REJECTED',
+          targetType: 'WALLET',
+          targetId: id,
+          description: `Từ chối nạp thủ công cho provider ${request.providerId}`,
+          ipAddress: 'System',
+        },
+      });
+
+      return rejected;
     });
 
     return { data: updated, message: 'Đã từ chối yêu cầu nạp tiền' };

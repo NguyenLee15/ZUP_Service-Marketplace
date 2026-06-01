@@ -73,7 +73,8 @@ export class PermissionsGuard implements CanActivate {
     if (!hasPermission) {
       throw new ForbiddenException({
         code: ErrorCodes.FORBIDDEN,
-        message: 'Bạn không có quyền thực hiện hành động này trong module tương ứng',
+        message:
+          'Bạn không có quyền thực hiện hành động này trong module tương ứng',
       });
     }
 

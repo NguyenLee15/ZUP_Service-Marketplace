@@ -48,6 +48,51 @@ export class BookingQueryService {
     return { data: booking };
   }
 
+  async getTimeline(bookingId: number, userId: number) {
+    const booking = await this.prisma.booking.findFirst({
+      where: {
+        id: bookingId,
+        OR: [{ customerId: userId }, { providerId: userId }],
+      },
+      select: { id: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Đơn hàng không tồn tại',
+      });
+    }
+
+    const data = await this.prisma.bookingStatusHistory.findMany({
+      where: { bookingId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return { data };
+  }
+
+  async getTimelineForAdmin(bookingId: number) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { id: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Đơn hàng không tồn tại',
+      });
+    }
+
+    const data = await this.prisma.bookingStatusHistory.findMany({
+      where: { bookingId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return { data };
+  }
+
   async getMyBookings(
     userId: number,
     role: 'customer' | 'provider',

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BookingSharedService } from './booking-shared.service';
+import { BookingStatePolicy } from './booking-state.policy';
 
 export const PROVIDER_ACCEPTANCE_TIMEOUT_MS = 60 * 1000;
 
@@ -12,6 +13,7 @@ export class BookingTimeoutService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly shared: BookingSharedService,
+    private readonly bookingStatePolicy: BookingStatePolicy,
   ) {}
 
   async expirePendingProviderAcceptances() {
@@ -60,6 +62,11 @@ export class BookingTimeoutService {
       booking.providerResponseDeadline ??
       new Date(Date.now() - PROVIDER_ACCEPTANCE_TIMEOUT_MS);
     if (deadline.getTime() > Date.now()) return false;
+
+    this.bookingStatePolicy.assertTransition(
+      BookingStatus.PENDING,
+      BookingStatus.CANCELLED,
+    );
 
     const result = await this.prisma.booking.updateMany({
       where: {

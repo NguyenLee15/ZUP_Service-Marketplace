@@ -179,12 +179,8 @@ export class ProviderPublicService {
     providerId: number,
     queryParams: PublicProviderServicesQuery,
   ) {
-    const page = queryParams.page
-      ? Number.parseInt(String(queryParams.page), 10)
-      : 1;
-    const limit = queryParams.limit
-      ? Number.parseInt(String(queryParams.limit), 10)
-      : 8;
+    const page = queryParams.page ?? 1;
+    const limit = queryParams.limit ?? 8;
     const skip = (page - 1) * limit;
     const search = queryParams.search
       ? String(queryParams.search).trim()

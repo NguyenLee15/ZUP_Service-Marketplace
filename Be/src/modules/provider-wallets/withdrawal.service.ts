@@ -149,6 +149,22 @@ export class WithdrawalService {
         });
       }
 
+      const claimed = await tx.withdrawalRequest.updateMany({
+        where: { id, status: 'PENDING' },
+        data: {
+          status: 'APPROVED',
+          adminNote: note?.trim() || null,
+          processedBy: adminId,
+          processedAt: new Date(),
+        },
+      });
+      if (claimed.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Yêu cầu này đã được xử lý',
+        });
+      }
+
       const wallet = await tx.providerWallet.findUnique({
         where: { providerId: request.providerId },
       });
@@ -174,14 +190,8 @@ export class WithdrawalService {
         idempotencyKey: `withdrawal:${id}`,
       });
 
-      const updatedRequest = await tx.withdrawalRequest.update({
+      const updatedRequest = await tx.withdrawalRequest.findUniqueOrThrow({
         where: { id },
-        data: {
-          status: 'APPROVED',
-          adminNote: note?.trim() || null,
-          processedBy: adminId,
-          processedAt: new Date(),
-        },
         include: {
           provider: {
             select: { id: true, fullName: true, email: true, phone: true },
@@ -220,46 +230,71 @@ export class WithdrawalService {
   }
 
   async adminRejectWithdrawal(adminId: number, id: number, note?: string) {
-    const request = await this.prisma.withdrawalRequest.findUnique({
-      where: { id },
-    });
-    if (!request) {
-      throw new NotFoundException({
-        code: ErrorCodes.NOT_FOUND,
-        message: 'Yêu cầu rút tiền không tồn tại',
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const request = await tx.withdrawalRequest.findUnique({
+        where: { id },
       });
-    }
-    if (request.status !== 'PENDING') {
-      throw new BadRequestException({
-        code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Yêu cầu này đã được xử lý',
-      });
-    }
+      if (!request) {
+        throw new NotFoundException({
+          code: ErrorCodes.NOT_FOUND,
+          message: 'Yêu cầu rút tiền không tồn tại',
+        });
+      }
+      if (request.status !== 'PENDING') {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Yêu cầu này đã được xử lý',
+        });
+      }
 
-    const updated = await this.prisma.withdrawalRequest.update({
-      where: { id },
-      data: {
-        status: 'REJECTED',
-        adminNote: note?.trim() || null,
-        processedBy: adminId,
-        processedAt: new Date(),
-      },
-      include: {
-        provider: {
-          select: { id: true, fullName: true, email: true, phone: true },
+      const claimed = await tx.withdrawalRequest.updateMany({
+        where: { id, status: 'PENDING' },
+        data: {
+          status: 'REJECTED',
+          adminNote: note?.trim() || null,
+          processedBy: adminId,
+          processedAt: new Date(),
         },
-        processor: { select: { id: true, fullName: true, email: true } },
-      },
-    });
+      });
+      if (claimed.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Yêu cầu này đã được xử lý',
+        });
+      }
 
-    await this.prisma.notification.create({
-      data: {
-        userId: request.providerId,
-        type: 'WITHDRAWAL_REJECTED',
-        title: 'Yêu cầu rút tiền bị từ chối',
-        content: note?.trim() || 'Admin đã từ chối yêu cầu rút tiền.',
-        referenceId: id,
-      },
+      const rejected = await tx.withdrawalRequest.findUniqueOrThrow({
+        where: { id },
+        include: {
+          provider: {
+            select: { id: true, fullName: true, email: true, phone: true },
+          },
+          processor: { select: { id: true, fullName: true, email: true } },
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: request.providerId,
+          type: 'WITHDRAWAL_REJECTED',
+          title: 'Yêu cầu rút tiền bị từ chối',
+          content: note?.trim() || 'Admin đã từ chối yêu cầu rút tiền.',
+          referenceId: id,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'WITHDRAWAL_REJECTED',
+          targetType: 'WALLET',
+          targetId: id,
+          description: `Từ chối rút tiền cho provider ${request.providerId}`,
+          ipAddress: 'System',
+        },
+      });
+
+      return rejected;
     });
 
     return { data: updated, message: 'Đã từ chối yêu cầu rút tiền' };

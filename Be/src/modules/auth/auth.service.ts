@@ -9,12 +9,13 @@ import {
 } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserRole, UserStatus } from '@prisma/client';
+import { Prisma, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { hashPassword, comparePassword } from '../../common/utils/hash.util';
 import { generateOtp, generateToken } from '../../common/utils/generate.util';
+import { hashToken } from '../../common/utils/token-hash.util';
 import {
   RegisterDto,
   VerifyOtpDto,
@@ -162,7 +163,12 @@ export class AuthService {
     });
 
     // 6. Tạo token pair
-    const tokens = await this.generateTokenPair(user.id, user.email, user.role);
+    const tokens = await this.generateTokenPair(
+      this.prisma,
+      user.id,
+      user.email,
+      user.role,
+    );
 
     // 7. Tạo ví nếu là Provider
     if (user.role === UserRole.PROVIDER) {
@@ -279,7 +285,12 @@ export class AuthService {
     await this.clearLoginAttempts(loginAttemptKey);
 
     // 6. Tạo token pair
-    const tokens = await this.generateTokenPair(user.id, user.email, user.role);
+    const tokens = await this.generateTokenPair(
+      this.prisma,
+      user.id,
+      user.email,
+      user.role,
+    );
 
     this.logger.log(`User logged in: ${dto.email} (role: ${user.role})`);
 
@@ -359,6 +370,7 @@ export class AuthService {
 
       // 5. Tạo token pair
       const tokens = await this.generateTokenPair(
+        this.prisma,
         user.id,
         user.email,
         user.role,
@@ -386,12 +398,12 @@ export class AuthService {
   // ===== REFRESH TOKEN =====
 
   async refreshToken(refreshToken: string) {
-    // 1. Tìm token trong DB
+    const tokenHash = hashToken(refreshToken);
+
+    // 1. Tìm token hash mới, fallback legacy raw token cho phiên cũ
     const tokenRecord = await this.prisma.refreshToken.findFirst({
       where: {
-        token: refreshToken,
-        revoked: false,
-        expiresAt: { gt: new Date() },
+        OR: [{ tokenHash }, { token: refreshToken }],
       },
       include: { user: true },
     });
@@ -403,15 +415,32 @@ export class AuthService {
       });
     }
 
-    // 2. Revoke token cũ (rotation)
-    await this.prisma.refreshToken.update({
-      where: { id: tokenRecord.id },
-      data: { revoked: true },
-    });
+    if (tokenRecord.revoked) {
+      await this.prisma.refreshToken.updateMany({
+        where: { userId: tokenRecord.userId, revoked: false },
+        data: { revoked: true },
+      });
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Refresh token không hợp lệ hoặc đã hết hạn',
+      });
+    }
 
-    // 3. Tạo token pair mới
+    if (tokenRecord.expiresAt <= new Date()) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Refresh token không hợp lệ hoặc đã hết hạn',
+      });
+    }
+
     const user = tokenRecord.user;
-    const tokens = await this.generateTokenPair(user.id, user.email, user.role);
+    const tokens = await this.prisma.$transaction(async (tx) => {
+      await tx.refreshToken.update({
+        where: { id: tokenRecord.id },
+        data: { revoked: true },
+      });
+      return this.generateTokenPair(tx, user.id, user.email, user.role);
+    });
 
     return {
       data: {
@@ -475,7 +504,8 @@ export class AuthService {
     await this.prisma.passwordReset.create({
       data: {
         userId: user.id,
-        token,
+        token: '',
+        tokenHash: hashToken(token),
         expiresAt,
       },
     });
@@ -497,16 +527,20 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    // 1. Tìm token chưa dùng + chưa hết hạn
+    const tokenHash = hashToken(dto.token);
+
+    // 1. Tìm token hash mới, fallback legacy raw token
     const resetRecord = await this.prisma.passwordReset.findFirst({
       where: {
-        token: dto.token,
-        used: false,
-        expiresAt: { gt: new Date() },
+        OR: [{ tokenHash }, { token: dto.token }],
       },
     });
 
-    if (!resetRecord) {
+    if (
+      !resetRecord ||
+      resetRecord.used ||
+      resetRecord.expiresAt <= new Date()
+    ) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
         message: 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn',
@@ -734,6 +768,7 @@ export class AuthService {
   }
 
   private async generateTokenPair(
+    tx: PrismaService | Prisma.TransactionClient,
     userId: number,
     email: string,
     role: UserRole,
@@ -757,10 +792,11 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (parseInt(refreshExpiresIn) || 7));
 
-    await this.prisma.refreshToken.create({
+    await tx.refreshToken.create({
       data: {
         userId,
-        token: refreshToken,
+        token: '',
+        tokenHash: hashToken(refreshToken),
         expiresAt,
       },
     });

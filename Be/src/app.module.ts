@@ -39,9 +39,6 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { SettingsModule } from './modules/settings/settings.module';
 
-const throttleTtl = Number(process.env.THROTTLE_TTL || 60000);
-const throttleLimit = Number(process.env.THROTTLE_LIMIT || 100);
-
 @Module({
   imports: [
     // Config — đọc .env, inject vào toàn bộ app
@@ -66,12 +63,16 @@ const throttleLimit = Number(process.env.THROTTLE_LIMIT || 100);
     EventEmitterModule.forRoot(),
 
     // Rate Limiting (Chống Spam/DDoS) - 100 reqs/phút
-    ThrottlerModule.forRoot([
-      {
-        ttl: Number.isFinite(throttleTtl) ? throttleTtl : 60000,
-        limit: Number.isFinite(throttleLimit) ? throttleLimit : 100,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: configService.get<number>('app.throttleTtl', 60000),
+          limit: configService.get<number>('app.throttleLimit', 100),
+        },
+      ],
+      inject: [ConfigService],
+    }),
 
     // Core modules
     PrismaModule,

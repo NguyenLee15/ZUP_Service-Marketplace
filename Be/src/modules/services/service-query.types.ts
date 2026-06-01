@@ -33,8 +33,8 @@ export type SearchServiceItem = ServiceSearchBase & {
 };
 
 export interface PublicProviderServicesQuery {
-  page?: string | number;
-  limit?: string | number;
+  page?: number;
+  limit?: number;
   search?: string;
   sortBy?: string;
 }

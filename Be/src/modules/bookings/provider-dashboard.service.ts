@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BookingStatus, Prisma } from '@prisma/client';
 import { Workbook } from 'exceljs';
+import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 import PdfPrinter from 'pdfmake/js/Printer';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -140,7 +141,7 @@ export class ProviderDashboardService {
       },
     };
     const printer = new PdfPrinter(fonts);
-    const content: any[] = [
+    const content: Content[] = [
       {
         text: 'HomeService Marketplace',
         fontSize: 18,
@@ -258,7 +259,7 @@ export class ProviderDashboardService {
       margin: [0, 32, 0, 0],
     });
 
-    const docDefinition = {
+    const docDefinition: TDocumentDefinitions = {
       pageSize: 'A4',
       pageMargins: [36, 42, 36, 48],
       defaultStyle: { font: 'Helvetica' },

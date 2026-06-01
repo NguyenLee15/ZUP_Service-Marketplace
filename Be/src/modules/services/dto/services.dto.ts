@@ -1,4 +1,5 @@
 import {
+  IsIn,
   IsString,
   IsOptional,
   IsInt,
@@ -10,6 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { FeaturedListingStatus } from '@prisma/client';
 
 export class CreateServiceItemDto {
   @IsString()
@@ -72,7 +74,6 @@ export class UpdateServiceDto {
   @Type(() => CreateServiceItemDto)
   items?: CreateServiceItemDto[];
 }
-
 
 export class SearchServiceDto {
   @IsString()
@@ -161,4 +162,96 @@ export class AdminHideDto {
 export class AiSearchDto {
   @IsString()
   query: string;
+}
+
+export class AdminServicesQueryDto {
+  @IsString()
+  @IsOptional()
+  status?: string;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  categoryId?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  page?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  @Max(100)
+  limit?: number;
+}
+
+export class PurchaseFeaturedListingDto {
+  @IsInt()
+  @Type(() => Number)
+  @IsIn([1, 3, 7])
+  days: number;
+}
+
+export class AdminFeaturedListingsQueryDto {
+  @IsString()
+  @IsOptional()
+  @IsIn(Object.values(FeaturedListingStatus))
+  status?: FeaturedListingStatus;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  serviceId?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  providerId?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  page?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  @Max(100)
+  limit?: number;
+}
+
+export class UpdateFeaturedRateDto {
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1000)
+  @Max(10000000)
+  dailyRate: number;
+}
+
+export class PublicProviderServicesQueryDto {
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  page?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  @Max(50)
+  limit?: number;
+
+  @IsString()
+  @IsOptional()
+  search?: string;
+
+  @IsString()
+  @IsOptional()
+  sortBy?: 'rating' | 'priceAsc' | 'priceDesc' | 'newest';
 }

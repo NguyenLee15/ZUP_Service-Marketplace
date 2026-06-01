@@ -13,10 +13,24 @@ import {
   Delete,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { AdminPermission } from '../../common/constants/admin-permissions';
+import {
+  ApiErrorResponses,
+  ApiSuccessResponse,
+} from '../../common/decorators/api-contract.decorator';
 import { FeaturedListingsService } from './featured-listings.service';
 import { ProviderPublicService } from './provider-public.service';
 import { ServiceCommandService } from './service-command.service';
@@ -29,10 +43,16 @@ import {
   AdminRejectDto,
   AdminHideDto,
   AiSearchDto,
+  AdminServicesQueryDto,
+  PublicProviderServicesQueryDto,
+  PurchaseFeaturedListingDto,
+  AdminFeaturedListingsQueryDto,
+  UpdateFeaturedRateDto,
 } from './dto/services.dto';
-import type { PublicProviderServicesQuery } from './services.service';
 
 @Controller('services')
+@ApiTags('services')
+@ApiErrorResponses()
 export class ServicesController {
   constructor(
     private readonly commandService: ServiceCommandService,
@@ -51,6 +71,8 @@ export class ServicesController {
 
   /** GET /services/search */
   @Get('search')
+  @ApiOperation({ summary: 'Search public services' })
+  @ApiSuccessResponse('Service search results')
   async search(@Query() dto: SearchServiceDto) {
     return this.searchService.search(dto);
   }
@@ -92,7 +114,7 @@ export class ServicesController {
   @Get('providers/:id/services')
   async getPublicProviderServices(
     @Param('id', ParseIntPipe) id: number,
-    @Query() query: PublicProviderServicesQuery,
+    @Query() query: PublicProviderServicesQueryDto,
   ) {
     return this.providerPublicService.getPublicProviderServices(id, query);
   }
@@ -112,6 +134,26 @@ export class ServicesController {
 
   /** POST /services — create service (provider) */
   @Post()
+  @ApiOperation({ summary: 'Provider creates a service' })
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        categoryId: { type: 'number' },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        referencePrice: { type: 'number' },
+        items: { type: 'string', description: 'JSON service item array' },
+        images: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+      required: ['categoryId', 'name', 'description', 'referencePrice'],
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   @UseInterceptors(FilesInterceptor('images', 5))
@@ -125,6 +167,25 @@ export class ServicesController {
 
   /** PATCH /services/:id — update service (provider) */
   @Patch(':id')
+  @ApiOperation({ summary: 'Provider updates a service' })
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        categoryId: { type: 'number' },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        referencePrice: { type: 'number' },
+        items: { type: 'string', description: 'JSON service item array' },
+        images: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   @UseInterceptors(FilesInterceptor('images', 5))
@@ -188,12 +249,12 @@ export class ServicesController {
   async purchaseFeature(
     @CurrentUser('id') providerId: number,
     @Param('id', ParseIntPipe) serviceId: number,
-    @Body('days') days: number,
+    @Body() dto: PurchaseFeaturedListingDto,
   ) {
     return this.featuredListingsService.purchaseFeaturedListing(
       providerId,
       serviceId,
-      days,
+      dto.days,
     );
   }
 
@@ -209,25 +270,20 @@ export class ServicesController {
 // ===== Admin Controller — /admin/services =====
 
 @Controller('admin/services')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles('ADMIN', 'STAFF')
+@Permissions(AdminPermission.SERVICE_MODERATE)
+@ApiTags('admin-services')
+@ApiBearerAuth()
+@ApiErrorResponses()
 export class AdminServicesController {
   constructor(private readonly moderationService: ServiceModerationService) {}
 
   /** GET /admin/services */
   @Get()
-  async getAll(
-    @Query('status') status?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.moderationService.getAll({
-      status,
-      categoryId: categoryId ? parseInt(categoryId) : undefined,
-      page: page ? parseInt(page) : undefined,
-      limit: limit ? parseInt(limit) : undefined,
-    });
+  @ApiOperation({ summary: 'Admin lists services for moderation' })
+  async getAll(@Query() query: AdminServicesQueryDto) {
+    return this.moderationService.getAll(query);
   }
 
   /** PATCH /admin/services/:id/approve */
@@ -266,5 +322,68 @@ export class AdminServicesController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.moderationService.delete(adminId, id);
+  }
+}
+
+// ===== Admin Featured Listings — /admin/featured-listings =====
+
+@Controller('admin/featured-listings')
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+@Roles('ADMIN', 'STAFF')
+@Permissions(AdminPermission.SERVICE_MODERATE)
+@ApiTags('admin-featured-listings')
+@ApiBearerAuth()
+@ApiErrorResponses()
+export class AdminFeaturedListingsController {
+  constructor(
+    private readonly featuredListingsService: FeaturedListingsService,
+  ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Admin lists featured listings' })
+  async getAll(@Query() query: AdminFeaturedListingsQueryDto) {
+    return this.featuredListingsService.adminListFeaturedListings(query);
+  }
+
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Admin cancels an active featured listing' })
+  async cancel(
+    @CurrentUser('id') adminId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.featuredListingsService.adminCancelFeaturedListing(adminId, id);
+  }
+}
+
+// ===== Admin Featured Rate — /admin/settings/featured-rate =====
+
+@Controller('admin/settings/featured-rate')
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+@Roles('ADMIN', 'STAFF')
+@Permissions(AdminPermission.FINANCE_COMMISSION)
+@ApiTags('admin-settings')
+@ApiBearerAuth()
+@ApiErrorResponses()
+export class AdminFeaturedRateController {
+  constructor(
+    private readonly featuredListingsService: FeaturedListingsService,
+  ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Admin gets featured listing daily rate' })
+  async getFeaturedRate() {
+    return this.featuredListingsService.getFeaturedDailyRate();
+  }
+
+  @Patch()
+  @ApiOperation({ summary: 'Admin updates featured listing daily rate' })
+  async updateFeaturedRate(
+    @CurrentUser('id') adminId: number,
+    @Body() dto: UpdateFeaturedRateDto,
+  ) {
+    return this.featuredListingsService.updateFeaturedDailyRate(
+      adminId,
+      dto.dailyRate,
+    );
   }
 }

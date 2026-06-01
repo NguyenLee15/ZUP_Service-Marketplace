@@ -54,6 +54,7 @@ export class HealthController {
 
     return {
       status: ready ? 'ready' : 'not_ready',
+      nodeEnv: this.configService.get<string>('app.nodeEnv'),
       profile: this.configService.get<string>('runtime.profile'),
       queueMode: this.configService.get<string>('runtime.queueMode'),
       workerEnabled: this.configService.get<boolean>('runtime.workerEnabled'),

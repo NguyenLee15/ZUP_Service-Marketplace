@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   BookingStatus,
@@ -11,6 +12,11 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { CloudinaryService } from '../src/shared/cloudinary/cloudinary.service';
 import { RedisService } from '../src/shared/redis/redis.service';
 import { JobsService } from '../src/shared/jobs/jobs.service';
+import { DepositService } from '../src/modules/provider-wallets/deposit.service';
+import { WithdrawalService } from '../src/modules/provider-wallets/withdrawal.service';
+import { WalletLedgerService } from '../src/modules/provider-wallets/wallet-ledger.service';
+import { WalletSharedService } from '../src/modules/provider-wallets/wallet-shared.service';
+import { VnpayService } from '../src/modules/provider-wallets/vnpay.service';
 import { BookingLifecycleService } from '../src/modules/bookings/booking-lifecycle.service';
 import { BookingDisputeService } from '../src/modules/bookings/booking-dispute.service';
 import { BookingQueryService } from '../src/modules/bookings/booking-query.service';
@@ -39,6 +45,8 @@ describe('Booking flow integration', () => {
   let dispute: BookingDisputeService;
   let timeout: BookingTimeoutService;
   let policy: BookingStatePolicy;
+  let deposit: DepositService;
+  let withdrawal: WithdrawalService;
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
@@ -51,6 +59,28 @@ describe('Booking flow integration', () => {
         BookingSharedService,
         BookingStatePolicy,
         BookingTimeoutService,
+        DepositService,
+        WithdrawalService,
+        WalletLedgerService,
+        WalletSharedService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              const values: Record<string, string> = {
+                FRONTEND_URL: 'http://localhost:3000',
+                VNPAY_RETURN_URL: 'http://localhost:3000/payment/return',
+                VNPAY_IPN_URL: 'http://localhost:3000/payment/ipn',
+              };
+
+              return values[key];
+            }),
+          },
+        },
+        {
+          provide: VnpayService,
+          useValue: { createPaymentUrl: jest.fn() },
+        },
         {
           provide: EventEmitter2,
           useValue: { emit: jest.fn() },
@@ -79,6 +109,8 @@ describe('Booking flow integration', () => {
     dispute = moduleRef.get(BookingDisputeService);
     timeout = moduleRef.get(BookingTimeoutService);
     policy = moduleRef.get(BookingStatePolicy);
+    deposit = moduleRef.get(DepositService);
+    withdrawal = moduleRef.get(WithdrawalService);
     await prisma.$connect();
   });
 
@@ -237,12 +269,125 @@ describe('Booking flow integration', () => {
     expect(updated.status).toBe(BookingStatus.CANCELLED);
     expect(history.note).toContain('Admin hủy đơn');
   });
+
+  it('manual deposit approve is atomic and cannot be processed twice', async () => {
+    const seed = await seedActiveService(prisma);
+    const request = await prisma.manualDepositRequest.create({
+      data: {
+        providerId: seed.provider.id,
+        amount: 10000,
+        transferCode: 'MANUAL-TEST-1',
+      },
+    });
+
+    await deposit.adminApproveManualDeposit(seed.admin.id, request.id, 'ok');
+    await expect(
+      deposit.adminApproveManualDeposit(seed.admin.id, request.id, 'again'),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      deposit.adminRejectManualDeposit(seed.admin.id, request.id, 'reject'),
+    ).rejects.toThrow(BadRequestException);
+
+    const wallet = await prisma.providerWallet.findUniqueOrThrow({
+      where: { providerId: seed.provider.id },
+    });
+    const transactions = await prisma.walletTransaction.findMany({
+      where: { idempotencyKey: `manual-deposit:${request.id}` },
+    });
+    const updated = await prisma.manualDepositRequest.findUniqueOrThrow({
+      where: { id: request.id },
+    });
+
+    expect(updated.status).toBe('APPROVED');
+    expect(Number(wallet.balance)).toBe(110000);
+    expect(transactions).toHaveLength(1);
+  });
+
+  it('withdrawal approve is atomic and cannot be processed twice', async () => {
+    const seed = await seedActiveService(prisma);
+    const request = await prisma.withdrawalRequest.create({
+      data: {
+        providerId: seed.provider.id,
+        amount: 50000,
+        bankName: 'Test Bank',
+        bankAccountNumber: '123456789',
+        bankAccountHolder: 'Provider Test',
+      },
+    });
+
+    await withdrawal.adminApproveWithdrawal(seed.admin.id, request.id, 'ok');
+    await expect(
+      withdrawal.adminApproveWithdrawal(seed.admin.id, request.id, 'again'),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      withdrawal.adminRejectWithdrawal(seed.admin.id, request.id, 'reject'),
+    ).rejects.toThrow(BadRequestException);
+
+    const wallet = await prisma.providerWallet.findUniqueOrThrow({
+      where: { providerId: seed.provider.id },
+    });
+    const transactions = await prisma.walletTransaction.findMany({
+      where: { idempotencyKey: `withdrawal:${request.id}` },
+    });
+    const updated = await prisma.withdrawalRequest.findUniqueOrThrow({
+      where: { id: request.id },
+    });
+
+    expect(updated.status).toBe('APPROVED');
+    expect(Number(wallet.balance)).toBe(50000);
+    expect(transactions).toHaveLength(1);
+  });
+
+  it('rejecting manual deposit or withdrawal prevents later approval', async () => {
+    const seed = await seedActiveService(prisma);
+    const manualDeposit = await prisma.manualDepositRequest.create({
+      data: {
+        providerId: seed.provider.id,
+        amount: 10000,
+        transferCode: 'MANUAL-TEST-2',
+      },
+    });
+    const withdrawalRequest = await prisma.withdrawalRequest.create({
+      data: {
+        providerId: seed.provider.id,
+        amount: 50000,
+        bankName: 'Test Bank',
+        bankAccountNumber: '123456789',
+        bankAccountHolder: 'Provider Test',
+      },
+    });
+
+    await deposit.adminRejectManualDeposit(
+      seed.admin.id,
+      manualDeposit.id,
+      'reject',
+    );
+    await withdrawal.adminRejectWithdrawal(
+      seed.admin.id,
+      withdrawalRequest.id,
+      'reject',
+    );
+
+    await expect(
+      deposit.adminApproveManualDeposit(seed.admin.id, manualDeposit.id, 'ok'),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      withdrawal.adminApproveWithdrawal(seed.admin.id, withdrawalRequest.id),
+    ).rejects.toThrow(BadRequestException);
+
+    const wallet = await prisma.providerWallet.findUniqueOrThrow({
+      where: { providerId: seed.provider.id },
+    });
+    expect(Number(wallet.balance)).toBe(100000);
+  });
 });
 
 async function truncateBusinessTables(prisma: PrismaService) {
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE
       wallet_transactions,
+      withdrawal_requests,
+      manual_deposit_requests,
       provider_wallets,
       dispute_evidences,
       disputes,

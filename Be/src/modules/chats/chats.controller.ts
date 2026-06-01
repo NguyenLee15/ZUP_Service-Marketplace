@@ -9,17 +9,22 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ChatsService } from './chats.service';
+import { ChatHistoryQueryDto, CreateConversationDto } from './dto/chats.dto';
 
 @Controller('chats')
 @UseGuards(JwtAuthGuard)
+@ApiTags('chats')
+@ApiBearerAuth()
 export class ChatsController {
   constructor(private readonly chatsService: ChatsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List current user conversations' })
   async getConversations(@CurrentUser('id') userId: number) {
     return this.chatsService.getConversations(userId);
   }
@@ -28,7 +33,7 @@ export class ChatsController {
   async getOrCreateConversation(
     @CurrentUser('id') userId: number,
     @CurrentUser('role') role: UserRole,
-    @Body() body: { serviceId?: number; bookingId?: number },
+    @Body() body: CreateConversationDto,
   ) {
     return this.chatsService.getOrCreateConversationForUser(userId, role, body);
   }
@@ -37,13 +42,9 @@ export class ChatsController {
   async getHistory(
     @CurrentUser('id') userId: number,
     @Param('conversationId', ParseIntPipe) conversationId: number,
-    @Query('cursor') cursor?: string,
+    @Query() query: ChatHistoryQueryDto,
   ) {
-    return this.chatsService.getHistory(
-      conversationId,
-      userId,
-      cursor ? parseInt(cursor) : undefined,
-    );
+    return this.chatsService.getHistory(conversationId, userId, query.cursor);
   }
 
   @Get(':conversationId/smart-reply')

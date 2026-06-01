@@ -19,8 +19,26 @@ import { BookingLifecycleService } from '../bookings/booking-lifecycle.service';
 import { BookingQueryService } from '../bookings/booking-query.service';
 import { ChatsService } from '../chats/chats.service';
 import { ServicesService } from '../services/services.service';
-import { CreateBookingDto } from '../bookings/dto/bookings.dto';
 import { calculateHaversineDistance } from '../../shared/utils/geo';
+import { ChatbotIntentService } from './chatbot-intent.service';
+import { ChatbotPersistenceService } from './chatbot-persistence.service';
+import { ChatbotDraftService } from './chatbot-draft.service';
+import { ChatbotFormatterService } from './chatbot-formatter.service';
+import type {
+  BookingDraft,
+  ChatbotAction,
+  ChatbotAskRequest,
+  ChatbotCitation,
+  ChatbotPageContext,
+  ChatbotQuickReply,
+  ChatbotStreamResultRequest,
+  ChatResponse,
+  ChatServiceResult,
+  ChatbotSessionState,
+  DetectedChatbotIntent,
+  SessionContext,
+  StoredChatbotAction,
+} from './chatbot.types';
 
 const districtCoords: Record<string, { lat: number; lng: number }> = {
   // TP.HCM
@@ -83,144 +101,6 @@ type ServiceWithGeo = ServiceWithRelations & {
   providerAddress?: string;
 };
 
-type IntentName =
-  | 'search'
-  | 'compare'
-  | 'create_booking'
-  | 'booking_status'
-  | 'open_chat'
-  | 'rebook'
-  | 'smalltalk';
-
-export type ChatbotActionType =
-  | 'CREATE_BOOKING_DRAFT'
-  | 'CONFIRM_CREATE_BOOKING'
-  | 'OPEN_PROVIDER_CHAT'
-  | 'VIEW_BOOKING'
-  | 'REBOOK'
-  | 'CANCEL_BOOKING_DRAFT';
-
-export interface ChatServiceResult {
-  id: number;
-  name: string;
-  description?: string;
-  referencePrice: number;
-  providerId: number;
-  providerName: string;
-  avgRating: number;
-  totalReviews: number;
-  categoryName: string;
-  imageUrl?: string;
-  distanceKm?: number;
-  providerAddress?: string;
-}
-
-export interface ChatbotQuickReply {
-  label: string;
-  message: string;
-}
-
-export interface ChatbotCitation {
-  type: 'service' | 'booking';
-  id: number;
-  label: string;
-  href?: string;
-}
-
-export interface ChatbotAction {
-  id: string;
-  type: ChatbotActionType;
-  label: string;
-  summary: string;
-  payload: Record<string, unknown>;
-  requiresConfirmation: boolean;
-  href?: string;
-}
-
-type StoredAction = ChatbotAction & { createdAt: string };
-
-type BookingDraft = {
-  serviceId?: number;
-  description?: string;
-  desiredTime?: string;
-  province?: string;
-  district?: string;
-  ward?: string;
-  addressDetail?: string;
-};
-
-type ChatbotSessionState = {
-  bookingDraft?: BookingDraft;
-  pendingActions?: Record<string, StoredAction>;
-};
-
-export interface ChatbotPageContext {
-  path?: string;
-  serviceId?: number | string;
-  bookingId?: number | string;
-  serviceName?: string;
-  latitude?: number;
-  longitude?: number;
-  addressText?: string;
-}
-
-export interface ChatbotAskRequest {
-  message?: string;
-  sessionId?: string;
-  history?: Array<{ role: string; content: string }>;
-  pageContext?: ChatbotPageContext;
-  confirmedActionId?: string;
-}
-
-export interface ChatbotStreamResultRequest {
-  sessionId?: string;
-  userMessage?: string;
-  assistantMessage?: string;
-  services?: ChatServiceResult[];
-  quickReplies?: ChatbotQuickReply[];
-  action?: ChatbotAction;
-  confidence?: number;
-  citations?: ChatbotCitation[];
-}
-
-export interface ChatResponse {
-  reply: string;
-  sessionId: string;
-  services: ChatServiceResult[];
-  quickReplies: ChatbotQuickReply[];
-  action?: ChatbotAction;
-  confidence: number;
-  citations: ChatbotCitation[];
-}
-
-type DetectedIntent = { name: IntentName; confidence: number };
-type SessionContext = {
-  id: string;
-  state: ChatbotSessionState;
-  isPersistent: boolean;
-};
-
-interface AssistantMessageMetadata {
-  serviceIds?: number[];
-  action?: {
-    id: string;
-    type?: ChatbotActionType;
-  };
-}
-
-export interface ChatbotUiMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  parts: Array<{ type: 'text'; text: string }>;
-  createdAt: string;
-  metadata?: {
-    sessionId: string;
-    services: ChatServiceResult[];
-    action?: ChatbotAction;
-    quickReplies: ChatbotQuickReply[];
-  };
-}
-
 @Injectable()
 export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
@@ -232,6 +112,10 @@ export class ChatbotService {
     private readonly bookingQueryService: BookingQueryService,
     private readonly chatsService: ChatsService,
     private readonly servicesService: ServicesService,
+    private readonly persistence: ChatbotPersistenceService,
+    private readonly intentService: ChatbotIntentService,
+    private readonly draftService: ChatbotDraftService,
+    private readonly formatter: ChatbotFormatterService,
   ) {}
 
   async askQuestion(
@@ -245,7 +129,7 @@ export class ChatbotService {
         : input || {};
 
     const message = (request.message || '').trim();
-    const session = await this.resolveSession(
+    const session = await this.persistence.resolveSession(
       userId,
       request.sessionId,
       message,
@@ -266,23 +150,23 @@ export class ChatbotService {
             reply:
               'Bạn muốn tôi tìm dịch vụ, so sánh lựa chọn, tạo lịch đặt hay tra cứu đơn hàng?',
             services: [],
-            quickReplies: this.defaultQuickReplies(),
+            quickReplies: this.formatter.defaultQuickReplies(),
             confidence: 0.7,
             citations: [],
           });
-        } else if (this.isCancelDraftMessage(message)) {
+        } else if (this.intentService.isCancelDraftMessage(message)) {
           delete session.state.bookingDraft;
           session.state.pendingActions = {};
           response = this.withSession(session, {
             reply:
               'Tôi đã hủy nháp và các thao tác đang chờ xác nhận trong phiên chat này.',
             services: [],
-            quickReplies: this.defaultQuickReplies(),
+            quickReplies: this.formatter.defaultQuickReplies(),
             confidence: 1,
             citations: [],
           });
         } else {
-          const intent = this.detectIntent(message);
+          const intent = this.intentService.detectIntent(message);
           const customerCoords = await this.getCustomerCoords(
             userId,
             message,
@@ -300,7 +184,7 @@ export class ChatbotService {
         }
       }
 
-      await this.persistTurn(session, message, response);
+      await this.persistence.persistTurn(session, message, response);
       return response;
     } catch (error) {
       const messageText =
@@ -322,199 +206,20 @@ export class ChatbotService {
       const response = this.withSession(session, {
         reply: userFriendlyReply,
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 0.2,
         citations: [],
       });
-      await this.persistTurn(session, message, response);
+      await this.persistence.persistTurn(session, message, response);
       return response;
     }
-  }
-
-  async getSessionHistory(
-    userId: number,
-    sessionId: string,
-  ): Promise<ChatbotUiMessage[]> {
-    const session = await this.prisma.chatbotSession.findFirst({
-      where: { id: sessionId, userId },
-      select: { id: true, state: true },
-    });
-
-    if (!session) {
-      throw new NotFoundException('Không tìm thấy phiên trò chuyện');
-    }
-
-    const messages = await this.prisma.chatbotSessionMessage.findMany({
-      where: { sessionId },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    // 1. Thu thập tất cả serviceIds từ metadata tin nhắn
-    const serviceIds: number[] = [];
-    messages.forEach((msg) => {
-      if (msg.role === 'assistant' && msg.metadata) {
-        const meta = this.parseAssistantMetadata(msg.metadata);
-        meta?.serviceIds?.forEach((id) => serviceIds.push(id));
-      }
-    });
-
-    // 2. Hydrate services
-    const uniqueServiceIds = Array.from(new Set(serviceIds));
-    const services =
-      uniqueServiceIds.length > 0
-        ? await this.prisma.service.findMany({
-            where: {
-              id: { in: uniqueServiceIds },
-              isDeleted: false,
-            },
-            include: serviceCardInclude,
-          })
-        : [];
-
-    const defaultAddress = await this.getDefaultAddress(userId);
-    const customerCoords =
-      defaultAddress && defaultAddress.latitude && defaultAddress.longitude
-        ? {
-            lat: Number(defaultAddress.latitude),
-            lng: Number(defaultAddress.longitude),
-          }
-        : undefined;
-
-    const providerIds = Array.from(new Set(services.map((s) => s.providerId)));
-    const addresses =
-      providerIds.length > 0
-        ? await this.prisma.userAddress.findMany({
-            where: { userId: { in: providerIds } },
-            orderBy: [{ isDefault: 'desc' }, { id: 'desc' }],
-          })
-        : [];
-
-    const addressMap = new Map<number, UserAddressRecord>();
-    for (const addr of addresses) {
-      if (!addressMap.has(addr.userId)) {
-        addressMap.set(addr.userId, addr);
-      }
-    }
-
-    const serviceMap = new Map<number, ChatServiceResult>();
-    services.forEach((s) => {
-      const addr = addressMap.get(s.providerId);
-      const geoService: ServiceWithGeo = { ...s };
-      if (addr) {
-        geoService.providerAddress = `${addr.addressDetail}, ${addr.ward}, ${addr.district}, ${addr.province}`;
-        if (customerCoords && addr.latitude && addr.longitude) {
-          geoService.distanceKm = calculateHaversineDistance(
-            customerCoords.lat,
-            customerCoords.lng,
-            Number(addr.latitude),
-            Number(addr.longitude),
-          );
-        }
-      }
-      serviceMap.set(s.id, this.toServiceCard(geoService));
-    });
-
-    // 3. Phục dựng trạng thái action từ session state
-    const sessionState = this.deserializeState(session.state);
-    const pendingActions = sessionState.pendingActions || {};
-
-    // 4. Map tin nhắn sang UIMessage
-    return messages.map((msg) => {
-      const role = msg.role === 'user' ? 'user' : 'assistant';
-      const uiMsg: ChatbotUiMessage = {
-        id: `msg-${msg.id}`,
-        role,
-        parts: [{ type: 'text', text: msg.content }],
-        createdAt: msg.createdAt.toISOString(),
-      };
-
-      if (role === 'assistant') {
-        const meta = this.parseAssistantMetadata(msg.metadata);
-        const msgServices: ChatServiceResult[] = [];
-        let msgAction: ChatbotAction | undefined = undefined;
-
-        if (meta) {
-          meta.serviceIds?.forEach((id) => {
-            const svc = serviceMap.get(id);
-            if (svc) msgServices.push(svc);
-          });
-
-          if (meta.action && meta.action.id) {
-            const act = pendingActions[meta.action.id];
-            if (act) {
-              msgAction = act;
-            } else {
-              // Action dự phòng nếu đã bị trim/hết hạn
-              msgAction = {
-                id: meta.action.id,
-                type: meta.action.type ?? 'VIEW_BOOKING',
-                label: 'Thao tác liên quan',
-                summary: 'Thao tác này đã kết thúc',
-                payload: {},
-                requiresConfirmation: false,
-              };
-            }
-          }
-        }
-
-        uiMsg.metadata = {
-          sessionId,
-          services: msgServices,
-          action: msgAction,
-          quickReplies: [],
-        };
-      }
-
-      return uiMsg;
-    });
   }
 
   async persistStreamResult(
     userId: number | undefined,
     input: ChatbotStreamResultRequest,
   ) {
-    if (!userId) {
-      return { data: { persisted: false, reason: 'guest' } };
-    }
-
-    const sessionId = input.sessionId?.trim();
-    if (!sessionId) {
-      return { data: { persisted: false, reason: 'missing_session' } };
-    }
-
-    const assistantMessage = input.assistantMessage?.trim();
-    if (!assistantMessage) {
-      return {
-        data: { persisted: false, reason: 'missing_assistant_message' },
-      };
-    }
-
-    const existing = await this.prisma.chatbotSession.findFirst({
-      where: { id: sessionId, userId },
-      select: { id: true, state: true },
-    });
-
-    if (!existing) {
-      throw new ForbiddenException('Phiên chatbot không hợp lệ');
-    }
-
-    const session: SessionContext = {
-      id: existing.id,
-      state: this.deserializeState(existing.state),
-      isPersistent: true,
-    };
-
-    await this.persistTurn(session, input.userMessage?.trim() || '', {
-      reply: assistantMessage,
-      sessionId: existing.id,
-      services: input.services || [],
-      quickReplies: input.quickReplies || [],
-      action: input.action,
-      confidence: typeof input.confidence === 'number' ? input.confidence : 0.7,
-      citations: input.citations || [],
-    });
-
-    return { data: { persisted: true, sessionId: existing.id } };
+    return this.persistence.persistStreamResult(userId, input);
   }
 
   /**
@@ -537,7 +242,11 @@ export class ChatbotService {
     citations: ChatbotCitation[];
   }> {
     const message = (input.message || '').trim();
-    const session = await this.resolveSession(userId, input.sessionId, message);
+    const session = await this.persistence.resolveSession(
+      userId,
+      input.sessionId,
+      message,
+    );
 
     const baseResult = {
       sessionId: session.id,
@@ -557,7 +266,7 @@ export class ChatbotService {
         session,
         input.confirmedActionId,
       );
-      await this.persistTurn(session, message, response);
+      await this.persistence.persistTurn(session, message, response);
       return {
         ...baseResult,
         ...response,
@@ -570,7 +279,7 @@ export class ChatbotService {
     if (!message) {
       const reply =
         'Bạn muốn tôi tìm dịch vụ, so sánh lựa chọn, tạo lịch đặt hay tra cứu đơn hàng?';
-      const quickReplies = this.defaultQuickReplies();
+      const quickReplies = this.formatter.defaultQuickReplies();
       const response = this.withSession(session, {
         reply,
         services: [],
@@ -578,17 +287,17 @@ export class ChatbotService {
         confidence: 0.7,
         citations: [],
       });
-      await this.persistTurn(session, message, response);
+      await this.persistence.persistTurn(session, message, response);
       return { ...baseResult, reply, quickReplies, needsAiStream: false };
     }
 
     // Hủy nháp
-    if (this.isCancelDraftMessage(message)) {
+    if (this.intentService.isCancelDraftMessage(message)) {
       delete session.state.bookingDraft;
       session.state.pendingActions = {};
       const reply =
         'Tôi đã hủy nháp và các thao tác đang chờ xác nhận trong phiên chat này.';
-      const quickReplies = this.defaultQuickReplies();
+      const quickReplies = this.formatter.defaultQuickReplies();
       const response = this.withSession(session, {
         reply,
         services: [],
@@ -596,7 +305,7 @@ export class ChatbotService {
         confidence: 1,
         citations: [],
       });
-      await this.persistTurn(session, message, response);
+      await this.persistence.persistTurn(session, message, response);
       return {
         ...baseResult,
         reply,
@@ -606,7 +315,7 @@ export class ChatbotService {
       };
     }
 
-    const intent = this.detectIntent(message);
+    const intent = this.intentService.detectIntent(message);
     const customerCoords = await this.getCustomerCoords(
       userId,
       message,
@@ -624,7 +333,7 @@ export class ChatbotService {
         intent,
         customerCoords,
       );
-      await this.persistTurn(session, message, response);
+      await this.persistence.persistTurn(session, message, response);
       return {
         ...baseResult,
         ...response,
@@ -639,12 +348,12 @@ export class ChatbotService {
       input.pageContext,
       customerCoords,
     );
-    const serviceCards = services.map((s) => this.toServiceCard(s));
+    const serviceCards = services.map((s) => this.formatter.toServiceCard(s));
 
     if (services.length === 0) {
       const reply =
         'Tôi chưa tìm thấy dịch vụ phù hợp trong hệ thống. Bạn có thể mô tả cụ thể hơn, ví dụ "máy lạnh chảy nước", "ổ điện bị chập" hoặc "dọn nhà cuối tuần".';
-      const quickReplies = this.defaultQuickReplies();
+      const quickReplies = this.formatter.defaultQuickReplies();
       const response = this.withSession(session, {
         reply,
         services: [],
@@ -652,7 +361,7 @@ export class ChatbotService {
         confidence: 0.45,
         citations: [],
       });
-      await this.persistTurn(session, message, response);
+      await this.persistence.persistTurn(session, message, response);
       return {
         ...baseResult,
         reply,
@@ -662,7 +371,7 @@ export class ChatbotService {
       };
     }
 
-    const context = this.buildServiceContext(services);
+    const context = this.formatter.buildServiceContext(services);
     const systemPrompt =
       'Bạn là trợ lý ảo của HomeService Marketplace. Trả lời tiếng Việt ngắn gọn, rõ ràng, không bịa dữ liệu. ' +
       'Chỉ nhắc tới dịch vụ, giá, nhà cung cấp, trạng thái nếu có trong dữ liệu hệ thống bên dưới. ' +
@@ -702,7 +411,7 @@ export class ChatbotService {
     message: string,
     history: Array<{ role: string; content: string }>,
     pageContext: ChatbotPageContext | undefined,
-    intent: DetectedIntent,
+    intent: DetectedChatbotIntent,
     customerCoords?: { lat: number; lng: number },
   ): Promise<ChatResponse> {
     if (intent.name === 'smalltalk') {
@@ -710,7 +419,7 @@ export class ChatbotService {
         reply:
           'Tôi có thể giúp bạn tìm dịch vụ, so sánh nhà cung cấp, tạo nháp đặt lịch, mở chat với nhà cung cấp hoặc tra cứu đơn hàng.',
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: intent.confidence,
         citations: [],
       });
@@ -771,20 +480,22 @@ export class ChatbotService {
     services: ServiceWithRelations[],
     confidence: number,
   ): Promise<ChatResponse> {
-    const serviceCards = services.map((service) => this.toServiceCard(service));
+    const serviceCards = services.map((service) =>
+      this.formatter.toServiceCard(service),
+    );
 
     if (services.length === 0) {
       return this.withSession(session, {
         reply:
           'Tôi chưa tìm thấy dịch vụ phù hợp trong hệ thống. Bạn có thể mô tả cụ thể hơn, ví dụ "máy lạnh chảy nước", "ổ điện bị chập" hoặc "dọn nhà cuối tuần".',
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 0.45,
         citations: [],
       });
     }
 
-    const context = this.buildServiceContext(services);
+    const context = this.formatter.buildServiceContext(services);
     const aiReply = await this.aiService.chat(
       `${message}\n\nHãy tư vấn dựa trên danh sách dịch vụ thật. Nếu phù hợp, hỏi thêm thời gian hoặc địa chỉ để tạo nháp đặt lịch.`,
       context,
@@ -826,14 +537,14 @@ export class ChatbotService {
   ): ChatResponse {
     const serviceCards = services
       .slice(0, 5)
-      .map((service) => this.toServiceCard(service));
+      .map((service) => this.formatter.toServiceCard(service));
 
     if (serviceCards.length < 2) {
       return this.withSession(session, {
         reply:
           'Tôi cần ít nhất 2 dịch vụ để so sánh. Bạn hãy nói rõ nhóm dịch vụ cần tìm, ví dụ "so sánh dịch vụ vệ sinh máy lạnh".',
         services: serviceCards,
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 0.45,
         citations: [],
       });
@@ -841,7 +552,7 @@ export class ChatbotService {
 
     const lines = serviceCards.map(
       (service, index) =>
-        `${index + 1}. ${service.name}: ${this.formatPrice(service.referencePrice)}, đánh giá ${service.avgRating.toFixed(1)}/5, nhà cung cấp ${service.providerName}.`,
+        `${index + 1}. ${service.name}: ${this.formatter.formatPrice(service.referencePrice)}, đánh giá ${service.avgRating.toFixed(1)}/5, nhà cung cấp ${service.providerName}.`,
     );
 
     return this.withSession(session, {
@@ -875,7 +586,9 @@ export class ChatbotService {
     services: ServiceWithRelations[],
     confidence: number,
   ): Promise<ChatResponse> {
-    const serviceCards = services.map((service) => this.toServiceCard(service));
+    const serviceCards = services.map((service) =>
+      this.formatter.toServiceCard(service),
+    );
 
     if (!userId) {
       return this.withSession(session, {
@@ -907,7 +620,8 @@ export class ChatbotService {
       serviceId: selectedServiceId || currentDraft.serviceId,
       description:
         this.extractProblemDescription(message) || currentDraft.description,
-      desiredTime: this.parseDesiredTime(message) || currentDraft.desiredTime,
+      desiredTime:
+        this.draftService.parseDesiredTime(message) || currentDraft.desiredTime,
       province: currentDraft.province || defaultAddress?.province,
       district: currentDraft.district || defaultAddress?.district,
       ward: currentDraft.ward || defaultAddress?.ward,
@@ -916,12 +630,15 @@ export class ChatbotService {
     };
     session.state.bookingDraft = draft;
 
-    const missing = this.getDraftMissingFields(draft);
+    const missing = this.draftService.getDraftMissingFields(draft);
     if (missing.length > 0) {
       return this.withSession(session, {
-        reply: this.composeDraftMissingReply(missing, serviceCards),
+        reply: this.draftService.composeDraftMissingReply(
+          missing,
+          serviceCards,
+        ),
         services: serviceCards,
-        quickReplies: this.draftQuickReplies(missing),
+        quickReplies: this.draftService.draftQuickReplies(missing),
         action: this.createDraftAction(session, draft),
         confidence,
         citations: serviceCards.map((service) => ({
@@ -937,7 +654,7 @@ export class ChatbotService {
     const action = this.rememberAction(session.state, {
       type: 'CONFIRM_CREATE_BOOKING',
       label: 'Xác nhận đặt lịch',
-      summary: `Đặt "${service.name}" vào ${this.formatDate(draft.desiredTime!)} tại ${draft.addressDetail}, ${draft.ward}, ${draft.district}, ${draft.province}.`,
+      summary: `Đặt "${service.name}" vào ${this.formatter.formatDate(draft.desiredTime!)} tại ${draft.addressDetail}, ${draft.ward}, ${draft.district}, ${draft.province}.`,
       payload: { draft },
       requiresConfirmation: true,
     });
@@ -945,10 +662,10 @@ export class ChatbotService {
     return this.withSession(session, {
       reply:
         `Tôi đã chuẩn bị nháp đặt lịch cho dịch vụ "${service.name}". ` +
-        `Thời gian mong muốn: ${this.formatDate(draft.desiredTime!)}. ` +
+        `Thời gian mong muốn: ${this.formatter.formatDate(draft.desiredTime!)}. ` +
         `Địa chỉ: ${draft.addressDetail}, ${draft.ward}, ${draft.district}, ${draft.province}. ` +
         'Bạn kiểm tra lại rồi bấm xác nhận để tạo đơn.',
-      services: [this.toServiceCard(service)],
+      services: [this.formatter.toServiceCard(service)],
       quickReplies: [
         { label: 'Đổi thời gian', message: 'Tôi muốn đổi thời gian đặt lịch' },
       ],
@@ -995,7 +712,7 @@ export class ChatbotService {
         reply:
           'Bạn chưa có đơn hàng nào. Tôi có thể giúp bạn tìm dịch vụ và tạo nháp đặt lịch.',
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 0.85,
         citations: [],
       });
@@ -1003,14 +720,14 @@ export class ChatbotService {
 
     const lines = bookings.map(
       (booking) =>
-        `#${booking.bookingCode}: ${booking.service?.name || 'Dịch vụ'} - ${this.statusLabel(booking.status)}. Nhà cung cấp: ${booking.provider?.fullName || 'chưa rõ'}.`,
+        `#${booking.bookingCode}: ${booking.service?.name || 'Dịch vụ'} - ${this.formatter.statusLabel(booking.status)}. Nhà cung cấp: ${booking.provider?.fullName || 'chưa rõ'}.`,
     );
     const latest = bookings[0];
 
     return this.withSession(session, {
       reply:
         `Đây là các đơn gần nhất của bạn:\n${lines.join('\n')}\n\n` +
-        `Đơn mới nhất #${latest.bookingCode}: ${this.nextStepForStatus(latest.status)}.`,
+        `Đơn mới nhất #${latest.bookingCode}: ${this.formatter.nextStepForStatus(latest.status)}.`,
       services: [],
       quickReplies: [
         {
@@ -1073,7 +790,9 @@ export class ChatbotService {
       return this.withSession(session, {
         reply:
           'Bạn muốn chat với nhà cung cấp của dịch vụ nào? Hãy mở trang chi tiết dịch vụ hoặc nhắn tên dịch vụ cụ thể.',
-        services: services.map((service) => this.toServiceCard(service)),
+        services: services.map((service) =>
+          this.formatter.toServiceCard(service),
+        ),
         quickReplies: [
           { label: 'Tìm dịch vụ', message: 'Tìm dịch vụ phù hợp cho tôi' },
         ],
@@ -1093,7 +812,7 @@ export class ChatbotService {
 
     return this.withSession(session, {
       reply: `Tôi có thể mở chat với nhà cung cấp của dịch vụ "${service.name}". Bạn bấm xác nhận để tạo/mở cuộc trò chuyện.`,
-      services: [this.toServiceCard(service)],
+      services: [this.formatter.toServiceCard(service)],
       quickReplies: [
         { label: 'Đặt lịch luôn', message: 'Tôi muốn đặt lịch dịch vụ này' },
       ],
@@ -1120,7 +839,7 @@ export class ChatbotService {
       return this.withSession(session, {
         reply: 'Bạn cần đăng nhập để đặt lại đơn hàng.',
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 0.75,
         citations: [],
       });
@@ -1156,7 +875,7 @@ export class ChatbotService {
 
     return this.withSession(session, {
       reply: `Tôi sẽ tạo đơn mới dựa trên đơn #${booking.bookingCode} (${booking.service.name}) và thời gian mặc định là ngày mai. Bạn bấm xác nhận để đặt lại.`,
-      services: [this.toServiceCard(booking.service)],
+      services: [this.formatter.toServiceCard(booking.service)],
       quickReplies: [
         { label: 'Tra cứu đơn', message: 'Đơn của tôi tới đâu rồi?' },
       ],
@@ -1185,7 +904,7 @@ export class ChatbotService {
         reply:
           'Hành động này đã hết hạn hoặc không còn trong phiên chat. Bạn hãy yêu cầu lại để tôi chuẩn bị thao tác mới.',
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 0.5,
         citations: [],
       });
@@ -1195,7 +914,7 @@ export class ChatbotService {
       return this.withSession(session, {
         reply: 'Bạn cần đăng nhập trước khi xác nhận thao tác này.',
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 0.7,
         citations: [],
       });
@@ -1217,7 +936,7 @@ export class ChatbotService {
           );
         }
       }
-      const dto = this.toCreateBookingDto(draft);
+      const dto = this.draftService.toCreateBookingDto(draft);
       const result = await this.bookingLifecycleService.create(userId, dto);
       const booking = result.data;
       if (!booking) {
@@ -1336,102 +1055,13 @@ export class ChatbotService {
       return this.withSession(session, {
         reply: 'Tôi đã hủy nháp đặt lịch trong phiên chat này.',
         services: [],
-        quickReplies: this.defaultQuickReplies(),
+        quickReplies: this.formatter.defaultQuickReplies(),
         confidence: 1,
         citations: [],
       });
     }
 
     throw new BadRequestException('Action không được hỗ trợ');
-  }
-
-  private async resolveSession(
-    userId: number | undefined,
-    sessionId: string | undefined,
-    firstMessage: string,
-  ): Promise<SessionContext> {
-    if (!userId) {
-      return {
-        id: sessionId || `guest-${randomUUID()}`,
-        state: {},
-        isPersistent: false,
-      };
-    }
-
-    const existing = sessionId
-      ? await this.prisma.chatbotSession.findFirst({
-          where: { id: sessionId, userId },
-          select: { id: true, state: true },
-        })
-      : null;
-
-    if (existing) {
-      return {
-        id: existing.id,
-        state: this.deserializeState(existing.state),
-        isPersistent: true,
-      };
-    }
-
-    const session = await this.prisma.chatbotSession.create({
-      data: {
-        userId,
-        title: this.makeTitle(firstMessage),
-        state: this.toJson({ pendingActions: {} }),
-      },
-      select: { id: true },
-    });
-
-    return {
-      id: session.id,
-      state: { pendingActions: {} },
-      isPersistent: true,
-    };
-  }
-
-  private async persistTurn(
-    session: SessionContext,
-    userMessage: string,
-    response: ChatResponse,
-  ) {
-    if (!session.isPersistent) return;
-
-    if (userMessage) {
-      await this.prisma.chatbotSessionMessage.create({
-        data: {
-          sessionId: session.id,
-          role: 'user',
-          content: userMessage.slice(0, 4000),
-        },
-      });
-    }
-
-    await this.prisma.chatbotSessionMessage.create({
-      data: {
-        sessionId: session.id,
-        role: 'assistant',
-        content: response.reply.slice(0, 4000),
-        metadata: this.toJson({
-          serviceIds: response.services.map((service) => service.id),
-          action: response.action
-            ? { id: response.action.id, type: response.action.type }
-            : null,
-        }),
-      },
-    });
-
-    const messageCount = await this.prisma.chatbotSessionMessage.count({
-      where: { sessionId: session.id },
-    });
-
-    await this.prisma.chatbotSession.update({
-      where: { id: session.id },
-      data: {
-        state: this.toJson(this.trimSessionState(session.state)),
-        summary:
-          messageCount > 20 ? this.makeSummary(response.reply) : undefined,
-      },
-    });
   }
 
   private async findRelevantServices(
@@ -1442,7 +1072,9 @@ export class ChatbotService {
     (ServiceWithRelations & { distanceKm?: number; providerAddress?: string })[]
   > {
     const results: ServiceWithRelations[] = [];
-    const contextServiceId = this.parsePositiveInt(pageContext?.serviceId);
+    const contextServiceId = this.intentService.parsePositiveInt(
+      pageContext?.serviceId,
+    );
 
     if (contextServiceId) {
       const service = await this.prisma.service.findFirst({
@@ -1647,8 +1279,10 @@ export class ChatbotService {
     message: string,
     pageContext?: ChatbotPageContext,
   ) {
-    const bookingId = this.parsePositiveInt(pageContext?.bookingId);
-    const bookingCode = this.extractBookingCode(message);
+    const bookingId = this.intentService.parsePositiveInt(
+      pageContext?.bookingId,
+    );
+    const bookingCode = this.intentService.extractBookingCode(message);
 
     return this.prisma.booking.findFirst({
       where: {
@@ -1668,101 +1302,22 @@ export class ChatbotService {
     });
   }
 
-  private detectIntent(message: string): DetectedIntent {
-    const normalized = this.normalize(message);
-
-    if (
-      this.hasAny(normalized, [
-        'dat lai',
-        'rebook',
-        'dat them lan nua',
-        'goi lai dich vu',
-      ])
-    ) {
-      return { name: 'rebook', confidence: 0.88 };
-    }
-
-    if (
-      this.hasAny(normalized, [
-        'don cua toi',
-        'don hang',
-        'lich hen',
-        'trang thai',
-        'toi dau',
-        'bao gia',
-        'khao sat',
-      ])
-    ) {
-      return { name: 'booking_status', confidence: 0.86 };
-    }
-
-    if (
-      this.hasAny(normalized, [
-        'nhan tin',
-        'chat',
-        'lien he',
-        'hoi nha cung cap',
-        'noi chuyen voi tho',
-      ])
-    ) {
-      return { name: 'open_chat', confidence: 0.86 };
-    }
-
-    if (
-      this.hasAny(normalized, [
-        'so sanh',
-        'khac nhau',
-        'nen chon',
-        'chon cai nao',
-        'chon dich vu nao',
-      ])
-    ) {
-      return { name: 'compare', confidence: 0.82 };
-    }
-
-    if (
-      this.hasAny(normalized, [
-        'dat lich',
-        'dat dich vu',
-        'book',
-        'goi tho',
-        'can tho',
-        'hen lich',
-        'toi muon dat',
-      ])
-    ) {
-      return { name: 'create_booking', confidence: 0.84 };
-    }
-
-    if (
-      this.hasAny(normalized, [
-        'xin chao',
-        'hello',
-        'hi',
-        'ban lam duoc gi',
-        'tro ly lam duoc gi',
-      ])
-    ) {
-      return { name: 'smalltalk', confidence: 0.7 };
-    }
-
-    return { name: 'search', confidence: 0.65 };
-  }
-
   private resolveServiceId(
     message: string,
     pageContext: ChatbotPageContext | undefined,
     services: ServiceWithRelations[],
   ): number | undefined {
-    const contextId = this.parsePositiveInt(pageContext?.serviceId);
+    const contextId = this.intentService.parsePositiveInt(
+      pageContext?.serviceId,
+    );
     if (contextId) return contextId;
 
-    const explicitId = this.extractServiceId(message);
+    const explicitId = this.intentService.extractServiceId(message);
     if (explicitId) return explicitId;
 
-    const normalizedMessage = this.normalize(message);
+    const normalizedMessage = this.intentService.normalize(message);
     const exact = services.find((service) =>
-      normalizedMessage.includes(this.normalize(service.name)),
+      normalizedMessage.includes(this.intentService.normalize(service.name)),
     );
     if (exact) return exact.id;
 
@@ -1770,117 +1325,9 @@ export class ChatbotService {
   }
 
   private extractProblemDescription(message: string) {
-    const normalized = this.normalize(message);
+    const normalized = this.intentService.normalize(message);
     if (normalized.length < 12) return undefined;
     return message.slice(0, 800);
-  }
-
-  private parseDesiredTime(message: string): string | undefined {
-    const normalized = this.normalize(message);
-    const now = new Date();
-    const date = new Date(now);
-    let hasDate = false;
-
-    if (normalized.includes('ngay mai')) {
-      date.setDate(now.getDate() + 1);
-      hasDate = true;
-    } else if (normalized.includes('hom nay')) {
-      hasDate = true;
-    } else if (normalized.includes('cuoi tuan')) {
-      const day = now.getDay();
-      const daysUntilSaturday = (6 - day + 7) % 7 || 7;
-      date.setDate(now.getDate() + daysUntilSaturday);
-      hasDate = true;
-    } else {
-      const dateMatch = normalized.match(
-        /(\d{1,2})[/-](\d{1,2})(?:[/-](\d{4}))?/,
-      );
-      if (dateMatch) {
-        const day = Number(dateMatch[1]);
-        const month = Number(dateMatch[2]) - 1;
-        const year = dateMatch[3] ? Number(dateMatch[3]) : now.getFullYear();
-        date.setFullYear(year, month, day);
-        hasDate = true;
-      }
-    }
-
-    const hourMatch = normalized.match(/(\d{1,2})(?:h| gio|:)(\d{2})?/);
-    const hour = hourMatch ? Number(hourMatch[1]) : 9;
-    const minute = hourMatch?.[2] ? Number(hourMatch[2]) : 0;
-    date.setHours(Math.min(Math.max(hour, 7), 21), minute, 0, 0);
-
-    if (!hasDate) return undefined;
-    if (date.getTime() <= now.getTime()) {
-      date.setDate(date.getDate() + 1);
-    }
-
-    return date.toISOString();
-  }
-
-  private getDraftMissingFields(draft: BookingDraft) {
-    const missing: Array<
-      'service' | 'description' | 'address' | 'desiredTime'
-    > = [];
-    if (!draft.serviceId) missing.push('service');
-    if (!draft.description) missing.push('description');
-    if (
-      !draft.province ||
-      !draft.district ||
-      !draft.ward ||
-      !draft.addressDetail
-    ) {
-      missing.push('address');
-    }
-    if (!draft.desiredTime) missing.push('desiredTime');
-    return missing;
-  }
-
-  private composeDraftMissingReply(
-    missing: Array<'service' | 'description' | 'address' | 'desiredTime'>,
-    services: ChatServiceResult[],
-  ) {
-    const parts = missing.map((field) => {
-      if (field === 'service') return 'dịch vụ cần đặt';
-      if (field === 'description') return 'mô tả vấn đề/công việc';
-      if (field === 'address') return 'địa chỉ mặc định của bạn';
-      return 'thời gian mong muốn';
-    });
-
-    const serviceHint =
-      missing.includes('service') && services.length > 0
-        ? ` Tôi đã tìm thấy ${services.length} dịch vụ gợi ý ở bên dưới, bạn có thể mở dịch vụ hoặc nhắn tên dịch vụ muốn chọn.`
-        : '';
-
-    return `Tôi cần thêm ${parts.join(', ')} để tạo nháp đặt lịch.${serviceHint}`;
-  }
-
-  private draftQuickReplies(
-    missing: Array<'service' | 'description' | 'address' | 'desiredTime'>,
-  ) {
-    const replies: ChatbotQuickReply[] = [];
-    if (missing.includes('desiredTime')) {
-      replies.push({
-        label: 'Ngày mai 9h',
-        message: 'Tôi muốn đặt ngày mai lúc 9h',
-      });
-      replies.push({
-        label: 'Cuối tuần',
-        message: 'Tôi muốn đặt vào cuối tuần lúc 9h',
-      });
-    }
-    if (missing.includes('description')) {
-      replies.push({
-        label: 'Mô tả vấn đề',
-        message: 'Thiết bị đang gặp sự cố và cần thợ kiểm tra',
-      });
-    }
-    if (missing.includes('address')) {
-      replies.push({
-        label: 'Cần địa chỉ',
-        message: 'Tôi cần cập nhật địa chỉ mặc định ở hồ sơ',
-      });
-    }
-    return replies.length > 0 ? replies : this.defaultQuickReplies();
   }
 
   private createDraftAction(session: SessionContext, draft: BookingDraft) {
@@ -1898,7 +1345,7 @@ export class ChatbotService {
     action: Omit<ChatbotAction, 'id'>,
   ): ChatbotAction {
     const id = `${action.type.toLowerCase()}-${randomUUID().slice(0, 8)}`;
-    const stored: StoredAction = {
+    const stored: StoredChatbotAction = {
       id,
       ...action,
       createdAt: new Date().toISOString(),
@@ -1925,97 +1372,11 @@ export class ChatbotService {
     };
   }
 
-  private toCreateBookingDto(draft: BookingDraft): CreateBookingDto {
-    const missing = this.getDraftMissingFields(draft);
-    if (missing.length > 0) {
-      throw new BadRequestException(
-        `Thiếu thông tin đặt lịch: ${missing.join(', ')}`,
-      );
-    }
-
-    return {
-      serviceId: Number(draft.serviceId),
-      description: String(draft.description),
-      province: String(draft.province),
-      district: String(draft.district),
-      ward: String(draft.ward),
-      addressDetail: String(draft.addressDetail),
-      desiredTime: String(draft.desiredTime),
-    };
-  }
-
-  private toServiceCard(
-    service: ServiceWithRelations & {
-      distanceKm?: number;
-      providerAddress?: string;
-    },
-  ): ChatServiceResult {
-    return {
-      id: service.id,
-      name: service.name,
-      description: service.description,
-      referencePrice: Number(service.referencePrice),
-      providerId: service.providerId,
-      providerName: service.provider.fullName,
-      avgRating: Number(service.avgRating || 0),
-      totalReviews: service.totalReviews || 0,
-      categoryName: service.category?.name || 'Khác',
-      imageUrl: service.images?.[0]?.imageUrl,
-      distanceKm:
-        service.distanceKm !== undefined
-          ? Number(service.distanceKm)
-          : undefined,
-      providerAddress: service.providerAddress,
-    };
-  }
-
-  private buildServiceContext(
-    services: (ServiceWithRelations & {
-      distanceKm?: number;
-      providerAddress?: string;
-    })[],
-  ) {
-    return services
-      .map((service) => {
-        let text = `- [ID:${service.id}] ${service.name} | Giá tham khảo: ${this.formatPrice(Number(service.referencePrice))} | Đánh giá: ${Number(service.avgRating || 0).toFixed(1)} | Lượt đánh giá: ${service.totalReviews || 0} | Nhà cung cấp: ${service.provider.fullName} | Danh mục: ${service.category?.name || 'Khác'}`;
-        if (service.distanceKm !== undefined) {
-          text += ` | Khoảng cách đến khách hàng: ${service.distanceKm.toFixed(1)} km`;
-        }
-        if (service.providerAddress) {
-          text += ` | Địa chỉ thợ: ${service.providerAddress}`;
-        }
-        text += ` | Mô tả: ${service.description}`;
-        return text;
-      })
-      .join('\n');
-  }
-
   private withSession(
     session: SessionContext,
     response: Omit<ChatResponse, 'sessionId'>,
   ): ChatResponse {
     return { sessionId: session.id, ...response };
-  }
-
-  private deserializeState(
-    value: Prisma.JsonValue | null | undefined,
-  ): ChatbotSessionState {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      return { pendingActions: {} };
-    }
-    return this.normalizeSessionState(value);
-  }
-
-  private trimSessionState(state: ChatbotSessionState): ChatbotSessionState {
-    return {
-      bookingDraft: state.bookingDraft,
-      pendingActions: state.pendingActions,
-    };
-  }
-
-  private toJson(value: unknown): Prisma.InputJsonValue {
-    const parsed: unknown = JSON.parse(JSON.stringify(value));
-    return parsed as Prisma.InputJsonValue;
   }
 
   private getExceptionResponseMessage(error: unknown): string | undefined {
@@ -2034,93 +1395,6 @@ export class ChatbotService {
       return message[0];
     }
     return undefined;
-  }
-
-  private parseAssistantMetadata(
-    value: Prisma.JsonValue | null | undefined,
-  ): AssistantMessageMetadata | null {
-    if (!this.isRecord(value)) return null;
-    const metadata: AssistantMessageMetadata = {};
-
-    if (Array.isArray(value.serviceIds)) {
-      const serviceIds = value.serviceIds.filter(
-        (id): id is number => typeof id === 'number',
-      );
-      if (serviceIds.length > 0) metadata.serviceIds = serviceIds;
-    }
-
-    if (this.isRecord(value.action) && typeof value.action.id === 'string') {
-      metadata.action = {
-        id: value.action.id,
-        type: this.isChatbotActionType(value.action.type)
-          ? value.action.type
-          : undefined,
-      };
-    }
-
-    return metadata;
-  }
-
-  private normalizeSessionState(
-    value: Record<string, unknown>,
-  ): ChatbotSessionState {
-    const pendingActions: Record<string, StoredAction> = {};
-    if (this.isRecord(value.pendingActions)) {
-      for (const [id, action] of Object.entries(value.pendingActions)) {
-        if (this.isStoredAction(action)) pendingActions[id] = action;
-      }
-    }
-
-    return {
-      bookingDraft: this.isBookingDraft(value.bookingDraft)
-        ? value.bookingDraft
-        : undefined,
-      pendingActions,
-    };
-  }
-
-  private isStoredAction(value: unknown): value is StoredAction {
-    if (!this.isRecord(value)) return false;
-    return (
-      typeof value.id === 'string' &&
-      this.isChatbotActionType(value.type) &&
-      typeof value.label === 'string' &&
-      typeof value.summary === 'string' &&
-      this.isRecord(value.payload) &&
-      typeof value.requiresConfirmation === 'boolean' &&
-      typeof value.createdAt === 'string'
-    );
-  }
-
-  private isBookingDraft(value: unknown): value is BookingDraft {
-    if (!this.isRecord(value)) return false;
-    return [
-      'serviceId',
-      'description',
-      'desiredTime',
-      'province',
-      'district',
-      'ward',
-      'addressDetail',
-    ].every((key) => {
-      const field = value[key];
-      return (
-        field === undefined ||
-        typeof field === 'string' ||
-        typeof field === 'number'
-      );
-    });
-  }
-
-  private isChatbotActionType(value: unknown): value is ChatbotActionType {
-    return (
-      value === 'CREATE_BOOKING_DRAFT' ||
-      value === 'CONFIRM_CREATE_BOOKING' ||
-      value === 'OPEN_PROVIDER_CHAT' ||
-      value === 'VIEW_BOOKING' ||
-      value === 'REBOOK' ||
-      value === 'CANCEL_BOOKING_DRAFT'
-    );
   }
 
   private isRecord(value: unknown): value is Record<string, unknown> {
@@ -2177,108 +1451,11 @@ export class ChatbotService {
       'lam',
     ]);
 
-    return this.normalize(message)
+    return this.intentService
+      .normalize(message)
       .split(/\s+/)
       .filter((word) => word.length > 1 && !stopwords.has(word))
       .slice(0, 8);
-  }
-
-  private extractServiceId(message: string) {
-    const match = message.match(/(?:service|dịch vụ|dich vu|id|#)\s*(\d+)/i);
-    return match ? this.parsePositiveInt(match[1]) : undefined;
-  }
-
-  private extractBookingCode(message: string) {
-    const match = message.toUpperCase().match(/#?([A-Z]{2,}\d{3,})/);
-    return match?.[1];
-  }
-
-  private isCancelDraftMessage(message: string) {
-    const normalized = this.normalize(message);
-    return this.hasAny(normalized, [
-      'huy nhap',
-      'huy dat lich',
-      'huy thao tac',
-      'bo qua',
-      'khong dat nua',
-    ]);
-  }
-
-  private parsePositiveInt(value: unknown): number | undefined {
-    const parsed = Number(value);
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
-  }
-
-  private normalize(value: string) {
-    return value
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/[^\w\s/-]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  private hasAny(value: string, terms: string[]) {
-    return terms.some((term) => value.includes(term));
-  }
-
-  private statusLabel(status: string) {
-    const labels: Record<string, string> = {
-      PENDING: 'đang chờ nhà cung cấp phản hồi',
-      QUOTED: 'đã có báo giá, bạn cần xác nhận hoặc từ chối',
-      CONFIRMED: 'đã xác nhận lịch',
-      IN_PROGRESS: 'đang thực hiện',
-      DONE: 'đã hoàn thành',
-      DISPUTED: 'đang khiếu nại',
-      CANCELLED: 'đã hủy',
-    };
-    return labels[status] || status;
-  }
-
-  private nextStepForStatus(status: string) {
-    const steps: Record<string, string> = {
-      PENDING: 'hãy chờ nhà cung cấp xác nhận khảo sát hoặc gửi báo giá',
-      QUOTED: 'bạn nên xem báo giá và xác nhận nếu đồng ý',
-      CONFIRMED: 'hãy chuẩn bị theo lịch hẹn đã xác nhận',
-      IN_PROGRESS: 'hãy theo dõi quá trình thực hiện và chat nếu cần trao đổi',
-      DONE: 'bạn có thể nghiệm thu, đánh giá hoặc đặt lại dịch vụ',
-      DISPUTED: 'đội ngũ xử lý khiếu nại sẽ xem xét bằng chứng',
-      CANCELLED: 'bạn có thể đặt lại nếu vẫn cần dịch vụ',
-    };
-    return steps[status] || 'hãy mở chi tiết đơn để xem bước tiếp theo';
-  }
-
-  private formatPrice(value: number) {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-
-  private formatDate(value: string) {
-    return new Intl.DateTimeFormat('vi-VN', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    }).format(new Date(value));
-  }
-
-  private makeTitle(message: string) {
-    return (message || 'Phiên trợ lý mới').slice(0, 80);
-  }
-
-  private makeSummary(reply: string) {
-    return reply.replace(/\s+/g, ' ').slice(0, 240);
-  }
-
-  private defaultQuickReplies(): ChatbotQuickReply[] {
-    return [
-      { label: 'Tìm dịch vụ', message: 'Tìm dịch vụ phù hợp cho tôi' },
-      { label: 'So sánh dịch vụ', message: 'So sánh các dịch vụ giúp tôi' },
-      { label: 'Đơn của tôi', message: 'Đơn của tôi tới đâu rồi?' },
-    ];
   }
 
   private async getCustomerCoords(
@@ -2314,62 +1491,13 @@ export class ChatbotService {
     }
 
     if (message) {
-      const detectedDistrict = this.extractDistrictFromText(message);
+      const detectedDistrict =
+        this.intentService.extractDistrictFromText(message);
       if (detectedDistrict && districtCoords[detectedDistrict]) {
         return districtCoords[detectedDistrict];
       }
     }
 
     return undefined;
-  }
-
-  private extractDistrictFromText(text: string): string | null {
-    if (!text) return null;
-    const normalized = text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/\s+/g, ' ');
-
-    // 1. Tìm quận số trước: q1, q.1, q 1, quan 1, quan 12...
-    const matchNumber = normalized.match(/(?:quan|q\.?\s?)\s*(\d+)\b/i);
-    if (matchNumber) {
-      return `Quận ${matchNumber[1]}`;
-    }
-
-    // 2. Tìm quận chữ bằng cách quét từ khóa đặc trưng trong districtMap
-    const districtMap: Record<string, string> = {
-      'binh thanh': 'Quận Bình Thạnh',
-      'go vap': 'Quận Gò Vấp',
-      'thu duc': 'Thành phố Thủ Đức',
-      'phu nhuan': 'Quận Phú Nhuận',
-      'tan binh': 'Quận Tân Bình',
-      'tan phu': 'Quận Tân Phú',
-      'binh tan': 'Quận Bình Tân',
-      'cu chi': 'Huyện Củ Chi',
-      'hoc mon': 'Huyện Hóc Môn',
-      'nha be': 'Huyện Nhà Bè',
-      'binh chanh': 'Huyện Bình Chánh',
-      'can gio': 'Huyện Cần Giờ',
-      'hoan kiem': 'Quận Hoàn Kiếm',
-      'ba dinh': 'Quận Ba Đình',
-      'tay ho': 'Quận Tây Hồ',
-      'cau giay': 'Quận Cầu Giấy',
-      'dong da': 'Quận Đống Đa',
-      'hai ba trung': 'Quận Hai Bà Trưng',
-      'hoang mai': 'Quận Hoàng Mai',
-      'long bien': 'Quận Long Biên',
-      'thanh xuan': 'Quận Thanh Xuân',
-    };
-
-    for (const [key, name] of Object.entries(districtMap)) {
-      const regex = new RegExp(`(?:quan|q\\.?\\s?)?\\s*${key}`, 'i');
-      if (regex.test(normalized)) {
-        return name;
-      }
-    }
-
-    return null;
   }
 }

@@ -10,6 +10,11 @@ import {
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
+function parseJsonArrayValue(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  return JSON.parse(value) as unknown;
+}
+
 export class CreateBookingItemDto {
   @IsInt()
   serviceItemId: number;
@@ -45,7 +50,7 @@ export class CreateBookingDto {
 
   @IsArray()
   @IsOptional()
-  @Transform(({ value }) => typeof value === 'string' ? JSON.parse(value) : value)
+  @Transform(({ value }) => parseJsonArrayValue(value))
   @ValidateNested({ each: true })
   @Type(() => CreateBookingItemDto)
   items?: CreateBookingItemDto[];
@@ -89,12 +94,11 @@ export class SendQuoteDto {
 
   @IsArray()
   @IsOptional()
-  @Transform(({ value }) => typeof value === 'string' ? JSON.parse(value) : value)
+  @Transform(({ value }) => parseJsonArrayValue(value))
   @ValidateNested({ each: true })
   @Type(() => CreateQuotationItemDto)
   items?: CreateQuotationItemDto[];
 }
-
 
 export class CancelBookingDto {
   @IsString()

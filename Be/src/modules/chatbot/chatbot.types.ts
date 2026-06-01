@@ -6,6 +6,20 @@ export type ChatbotActionType =
   | 'REBOOK'
   | 'CANCEL_BOOKING_DRAFT';
 
+export type ChatbotIntentName =
+  | 'search'
+  | 'compare'
+  | 'create_booking'
+  | 'booking_status'
+  | 'open_chat'
+  | 'rebook'
+  | 'smalltalk';
+
+export type DetectedChatbotIntent = {
+  name: ChatbotIntentName;
+  confidence: number;
+};
+
 export interface ChatServiceResult {
   id: number;
   name: string;
@@ -42,6 +56,29 @@ export interface ChatbotAction {
   requiresConfirmation: boolean;
   href?: string;
 }
+
+export type StoredChatbotAction = ChatbotAction & { createdAt: string };
+
+export type BookingDraft = {
+  serviceId?: number;
+  description?: string;
+  desiredTime?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  addressDetail?: string;
+};
+
+export type ChatbotSessionState = {
+  bookingDraft?: BookingDraft;
+  pendingActions?: Record<string, StoredChatbotAction>;
+};
+
+export type SessionContext = {
+  id: string;
+  state: ChatbotSessionState;
+  isPersistent: boolean;
+};
 
 export interface ChatbotPageContext {
   path?: string;

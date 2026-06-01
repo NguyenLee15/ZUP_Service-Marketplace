@@ -6,6 +6,12 @@ import {
 import { PrismaService } from '../../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { Prisma, UserRole, UserStatus } from '@prisma/client';
+import {
+  ADMIN_PERMISSION_VALUES,
+  AdminPermissionValue,
+} from '../../../common/constants/admin-permissions';
+
+const ADMIN_PERMISSION_SET = new Set<string>(ADMIN_PERMISSION_VALUES);
 
 @Injectable()
 export class StaffAdminService {
@@ -61,6 +67,8 @@ export class StaffAdminService {
       permissions?: string[];
     },
   ) {
+    this.assertKnownPermissions(body.permissions);
+
     const existing = await this.prisma.user.findUnique({
       where: { email: body.email },
     });
@@ -105,8 +113,15 @@ export class StaffAdminService {
     adminId: number,
     ip: string,
     id: number,
-    body: { fullName?: string; phone?: string; status?: string; permissions?: string[] },
+    body: {
+      fullName?: string;
+      phone?: string;
+      status?: string;
+      permissions?: string[];
+    },
   ) {
+    this.assertKnownPermissions(body.permissions);
+
     const data: Prisma.UserUpdateInput = {};
     if (body.fullName) data.fullName = body.fullName;
     if (body.phone) data.phone = body.phone;
@@ -129,7 +144,7 @@ export class StaffAdminService {
           action: 'UPDATE_STAFF',
           targetType: 'USER',
           targetId: id,
-          description: `Cập nhật thông tin nhân viên: ${JSON.stringify(body)}`,
+          description: this.describeStaffUpdate(body),
           ipAddress: ip,
         },
       });
@@ -176,5 +191,40 @@ export class StaffAdminService {
       typeof value === 'string' &&
       Object.values(UserStatus).includes(value as UserStatus)
     );
+  }
+
+  private assertKnownPermissions(
+    permissions: string[] | undefined,
+  ): asserts permissions is AdminPermissionValue[] | undefined {
+    if (!permissions) return;
+    const invalid = permissions.filter(
+      (permission) => !ADMIN_PERMISSION_SET.has(permission),
+    );
+    if (invalid.length > 0) {
+      throw new BadRequestException({
+        code: 'INVALID_PERMISSION',
+        message: `Permission không hợp lệ: ${invalid.join(', ')}`,
+      });
+    }
+  }
+
+  private describeStaffUpdate(body: {
+    fullName?: string;
+    phone?: string;
+    status?: string;
+    permissions?: string[];
+  }) {
+    const changes: string[] = [];
+    if (body.fullName) changes.push('fullName');
+    if (body.phone) changes.push('phone');
+    if (body.status) changes.push(`status=${body.status}`);
+    if (body.permissions) {
+      changes.push(
+        `permissions(${body.permissions.length})=${body.permissions.join(',')}`,
+      );
+    }
+    return changes.length
+      ? `Cập nhật nhân viên: ${changes.join('; ')}`
+      : 'Cập nhật nhân viên';
   }
 }

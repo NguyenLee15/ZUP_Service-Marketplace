@@ -184,6 +184,7 @@ model RefreshToken {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   token     String   @db.Text
+  tokenHash String?  @unique @map("token_hash") @db.VarChar(64)
   expiresAt DateTime @map("expires_at")
   revoked   Boolean  @default(false)
   user      User     @relation(fields: [userId], references: [id])
@@ -196,6 +197,7 @@ model PasswordReset {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   token     String   @db.VarChar(255)
+  tokenHash String?  @unique @map("token_hash") @db.VarChar(64)
   expiresAt DateTime @map("expires_at")
   used      Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
@@ -279,7 +281,6 @@ model Service {
   conversations    Conversation[]
   items            ServiceItem[]
 
-
   @@index([categoryId, status])
   @@index([providerId])
   @@index([status, isDeleted, avgRating])
@@ -334,7 +335,6 @@ model Booking {
   walletTransactions WalletTransaction[]
   bookingItems       BookingItem[]
 
-
   @@index([customerId, status])
   @@index([providerId, status])
   @@index([status, providerAcceptedAt, providerResponseDeadline])
@@ -344,15 +344,14 @@ model Booking {
 
 /// Bảng quotations — commission_rate_snapshot chốt cứng % lúc gửi báo giá
 model Quotation {
-  id                     Int     @id @default(autoincrement())
-  bookingId              Int     @unique @map("booking_id")
-  actualPrice            Decimal @map("actual_price") @db.Decimal(15, 2)
-  commissionRateSnapshot Decimal @map("commission_rate_snapshot") @db.Decimal(5, 2)
-  estimatedTime          String  @map("estimated_time") @db.VarChar(100)
-  note                   String? @db.Text
-  booking                Booking @relation(fields: [bookingId], references: [id])
+  id                     Int             @id @default(autoincrement())
+  bookingId              Int             @unique @map("booking_id")
+  actualPrice            Decimal         @map("actual_price") @db.Decimal(15, 2)
+  commissionRateSnapshot Decimal         @map("commission_rate_snapshot") @db.Decimal(5, 2)
+  estimatedTime          String          @map("estimated_time") @db.VarChar(100)
+  note                   String?         @db.Text
+  booking                Booking         @relation(fields: [bookingId], references: [id])
   quotationItems         QuotationItem[]
-
 
   @@map("quotations")
 }
@@ -652,12 +651,12 @@ model FeaturedListing {
 }
 
 model ServiceItem {
-  id        Int           @id @default(autoincrement())
-  serviceId Int           @map("service_id")
-  name      String        @db.VarChar(100)
-  unit      String        @db.VarChar(20)
-  price     Decimal       @db.Decimal(15, 2)
-  service   Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  id           Int           @id @default(autoincrement())
+  serviceId    Int           @map("service_id")
+  name         String        @db.VarChar(100)
+  unit         String        @db.VarChar(20)
+  price        Decimal       @db.Decimal(15, 2)
+  service      Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   bookingItems BookingItem[]
 
   @@map("service_items")
@@ -688,4 +687,3 @@ model QuotationItem {
 
   @@map("quotation_items")
 }
-

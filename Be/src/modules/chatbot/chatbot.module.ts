@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ChatbotController } from './chatbot.controller';
+import { ChatbotDraftService } from './chatbot-draft.service';
+import { ChatbotFormatterService } from './chatbot-formatter.service';
+import { ChatbotIntentService } from './chatbot-intent.service';
 import { ChatbotService } from './chatbot.service';
+import { ChatbotPersistenceService } from './chatbot-persistence.service';
 import { ChatbotSessionService } from './chatbot-session.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
@@ -18,6 +22,13 @@ import { ServicesModule } from '../services/services.module';
     ServicesModule,
   ],
   controllers: [ChatbotController],
-  providers: [ChatbotService, ChatbotSessionService],
+  providers: [
+    ChatbotService,
+    ChatbotDraftService,
+    ChatbotFormatterService,
+    ChatbotIntentService,
+    ChatbotPersistenceService,
+    ChatbotSessionService,
+  ],
 })
 export class ChatbotModule {}

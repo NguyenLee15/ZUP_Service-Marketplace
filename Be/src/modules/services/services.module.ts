@@ -3,6 +3,8 @@ import { ServicesService } from './services.service';
 import {
   ServicesController,
   AdminServicesController,
+  AdminFeaturedListingsController,
+  AdminFeaturedRateController,
 } from './services.controller';
 import { CloudinaryModule } from '../../shared/cloudinary/cloudinary.module';
 import { AiModule } from '../../shared/ai/ai.module';
@@ -12,6 +14,7 @@ import { ServicesProcessor } from './services.processor';
 
 import { ServicesCron } from './services.cron';
 import { FeaturedListingsService } from './featured-listings.service';
+import { FeaturedListingsCron } from './featured-listings.cron';
 import { ProviderPublicService } from './provider-public.service';
 import { ServiceCommandService } from './service-command.service';
 import { ServiceModerationService } from './service-moderation.service';
@@ -31,7 +34,12 @@ import {
       ? [BullModule.registerQueue({ name: 'ai-queue' })]
       : []),
   ],
-  controllers: [ServicesController, AdminServicesController],
+  controllers: [
+    ServicesController,
+    AdminServicesController,
+    AdminFeaturedListingsController,
+    AdminFeaturedRateController,
+  ],
   providers: [
     ServiceSharedService,
     ServiceCommandService,
@@ -40,7 +48,7 @@ import {
     ProviderPublicService,
     ServicesService,
     ...(isWorkerEnabled() ? [ServicesProcessor] : []),
-    ...(isCronEnabled() ? [ServicesCron] : []),
+    ...(isCronEnabled() ? [ServicesCron, FeaturedListingsCron] : []),
     FeaturedListingsService,
   ],
   exports: [

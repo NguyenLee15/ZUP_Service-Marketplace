@@ -11,7 +11,10 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { AdminPermission } from '../../common/constants/admin-permissions';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/categories.dto';
 
@@ -33,16 +36,18 @@ export class CategoriesController {
 
   /** POST /categories — Admin only */
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles('ADMIN', 'STAFF')
+  @Permissions(AdminPermission.SERVICE_MODERATE)
   async create(@Body() dto: CreateCategoryDto) {
     return this.categoriesService.create(dto);
   }
 
   /** PATCH /categories/:id — Admin only */
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles('ADMIN', 'STAFF')
+  @Permissions(AdminPermission.SERVICE_MODERATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateCategoryDto,
@@ -52,8 +57,9 @@ export class CategoriesController {
 
   /** DELETE /categories/:id — Admin only */
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles('ADMIN', 'STAFF')
+  @Permissions(AdminPermission.SERVICE_MODERATE)
   async softDelete(@Param('id', ParseIntPipe) id: number) {
     return this.categoriesService.softDelete(id);
   }

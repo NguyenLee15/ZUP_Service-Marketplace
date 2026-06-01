@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BookingStatus, ServiceStatus } from '@prisma/client';
+import { BookingStatus, Prisma, ServiceStatus } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { generateBookingCode } from '../../common/utils/generate.util';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -64,7 +64,7 @@ export class BookingLifecycleService {
       name: string;
       unit: string;
       quantity: number;
-      priceSnapshot: any;
+      priceSnapshot: Prisma.Decimal;
     }> = [];
     if (dto.items && dto.items.length > 0) {
       const itemIds = dto.items.map((it) => it.serviceItemId);
@@ -78,12 +78,15 @@ export class BookingLifecycleService {
       if (serviceItems.length !== dto.items.length) {
         throw new BadRequestException({
           code: ErrorCodes.VALIDATION_ERROR,
-          message: 'Một số hạng mục dịch vụ con không hợp lệ hoặc không thuộc dịch vụ này',
+          message:
+            'Một số hạng mục dịch vụ con không hợp lệ hoặc không thuộc dịch vụ này',
         });
       }
 
       bookingItemsData = dto.items.map((it) => {
-        const matchingItem = serviceItems.find((s) => s.id === it.serviceItemId);
+        const matchingItem = serviceItems.find(
+          (s) => s.id === it.serviceItemId,
+        );
         if (!matchingItem) {
           throw new BadRequestException({
             code: ErrorCodes.VALIDATION_ERROR,
@@ -364,34 +367,36 @@ export class BookingLifecycleService {
       BookingStatus.QUOTED,
     );
 
-    const [quotation, updatedBooking] = await this.prisma.$transaction(async (tx) => {
-      const createdQuotation = await tx.quotation.create({
-        data: {
-          bookingId,
-          actualPrice: actualPrice,
-          commissionRateSnapshot: commissionRate,
-          estimatedTime: dto.estimatedTime,
-          note: dto.note,
-        },
-      });
+    const [quotation, updatedBooking] = await this.prisma.$transaction(
+      async (tx) => {
+        const createdQuotation = await tx.quotation.create({
+          data: {
+            bookingId,
+            actualPrice: actualPrice,
+            commissionRateSnapshot: commissionRate,
+            estimatedTime: dto.estimatedTime,
+            note: dto.note,
+          },
+        });
 
-      const quotationItems = items.map((item) => ({
-        quotationId: createdQuotation.id,
-        name: item.name,
-        unit: item.unit,
-        price: item.price,
-        quantity: item.quantity,
-      }));
+        const quotationItems = items.map((item) => ({
+          quotationId: createdQuotation.id,
+          name: item.name,
+          unit: item.unit,
+          price: item.price,
+          quantity: item.quantity,
+        }));
 
-      await tx.quotationItem.createMany({ data: quotationItems });
+        await tx.quotationItem.createMany({ data: quotationItems });
 
-      const updated = await tx.booking.update({
-        where: { id: bookingId },
-        data: { status: BookingStatus.QUOTED },
-      });
+        const updated = await tx.booking.update({
+          where: { id: bookingId },
+          data: { status: BookingStatus.QUOTED },
+        });
 
-      return [createdQuotation, updated];
-    });
+        return [createdQuotation, updated];
+      },
+    );
 
     if (files && files.length > 0) {
       for (const file of files) {

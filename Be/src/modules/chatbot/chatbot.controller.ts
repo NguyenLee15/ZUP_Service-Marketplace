@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import type {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { UpdateChatbotSessionTitleDto } from './dto/chatbot-session.dto';
 
 @Controller('chatbot')
 export class ChatbotController {
@@ -66,6 +68,20 @@ export class ChatbotController {
     @Param('id') sessionId: string,
   ) {
     return this.chatbotSessionService.deleteSession(userId, sessionId);
+  }
+
+  @Patch('sessions/:id/title')
+  @UseGuards(JwtAuthGuard)
+  async updateSessionTitle(
+    @CurrentUser('id') userId: number,
+    @Param('id') sessionId: string,
+    @Body() dto: UpdateChatbotSessionTitleDto,
+  ) {
+    return this.chatbotSessionService.updateSessionTitle(
+      userId,
+      sessionId,
+      dto.title,
+    );
   }
 
   @Get('sessions/:id/messages')

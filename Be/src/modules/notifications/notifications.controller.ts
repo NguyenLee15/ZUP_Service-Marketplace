@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Patch,
   Param,
@@ -7,26 +8,26 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { NotificationsService } from './notifications.service';
+import { NotificationsQueryDto } from './dto/notifications-query.dto';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
+@ApiTags('notifications')
+@ApiBearerAuth()
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List current user notifications' })
   async getAll(
     @CurrentUser('id') userId: number,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: NotificationsQueryDto,
   ) {
-    return this.notificationsService.getAll(
-      userId,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
-    );
+    return this.notificationsService.getAll(userId, query);
   }
 
   @Get('unread-count')
@@ -45,5 +46,13 @@ export class NotificationsController {
   @Patch('read-all')
   async markAllRead(@CurrentUser('id') userId: number) {
     return this.notificationsService.markAllRead(userId);
+  }
+
+  @Delete(':id')
+  async deleteNotification(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.notificationsService.delete(userId, id);
   }
 }
