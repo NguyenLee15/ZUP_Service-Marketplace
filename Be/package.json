@@ -27,7 +27,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:integration": "jest --config ./test/jest-integration.json --runInBand",
     "smoke:staging": "node scripts/smoke-staging.cjs",
-    "seed:admin": "node scripts/seed-admin.cjs"
+    "seed:admin": "node scripts/seed-admin.cjs",
+    "seed:demo-safe": "node scripts/seed-demo-safe.cjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
