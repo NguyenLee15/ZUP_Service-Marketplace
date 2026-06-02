@@ -7,7 +7,7 @@ import Script from 'next/script';
 import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/features/auth/services/auth.api';
 import { useAuthStore } from '@/store/auth.store';
-import { Role } from '@/types';
+import { Role, type User } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,42 @@ import {
   getGoogleIdentity,
   type GoogleCredentialResponse,
 } from '../_components/auth-utils';
+
+type LoginPayload = {
+  accessToken: string;
+  refreshToken?: string;
+  user: User;
+};
+
+function normalizeLoginPayload(payload: unknown): LoginPayload {
+  let parsed = payload;
+  if (typeof payload === 'string') {
+    try {
+      parsed = JSON.parse(payload) as unknown;
+    } catch {
+      throw new Error('Server đăng nhập trả về dữ liệu không hợp lệ. Vui lòng thử lại sau khi tải lại trang.');
+    }
+  }
+  const root = parsed as { data?: unknown };
+  const data = (root?.data && typeof root.data === 'object' ? root.data : parsed) as
+    | Partial<LoginPayload>
+    | undefined;
+
+  if (
+    !data ||
+    typeof data.accessToken !== 'string' ||
+    !data.user ||
+    typeof data.user !== 'object'
+  ) {
+    throw new Error('Phản hồi đăng nhập không hợp lệ. Vui lòng tải lại trang và thử lại.');
+  }
+
+  return {
+    accessToken: data.accessToken,
+    refreshToken: typeof data.refreshToken === 'string' ? data.refreshToken : undefined,
+    user: data.user as LoginPayload['user'],
+  };
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -73,7 +109,7 @@ export default function LoginPage() {
       setError('');
       try {
         const res = await authApi.googleAuth(response.credential);
-        const { accessToken, refreshToken, user } = res.data.data;
+        const { accessToken, refreshToken, user } = normalizeLoginPayload(res.data);
 
         setTokens(accessToken, refreshToken);
         setUser(user);
@@ -141,7 +177,7 @@ export default function LoginPage() {
 
     try {
       const res = await authApi.login({ email, password });
-      const { accessToken, refreshToken, user } = res.data.data;
+      const { accessToken, refreshToken, user } = normalizeLoginPayload(res.data);
 
       setTokens(accessToken, refreshToken);
       setUser(user);

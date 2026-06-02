@@ -36,7 +36,13 @@ export type GoogleIdentityApi = {
 
 export function getAuthErrorMessage(error: unknown, fallback: string) {
   const authError = error as AuthApiError;
-  return authError.response?.data?.error?.message || fallback;
+  if (authError.response?.data?.error?.message) {
+    return authError.response.data.error.message;
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
 }
 
 export function getAuthErrorCode(error: unknown) {
