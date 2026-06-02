@@ -350,6 +350,15 @@ export class AuthService {
         });
         this.logger.log(`New Google user registered: ${email}`);
       } else {
+        // Privileged accounts must not be claimed through a public Google flow.
+        if (user.role === UserRole.ADMIN || user.role === UserRole.STAFF) {
+          throw new UnauthorizedException({
+            code: ErrorCodes.UNAUTHORIZED,
+            message:
+              'Tài khoản quản trị không được đăng nhập bằng Google. Vui lòng dùng email và mật khẩu.',
+          });
+        }
+
         // 3. Nếu đã có nhưng chưa link googleId -> Link luôn
         if (!user.googleId) {
           user = await this.prisma.user.update({

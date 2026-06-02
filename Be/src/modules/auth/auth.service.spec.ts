@@ -1,7 +1,11 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserRole } from '@prisma/client';
+import { UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JobsService } from '../../shared/jobs/jobs.service';
 import { hashToken } from '../../common/utils/token-hash.util';
@@ -35,6 +39,18 @@ type PasswordResetRecord = {
   expiresAt: Date;
 };
 
+type GoogleUserRecord = {
+  id: number;
+  email: string;
+  fullName: string | null;
+  password?: string | null;
+  avatarUrl: string | null;
+  googleId: string | null;
+  role: UserRole;
+  status: UserStatus;
+  emailVerified: boolean;
+};
+
 type AuthPrismaMock = {
   refreshToken: {
     findFirst: jest.Mock<Promise<RefreshTokenRecord | null>, unknown[]>;
@@ -49,6 +65,8 @@ type AuthPrismaMock = {
   };
   user: {
     findUnique: jest.Mock;
+    findFirst: jest.Mock<Promise<GoogleUserRecord | null>, unknown[]>;
+    create: jest.Mock<Promise<GoogleUserRecord>, unknown[]>;
     update: jest.Mock;
   };
   $transaction: jest.Mock;
@@ -72,6 +90,13 @@ type PasswordResetCreateArg = {
 
 type TransactionCallback = (tx: AuthPrismaMock) => Promise<unknown>;
 
+type GooglePayload = {
+  email?: string;
+  name?: string;
+  picture?: string;
+  sub: string;
+};
+
 describe('AuthService token hardening', () => {
   let service: AuthService;
   let prisma: AuthPrismaMock;
@@ -91,6 +116,8 @@ describe('AuthService token hardening', () => {
       },
       user: {
         findUnique: jest.fn(),
+        findFirst: jest.fn<Promise<GoogleUserRecord | null>, unknown[]>(),
+        create: jest.fn<Promise<GoogleUserRecord>, unknown[]>(),
         update: jest.fn().mockResolvedValue({}),
       },
       $transaction: jest.fn<Promise<unknown>, [unknown]>((input) => {
@@ -269,6 +296,32 @@ describe('AuthService token hardening', () => {
       },
     });
   });
+
+  it('rejects Google login for privileged accounts matched by email', async () => {
+    const loggerErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation();
+    prisma.user.findFirst.mockResolvedValue(
+      googleUserRecord({
+        email: 'admin@test.local',
+        role: UserRole.ADMIN,
+      }),
+    );
+    mockGooglePayload(service, {
+      email: 'admin@test.local',
+      name: 'Admin User',
+      picture: 'https://avatar.test/admin.png',
+      sub: 'google-admin-sub',
+    });
+
+    await expect(
+      service.googleLogin('google-credential'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(prisma.refreshToken.create).not.toHaveBeenCalled();
+    loggerErrorSpy.mockRestore();
+  });
 });
 
 function refreshRecord(
@@ -301,6 +354,37 @@ function passwordResetRecord(
     used: false,
     expiresAt: new Date(Date.now() + 60_000),
     ...overrides,
+  };
+}
+
+function googleUserRecord(
+  overrides: Partial<GoogleUserRecord> = {},
+): GoogleUserRecord {
+  return {
+    id: 1,
+    email: 'user@test.local',
+    fullName: 'Test User',
+    password: null,
+    avatarUrl: null,
+    googleId: null,
+    role: UserRole.CUSTOMER,
+    status: UserStatus.ACTIVE,
+    emailVerified: true,
+    ...overrides,
+  };
+}
+
+function mockGooglePayload(service: AuthService, payload: GooglePayload): void {
+  (
+    service as unknown as {
+      googleClient: {
+        verifyIdToken: jest.Mock;
+      };
+    }
+  ).googleClient = {
+    verifyIdToken: jest.fn().mockResolvedValue({
+      getPayload: () => payload,
+    }),
   };
 }
 
