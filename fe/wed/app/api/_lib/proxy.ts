@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
-const ACCESS_TOKEN_COOKIE = 'hs_access_token';
-const REFRESH_TOKEN_COOKIE = 'hs_refresh_token';
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
+const ACCESS_TOKEN_COOKIE = "hs_access_token";
+const REFRESH_TOKEN_COOKIE = "hs_refresh_token";
 const AUTH_TOKEN_PATHS = new Set([
-  '/auth/login',
-  '/auth/google',
-  '/auth/verify-otp',
-  '/auth/refresh',
+  "/auth/login",
+  "/auth/google",
+  "/auth/verify-otp",
+  "/auth/refresh",
 ]);
 
 function authCookieOptions(maxAge: number) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    path: '/',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
     maxAge,
   };
 }
 
 function clearAuthCookies(response: NextResponse) {
-  response.cookies.set(ACCESS_TOKEN_COOKIE, '', authCookieOptions(0));
-  response.cookies.set(REFRESH_TOKEN_COOKIE, '', authCookieOptions(0));
+  response.cookies.set(ACCESS_TOKEN_COOKIE, "", authCookieOptions(0));
+  response.cookies.set(REFRESH_TOKEN_COOKIE, "", authCookieOptions(0));
 }
 
 function readJsonBody(text: string) {
@@ -36,7 +36,7 @@ function readJsonBody(text: string) {
 }
 
 function getPayloadData(payload: any) {
-  return payload?.data && typeof payload.data === 'object'
+  return payload?.data && typeof payload.data === "object"
     ? payload.data
     : payload;
 }
@@ -45,15 +45,15 @@ function getAuthTokens(payload: any) {
   const data = getPayloadData(payload);
   return {
     accessToken:
-      typeof data?.accessToken === 'string' ? data.accessToken : null,
+      typeof data?.accessToken === "string" ? data.accessToken : null,
     refreshToken:
-      typeof data?.refreshToken === 'string' ? data.refreshToken : null,
+      typeof data?.refreshToken === "string" ? data.refreshToken : null,
   };
 }
 
 function stripRefreshToken(payload: any) {
   const data = getPayloadData(payload);
-  if (data && typeof data === 'object') {
+  if (data && typeof data === "object") {
     delete data.refreshToken;
   }
 }
@@ -87,10 +87,7 @@ function storeAuthCookies(
  * Production-ready: ẩn BE URL khỏi client, forward IP cho audit log,
  * hỗ trợ multipart/form-data (file upload).
  */
-export async function proxyToBackend(
-  req: NextRequest,
-  backendPath: string,
-) {
+export async function proxyToBackend(req: NextRequest, backendPath: string) {
   const headers: Record<string, string> = {};
   const cookieStore = await cookies();
 
@@ -98,13 +95,16 @@ export async function proxyToBackend(
   // callers can still pass the short-lived in-memory access token explicitly.
   const cookieAccessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
   const auth =
-    req.headers.get('authorization') ||
+    req.headers.get("authorization") ||
     (cookieAccessToken ? `Bearer ${cookieAccessToken}` : null);
-  if (auth) headers['Authorization'] = auth;
+  if (auth) headers["Authorization"] = auth;
 
   // Forward IP for audit logs
-  const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-  headers['X-Forwarded-For'] = clientIp;
+  const clientIp =
+    req.headers.get("x-forwarded-for") ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  headers["X-Forwarded-For"] = clientIp;
 
   const fetchOptions: RequestInit = {
     method: req.method,
@@ -112,18 +112,18 @@ export async function proxyToBackend(
   };
 
   // Forward body for non-GET requests
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    const contentType = req.headers.get('content-type') || '';
-    if (contentType.includes('multipart/form-data')) {
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("multipart/form-data")) {
       // FormData — pass through, let fetch set boundary
       const formData = await req.formData();
       fetchOptions.body = formData as any;
       // Do NOT set Content-Type — fetch will auto-set with correct boundary
     } else {
       // JSON or other text body
-      headers['Content-Type'] = contentType || 'application/json';
+      headers["Content-Type"] = contentType || "application/json";
       const bodyText = await req.text();
-      if (backendPath === '/auth/refresh') {
+      if (backendPath === "/auth/refresh") {
         const body = readJsonBody(bodyText);
         if (!body.refreshToken) {
           body.refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
@@ -134,7 +134,7 @@ export async function proxyToBackend(
       }
     }
   } else {
-    headers['Content-Type'] = 'application/json';
+    headers["Content-Type"] = "application/json";
   }
 
   fetchOptions.headers = headers;
@@ -147,20 +147,21 @@ export async function proxyToBackend(
 
   try {
     const response = await fetch(url.toString(), fetchOptions);
-    const responseContentType = response.headers.get('content-type') || 'application/json';
+    const responseContentType =
+      response.headers.get("content-type") || "application/json";
 
     // Stream binary responses (PDF, Excel)
     if (
-      responseContentType.includes('application/pdf') ||
-      responseContentType.includes('spreadsheetml') ||
-      responseContentType.includes('octet-stream')
+      responseContentType.includes("application/pdf") ||
+      responseContentType.includes("spreadsheetml") ||
+      responseContentType.includes("octet-stream")
     ) {
       const buffer = await response.arrayBuffer();
       const resHeaders: Record<string, string> = {
-        'Content-Type': responseContentType,
+        "Content-Type": responseContentType,
       };
-      const disposition = response.headers.get('content-disposition');
-      if (disposition) resHeaders['Content-Disposition'] = disposition;
+      const disposition = response.headers.get("content-disposition");
+      if (disposition) resHeaders["Content-Disposition"] = disposition;
 
       return new NextResponse(buffer, {
         status: response.status,
@@ -174,7 +175,7 @@ export async function proxyToBackend(
     let parsedPayload: any = null;
     let authTokens: ReturnType<typeof getAuthTokens> | null = null;
 
-    if (responseContentType.includes('application/json')) {
+    if (responseContentType.includes("application/json")) {
       try {
         parsedPayload = JSON.parse(data);
         if (response.ok && AUTH_TOKEN_PATHS.has(backendPath)) {
@@ -186,14 +187,14 @@ export async function proxyToBackend(
       }
     }
 
-    if (parsedPayload && responseContentType.includes('application/json')) {
+    if (parsedPayload && responseContentType.includes("application/json")) {
       responseBody = JSON.stringify(parsedPayload);
     }
 
     const proxiedResponse = new NextResponse(responseBody, {
       status: response.status,
       headers: {
-        'Content-Type': responseContentType,
+        "Content-Type": responseContentType,
       },
     });
 
@@ -201,7 +202,10 @@ export async function proxyToBackend(
       storeAuthCookies(proxiedResponse, authTokens);
     }
 
-    if (backendPath === '/auth/logout') {
+    if (
+      backendPath === "/auth/logout" ||
+      (backendPath === "/auth/refresh" && response.status === 401)
+    ) {
       clearAuthCookies(proxiedResponse);
     }
 
@@ -209,7 +213,13 @@ export async function proxyToBackend(
   } catch (error) {
     console.error(`[BFF Proxy] Failed to reach backend: ${error}`);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Không thể kết nối đến server' } },
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "Không thể kết nối đến server",
+        },
+      },
       { status: 502 },
     );
   }
