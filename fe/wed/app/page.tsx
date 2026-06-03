@@ -1,22 +1,25 @@
-import React, { Suspense } from 'react';
-import { Sparkles } from 'lucide-react';
-import { headers } from 'next/headers';
+import React, { Suspense } from "react";
+import { Sparkles } from "lucide-react";
+import { headers } from "next/headers";
 
-import { CategoryGrid } from '@/app/components/home/CategoryGrid';
-import { DeferredRecentlyViewedServices } from '@/app/components/home/DeferredRecentlyViewedServices';
-import { FeaturedServices } from '@/app/components/home/FeaturedServices';
-import { HeroSection } from '@/app/components/home/HeroSection';
-import { HowItWorks } from '@/app/components/home/HowItWorks';
-import { CategoryGridSkeleton, ServicesListSkeleton } from '@/app/components/home/HomeSkeleton';
-import { GlossarySection } from '@/app/components/home/GlossarySection';
-import { Testimonials } from '@/app/components/home/Testimonials';
-import { CustomerFooter } from '@/components/layout/CustomerFooter';
-import { SocialShareWidget } from '@/components/social/SocialShareWidget';
-import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { CategoryGrid } from "@/app/components/home/CategoryGrid";
+import { DeferredRecentlyViewedServices } from "@/app/components/home/DeferredRecentlyViewedServices";
+import { FeaturedServices } from "@/app/components/home/FeaturedServices";
+import { HeroSection } from "@/app/components/home/HeroSection";
+import { HowItWorks } from "@/app/components/home/HowItWorks";
+import {
+  CategoryGridSkeleton,
+  ServicesListSkeleton,
+} from "@/app/components/home/HomeSkeleton";
+import { GlossarySection } from "@/app/components/home/GlossarySection";
+import { Testimonials } from "@/app/components/home/Testimonials";
+import { CustomerFooter } from "@/components/layout/CustomerFooter";
+import { SocialShareWidget } from "@/components/social/SocialShareWidget";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
-import { HomeHeader } from '@/components/layout/HomeHeader';
-import { Accordion } from '@/components/ui/accordion';
-import type { Category, Service } from '@/types';
+import { HomeHeader } from "@/components/layout/HomeHeader";
+import { Accordion } from "@/components/ui/accordion";
+import type { Category, Service } from "@/types";
 
 export const revalidate = 60;
 
@@ -31,7 +34,7 @@ type CategoryServiceSection = {
   services: Service[];
 };
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const HOME_MAIN_CATEGORY_IDS = [3, 1, 4, 8, 9, 10, 11, 12];
 
 function getBackendUrl(path: string, params?: Record<string, string | number>) {
@@ -46,17 +49,22 @@ function getBackendUrl(path: string, params?: Record<string, string | number>) {
   return url;
 }
 
-async function fetchHomeServices(path: string, params?: Record<string, string | number>) {
+async function fetchHomeServices(
+  path: string,
+  params?: Record<string, string | number>,
+) {
   try {
     const response = await fetch(getBackendUrl(path, params), {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: "application/json" },
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(4_000),
     });
 
     if (!response.ok) return [];
 
-    const payload = (await response.json()) as BackendResponse<Service[] | { data?: Service[] }>;
+    const payload = (await response.json()) as BackendResponse<
+      Service[] | { data?: Service[] }
+    >;
     const data = payload.data;
 
     if (Array.isArray(data)) return data;
@@ -70,8 +78,8 @@ async function fetchHomeServices(path: string, params?: Record<string, string | 
 
 async function fetchHomeCategories() {
   try {
-    const response = await fetch(getBackendUrl('/categories/flat'), {
-      headers: { Accept: 'application/json' },
+    const response = await fetch(getBackendUrl("/categories/flat"), {
+      headers: { Accept: "application/json" },
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(4_000),
     });
@@ -130,23 +138,33 @@ function getCategoryTreeIds(rootCategoryId: number, categories: Category[]) {
 function getCategorySectionDescription(categoryName: string) {
   const normalizedName = categoryName.toLowerCase();
 
-  if (normalizedName.includes('vệ sinh')) {
-    return 'Các gói vệ sinh được đặt nhiều, có giá tham khảo rõ và thợ đã xác minh.';
+  if (normalizedName.includes("vệ sinh")) {
+    return "Các gói vệ sinh được đặt nhiều, có giá tham khảo rõ và thợ đã xác minh.";
   }
 
-  if (normalizedName.includes('sửa') || normalizedName.includes('điện')) {
-    return 'Nhóm sửa chữa tổng hợp từ các danh mục con, phù hợp khi cần xử lý sự cố tại nhà.';
+  if (normalizedName.includes("sửa") || normalizedName.includes("điện")) {
+    return "Nhóm sửa chữa tổng hợp từ các danh mục con, phù hợp khi cần xử lý sự cố tại nhà.";
   }
 
-  if (normalizedName.includes('làm đẹp')) {
-    return 'Các dịch vụ chăm sóc cá nhân tại nhà, có thông tin thợ, giá và đánh giá để so sánh.';
+  if (normalizedName.includes("làm đẹp")) {
+    return "Các dịch vụ chăm sóc cá nhân tại nhà, có thông tin thợ, giá và đánh giá để so sánh.";
   }
 
-  if (normalizedName.includes('công nghệ') || normalizedName.includes('thiết kế')) {
-    return 'Dịch vụ kỹ thuật và sáng tạo được gom từ các nhóm con để bạn chọn nhanh.';
+  if (
+    normalizedName.includes("công nghệ") ||
+    normalizedName.includes("thiết kế")
+  ) {
+    return "Dịch vụ kỹ thuật và sáng tạo được gom từ các nhóm con để bạn chọn nhanh.";
   }
 
-  return 'Một số dịch vụ đang hoạt động trong nhóm danh mục này để bạn chọn nhanh.';
+  return "Một số dịch vụ đang hoạt động trong nhóm danh mục này để bạn chọn nhanh.";
+}
+
+function getCategorySectionActionLabel(categoryName: string) {
+  const trimmedName = categoryName.trim();
+  return trimmedName.toLowerCase().startsWith("dịch vụ")
+    ? `Xem thêm ${trimmedName}`
+    : `Xem thêm dịch vụ ${trimmedName}`;
 }
 
 async function fetchCategoryServiceSections(categories: Category[]) {
@@ -154,10 +172,10 @@ async function fetchCategoryServiceSections(categories: Category[]) {
 
   const sections = await Promise.all(
     candidates.map(async (category) => {
-      const services = await fetchHomeServices('/services/search', {
-        categoryIds: getCategoryTreeIds(category.id, categories).join(','),
+      const services = await fetchHomeServices("/services/search", {
+        categoryIds: getCategoryTreeIds(category.id, categories).join(","),
         limit: 4,
-        sortBy: 'rating',
+        sortBy: "rating",
       });
 
       return {
@@ -169,7 +187,10 @@ async function fetchCategoryServiceSections(categories: Category[]) {
   );
 
   return sections
-    .filter((section): section is CategoryServiceSection => section.services.length > 0)
+    .filter(
+      (section): section is CategoryServiceSection =>
+        section.services.length > 0,
+    )
     .slice(0, 3);
 }
 
@@ -178,7 +199,9 @@ function buildFallbackCategorySections(
   existingSections: CategoryServiceSection[],
   categories: Category[],
 ) {
-  const categoryById = new Map(categories.map((category) => [category.id, category]));
+  const categoryById = new Map(
+    categories.map((category) => [category.id, category]),
+  );
   const existingCategoryIds = new Set(
     existingSections.map((section) => section.category.id),
   );
@@ -198,7 +221,9 @@ function buildFallbackCategorySections(
   };
 
   services.forEach((service) => {
-    const category = service.category ? getRootCategory(service.category) : null;
+    const category = service.category
+      ? getRootCategory(service.category)
+      : null;
     if (!category || existingCategoryIds.has(category.id)) return;
 
     const current = grouped.get(category.id);
@@ -221,18 +246,23 @@ function buildFallbackCategorySections(
 
 export default async function Home() {
   const headersList = await headers();
-  const nonce = headersList.get('x-nonce') || undefined;
+  const nonce = headersList.get("x-nonce") || undefined;
 
   const [featuredServices, sponsoredServices, categories] = await Promise.all([
-    fetchHomeServices('/services/search', { limit: 8, sortBy: 'rating' }),
-    fetchHomeServices('/services/featured'),
+    fetchHomeServices("/services/search", { limit: 8, sortBy: "rating" }),
+    fetchHomeServices("/services/featured"),
     fetchHomeCategories(),
   ]);
-  const fetchedCategorySections = await fetchCategoryServiceSections(categories);
+  const fetchedCategorySections =
+    await fetchCategoryServiceSections(categories);
   const categorySections =
     fetchedCategorySections.length >= 2
       ? fetchedCategorySections
-      : buildFallbackCategorySections(featuredServices, fetchedCategorySections, categories);
+      : buildFallbackCategorySections(
+          featuredServices,
+          fetchedCategorySections,
+          categories,
+        );
 
   return (
     <div className="aether-page min-h-screen bg-background flex flex-col">
@@ -244,51 +274,52 @@ export default async function Home() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebPage",
-            "name": "Zup Marketplace - Nền tảng kết nối dịch vụ tiện ích tại nhà",
-            "description": "Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam. Vệ sinh nhà cửa, sửa chữa điện nước, làm đẹp tại nhà uy tín, chất lượng.",
-            "publisher": {
+            name: "Zup Marketplace - Nền tảng kết nối dịch vụ tiện ích tại nhà",
+            description:
+              "Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam. Vệ sinh nhà cửa, sửa chữa điện nước, làm đẹp tại nhà uy tín, chất lượng.",
+            publisher: {
               "@type": "Organization",
-              "name": "ZUP Marketplace",
-              "logo": {
+              name: "ZUP Marketplace",
+              logo: {
                 "@type": "ImageObject",
-                "url": "https://zup.vn/logo.png"
+                url: "https://zup.vn/logo.png",
               },
-              "sameAs": [
+              sameAs: [
                 "https://facebook.com/zup.vn",
                 "https://youtube.com/@zupvn",
                 "https://tiktok.com/@zup.vn",
-                "https://twitter.com/zupvn"
-              ]
+                "https://twitter.com/zupvn",
+              ],
             },
-            "author": {
+            author: {
               "@type": "Organization",
-              "name": "Ban Biên Tập ZUP Content Team"
+              name: "Ban Biên Tập ZUP Content Team",
             },
-            "reviewedBy": {
+            reviewedBy: {
               "@type": "Person",
-              "name": "Nguyễn Văn A",
-              "jobTitle": "Chuyên Gia Kiểm Định Dịch Vụ",
-              "hasCredential": {
+              name: "Nguyễn Văn A",
+              jobTitle: "Chuyên Gia Kiểm Định Dịch Vụ",
+              hasCredential: {
                 "@type": "EducationalOccupationalCredential",
-                "name": "Kỹ sư kiểm định chất lượng",
-                "credentialCategory": "Professional Certificate"
-              }
+                name: "Kỹ sư kiểm định chất lượng",
+                credentialCategory: "Professional Certificate",
+              },
             },
-            "datePublished": "2026-01-15T08:00:00+07:00",
-            "dateModified": "2026-05-29T08:00:00+07:00",
-            "aggregateRating": {
+            datePublished: "2026-01-15T08:00:00+07:00",
+            dateModified: "2026-05-29T08:00:00+07:00",
+            aggregateRating: {
               "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "10450",
-              "bestRating": "5",
-              "worstRating": "1"
+              ratingValue: "4.9",
+              reviewCount: "10450",
+              bestRating: "5",
+              worstRating: "1",
             },
-            "publishingPrinciples": "https://zup.vn/editorial-policy",
-            "publishingPolicy": {
+            publishingPrinciples: "https://zup.vn/editorial-policy",
+            publishingPolicy: {
               "@type": "CreativeWork",
-              "name": "Editorial & Fact-Checking Policy",
-              "url": "https://zup.vn/editorial-policy"
-            }
+              name: "Editorial & Fact-Checking Policy",
+              url: "https://zup.vn/editorial-policy",
+            },
           })}
         </script>
 
@@ -302,11 +333,46 @@ export default async function Home() {
                 <span className="text-cyan-400">📋</span>
                 <span>Nhanh:</span>
               </li>
-              <li><a href="#danh-muc-dich-vu" className="text-slate-400 hover:text-cyan-400 transition-colors">Danh mục</a></li>
-              <li><a href="#dich-vu-noi-bat" className="text-slate-400 hover:text-cyan-400 transition-colors">Nổi bật</a></li>
-              <li><a href="#danh-gia-khach-hang" className="text-slate-400 hover:text-cyan-400 transition-colors">Đánh giá</a></li>
-              <li><a href="#quy-trinh-hoat-dong" className="text-slate-400 hover:text-cyan-400 transition-colors">Quy trình</a></li>
-              <li><a href="#giai-dap-truc-tiep" className="text-slate-400 hover:text-cyan-400 transition-colors">Hỏi đáp</a></li>
+              <li>
+                <a
+                  href="#danh-muc-dich-vu"
+                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                >
+                  Danh mục
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#dich-vu-noi-bat"
+                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                >
+                  Nổi bật
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#danh-gia-khach-hang"
+                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                >
+                  Đánh giá
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#quy-trinh-hoat-dong"
+                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                >
+                  Quy trình
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#giai-dap-truc-tiep"
+                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                >
+                  Hỏi đáp
+                </a>
+              </li>
             </ul>
           </nav>
 
@@ -317,7 +383,10 @@ export default async function Home() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h2 id="dich-vu-noi-bat" className="text-2xl md:text-[38px] font-bold brand-heading leading-tight flex items-center gap-2 text-balance">
+                    <h2
+                      id="dich-vu-noi-bat"
+                      className="text-2xl md:text-[38px] font-bold brand-heading leading-tight flex items-center gap-2 text-balance"
+                    >
                       <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-action-blue" />
                       Dịch vụ nổi bật.
                     </h2>
@@ -335,14 +404,14 @@ export default async function Home() {
             <DeferredRecentlyViewedServices />
           </Suspense>
 
-           {categorySections.map((section) => (
+          {categorySections.map((section) => (
             <FeaturedServices
               key={section.category.id}
               services={section.services}
               title={section.category.name}
               description={section.description}
               href={`/services?categoryIds=${section.category.id}`}
-              actionLabel={`Xem thêm dịch vụ ${section.category.name}`}
+              actionLabel={getCategorySectionActionLabel(section.category.name)}
             />
           ))}
 
@@ -351,30 +420,66 @@ export default async function Home() {
           <HowItWorks />
 
           {/* E-E-A-T Compact Strip — giữ nguyên markup SEO, thu gọn hiển thị */}
-          <section className="border-t border-slate-800/60 pt-6" itemScope itemType="https://schema.org/CreativeWork">
-            <meta itemProp="name" content="Trang chủ ZUP Marketplace — Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam." />
+          <section
+            className="border-t border-slate-800/60 pt-6"
+            itemScope
+            itemType="https://schema.org/CreativeWork"
+          >
+            <meta
+              itemProp="name"
+              content="Trang chủ ZUP Marketplace — Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam."
+            />
             <meta itemProp="datePublished" content="2026-01-15" />
             <meta itemProp="dateModified" content="2026-05-29" />
             <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
-                <span itemProp="author" itemScope itemType="https://schema.org/Organization">
-                  <span className="text-slate-400 font-semibold">Biên soạn:</span>{' '}
-                  <span className="text-slate-300" itemProp="name">Ban Biên Tập ZUP</span>
+                <span
+                  itemProp="author"
+                  itemScope
+                  itemType="https://schema.org/Organization"
+                >
+                  <span className="text-slate-400 font-semibold">
+                    Biên soạn:
+                  </span>{" "}
+                  <span className="text-slate-300" itemProp="name">
+                    Ban Biên Tập ZUP
+                  </span>
                 </span>
                 <span className="hidden sm:inline text-slate-700">·</span>
                 <span>
-                  <span className="text-slate-400 font-semibold">Kiểm định:</span>{' '}
-                  <a href="https://zup.vn/certificates/reviewer-a" className="text-sky-400 hover:underline text-xs">Kỹ sư Nguyễn Văn A ↗</a>
+                  <span className="text-slate-400 font-semibold">
+                    Kiểm định:
+                  </span>{" "}
+                  <a
+                    href="https://zup.vn/certificates/reviewer-a"
+                    className="text-sky-400 hover:underline text-xs"
+                  >
+                    Kỹ sư Nguyễn Văn A ↗
+                  </a>
                 </span>
                 <span className="hidden sm:inline text-slate-700">·</span>
                 <span>
-                  <span className="text-slate-400 font-semibold">Cập nhật:</span>{' '}
-                  <time className="text-emerald-400" dateTime="2026-05-29">29/05/2026</time>
+                  <span className="text-slate-400 font-semibold">
+                    Cập nhật:
+                  </span>{" "}
+                  <time className="text-emerald-400" dateTime="2026-05-29">
+                    29/05/2026
+                  </time>
                 </span>
                 <span className="hidden sm:inline text-slate-700">·</span>
                 <span className="flex gap-3">
-                  <a href="/editorial-policy" className="text-sky-400 hover:underline">Chính sách biên tập</a>
-                  <a href="mailto:support@zup.vn" className="text-sky-400 hover:underline">support@zup.vn</a>
+                  <a
+                    href="/editorial-policy"
+                    className="text-sky-400 hover:underline"
+                  >
+                    Chính sách biên tập
+                  </a>
+                  <a
+                    href="mailto:support@zup.vn"
+                    className="text-sky-400 hover:underline"
+                  >
+                    support@zup.vn
+                  </a>
                 </span>
               </div>
               <SocialShareWidget />
