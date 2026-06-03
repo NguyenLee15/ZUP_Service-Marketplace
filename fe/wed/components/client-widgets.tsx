@@ -1,10 +1,56 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState, startTransition, type ComponentType } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  startTransition,
+  type ComponentType,
+} from "react";
 
 type SimpleComponent = ComponentType<Record<string, never>>;
 type ChatComponent = ComponentType<{ initialOpen?: boolean }>;
+
+function useLegacyServiceWorkerCleanup() {
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const cleanup = async () => {
+      try {
+        const hadController = Boolean(navigator.serviceWorker.controller);
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(
+          registrations.map((registration) => registration.unregister()),
+        );
+
+        if ("caches" in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames
+              .filter((name) =>
+                /^(workbox|start-url|pages|pages-rsc|apis|next-|static-)/.test(
+                  name,
+                ),
+              )
+              .map((name) => caches.delete(name)),
+          );
+        }
+
+        if (hadController && !sessionStorage.getItem("zup-legacy-sw-cleaned")) {
+          sessionStorage.setItem("zup-legacy-sw-cleaned", "1");
+          window.location.reload();
+        }
+      } catch (error) {
+        console.warn("Failed to clean legacy service worker", error);
+      }
+    };
+
+    void cleanup();
+  }, []);
+}
 
 function MessageSquareIcon() {
   return (
@@ -24,10 +70,11 @@ function MessageSquareIcon() {
 }
 
 export function ClientWidgets() {
+  useLegacyServiceWorkerCleanup();
+
   const pathname = usePathname();
   const [ChatWidget, setChatWidget] = useState<ChatComponent | null>(null);
   const [BackToTop, setBackToTop] = useState<SimpleComponent | null>(null);
-  const [SocialFloatingWidget, setSocialFloatingWidget] = useState<SimpleComponent | null>(null);
   const [chatRequested, setChatRequested] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -91,21 +138,33 @@ export function ClientWidgets() {
   return (
     <>
       {BackToTop && <BackToTop />}
-      {SocialFloatingWidget && <SocialFloatingWidget />}
-      
+
       {/* Auto-suggesting AI Chatbot Tooltip speech bubble */}
       {showTooltip && !ChatWidget && (
         <div className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] right-[calc(1rem_+_env(safe-area-inset-right))] z-50 sm:bottom-24 sm:right-6 animate-[bounce_2s_infinite] max-w-[240px] bg-slate-900/95 backdrop-blur-md border border-cyan-400/35 p-3.5 rounded-2xl shadow-2xl text-xs text-white select-none">
-          <button 
-            onClick={() => setShowTooltip(false)} 
+          <button
+            onClick={() => setShowTooltip(false)}
             className="absolute -top-1.5 -right-1.5 bg-slate-800 text-slate-400 hover:text-white rounded-full p-1 border border-white/10 flex items-center justify-center transition-colors focus-visible:outline-none"
             aria-label="Tắt gợi ý"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
-          <div onClick={loadChatWidget} className="cursor-pointer font-bold leading-relaxed text-slate-100 hover:text-cyan-300 transition-colors">
+          <div
+            onClick={loadChatWidget}
+            className="cursor-pointer font-bold leading-relaxed text-slate-100 hover:text-cyan-300 transition-colors"
+          >
             Chào bạn! Bạn cần tìm thợ gì hôm nay? Để tôi hỗ trợ gợi ý nhé! 🤖
           </div>
           {/* Triangular speech bubble tip */}

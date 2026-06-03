@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { use, useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { bookingsApi } from '@/features/auth/services/api';
-import { BookingStatus } from '@/types';
-import { BackButton } from '@/components/navigation/BackButton';
-import { Button } from '@/components/ui/button';
-import { getTrackingSocket } from '@/lib/socket';
+import { use, useEffect, useState, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import { bookingsApi } from "@/features/auth/services/api";
+import { BookingStatus } from "@/types";
+import { BackButton } from "@/components/navigation/BackButton";
+import { Button } from "@/components/ui/button";
+import { getTrackingSocket } from "@/lib/socket";
 import {
   Phone,
   MessageCircle,
@@ -20,10 +20,10 @@ import {
   AlertCircle,
   CheckCircle2,
   Locate,
-} from 'lucide-react';
+} from "lucide-react";
 
 // Dynamic import to avoid SSR issues with Leaflet
-const TrackingMap = dynamic(() => import('./TrackingMap'), {
+const TrackingMap = dynamic(() => import("./TrackingMap"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full glass-panel rounded-2xl flex items-center justify-center">
@@ -65,21 +65,21 @@ function haversineDistance(
 }
 
 function formatETA(distKm: number, speedKmh: number): string {
-  if (speedKmh <= 0) return '—';
+  if (speedKmh <= 0) return "—";
   const mins = Math.round((distKm / speedKmh) * 60);
-  if (mins < 1) return 'Sắp đến';
+  if (mins < 1) return "Sắp đến";
   if (mins < 60) return `${mins} phút`;
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  return `${h}h${m > 0 ? ` ${m}p` : ''}`;
+  return `${h}h${m > 0 ? ` ${m}p` : ""}`;
 }
 
 // ===================== STATUS CONFIGS =====================
 const TRACK_STATUSES = [
-  { key: 'accepted', label: 'Đã nhận đơn', icon: CheckCircle2, done: true },
-  { key: 'on_the_way', label: 'Đang di chuyển', icon: Truck, done: false },
-  { key: 'arrived', label: 'Đã đến nơi', icon: MapPin, done: false },
-  { key: 'working', label: 'Đang thực hiện', icon: RefreshCw, done: false },
+  { key: "accepted", label: "Đã nhận đơn", icon: CheckCircle2, done: true },
+  { key: "on_the_way", label: "Đang di chuyển", icon: Truck, done: false },
+  { key: "arrived", label: "Đã đến nơi", icon: MapPin, done: false },
+  { key: "working", label: "Đang thực hiện", icon: RefreshCw, done: false },
 ];
 
 // ===================== MAIN PAGE =====================
@@ -92,7 +92,7 @@ export default function TrackingPage({
   const router = useRouter();
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [trackingEnded, setTrackingEnded] = useState(false);
 
   // Provider realtime location
@@ -114,17 +114,21 @@ export default function TrackingPage({
       .then((res) => {
         const data = res.data.data || res.data;
         setBooking(data);
-        
+
         // Dynamically adjust customer coordinates based on booking province!
         if (data) {
-          const province = (data.province || '').toLowerCase();
-          if (province.includes('hồ chí minh') || province.includes('hcm') || province.includes('sài gòn')) {
+          const province = (data.province || "").toLowerCase();
+          if (
+            province.includes("hồ chí minh") ||
+            province.includes("hcm") ||
+            province.includes("sài gòn")
+          ) {
             setCustomerLoc({ lat: 10.762622, lng: 106.660172 });
-          } else if (province.includes('đà nẵng')) {
+          } else if (province.includes("đà nẵng")) {
             setCustomerLoc({ lat: 16.047079, lng: 108.20623 });
-          } else if (province.includes('cần thơ')) {
+          } else if (province.includes("cần thơ")) {
             setCustomerLoc({ lat: 10.045162, lng: 105.746857 });
-          } else if (province.includes('hải phòng')) {
+          } else if (province.includes("hải phòng")) {
             setCustomerLoc({ lat: 20.844912, lng: 106.688087 });
           } else {
             // Default to Hanoi
@@ -143,7 +147,7 @@ export default function TrackingPage({
           }
         }
       })
-      .catch(() => setError('Không tìm thấy đơn hàng'))
+      .catch(() => setError("Không tìm thấy đơn hàng"))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -160,26 +164,29 @@ export default function TrackingPage({
     socket.connect();
 
     // Subscribe to this booking's tracking room
-    socket.emit('subscribeTracking', { bookingId });
+    socket.emit("subscribeTracking", { bookingId });
 
     // Receive last known location on subscribe
-    socket.on('lastKnownLocation', (data: { bookingId: number; location: any }) => {
-      if (data.location) {
-        socketConnectedRef.current = true;
-        const loc = data.location;
-        setProviderLoc({
-          lat: loc.lat,
-          lng: loc.lng,
-          heading: loc.heading ?? 0,
-          speed: loc.speed ?? 0,
-          updatedAt: new Date(loc.updatedAt),
-        });
-        setTrail([[loc.lat, loc.lng]]);
-      }
-    });
+    socket.on(
+      "lastKnownLocation",
+      (data: { bookingId: number; location: any }) => {
+        if (data.location) {
+          socketConnectedRef.current = true;
+          const loc = data.location;
+          setProviderLoc({
+            lat: loc.lat,
+            lng: loc.lng,
+            heading: loc.heading ?? 0,
+            speed: loc.speed ?? 0,
+            updatedAt: new Date(loc.updatedAt),
+          });
+          setTrail([[loc.lat, loc.lng]]);
+        }
+      },
+    );
 
     // Receive realtime provider location updates
-    socket.on('providerLocation', (data: any) => {
+    socket.on("providerLocation", (data: any) => {
       socketConnectedRef.current = true;
       const newLoc: ProviderLocation = {
         lat: data.lat,
@@ -192,14 +199,19 @@ export default function TrackingPage({
       setTrail((t) => [...t.slice(-100), [data.lat, data.lng]]);
 
       // Auto-detect arrived
-      const dist = haversineDistance(data.lat, data.lng, customerLoc.lat, customerLoc.lng);
+      const dist = haversineDistance(
+        data.lat,
+        data.lng,
+        customerLoc.lat,
+        customerLoc.lng,
+      );
       if (dist < 0.05) {
         setCurrentStepIdx(2);
       }
     });
 
     // Tracking ended (booking status changed)
-    socket.on('trackingEnded', () => {
+    socket.on("trackingEnded", () => {
       setTrackingEnded(true);
     });
 
@@ -212,14 +224,14 @@ export default function TrackingPage({
 
     return () => {
       clearTimeout(fallbackTimer);
-      socket.emit('unsubscribeTracking', { bookingId });
-      socket.off('lastKnownLocation');
-      socket.off('providerLocation');
-      socket.off('trackingEnded');
+      socket.emit("unsubscribeTracking", { bookingId });
+      socket.off("lastKnownLocation");
+      socket.off("providerLocation");
+      socket.off("trackingEnded");
       socket.disconnect();
       if (simulationRef.current) clearInterval(simulationRef.current);
     };
-  }, [booking?.status, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [booking?.status, id]);
 
   // ---- Simulation fallback (demo/offline mode) ----
   const startSimulation = useCallback(() => {
@@ -241,7 +253,12 @@ export default function TrackingPage({
     simulationRef.current = setInterval(() => {
       setProviderLoc((prev) => {
         if (!prev) return prev;
-        const dist = haversineDistance(prev.lat, prev.lng, customerLoc.lat, customerLoc.lng);
+        const dist = haversineDistance(
+          prev.lat,
+          prev.lng,
+          customerLoc.lat,
+          customerLoc.lng,
+        );
 
         if (dist < 0.05) {
           if (simulationRef.current) clearInterval(simulationRef.current);
@@ -284,7 +301,7 @@ export default function TrackingPage({
   const eta =
     distance !== null && providerLoc
       ? formatETA(distance, providerLoc.speed)
-      : '—';
+      : "—";
 
   // ---- Render ----
   if (loading) {
@@ -302,10 +319,10 @@ export default function TrackingPage({
         <div className="glass-panel rounded-2xl p-8 flex flex-col items-center gap-4">
           <AlertCircle className="w-12 h-12 text-red-400" />
           <p className="text-lg font-semibold text-foreground">
-            {error || 'Không tìm thấy đơn hàng'}
+            {error || "Không tìm thấy đơn hàng"}
           </p>
           <Button
-            onClick={() => router.push('/bookings')}
+            onClick={() => router.push("/bookings")}
             className="bg-action-blue text-white rounded-xl"
           >
             Quay lại danh sách
@@ -317,34 +334,41 @@ export default function TrackingPage({
 
   const provider = booking.provider;
 
-  const trackableStatuses = [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS];
+  const trackableStatuses = [
+    BookingStatus.CONFIRMED,
+    BookingStatus.IN_PROGRESS,
+  ];
   const isTrackable = trackableStatuses.includes(booking.status);
 
   if (!isTrackable) {
-    let title = 'Chưa thể theo dõi lộ trình';
-    let description = 'Bản đồ theo dõi trực tiếp sẽ sẵn sàng ngay khi thợ bắt đầu di chuyển tới địa chỉ của bạn.';
-    let iconColor = 'text-amber-500';
-    let iconBg = 'bg-amber-500/10';
-    let statusLabel = 'Chờ thợ xuất phát';
+    let title = "Chưa thể theo dõi lộ trình";
+    let description =
+      "Bản đồ theo dõi trực tiếp sẽ sẵn sàng ngay khi thợ bắt đầu di chuyển tới địa chỉ của bạn.";
+    let iconColor = "text-amber-500";
+    let iconBg = "bg-amber-500/10";
+    let statusLabel = "Chờ thợ xuất phát";
 
     if (booking.status === BookingStatus.DONE) {
-      title = 'Lộ trình đã kết thúc';
-      description = 'Đơn hàng đã hoàn thành xuất sắc! Hệ thống đã dừng theo dõi trực tiếp lộ trình thợ.';
-      iconColor = 'text-green-500';
-      iconBg = 'bg-green-500/10';
-      statusLabel = 'Đã hoàn thành';
+      title = "Lộ trình đã kết thúc";
+      description =
+        "Đơn hàng đã hoàn thành xuất sắc! Hệ thống đã dừng theo dõi trực tiếp lộ trình thợ.";
+      iconColor = "text-green-500";
+      iconBg = "bg-green-500/10";
+      statusLabel = "Đã hoàn thành";
     } else if (booking.status === BookingStatus.CANCELLED) {
-      title = 'Tính năng theo dõi đã đóng';
-      description = 'Đơn hàng này đã bị hủy. Không thể theo dõi lộ trình di chuyển.';
-      iconColor = 'text-red-500';
-      iconBg = 'bg-red-500/10';
-      statusLabel = 'Đã hủy đơn';
+      title = "Tính năng theo dõi đã đóng";
+      description =
+        "Đơn hàng này đã bị hủy. Không thể theo dõi lộ trình di chuyển.";
+      iconColor = "text-red-500";
+      iconBg = "bg-red-500/10";
+      statusLabel = "Đã hủy đơn";
     } else if (booking.status === BookingStatus.DISPUTED) {
-      title = 'Tạm ngưng theo dõi lộ trình';
-      description = 'Đơn hàng đang ở trạng thái khiếu nại. Dịch vụ định vị tạm thời ngưng hoạt động.';
-      iconColor = 'text-purple-500';
-      iconBg = 'bg-purple-500/10';
-      statusLabel = 'Đang khiếu nại';
+      title = "Tạm ngưng theo dõi lộ trình";
+      description =
+        "Đơn hàng đang ở trạng thái khiếu nại. Dịch vụ định vị tạm thời ngưng hoạt động.";
+      iconColor = "text-purple-500";
+      iconBg = "bg-purple-500/10";
+      statusLabel = "Đang khiếu nại";
     }
 
     return (
@@ -352,8 +376,10 @@ export default function TrackingPage({
         <BackButton fallbackHref={`/bookings/${id}`} className="mb-6" />
         <div className="glass-panel rounded-3xl p-8 flex flex-col items-center gap-6 shadow-xl relative overflow-hidden border border-white/5">
           <div className="absolute inset-0 bg-gradient-to-br from-action-blue/5 via-transparent to-transparent pointer-events-none" />
-          
-          <div className={`w-16 h-16 rounded-full ${iconBg} flex items-center justify-center`}>
+
+          <div
+            className={`w-16 h-16 rounded-full ${iconBg} flex items-center justify-center`}
+          >
             <Navigation className={`w-8 h-8 ${iconColor} animate-pulse`} />
           </div>
 
@@ -377,7 +403,7 @@ export default function TrackingPage({
               Xem chi tiết đơn hàng
             </Button>
             <Button
-              onClick={() => router.push('/bookings')}
+              onClick={() => router.push("/bookings")}
               variant="ghost"
               className="w-full rounded-xl text-muted-foreground"
             >
@@ -447,14 +473,17 @@ export default function TrackingPage({
             const isDone = idx < currentStepIdx || step.done;
             const Icon = step.icon;
             return (
-              <div key={step.key} className="flex flex-col items-center gap-1.5 flex-1">
+              <div
+                key={step.key}
+                className="flex flex-col items-center gap-1.5 flex-1"
+              >
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500 ${
                     isDone
-                      ? 'bg-gradient-to-br from-green-400 to-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                      ? "bg-gradient-to-br from-green-400 to-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]"
                       : isActive
-                      ? 'bg-gradient-to-br from-action-blue to-glacier-blue text-white shadow-[0_0_12px_rgba(0,107,255,0.3)] animate-pulse'
-                      : 'glass-panel text-muted-foreground'
+                        ? "bg-gradient-to-br from-action-blue to-glacier-blue text-white shadow-[0_0_12px_rgba(0,107,255,0.3)] animate-pulse"
+                        : "glass-panel text-muted-foreground"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -462,8 +491,8 @@ export default function TrackingPage({
                 <span
                   className={`text-[9px] font-bold uppercase tracking-wider text-center leading-tight ${
                     isDone || isActive
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
+                      ? "text-foreground"
+                      : "text-muted-foreground"
                   }`}
                 >
                   {step.label}
@@ -473,12 +502,12 @@ export default function TrackingPage({
                   <div
                     className={`absolute h-0.5 top-[18px] ${
                       isDone
-                        ? 'bg-gradient-to-r from-green-400 to-emerald-500'
-                        : 'bg-platinum-tint'
+                        ? "bg-gradient-to-r from-green-400 to-emerald-500"
+                        : "bg-platinum-tint"
                     }`}
                     style={{
                       left: `${(idx + 0.5) * 25}%`,
-                      width: '25%',
+                      width: "25%",
                     }}
                   />
                 )}
@@ -497,7 +526,7 @@ export default function TrackingPage({
                 className="w-full h-full object-cover"
               />
             ) : (
-              provider?.fullName?.charAt(0) || '?'
+              provider?.fullName?.charAt(0) || "?"
             )}
           </div>
 
@@ -506,7 +535,7 @@ export default function TrackingPage({
               Thợ đang đến
             </p>
             <h3 className="text-base font-bold text-foreground truncate">
-              {provider?.fullName || 'Đang cập nhật...'}
+              {provider?.fullName || "Đang cập nhật..."}
             </h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Clock className="w-3 h-3" />
@@ -528,7 +557,7 @@ export default function TrackingPage({
             <button
               onClick={() =>
                 router.push(
-                  `/chat?conversationId=${booking.conversationId || ''}`,
+                  `/chat?conversationId=${booking.conversationId || ""}`,
                 )
               }
               className="w-11 h-11 rounded-full bg-gradient-to-r from-action-blue to-glacier-blue text-white flex items-center justify-center shadow-[0_0_12px_rgba(0,107,255,0.3)] hover:from-glacier-blue hover:to-action-blue transition-all active:scale-95"
@@ -548,11 +577,11 @@ export default function TrackingPage({
           Đang theo dõi trực tiếp
           {providerLoc && (
             <span className="text-[10px] text-slate-blue">
-              • Cập nhật{' '}
-              {providerLoc.updatedAt.toLocaleTimeString('vi-VN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
+              • Cập nhật{" "}
+              {providerLoc.updatedAt.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
               })}
             </span>
           )}
