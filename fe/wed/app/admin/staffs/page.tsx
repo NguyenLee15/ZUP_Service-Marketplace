@@ -21,7 +21,7 @@ import {
   Percent,
   Users,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +75,7 @@ const permissionVisuals: Record<
   },
 };
 
-function unwrapPermissionGroups(payload: any): AdminPermissionGroup[] {
+function unwrapPermissionGroups(payload: ApiPayload): AdminPermissionGroup[] {
   const data = payload?.data;
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.data)) return data.data;
@@ -84,14 +84,14 @@ function unwrapPermissionGroups(payload: any): AdminPermissionGroup[] {
 
 export default function StaffsPage() {
   const { toast } = useToast();
-  const [staffs, setStaffs] = useState<any[]>([]);
+  const [staffs, setStaffs] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
-  const [meta, setMeta] = useState<any>({});
+  const [meta, setMeta] = useState<ApiPayload>({});
 
   // Create/Edit Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingStaff, setEditingStaff] = useState<any>(null);
+  const [editingStaff, setEditingStaff] = useState<ApiPayload>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
@@ -101,7 +101,7 @@ export default function StaffsPage() {
 
   // Permission Modal
   const [permModalOpen, setPermModalOpen] = useState(false);
-  const [permStaff, setPermStaff] = useState<any>(null);
+  const [permStaff, setPermStaff] = useState<ApiPayload>(null);
   const [permState, setPermState] = useState<Record<string, boolean>>({});
   const [permSaving, setPermSaving] = useState(false);
   const [permissionGroups, setPermissionGroups] = useState<
@@ -163,7 +163,7 @@ export default function StaffsPage() {
         throw new Error("BE không trả về permission matrix");
       }
       setPermissionGroups(groups);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       const message =
         err.response?.data?.error?.message ||
         err.message ||
@@ -194,7 +194,7 @@ export default function StaffsPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (staff: any) => {
+  const openEditModal = (staff: ApiPayload) => {
     setEditingStaff(staff);
     setFormName(staff.fullName || "");
     setFormEmail(staff.email || "");
@@ -204,7 +204,7 @@ export default function StaffsPage() {
     setIsModalOpen(true);
   };
 
-  const openPermModal = (staff: any) => {
+  const openPermModal = (staff: ApiPayload) => {
     if (permissionsLoading) {
       toast({
         title: "Đang tải danh sách quyền",
@@ -253,7 +253,7 @@ export default function StaffsPage() {
       }
       setIsModalOpen(false);
       fetchStaffs(keyword);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Lỗi",
         description: err.response?.data?.message || err.message,
@@ -270,7 +270,7 @@ export default function StaffsPage() {
       await adminApi.deleteStaff(id);
       toast({ title: "Đã xóa nhân viên" });
       fetchStaffs(keyword);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Lỗi",
         description: err.response?.data?.message || err.message,
@@ -279,7 +279,7 @@ export default function StaffsPage() {
     }
   };
 
-  const handleToggleStatus = async (staff: any) => {
+  const handleToggleStatus = async (staff: ApiPayload) => {
     try {
       if (staff.status === "ACTIVE") {
         await adminApi.lockUser(staff.id, {
@@ -291,7 +291,7 @@ export default function StaffsPage() {
         toast({ title: "Đã mở khóa tài khoản" });
       }
       fetchStaffs(keyword);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Lỗi",
         description: err.response?.data?.message,
@@ -314,7 +314,7 @@ export default function StaffsPage() {
       toast({ title: "✅ Đã cập nhật phân quyền thành công!" });
       setPermModalOpen(false);
       fetchStaffs(keyword);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Lỗi",
         description: err.response?.data?.message || err.message,

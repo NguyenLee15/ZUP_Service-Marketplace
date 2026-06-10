@@ -6,11 +6,9 @@ import {
   Unlock,
   AlertCircle,
   Search,
-  X,
   Users,
   Wrench,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -19,6 +17,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const lockSchema = z.object({
   reason: z.string().min(10, 'Lý do phải có ít nhất 10 ký tự'),
@@ -42,10 +48,10 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 
 export default function UsersPage() {
   const { toast } = useToast();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [selectedUser, setSelectedUser] = useState<ApiPayload | null>(null);
   const [showLockModal, setShowLockModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
@@ -103,7 +109,7 @@ export default function UsersPage() {
       setSelectedUser(null);
       reset();
       fetchUsers();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || err.message, variant: 'destructive' });
     } finally {
       setActionLoading(false);
@@ -120,7 +126,7 @@ export default function UsersPage() {
       setSelectedUser(null);
       reset();
       fetchUsers();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || err.message, variant: 'destructive' });
     } finally {
       setActionLoading(false);
@@ -199,7 +205,7 @@ export default function UsersPage() {
           <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <Input
-                placeholder="Tìm kiếm theo tên hoặc email..."
+                placeholder="Tìm kiếm theo tên hoặc email…"
               className="h-10 rounded-md border-[var(--admin-border)] bg-white pl-9 text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -301,27 +307,30 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Lock/Unlock Modal */}
-      {showLockModal && selectedUser && (
-        <div className="fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <Card className="w-full max-w-md overflow-hidden rounded-xl border-[var(--admin-border)] bg-white shadow-2xl">
-            <CardHeader className={`flex flex-row items-center justify-between border-b border-[var(--admin-border)] ${selectedUser.status === 'LOCKED' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <AlertCircle className={`w-5 h-5 ${selectedUser.status === 'LOCKED' ? 'text-green-600' : 'text-red-600'}`} />
-                {selectedUser.status === 'LOCKED' ? 'Mở Khóa' : 'Khóa'} Tài Khoản
-              </CardTitle>
-              <button
-                onClick={() => {
-                  setShowLockModal(false);
-                  setSelectedUser(null);
-                  reset();
-                }}
-                className="p-1 hover:bg-muted rounded"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </CardHeader>
-            <CardContent className="p-5">
+      <Dialog
+        open={showLockModal && Boolean(selectedUser)}
+        onOpenChange={(open) => {
+          setShowLockModal(open);
+          if (!open) {
+            setSelectedUser(null);
+            reset();
+          }
+        }}
+      >
+        {selectedUser && (
+          <DialogContent className="overflow-hidden rounded-xl border-[var(--admin-border)] bg-white p-0 shadow-2xl">
+            <DialogHeader className={`border-b border-[var(--admin-border)] p-5 ${selectedUser.status === 'LOCKED' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+              <DialogTitle className="flex items-center gap-2 text-lg">
+                <AlertCircle className={`h-5 w-5 ${selectedUser.status === 'LOCKED' ? 'text-green-600' : 'text-red-600'}`} />
+                {selectedUser.status === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedUser.status === 'LOCKED'
+                  ? 'Tài khoản sẽ được phép đăng nhập lại ngay sau khi mở khóa.'
+                  : 'Người dùng sẽ không thể đăng nhập cho đến khi tài khoản được mở khóa.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-5">
               <div className="mb-4 rounded-md border border-[var(--admin-border)] bg-slate-50 p-3">
                 <p className="text-sm font-semibold text-slate-950">{selectedUser.fullName}</p>
                 <p className="text-xs text-slate-500">{selectedUser.email}</p>
@@ -330,21 +339,24 @@ export default function UsersPage() {
               {selectedUser.status !== 'LOCKED' && (
                 <form onSubmit={handleSubmit(handleLockUser)} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-foreground/80 mb-1">
-                      Lý Do Khóa Tài Khoản
+                    <label htmlFor="lock-reason" className="block text-sm font-medium text-foreground/80 mb-1">
+                      Lý do khóa tài khoản
                     </label>
                     <textarea
-                      placeholder="Nhập lý do chi tiết..."
+                      id="lock-reason"
+                      placeholder="Ví dụ: tài khoản có dấu hiệu spam hoặc vi phạm chính sách…"
                       {...register('reason')}
                       className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-sm focus:border-slate-700 focus:ring-2 focus:ring-slate-900/10"
                       rows={3}
+                      aria-invalid={Boolean(errors.reason)}
+                      aria-describedby={errors.reason ? 'lock-reason-error' : undefined}
                     />
                     {errors.reason && (
-                      <p className="text-red-600 text-sm mt-1">{errors.reason.message}</p>
+                      <p id="lock-reason-error" className="text-red-600 text-sm mt-1">{errors.reason.message}</p>
                     )}
                   </div>
 
-                  <div className="flex gap-2 justify-end pt-2">
+                  <DialogFooter className="pt-2">
                     <Button
                       type="button"
                       variant="outline"
@@ -357,14 +369,14 @@ export default function UsersPage() {
                       Hủy
                     </Button>
                     <Button type="submit" variant="destructive" disabled={actionLoading}>
-                      Khóa Tài Khoản
+                      Khóa tài khoản
                     </Button>
-                  </div>
+                  </DialogFooter>
                 </form>
               )}
 
               {selectedUser.status === 'LOCKED' && (
-                <div className="flex gap-2 justify-end pt-2">
+                <DialogFooter className="pt-2">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -376,14 +388,14 @@ export default function UsersPage() {
                     Hủy
                   </Button>
                   <Button className="bg-green-600 hover:bg-green-700" onClick={handleUnlockUser} disabled={actionLoading}>
-                    Mở Khóa Ngay
+                    Mở khóa ngay
                   </Button>
-                </div>
+                </DialogFooter>
               )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }

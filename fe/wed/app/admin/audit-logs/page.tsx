@@ -59,7 +59,7 @@ const initialFilters: AuditFilters = {
   limit: 20,
 };
 
-function unwrapList(payload: any): { data: AuditLog[]; meta: any } {
+function unwrapList(payload: ApiPayload): { data: AuditLog[]; meta: ApiPayload } {
   const directData = payload?.data;
   if (Array.isArray(directData)) {
     return { data: directData, meta: payload?.meta || {} };
@@ -101,7 +101,7 @@ export default function AdminAuditLogsPage() {
   const { toast } = useToast();
   const [filters, setFilters] = useState<AuditFilters>(initialFilters);
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [meta, setMeta] = useState<any>({});
+  const [meta, setMeta] = useState<ApiPayload>({});
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -114,7 +114,7 @@ export default function AdminAuditLogsPage() {
       const unwrapped = unwrapList(res.data);
       setLogs(unwrapped.data);
       setMeta(unwrapped.meta);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Không tải được audit logs",
         description: err.response?.data?.error?.message || err.message,
@@ -150,7 +150,7 @@ export default function AdminAuditLogsPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Không thể xuất CSV",
         description: err.response?.data?.error?.message || err.message,

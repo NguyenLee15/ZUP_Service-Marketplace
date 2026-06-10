@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   Star,
   MessageSquare,
@@ -17,7 +16,6 @@ import {
   Award,
   Clock,
   CheckCircle2,
-  Loader2,
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
@@ -38,7 +36,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 
 interface ProviderProfileClientProps {
-  provider: any;
+  provider: ApiPayload;
 }
 
 export function ProviderProfileClient({ provider }: ProviderProfileClientProps) {
@@ -46,7 +44,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
   const { isAuthenticated, user, setUser } = useAuthStore();
 
   // Search, Filter & Pagination states
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<ApiPayload[]>([]);
   const [totalServicesCount, setTotalServicesCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

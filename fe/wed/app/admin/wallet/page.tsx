@@ -103,7 +103,7 @@ export default function AdminWalletPage() {
 
   const fetchRequests = async () => {
     setLoading(true);
-    const params: Record<string, any> = { page: 1, limit: 50 };
+    const params: Record<string, ApiPayload> = { page: 1, limit: 50 };
     if (status !== 'all') params.status = status;
 
     try {
@@ -114,7 +114,7 @@ export default function AdminWalletPage() {
         const res = await adminApi.getWalletWithdrawals(params);
         setWithdrawals(res.data?.data || []);
       }
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: 'Không tải được dữ liệu ví',
         description: err.response?.data?.error?.message || err.message,
@@ -150,7 +150,7 @@ export default function AdminWalletPage() {
       setSelected(null);
       setNote('');
       fetchRequests();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: 'Thao tác thất bại',
         description: err.response?.data?.error?.message || err.response?.data?.message || err.message,

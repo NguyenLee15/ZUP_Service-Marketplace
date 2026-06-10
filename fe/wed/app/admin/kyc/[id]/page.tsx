@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/auth/services/api";
 import {
   ZoomIn, ZoomOut, RotateCw, CheckCircle, XCircle, ArrowLeft,
-  User, Mail, Phone, Calendar, Shield, FileText, Maximize2,
+  User, Mail, Phone, Shield, FileText, Maximize2,
   AlertTriangle, Loader2, ImageIcon
 } from "lucide-react";
 

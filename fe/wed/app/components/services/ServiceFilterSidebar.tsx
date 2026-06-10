@@ -16,7 +16,7 @@ interface ServiceFilterSidebarProps {
     maxPrice: string;
     minRating: number;
   };
-  onFilterChange: (newFilters: any) => void;
+  onFilterChange: (newFilters: ApiPayload) => void;
   onClear: () => void;
 }
 

@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter, usePathname } from 'next/navigation';
-import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Wrench } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
@@ -35,9 +35,6 @@ export function CustomerHeader() {
   const { user, isAuthenticated, logout: storeLogout, setUser } = useAuthStore();
   const { favorites } = useServiceStore();
   const router = useRouter();
-  const pathname = usePathname();
-  const isHomePage = pathname === '/';
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -315,7 +312,7 @@ export function CustomerHeader() {
                     prefetch={false}
                     className="inline-flex h-9 items-center justify-center rounded-lg bg-action-blue px-4 text-sm font-medium text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                   >
-                    Đăng nhập tài khoản.
+                    Đăng nhập
                   </Link>
                 </div>
               ) : (
@@ -392,7 +389,7 @@ export function CustomerHeader() {
             ) : mounted ? (
               <>
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-foreground/80 hover:bg-pale-gray rounded-xl font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
-                  <User className="w-5 h-5" /> Đăng nhập ZUP.
+                  <User className="w-5 h-5" /> Đăng nhập
                 </Link>
                 <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-action-blue hover:bg-pale-gray rounded-xl font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
                   Đăng ký tài khoản

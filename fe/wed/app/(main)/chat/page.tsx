@@ -51,7 +51,7 @@ export default function ChatPage() {
             <div className="w-10 h-10 rounded-full bg-action-blue/10 flex items-center justify-center animate-pulse">
               <Bot className="w-5 h-5 text-action-blue" />
             </div>
-            Đang tải tin nhắn...
+            Đang tải tin nhắn…
           </div>
         </div>
       }

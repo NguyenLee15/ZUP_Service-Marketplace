@@ -1,14 +1,14 @@
 import api from "@/lib/axios";
 
 export const servicesApi = {
-  search: (params: Record<string, any>) =>
+  search: (params: Record<string, ApiPayload>) =>
     api.get("/services/search", { params }),
 
   aiSearch: (query: string) => api.post("/services/ai-search", { query }),
 
   getDetail: (id: number) => api.get(`/services/${id}`),
 
-  getReviews: (serviceId: number, params?: Record<string, any>) =>
+  getReviews: (serviceId: number, params?: Record<string, ApiPayload>) =>
     api.get(`/reviews/service/${serviceId}`, { params }),
 
   // Provider
@@ -45,9 +45,9 @@ export const categoriesApi = {
 };
 
 export const bookingsApi = {
-  create: (data: any) => api.post("/bookings", data),
+  create: (data: ApiPayload) => api.post("/bookings", data),
 
-  getMyBookings: (params?: Record<string, any>) =>
+  getMyBookings: (params?: Record<string, ApiPayload>) =>
     api.get("/bookings", { params }),
 
   getById: (id: number) => api.get(`/bookings/${id}`),
@@ -72,12 +72,12 @@ export const bookingsApi = {
   rebook: (id: number) => api.post(`/bookings/${id}/rebook`),
 
   // Provider
-  providerBookings: (params?: Record<string, any>) =>
+  providerBookings: (params?: Record<string, ApiPayload>) =>
     api.get("/provider/bookings", { params }),
 
   providerGetById: (id: number) => api.get(`/provider/bookings/${id}`),
 
-  confirmSurveyor: (id: number, data: any) =>
+  confirmSurveyor: (id: number, data: ApiPayload) =>
     api.patch(`/provider/bookings/${id}/surveyor`, data),
 
   sendQuote: (id: number, formData: FormData) =>
@@ -98,14 +98,14 @@ export const bookingsApi = {
 
 export const walletsApi = {
   getBalance: () => api.get("/provider-wallets/balance"),
-  getHistory: (params?: Record<string, any>) =>
+  getHistory: (params?: Record<string, ApiPayload>) =>
     api.get("/provider-wallets/history", { params }),
   deposit: (amount: number) =>
     api.post("/provider-wallets/deposit", { amount }),
 };
 
 export const notificationsApi = {
-  getAll: (params?: Record<string, any>) =>
+  getAll: (params?: Record<string, ApiPayload>) =>
     api.get("/notifications", { params }),
   getUnreadCount: () => api.get("/notifications/unread-count"),
   markRead: (id: number) => api.patch(`/notifications/${id}/read`),
@@ -137,17 +137,17 @@ export const reviewsApi = {
 
 export const adminApi = {
   // Dashboard
-  getDashboardStats: (params?: Record<string, any>) =>
+  getDashboardStats: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/dashboard/stats", { params }),
-  getDashboardChartData: (params?: Record<string, any>) =>
+  getDashboardChartData: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/dashboard/chart-data", { params }),
-  exportDashboardPdf: (params?: Record<string, any>) =>
+  exportDashboardPdf: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/dashboard/export-pdf", { params, responseType: "blob" }),
-  exportDashboardExcel: (params?: Record<string, any>) =>
+  exportDashboardExcel: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/dashboard/export-excel", { params, responseType: "blob" }),
 
   // Users
-  getUsers: (params?: Record<string, any>) =>
+  getUsers: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/users", { params }),
   lockUser: (id: number, data?: { reason: string }) =>
     api.patch(`/admin/users/${id}/lock`, data),
@@ -155,14 +155,14 @@ export const adminApi = {
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
 
   // Categories
-  createCategory: (data: any) => api.post("/categories", data),
-  updateCategory: (id: number, data: any) =>
+  createCategory: (data: ApiPayload) => api.post("/categories", data),
+  updateCategory: (id: number, data: ApiPayload) =>
     api.patch(`/categories/${id}`, data),
   deleteCategory: (id: number) => api.delete(`/categories/${id}`),
 
   // Staffs — UC07
   getPermissions: () => api.get("/admin/permissions"),
-  getStaffs: (params?: Record<string, any>) =>
+  getStaffs: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/staffs", { params }),
   createStaff: (data: {
     fullName: string;
@@ -182,7 +182,7 @@ export const adminApi = {
   deleteStaff: (id: number) => api.delete(`/admin/staffs/${id}`),
 
   // KYC
-  getKycRequests: (params?: Record<string, any>) =>
+  getKycRequests: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/kyc", { params }),
   getKycDetail: (id: number) => api.get(`/admin/kyc/${id}`),
   approveKyc: (id: number) => api.patch(`/admin/kyc/${id}/approve`),
@@ -190,7 +190,7 @@ export const adminApi = {
     api.patch(`/admin/kyc/${id}/reject`, { reason }),
 
   // Services
-  getServices: (params?: Record<string, any>) =>
+  getServices: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/services", { params }),
   approveService: (id: number) => api.patch(`/admin/services/${id}/approve`),
   rejectService: (id: number, reason: string) =>
@@ -200,7 +200,7 @@ export const adminApi = {
   deleteService: (id: number) => api.delete(`/admin/services/${id}`),
 
   // Bookings
-  getBookings: (params?: Record<string, any>) =>
+  getBookings: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/bookings", { params }),
   getBookingDetail: (id: number) => api.get(`/admin/bookings/${id}`),
   getBookingTimeline: (id: number) => api.get(`/admin/bookings/${id}/timeline`),
@@ -208,13 +208,13 @@ export const adminApi = {
     api.patch(`/admin/bookings/${id}/cancel`, { reason }),
 
   // Wallet manual deposits / withdrawals
-  getWalletDeposits: (params?: Record<string, any>) =>
+  getWalletDeposits: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/wallet-deposits", { params }),
   approveWalletDeposit: (id: number, note?: string) =>
     api.patch(`/admin/wallet-deposits/${id}/approve`, { note }),
   rejectWalletDeposit: (id: number, note?: string) =>
     api.patch(`/admin/wallet-deposits/${id}/reject`, { note }),
-  getWalletWithdrawals: (params?: Record<string, any>) =>
+  getWalletWithdrawals: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/wallet-withdrawals", { params }),
   approveWalletWithdrawal: (id: number, note?: string) =>
     api.patch(`/admin/wallet-withdrawals/${id}/approve`, { note }),
@@ -222,7 +222,7 @@ export const adminApi = {
     api.patch(`/admin/wallet-withdrawals/${id}/reject`, { note }),
 
   // Disputes — UC09
-  getDisputes: (params?: Record<string, any>) =>
+  getDisputes: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/disputes", { params }),
   getDisputeDetail: (id: number) => api.get(`/admin/disputes/${id}`),
   resolveDispute: (
@@ -235,9 +235,9 @@ export const adminApi = {
   ) => api.patch(`/admin/disputes/${id}/resolve`, data),
 
   // Audit logs
-  getAuditLogs: (params?: Record<string, any>) =>
+  getAuditLogs: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/audit-logs", { params }),
-  exportAuditLogs: (params?: Record<string, any>) =>
+  exportAuditLogs: (params?: Record<string, ApiPayload>) =>
     api.get("/admin/audit-logs/export", { params, responseType: "blob" }),
 
   // Settings — UC10.3
@@ -248,16 +248,16 @@ export const adminApi = {
     maxAmount: number;
   }) => api.patch("/admin/settings/commission", data),
   getSocialSettings: () => api.get("/admin/settings/social"),
-  updateSocialSettings: (data: any) =>
+  updateSocialSettings: (data: ApiPayload) =>
     api.patch("/admin/settings/social", data),
 };
 
 export const providerDashboardApi = {
-  getStats: (params?: Record<string, any>) =>
+  getStats: (params?: Record<string, ApiPayload>) =>
     api.get("/provider/dashboard/stats", { params }),
-  exportPdf: (params?: Record<string, any>) =>
+  exportPdf: (params?: Record<string, ApiPayload>) =>
     api.get("/provider/dashboard/export-pdf", { params, responseType: "blob" }),
-  exportExcel: (params?: Record<string, any>) =>
+  exportExcel: (params?: Record<string, ApiPayload>) =>
     api.get("/provider/dashboard/export-excel", {
       params,
       responseType: "blob",

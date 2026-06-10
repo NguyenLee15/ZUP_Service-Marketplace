@@ -97,7 +97,7 @@ instance.interceptors.response.use(
       error.response?.status === 504 ||
       error.code === 'ECONNABORTED';
 
-    const retryConfig = originalRequest as Record<string, any>;
+    const retryConfig = originalRequest as Record<string, ApiPayload>;
     if (isTransient && (!retryConfig._retryCount || retryConfig._retryCount < 3)) {
       retryConfig._retryCount = (retryConfig._retryCount || 0) + 1;
       const delay = Math.pow(2, retryConfig._retryCount) * 1000;

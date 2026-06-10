@@ -29,7 +29,7 @@ export function RecentlyViewedServices() {
           prefetch={false}
           className="inline-flex text-sm font-bold text-action-blue hover:text-glacier-blue items-center gap-1 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue rounded-md"
         >
-          Xem tất cả thợ
+          Xem thêm dịch vụ
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>

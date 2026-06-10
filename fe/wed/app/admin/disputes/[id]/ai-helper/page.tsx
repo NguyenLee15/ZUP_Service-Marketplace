@@ -92,7 +92,7 @@ function parseAiSummary(raw?: string | null): ParsedAiSummary {
 
 export default function AdminDisputeAiHelperPage() {
   const params = useParams<{ id: string }>();
-  const [dispute, setDispute] = useState<any>(null);
+  const [dispute, setDispute] = useState<ApiPayload>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -215,7 +215,7 @@ export default function AdminDisputeAiHelperPage() {
               />
               <EvidenceGrid
                 title="Thợ nghiệm thu"
-                items={(booking?.attachments ?? []).filter((item: any) => item.type === 'RESULT')}
+                items={(booking?.attachments ?? []).filter((item: ApiPayload) => item.type === 'RESULT')}
                 emptyLabel="Thợ chưa có ảnh nghiệm thu."
               />
             </CardContent>
@@ -292,7 +292,7 @@ function EvidenceGrid({
   emptyLabel,
 }: {
   title: string;
-  items: any[];
+  items: ApiPayload[];
   emptyLabel: string;
 }) {
   return (

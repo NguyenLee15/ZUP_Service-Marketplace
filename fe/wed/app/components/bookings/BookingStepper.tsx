@@ -40,7 +40,6 @@ export function BookingStepper({ currentStatus }: BookingStepperProps) {
           const Icon = step.icon;
           const isCompleted = index < activeIndex;
           const isActive = index === activeIndex;
-          const isPending = index > activeIndex;
 
           return (
             <div key={step.status} className="relative z-10 flex flex-col items-center gap-3 flex-1">

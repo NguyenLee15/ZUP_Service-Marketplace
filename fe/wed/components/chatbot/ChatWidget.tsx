@@ -7,10 +7,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import {
   Bot,
-  CalendarCheck,
   Check,
   ChevronRight,
-  Clock,
   Loader2,
   MessageSquare,
   Pencil,
@@ -250,7 +248,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
         const sessions = response.data?.data;
         const current = Array.isArray(sessions)
           ? sessions.find(
-              (session: any) => String(session.id) === String(sessionId),
+              (session: ApiPayload) => String(session.id) === String(sessionId),
             )
           : null;
         if (current?.title) {
@@ -332,7 +330,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
 
           // Hydrate metaMap
           const newMetaMap: Record<string, ChatbotMessageMeta> = {};
-          historyData.forEach((msg: any) => {
+          historyData.forEach((msg: ApiPayload) => {
             if (msg.role === "assistant" && msg.metadata) {
               newMetaMap[msg.id] = msg.metadata;
             }
@@ -482,7 +480,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           parts: [{ type: "text", text: data?.reply || "Đã xử lý thao tác." }],
         } as ChatbotUIMessage,
       ]);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       const errMsg =
         err?.response?.data?.message ||
         err?.message ||
@@ -760,7 +758,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                           </div>
                         </div>
                         {meta.action.type === "CREATE_BOOKING_DRAFT" &&
-                          !(meta.action.payload as any)?.draft?.desiredTime && (
+                          !(meta.action.payload as ApiPayload)?.draft?.desiredTime && (
                             <div className="mt-3 space-y-1 rounded-lg border border-blue-100 bg-white p-2 shadow-sm">
                               <label className="block text-[11px] font-medium text-slate-600">
                                 📅 Chọn thời gian mong muốn đặt lịch:

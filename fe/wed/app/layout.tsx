@@ -5,7 +5,10 @@ import { ClientWidgets } from '@/components/client-widgets'
 import { DeferredTopLoader } from '@/components/navigation/DeferredTopLoader'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { headers } from 'next/headers'
+import { homeFaqs } from './components/home/homeFaqContent'
 
+const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+const absoluteUrl = (path = '/') => `${appUrl}${path.startsWith('/') ? path : `/${path}`}`;
 
 const montserrat = Montserrat({
   subsets: ['vietnamese', 'latin', 'latin-ext'],
@@ -19,13 +22,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://service-marketplace-gold.vercel.app'),
+  metadataBase: new URL(appUrl),
   referrer: 'strict-origin-when-cross-origin',
-  title: 'Zup - Tìm Dịch Vụ Tại Nhà Nhanh Chóng',
-  description: 'Nền tảng kết nối thợ gia đình, vệ sinh, sửa chữa, điện nước uy tín và nhanh chóng nhất. Giải pháp công nghệ thông minh cho mọi nhà.',
-  manifest: '/manifest.json',
+  title: 'Zup - Tìm Và Đặt Dịch Vụ Tại Nhà',
+  description: 'Zup giúp bạn tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông tin thợ, giá tham khảo và đánh giá rõ ràng.',
   alternates: {
-    canonical: 'https://service-marketplace-gold.vercel.app/',
+    canonical: absoluteUrl('/'),
   },
   icons: {
     icon: '/icon.svg',
@@ -33,13 +35,13 @@ export const metadata: Metadata = {
     apple: '/icon.svg',
   },
   openGraph: {
-    title: 'Zup - Nền Tảng Dịch Vụ Tại Nhà Hàng Đầu',
-    description: 'Khám phá hàng ngàn dịch vụ gia đình chất lượng, uy tín với sự hỗ trợ của AI.',
-    url: 'https://service-marketplace-gold.vercel.app/',
+    title: 'Zup - Đặt Dịch Vụ Tại Nhà Rõ Ràng Hơn',
+    description: 'Tìm dịch vụ, mô tả nhu cầu, nhận báo giá và theo dõi tiến độ trong một nơi.',
+    url: absoluteUrl('/'),
     siteName: 'Zup',
     images: [
       {
-        url: 'https://service-marketplace-gold.vercel.app/images/hero_bg.png',
+        url: absoluteUrl('/images/hero_bg.png'),
         width: 1200,
         height: 630,
         alt: 'Zup Hero Banner',
@@ -50,9 +52,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Zup - Tìm Dịch Vụ Nhanh Chóng',
-    description: 'Giải quyết mọi sự cố gia đình chỉ với 3 thao tác đơn giản.',
-    images: ['https://service-marketplace-gold.vercel.app/images/hero_bg.png'],
+    title: 'Zup - Đặt Dịch Vụ Tại Nhà',
+    description: 'Tìm dịch vụ tại nhà với thông tin rõ ràng trước khi đặt lịch.',
+    images: [absoluteUrl('/images/hero_bg.png')],
   },
   other: {
     'theme-color': '#ffffff',
@@ -71,14 +73,14 @@ const jsonLdData = {
   '@graph': [
     {
       '@type': 'Organization',
-      '@id': 'https://service-marketplace-gold.vercel.app/#organization',
+      '@id': absoluteUrl('/#organization'),
       'name': 'Zup',
-      'url': 'https://service-marketplace-gold.vercel.app/',
+      'url': absoluteUrl('/'),
       'logo': {
         '@type': 'ImageObject',
-        '@id': 'https://service-marketplace-gold.vercel.app/#logo',
-        'url': 'https://service-marketplace-gold.vercel.app/icon.svg',
-        'contentUrl': 'https://service-marketplace-gold.vercel.app/icon.svg',
+        '@id': absoluteUrl('/#logo'),
+        'url': absoluteUrl('/icon.svg'),
+        'contentUrl': absoluteUrl('/icon.svg'),
         'caption': 'Zup'
       },
       'contactPoint': {
@@ -96,99 +98,64 @@ const jsonLdData = {
         'postalCode': '70000',
         'addressCountry': 'VN'
       },
-      'sameAs': [
-        'https://www.facebook.com/Nguyenlee150804',
-        'https://zalo.me/0901234567',
-        'https://youtube.com/@zupvn',
-        'https://tiktok.com/@zup.vn',
-        'https://twitter.com/zupvn'
-      ]
+      'sameAs': []
     },
     {
       '@type': 'WebSite',
-      '@id': 'https://service-marketplace-gold.vercel.app/#website',
+      '@id': absoluteUrl('/#website'),
       'name': 'Zup',
-      'url': 'https://service-marketplace-gold.vercel.app/',
+      'url': absoluteUrl('/'),
       'publisher': {
-        '@id': 'https://service-marketplace-gold.vercel.app/#organization'
+        '@id': absoluteUrl('/#organization')
       },
       'potentialAction': {
         '@type': 'SearchAction',
         'target': {
           '@type': 'EntryPoint',
-          'urlTemplate': 'https://service-marketplace-gold.vercel.app/services?keyword={search_term_string}'
+          'urlTemplate': absoluteUrl('/services?keyword={search_term_string}')
         },
         'query-input': 'required name=search_term_string'
       }
     },
     {
       '@type': 'BreadcrumbList',
-      '@id': 'https://service-marketplace-gold.vercel.app/#breadcrumb',
+      '@id': absoluteUrl('/#breadcrumb'),
       'itemListElement': [
         {
           '@type': 'ListItem',
           'position': 1,
           'name': 'Trang chủ',
-          'item': 'https://service-marketplace-gold.vercel.app/'
+          'item': absoluteUrl('/')
         },
         {
           '@type': 'ListItem',
           'position': 2,
           'name': 'Dịch vụ',
-          'item': 'https://service-marketplace-gold.vercel.app/services'
+          'item': absoluteUrl('/services')
         }
       ]
     },
     {
       '@type': 'FAQPage',
-      '@id': 'https://service-marketplace-gold.vercel.app/#faq',
+      '@id': absoluteUrl('/#faq'),
       'publisher': {
-        '@id': 'https://service-marketplace-gold.vercel.app/#organization'
+        '@id': absoluteUrl('/#organization')
       },
       'author': {
-        '@type': 'Person',
-        'name': 'Lê Hoàng Nguyễn',
-        'jobTitle': 'Chief Quality Officer',
-        'worksFor': {
-          '@id': 'https://service-marketplace-gold.vercel.app/#organization'
-        }
+        '@type': 'Organization',
+        'name': 'Zup',
+        'url': absoluteUrl('/')
       },
       'datePublished': '2026-05-15T08:00:00+07:00',
       'dateModified': '2026-05-28T21:00:00+07:00',
-      'mainEntity': [
-        {
-          '@type': 'Question',
-          'name': 'Làm sao để tôi đặt lịch dịch vụ?',
-          'acceptedAnswer': {
-            '@type': 'Answer',
-            'text': 'Bạn chỉ cần tìm kiếm dịch vụ mong muốn, chọn thợ phù hợp, điền thông tin địa chỉ và thời gian. Sau khi nhấn xác nhận, thợ sẽ liên hệ lại để chốt lịch.'
-          }
-        },
-        {
-          '@type': 'Question',
-          'name': 'Tôi có mất phí khi hủy lịch không?',
-          'acceptedAnswer': {
-            '@type': 'Answer',
-            'text': 'Việc hủy lịch là hoàn toàn miễn phí nếu bạn thực hiện trước 2 giờ so với thời gian hẹn. Sau thời gian đó có thể phát sinh phí di chuyển cho thợ.'
-          }
-        },
-        {
-          '@type': 'Question',
-          'name': 'Làm sao để đảm bảo an toàn khi thợ đến nhà?',
-          'acceptedAnswer': {
-            '@type': 'Answer',
-            'text': 'Tất cả thợ đều được định danh (KYC) và có hồ sơ lý lịch rõ ràng. Bạn cũng có thể theo dõi trạng thái thợ đang di chuyển trên ứng dụng.'
-          }
-        },
-        {
-          '@type': 'Question',
-          'name': 'Nếu tôi không hài lòng với dịch vụ thì sao?',
-          'acceptedAnswer': {
-            '@type': 'Answer',
-            'text': 'Bạn có thể gửi khiếu nại ngay trong mục quản lý đơn hàng. Chúng tôi sẽ tạm giữ tiền thanh toán và giải quyết thỏa đáng cho bạn.'
-          }
+      'mainEntity': homeFaqs.map((faq) => ({
+        '@type': 'Question',
+        'name': faq.q,
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': faq.a
         }
-      ]
+      }))
     }
   ]
 };

@@ -6,12 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { adminApi } from '@/features/auth/services/api';
-import { AlertTriangle, CheckCircle, Clock, Search, Eye, Scale, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Eye, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminDisputesPage() {
   const router = useRouter();
-  const [disputes, setDisputes] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | ''>('');
 
@@ -60,7 +60,7 @@ export default function AdminDisputesPage() {
             <button
               key={option.value}
               type="button"
-              onClick={() => setStatusFilter(option.value as any)}
+              onClick={() => setStatusFilter(option.value as ApiPayload)}
               className={`h-9 rounded-lg border px-4 text-xs font-bold transition-all ${
                 statusFilter === option.value
                   ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/10'
@@ -87,7 +87,7 @@ export default function AdminDisputesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {disputes.map((d: any) => {
+          {disputes.map((d: ApiPayload) => {
             const isResolved = d.status === 'RESOLVED';
             const booking = d.booking || {};
             const service = booking.service || {};

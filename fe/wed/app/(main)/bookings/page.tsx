@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Booking } from '@/types';
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: ApiPayload }> = {
   PENDING: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
   QUOTED: { label: 'Đã báo giá', color: 'bg-pale-gray text-action-blue', icon: Package },
   CONFIRMED: { label: 'Đã xác nhận', color: 'bg-pale-gray text-glacier-blue', icon: CheckCircle },
@@ -33,7 +33,7 @@ export default function BookingsPage() {
 
   useEffect(() => {
     setLoading(true);
-    const params: any = { page, limit: PAGE_SIZE };
+    const params: ApiPayload = { page, limit: PAGE_SIZE };
     if (status) params.status = status;
     bookingsApi.getMyBookings(params)
       .then((res) => {

@@ -35,6 +35,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { BackButton } from "@/components/navigation/BackButton";
 import { useNotificationsSocket } from "@/features/notification/hooks/useNotificationsSocket";
 
@@ -44,8 +52,8 @@ export default function BookingDetailPage() {
   const { toast } = useToast();
   const { user } = useAuthStore();
 
-  const [booking, setBooking] = useState<any>(null);
-  const [timeline, setTimeline] = useState<any[]>([]);
+  const [booking, setBooking] = useState<ApiPayload>(null);
+  const [timeline, setTimeline] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -79,7 +87,7 @@ export default function BookingDetailPage() {
   }, [fetchBooking]);
 
   const handleRealtimeBookingUpdate = useCallback(
-    (notification: any) => {
+    (notification: ApiPayload) => {
       const bookingId = Number(
         notification?.referenceId || notification?.bookingId || 0,
       );
@@ -91,7 +99,7 @@ export default function BookingDetailPage() {
   useNotificationsSocket(handleRealtimeBookingUpdate);
 
   const handleAction = async (
-    action: () => Promise<any>,
+    action: () => Promise<ApiPayload>,
     successMsg: string,
   ) => {
     setActionLoading(true);
@@ -109,7 +117,7 @@ export default function BookingDetailPage() {
       }
 
       fetchBooking();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Lỗi",
         description: err.response?.data?.error?.message,
@@ -170,6 +178,33 @@ export default function BookingDetailPage() {
   const isCustomer = user?.id === booking.customerId;
   const statusHistory =
     timeline.length > 0 ? timeline : booking.statusHistories || [];
+  const cancelDialogCopy =
+    booking.status === BookingStatus.QUOTED
+      ? {
+          title: "Từ chối báo giá",
+          description:
+            "Cho nhà cung cấp biết lý do bạn chưa đồng ý với báo giá này.",
+          label: "Lý do từ chối",
+          placeholder: "Ví dụ: giá vượt ngân sách hoặc hạng mục chưa phù hợp…",
+          confirm: "Từ chối báo giá",
+        }
+      : booking.status === BookingStatus.DONE
+        ? {
+            title: "Gửi khiếu nại",
+            description:
+              "Mô tả vấn đề để đội ngũ hỗ trợ có đủ thông tin xử lý.",
+            label: "Nội dung khiếu nại",
+            placeholder: "Ví dụ: công việc chưa hoàn tất hoặc phát sinh hư hỏng…",
+            confirm: "Gửi khiếu nại",
+          }
+        : {
+            title: "Hủy đơn",
+            description:
+              "Lý do hủy sẽ được lưu vào lịch sử và gửi cho nhà cung cấp.",
+            label: "Lý do hủy",
+            placeholder: "Ví dụ: tôi chọn nhầm thời gian hoặc không còn nhu cầu…",
+            confirm: "Hủy đơn",
+          };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
@@ -287,7 +322,7 @@ export default function BookingDetailPage() {
             </AccordionTrigger>
             <AccordionContent className="pb-4 space-y-4">
               <div className="relative pl-4 border-l-2 border-action-blue/30 space-y-6">
-                {statusHistory.map((h: any, i: number) => (
+                {statusHistory.map((h: ApiPayload, i: number) => (
                   <div key={i} className="relative">
                     <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full bg-card border-2 border-action-blue shadow-[0_0_6px_rgba(0,107,255,0.3)]" />
                     <div className="space-y-0.5">
@@ -364,7 +399,7 @@ export default function BookingDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {booking.bookingItems.map((item: any) => (
+                  {booking.bookingItems.map((item: ApiPayload) => (
                     <tr
                       key={item.id}
                       className="border-b border-white/5 hover:bg-white/5"
@@ -418,9 +453,9 @@ export default function BookingDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {booking.quotation.quotationItems.map((item: any) => {
+                    {booking.quotation.quotationItems.map((item: ApiPayload) => {
                       const originallyOrdered = booking.bookingItems?.some(
-                        (bItem: any) =>
+                        (bItem: ApiPayload) =>
                           bItem.name.toLowerCase().trim() ===
                           item.name.toLowerCase().trim(),
                       );
@@ -632,48 +667,67 @@ export default function BookingDetailPage() {
           )}
       </div>
 
-      {/* Cancel/Reject dialog */}
-      {showCancel && (
-        <Card className="glass-panel rounded-2xl border-red-500/20 border-l-4">
-          <CardContent className="p-5 space-y-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-red-500/80">
-              Xác nhận hành động
-            </p>
+      <Dialog
+        open={showCancel}
+        onOpenChange={(open) => {
+          setShowCancel(open);
+          if (!open) setCancelReason("");
+        }}
+      >
+        <DialogContent className="glass-panel rounded-2xl border-red-500/20 border-l-4">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">
+              {cancelDialogCopy.title}
+            </DialogTitle>
+            <DialogDescription>{cancelDialogCopy.description}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <label htmlFor="booking-cancel-reason" className="text-sm font-semibold text-foreground">
+              {cancelDialogCopy.label}
+            </label>
             <Textarea
+              id="booking-cancel-reason"
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="Lý do..."
+              placeholder={cancelDialogCopy.placeholder}
               rows={2}
               className="bg-card/50"
+              aria-invalid={!cancelReason.trim()}
+              aria-describedby={!cancelReason.trim() ? "booking-cancel-reason-help" : undefined}
             />
-            <div className="flex gap-2">
+            {!cancelReason.trim() && (
+              <p id="booking-cancel-reason-help" className="text-xs font-medium text-red-600">
+                Vui lòng nhập lý do để tiếp tục.
+              </p>
+            )}
+            <DialogFooter>
               <Button
                 onClick={() => {
                   if (booking.status === BookingStatus.QUOTED) {
                     handleAction(
-                      () => bookingsApi.rejectQuote(booking.id, cancelReason),
+                      () => bookingsApi.rejectQuote(booking.id, cancelReason.trim()),
                       "Đã từ chối báo giá",
                     );
                   } else if (booking.status === BookingStatus.DONE) {
                     const fd = new FormData();
-                    fd.append("reason", cancelReason);
+                    fd.append("reason", cancelReason.trim());
                     handleAction(
                       () => bookingsApi.dispute(booking.id, fd),
                       "Đã gửi khiếu nại",
                     );
                   } else {
                     handleAction(
-                      () => bookingsApi.cancel(booking.id, cancelReason),
+                      () => bookingsApi.cancel(booking.id, cancelReason.trim()),
                       "Đã hủy đơn",
                     );
                   }
                   setShowCancel(false);
                 }}
-                disabled={!cancelReason || actionLoading}
+                disabled={!cancelReason.trim() || actionLoading}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                 size="sm"
               >
-                Xác nhận
+                {cancelDialogCopy.confirm}
               </Button>
               <Button
                 onClick={() => setShowCancel(false)}
@@ -682,10 +736,10 @@ export default function BookingDetailPage() {
               >
                 Đóng
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Review form */}
       {showReview && (
@@ -696,7 +750,14 @@ export default function BookingDetailPage() {
             </p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((s) => (
-                <button key={s} onClick={() => setRating(s)}>
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setRating(s)}
+                  aria-label={`Chọn ${s} sao`}
+                  aria-pressed={s === rating}
+                  className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                >
                   <Star
                     className={`w-7 h-7 cursor-pointer transition-all ${s <= rating ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.5)]" : "text-platinum-tint hover:text-yellow-200"}`}
                   />
@@ -719,6 +780,7 @@ export default function BookingDetailPage() {
                   "Chất lượng cao",
                 ].map((tag) => (
                   <button
+                    type="button"
                     key={tag}
                     onClick={() =>
                       setComment((prev) => (prev ? `${prev}, ${tag}` : tag))
@@ -735,11 +797,12 @@ export default function BookingDetailPage() {
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Nhận xét của bạn về chất lượng dịch vụ..."
+                placeholder="Nhận xét của bạn về chất lượng dịch vụ…"
                 rows={3}
                 className="pr-12 bg-card/50"
               />
               <button
+                type="button"
                 onClick={() => {
                   const suggestions = [
                     "Dịch vụ rất chuyên nghiệp, thợ đến đúng giờ và xử lý vấn đề rất nhanh gọn. Tôi rất hài lòng!",

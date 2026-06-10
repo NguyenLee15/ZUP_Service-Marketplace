@@ -4,15 +4,14 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const appDir = dirname(fileURLToPath(import.meta.url));
 const isVercel = process.env.VERCEL === "1";
+const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+const canonicalHost = new URL(appUrl).hostname;
 
 const withPWA = withPWAInit({
   dest: "public",
   disable: true,
   register: false,
   skipWaiting: true,
-  fallbacks: {
-    document: "/offline",
-  },
 });
 
 const securityHeaders = [
@@ -50,7 +49,7 @@ const staticAssetHeaders = [
   ...securityHeaders,
   {
     key: "Access-Control-Allow-Origin",
-    value: "https://service-marketplace-gold.vercel.app",
+    value: appUrl,
   },
   {
     key: "Access-Control-Allow-Methods",
@@ -142,10 +141,10 @@ const nextConfig = {
         has: [
           {
             type: "host",
-            value: "www.service-marketplace-gold.vercel.app",
+            value: `www.${canonicalHost}`,
           },
         ],
-        destination: "https://service-marketplace-gold.vercel.app/:path*",
+        destination: `${appUrl}/:path*`,
         permanent: true,
       },
     ];

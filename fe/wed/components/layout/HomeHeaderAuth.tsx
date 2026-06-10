@@ -85,7 +85,7 @@ export function HomeHeaderAuth() {
           href="/login"
           className="inline-flex h-9 items-center justify-center rounded-lg bg-sky-600 px-4 text-sm font-medium text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] transition-colors hover:bg-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
         >
-          Đăng nhập tài khoản.
+          Đăng nhập
         </Link>
       </div>
     );
@@ -104,7 +104,7 @@ export function HomeHeaderAuth() {
           href="/login"
           className="inline-flex h-9 items-center justify-center rounded-lg bg-sky-600 px-4 text-sm font-medium text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] transition-colors hover:bg-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
         >
-          Đăng nhập tài khoản.
+          Đăng nhập
         </Link>
       </div>
     );

@@ -55,7 +55,7 @@ export default function FavoritesPage() {
       if (cancelled) return;
 
       const loadedServices = results
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
+        .filter((result): result is PromiseFulfilledResult<ApiPayload> => result.status === 'fulfilled')
         .map((result) => result.value.data.data || result.value.data)
         .filter((service): service is Service => Boolean(service?.id));
 

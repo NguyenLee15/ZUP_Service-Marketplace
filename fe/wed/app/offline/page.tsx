@@ -34,7 +34,7 @@ export default function OfflinePage() {
         </div>
 
         <div className="bg-[#1d2022] rounded-xl px-4 py-3 text-xs text-[#bfc7d2]/80 border border-white/5">
-          <span>Hệ thống đã lưu cache ứng dụng. Bạn có thể tải lại trang khi kết nối mạng được khôi phục.</span>
+          <span>PWA/offline đang tắt cho bản release này. Vui lòng tải lại trang khi kết nối mạng được khôi phục.</span>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
@@ -44,7 +44,7 @@ export default function OfflinePage() {
             className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-blue-600 hover:to-cyan-500 disabled:opacity-60 text-white rounded-full px-6 py-2.5 text-sm font-bold shadow-lg shadow-cyan-500/20 active:scale-95 transition-all duration-200"
           >
             <RotateCcw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying ? 'Đang kiểm tra...' : 'Thử lại'}
+            {isRetrying ? 'Đang kiểm tra…' : 'Thử lại'}
           </button>
           
           <Link href="/" className="w-full sm:w-auto">

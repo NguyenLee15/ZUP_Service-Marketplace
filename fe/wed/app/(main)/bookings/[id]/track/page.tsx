@@ -14,7 +14,6 @@ import {
   Navigation,
   Clock,
   MapPin,
-  User,
   Truck,
   RefreshCw,
   AlertCircle,
@@ -31,7 +30,7 @@ const TrackingMap = dynamic(() => import("./TrackingMap"), {
         <div className="w-10 h-10 rounded-full bg-action-blue/10 flex items-center justify-center animate-pulse">
           <Navigation className="w-5 h-5 text-action-blue" />
         </div>
-        <span className="text-sm font-medium">Đang tải bản đồ...</span>
+        <span className="text-sm font-medium">Đang tải bản đồ…</span>
       </div>
     </div>
   ),
@@ -90,11 +89,10 @@ export default function TrackingPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const [booking, setBooking] = useState<any>(null);
+  const [booking, setBooking] = useState<ApiPayload>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [trackingEnded, setTrackingEnded] = useState(false);
-
+  const [, setTrackingEnded] = useState(false);
   // Provider realtime location
   const [providerLoc, setProviderLoc] = useState<ProviderLocation | null>(null);
   const [trail, setTrail] = useState<[number, number][]>([]);
@@ -169,7 +167,7 @@ export default function TrackingPage({
     // Receive last known location on subscribe
     socket.on(
       "lastKnownLocation",
-      (data: { bookingId: number; location: any }) => {
+      (data: { bookingId: number; location: ApiPayload }) => {
         if (data.location) {
           socketConnectedRef.current = true;
           const loc = data.location;
@@ -186,7 +184,7 @@ export default function TrackingPage({
     );
 
     // Receive realtime provider location updates
-    socket.on("providerLocation", (data: any) => {
+    socket.on("providerLocation", (data: ApiPayload) => {
       socketConnectedRef.current = true;
       const newLoc: ProviderLocation = {
         lat: data.lat,
@@ -535,7 +533,7 @@ export default function TrackingPage({
               Thợ đang đến
             </p>
             <h3 className="text-base font-bold text-foreground truncate">
-              {provider?.fullName || "Đang cập nhật..."}
+              {provider?.fullName || "Đang cập nhật…"}
             </h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Clock className="w-3 h-3" />

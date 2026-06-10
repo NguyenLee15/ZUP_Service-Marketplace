@@ -39,6 +39,7 @@ import {
   NEW_ADMIN_DISTRICT_VALUE,
   withCurrentOption,
 } from '@/lib/address-options';
+import { formatLocalDateTimeInput } from '@/lib/datetime-local';
 import { useAddressOptions } from '@/hooks/use-address-options';
 
 type AddressMode = 'default' | 'custom';
@@ -75,7 +76,7 @@ function CreateBookingContent() {
   const serviceId = searchParams.get('serviceId');
   const reorderId = searchParams.get('reorderId');
 
-  const [service, setService] = useState<any>(null);
+  const [service, setService] = useState<ApiPayload>(null);
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [addressesLoading, setAddressesLoading] = useState(true);
@@ -213,48 +214,92 @@ function CreateBookingContent() {
     };
   }, [reorderId]);
 
-  // GPS Simulated Auto-Fill
+  // Real browser geolocation only. Do not auto-fill address fields without a
+  // reverse-geocoded address because that can create wrong bookings.
   const handleAutoLocate = () => {
-    setGpsLoading(true);
-    setTimeout(() => {
-      const mockAddresses = [
-        {
-          province: 'Thành phố Hồ Chí Minh',
-          ward: 'Phường 22',
-          district: 'Quận Bình Thạnh',
-          addressDetail: 'Vinhomes Central Park, 208 Nguyễn Hữu Cảnh',
-        },
-        {
-          province: 'Thành phố Hà Nội',
-          ward: 'Phường Hàng Trống',
-          district: 'Quận Hoàn Kiếm',
-          addressDetail: 'Khách sạn Metropole, 15 Ngô Quyền',
-        },
-        {
-          province: 'Thành phố Đà Nẵng',
-          ward: 'Phường Mỹ An',
-          district: 'Quận Ngũ Hành Sơn',
-          addressDetail: 'Resort Pullman, 101 Võ Nguyên Giáp',
-        }
-      ];
-      const selected = mockAddresses[Math.floor(Math.random() * mockAddresses.length)];
-      setProvince(selected.province);
-      setDistrict(selected.district);
-      setWard(selected.ward);
-      setAddressDetail(selected.addressDetail);
-      setAddressMode('custom');
-      setSelectedAddressId(null);
-      clearAddressErrors();
-      setGpsLoading(false);
+    if (!navigator.geolocation) {
       toast({
-        title: 'Định vị GPS thành công!',
-        description: `Đã tự động điền vị trí: ${selected.addressDetail}, ${selected.ward}, ${selected.district}, ${selected.province}`,
+        title: 'Trình duyệt không hỗ trợ định vị',
+        description: 'Vui lòng nhập địa chỉ thực hiện theo cách thủ công.',
+        variant: 'destructive',
       });
-    }, 1200);
+      return;
+    }
+
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setAddressMode('custom');
+        setSelectedAddressId(null);
+        toast({
+          title: 'Đã nhận được vị trí hiện tại',
+          description: 'Vui lòng kiểm tra và nhập địa chỉ chi tiết để thợ đến đúng nơi.',
+        });
+        setGpsLoading(false);
+      },
+      () => {
+        toast({
+          title: 'Không thể lấy vị trí',
+          description: 'Vui lòng cấp quyền vị trí hoặc nhập địa chỉ thủ công.',
+          variant: 'destructive',
+        });
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  };
+
+  const validateBookingBeforeSubmit = () => {
+    const errors: Record<string, string> = {};
+
+    if (!description.trim()) errors.description = 'Vui lòng mô tả yêu cầu';
+    else if (description.trim().length < 10) errors.description = 'Mô tả quá ngắn (tối thiểu 10 ký tự)';
+
+    if (!(addressMode === 'default' && selectedAddressId)) {
+      if (!province) errors.province = 'Bắt buộc';
+      if (!ward) errors.ward = 'Bắt buộc';
+      if (!addressDetail.trim()) errors.addressDetail = 'Bắt buộc';
+    }
+
+    const selectedDate = new Date(desiredTime);
+    if (!desiredTime) errors.desiredTime = 'Vui lòng chọn thời gian';
+    else if (isNaN(selectedDate.getTime())) errors.desiredTime = 'Thời gian không hợp lệ';
+    else if (selectedDate < new Date()) errors.desiredTime = 'Thời gian phải ở tương lai';
+
+    return errors;
+  };
+
+  const focusBookingError = (errors: Record<string, string>) => {
+    const firstError = Object.keys(errors)[0];
+    const focusTarget: Record<string, string> = {
+      description: 'booking-description',
+      province: 'booking-province',
+      ward: 'booking-ward',
+      addressDetail: 'booking-address-detail',
+      desiredTime: 'booking-desired-time',
+    };
+
+    if (firstError === 'description') setStep(1);
+    else if (['province', 'ward', 'addressDetail'].includes(firstError)) {
+      setAddressMode('custom');
+      setStep(2);
+    } else if (firstError === 'desiredTime') setStep(3);
+
+    window.setTimeout(() => {
+      const targetId = focusTarget[firstError];
+      if (targetId) document.getElementById(targetId)?.focus();
+    }, 80);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const errors = validateBookingBeforeSubmit();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      focusBookingError(errors);
+      return;
+    }
+
     setLoading(true);
     try {
       const itemsPayload = Object.values(selectedItems).map((it) => ({
@@ -274,7 +319,7 @@ function CreateBookingContent() {
       });
       toast({ title: 'Đặt dịch vụ thành công', description: 'Nhà cung cấp sẽ liên hệ bạn sớm.' });
       router.push('/bookings');
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Đã xảy ra lỗi', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -287,8 +332,6 @@ function CreateBookingContent() {
   // Step validation helpers
   const isStep1Valid = description.trim().length >= 10 && !fieldErrors.description;
   const isStep2Valid = addressMode === 'default' && selectedAddressId ? true : (province && ward && addressDetail && !fieldErrors.province && !fieldErrors.ward && !fieldErrors.addressDetail);
-  const isStep3Valid = desiredTime && !fieldErrors.desiredTime;
-
   return (
     <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       
@@ -400,7 +443,7 @@ function CreateBookingContent() {
                 </div>
                 
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                  {service.items.map((item: any) => {
+                  {service.items.map((item: ApiPayload) => {
                     const isSelected = !!selectedItems[item.id];
                     const qty = selectedItems[item.id]?.quantity || 1;
                     return (
@@ -529,11 +572,16 @@ function CreateBookingContent() {
                 <div>
                   <Label>Địa chỉ thực hiện *</Label>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Chọn địa chỉ mặc định, tự động định vị GPS hoặc điền thủ công.
+                    Chọn địa chỉ mặc định, kiểm tra quyền vị trí hoặc điền thủ công.
                   </p>
                   {addressOptionsLoading && (
                     <p className="mt-1 text-[11px] font-medium text-action-blue">
                       Đang tải danh sách địa giới hành chính…
+                    </p>
+                  )}
+                  {addressOptionsFallback && !addressOptionsLoading && (
+                    <p className="mt-1 text-[11px] font-medium text-amber-400">
+                      Tạm dùng danh sách địa giới rút gọn. Vui lòng kiểm tra kỹ địa chỉ.
                     </p>
                   )}
                 </div>
@@ -593,12 +641,12 @@ function CreateBookingContent() {
                     <span className="text-sm font-bold text-white">Địa điểm khác</span>
                   </div>
                   <p className="text-[10px] leading-relaxed text-muted-foreground">
-                    Điền vị trí hoặc định vị nhanh bằng một click GPS tự động.
+                    Điền vị trí thủ công hoặc kiểm tra quyền vị trí hiện tại.
                   </p>
                 </button>
               </div>
 
-              {/* Automatic GPS Auto-Fill Map Widget */}
+              {/* Real geolocation permission check, without fake address autofill. */}
               <div className="border border-white/10 bg-white/5 p-4 rounded-2xl space-y-3 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none">
                   <Locate className="w-16 h-16 text-sky-400" />
@@ -607,10 +655,10 @@ function CreateBookingContent() {
                   <div>
                     <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
                       <Locate className="w-4 h-4 text-action-blue" />
-                      Định vị GPS thông minh
+                  Hỗ trợ vị trí hiện tại
                     </h4>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Tìm nhanh địa chỉ thực hiện xung quanh vị trí của bạn
+                      Kiểm tra quyền vị trí, sau đó bạn vẫn cần nhập địa chỉ chính xác.
                     </p>
                   </div>
                   <Button
@@ -627,7 +675,7 @@ function CreateBookingContent() {
                     ) : (
                       <>
                         <Locate className="w-3.5 h-3.5" />
-                        Lấy vị trí GPS
+                        Kiểm tra vị trí
                       </>
                     )}
                   </Button>
@@ -644,13 +692,13 @@ function CreateBookingContent() {
                           <Locate className="w-4 h-4 text-action-blue" />
                         </span>
                       </span>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Đang định dạng bản đồ vệ tinh…</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Đang kiểm tra quyền vị trí…</span>
                     </div>
                   ) : province ? (
                     <div className="text-center p-3 z-10 space-y-1 animate-in fade-in duration-300">
                       <div className="flex items-center justify-center gap-1 text-green-400">
                         <Check className="w-4 h-4" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">Đã khóa tọa độ GPS</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Địa chỉ đang được nhập</span>
                       </div>
                       <p className="text-xs font-bold text-white truncate max-w-[280px]">
                         {addressDetail || 'Chưa điền số nhà'}
@@ -663,7 +711,7 @@ function CreateBookingContent() {
                     <div className="text-center p-4 text-muted-foreground z-10">
                       <MapPin className="w-6 h-6 text-slate-500 mx-auto mb-1.5" />
                       <p className="text-[10px] font-bold">Tọa độ chưa xác định</p>
-                      <p className="text-[9px] text-slate-500 mt-0.5">Nhấp Lấy vị trí GPS hoặc điền thủ công phía dưới</p>
+                      <p className="text-[9px] text-slate-500 mt-0.5">Nhập thủ công để thợ đến đúng địa điểm</p>
                     </div>
                   )}
                 </div>
@@ -743,7 +791,7 @@ function CreateBookingContent() {
                 setDesiredTime(e.target.value);
                 validate('desiredTime', e.target.value);
               }}
-                min={new Date().toISOString().slice(0, 16)} className={fieldErrors.desiredTime ? 'border-red-500' : 'border-white/10 bg-white/5 h-11 rounded-xl'} />
+                min={formatLocalDateTimeInput(new Date())} className={fieldErrors.desiredTime ? 'border-red-500' : 'border-white/10 bg-white/5 h-11 rounded-xl'} />
               {fieldErrors.desiredTime && <p className="text-red-500 text-[10px]">{fieldErrors.desiredTime}</p>}
 
               {/* AI Scheduling Hints */}
@@ -762,7 +810,7 @@ function CreateBookingContent() {
                       const tomorrow = new Date();
                       tomorrow.setDate(tomorrow.getDate() + 1);
                       tomorrow.setHours(9, 0, 0, 0);
-                      const value = tomorrow.toISOString().slice(0, 16);
+                      const value = formatLocalDateTimeInput(tomorrow);
                       setDesiredTime(value);
                       validate('desiredTime', value);
                     }}
@@ -785,7 +833,7 @@ function CreateBookingContent() {
                     onClick={() => {
                       const now = new Date();
                       now.setHours(now.getHours() + 2);
-                      const value = now.toISOString().slice(0, 16);
+                      const value = formatLocalDateTimeInput(now);
                       setDesiredTime(value);
                       validate('desiredTime', value);
                     }}
@@ -884,7 +932,7 @@ function CreateBookingContent() {
           ) : (
             <Button 
               type="submit" 
-              disabled={loading || !isStep1Valid || !isStep2Valid || !isStep3Valid}
+              disabled={loading}
               className="flex-[2] h-12 bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white font-extrabold rounded-xl shadow-[0_4px_20px_rgba(0,107,255,0.3)] transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (

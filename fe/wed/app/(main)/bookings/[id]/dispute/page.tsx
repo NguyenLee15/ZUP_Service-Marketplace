@@ -216,7 +216,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-steel-gray text-white font-semibold py-3 flex items-center justify-center gap-2 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.2)] transition-all hover:-translate-y-0.5"
             >
               <Send className="w-4 h-4" />
-              {isSubmitting ? 'Đang gửi...' : 'Gửi khiếu nại'}
+              {isSubmitting ? 'Đang gửi…' : 'Gửi khiếu nại'}
             </Button>
           </form>
 

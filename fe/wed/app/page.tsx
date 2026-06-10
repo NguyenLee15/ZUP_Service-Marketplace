@@ -8,17 +8,13 @@ import { FeaturedServices } from "@/app/components/home/FeaturedServices";
 import { HeroSection } from "@/app/components/home/HeroSection";
 import { HowItWorks } from "@/app/components/home/HowItWorks";
 import {
-  CategoryGridSkeleton,
   ServicesListSkeleton,
 } from "@/app/components/home/HomeSkeleton";
 import { GlossarySection } from "@/app/components/home/GlossarySection";
 import { Testimonials } from "@/app/components/home/Testimonials";
 import { CustomerFooter } from "@/components/layout/CustomerFooter";
-import { SocialShareWidget } from "@/components/social/SocialShareWidget";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 import { HomeHeader } from "@/components/layout/HomeHeader";
-import { Accordion } from "@/components/ui/accordion";
 import type { Category, Service } from "@/types";
 
 export const revalidate = 60;
@@ -35,6 +31,10 @@ type CategoryServiceSection = {
 };
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
+  /\/$/,
+  "",
+);
 const HOME_MAIN_CATEGORY_IDS = [3, 1, 4, 8, 9, 10, 11, 12];
 
 function getBackendUrl(path: string, params?: Record<string, string | number>) {
@@ -274,52 +274,24 @@ export default async function Home() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebPage",
-            name: "Zup Marketplace - Nền tảng kết nối dịch vụ tiện ích tại nhà",
+            name: "Zup - Nền tảng đặt dịch vụ tại nhà",
             description:
-              "Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam. Vệ sinh nhà cửa, sửa chữa điện nước, làm đẹp tại nhà uy tín, chất lượng.",
+              "Zup giúp khách hàng tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông tin thợ, giá tham khảo và đánh giá rõ ràng.",
             publisher: {
               "@type": "Organization",
-              name: "ZUP Marketplace",
+              name: "Zup",
+              url: APP_URL,
               logo: {
                 "@type": "ImageObject",
-                url: "https://zup.vn/logo.png",
+                url: `${APP_URL}/logo.png`,
               },
-              sameAs: [
-                "https://facebook.com/zup.vn",
-                "https://youtube.com/@zupvn",
-                "https://tiktok.com/@zup.vn",
-                "https://twitter.com/zupvn",
-              ],
             },
             author: {
               "@type": "Organization",
-              name: "Ban Biên Tập ZUP Content Team",
-            },
-            reviewedBy: {
-              "@type": "Person",
-              name: "Nguyễn Văn A",
-              jobTitle: "Chuyên Gia Kiểm Định Dịch Vụ",
-              hasCredential: {
-                "@type": "EducationalOccupationalCredential",
-                name: "Kỹ sư kiểm định chất lượng",
-                credentialCategory: "Professional Certificate",
-              },
+              name: "Zup",
             },
             datePublished: "2026-01-15T08:00:00+07:00",
             dateModified: "2026-05-29T08:00:00+07:00",
-            aggregateRating: {
-              "@type": "AggregateRating",
-              ratingValue: "4.9",
-              reviewCount: "10450",
-              bestRating: "5",
-              worstRating: "1",
-            },
-            publishingPrinciples: "https://zup.vn/editorial-policy",
-            publishingPolicy: {
-              "@type": "CreativeWork",
-              name: "Editorial & Fact-Checking Policy",
-              url: "https://zup.vn/editorial-policy",
-            },
           })}
         </script>
 
@@ -388,11 +360,11 @@ export default async function Home() {
                       className="text-2xl md:text-[38px] font-bold brand-heading leading-tight flex items-center gap-2 text-balance"
                     >
                       <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-action-blue" />
-                      Dịch vụ nổi bật.
+                      Dịch vụ nổi bật
                     </h2>
                   </div>
                   <p className="text-sm md:text-base text-muted-foreground font-medium">
-                    Đối tác hàng đầu được tài trợ
+                    Dịch vụ đang được giới thiệu
                   </p>
                 </div>
               </div>
@@ -419,76 +391,7 @@ export default async function Home() {
 
           <HowItWorks />
 
-          {/* E-E-A-T Compact Strip — giữ nguyên markup SEO, thu gọn hiển thị */}
-          <section
-            className="border-t border-slate-800/60 pt-6"
-            itemScope
-            itemType="https://schema.org/CreativeWork"
-          >
-            <meta
-              itemProp="name"
-              content="Trang chủ ZUP Marketplace — Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam."
-            />
-            <meta itemProp="datePublished" content="2026-01-15" />
-            <meta itemProp="dateModified" content="2026-05-29" />
-            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
-                <span
-                  itemProp="author"
-                  itemScope
-                  itemType="https://schema.org/Organization"
-                >
-                  <span className="text-slate-400 font-semibold">
-                    Biên soạn:
-                  </span>{" "}
-                  <span className="text-slate-300" itemProp="name">
-                    Ban Biên Tập ZUP
-                  </span>
-                </span>
-                <span className="hidden sm:inline text-slate-700">·</span>
-                <span>
-                  <span className="text-slate-400 font-semibold">
-                    Kiểm định:
-                  </span>{" "}
-                  <a
-                    href="https://zup.vn/certificates/reviewer-a"
-                    className="text-sky-400 hover:underline text-xs"
-                  >
-                    Kỹ sư Nguyễn Văn A ↗
-                  </a>
-                </span>
-                <span className="hidden sm:inline text-slate-700">·</span>
-                <span>
-                  <span className="text-slate-400 font-semibold">
-                    Cập nhật:
-                  </span>{" "}
-                  <time className="text-emerald-400" dateTime="2026-05-29">
-                    29/05/2026
-                  </time>
-                </span>
-                <span className="hidden sm:inline text-slate-700">·</span>
-                <span className="flex gap-3">
-                  <a
-                    href="/editorial-policy"
-                    className="text-sky-400 hover:underline"
-                  >
-                    Chính sách biên tập
-                  </a>
-                  <a
-                    href="mailto:support@zup.vn"
-                    className="text-sky-400 hover:underline"
-                  >
-                    support@zup.vn
-                  </a>
-                </span>
-              </div>
-              <SocialShareWidget />
-            </div>
-          </section>
-
-          <Accordion type="single" collapsible>
-            <GlossarySection />
-          </Accordion>
+          <GlossarySection />
         </div>
       </main>
 

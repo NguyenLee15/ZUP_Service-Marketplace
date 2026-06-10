@@ -114,7 +114,7 @@ function ServicesSearchContent() {
 
   // Voice Search Logic
   const startVoiceSearch = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as ApiPayload).SpeechRecognition || (window as ApiPayload).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast({ title: 'Trình duyệt không hỗ trợ', description: 'Tính năng tìm kiếm giọng nói cần trình duyệt hiện đại hơn.', variant: 'destructive' });
       return;
@@ -129,7 +129,7 @@ function ServicesSearchContent() {
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: ApiPayload) => {
       const transcript = event.results[0][0].transcript;
       const input = document.getElementById('main-search-input') as HTMLInputElement;
       if (input) {
@@ -166,7 +166,7 @@ function ServicesSearchContent() {
     categoriesApi.getFlat().then((res) => setCategories(res.data.data || [])).catch(() => {});
   }, []);
 
-  const handleSearch = useCallback(async (page = 1, currentFilters?: any, append = false) => {
+  const handleSearch = useCallback(async (page = 1, currentFilters?: ApiPayload, append = false) => {
     if (append) setIsFetchingMore(true);
     else {
       setLoading(true);
@@ -174,7 +174,7 @@ function ServicesSearchContent() {
     }
     
     try {
-      const params: Record<string, any> = { 
+      const params: Record<string, ApiPayload> = {
         page, 
         limit: 12, 
         sortBy,
@@ -253,7 +253,7 @@ function ServicesSearchContent() {
     handleSearchRef.current(1);
   }, [searchParams, sortBy, userLocation.lat, userLocation.lng]);
 
-  const onFilterChange = (filters: any) => {
+  const onFilterChange = (filters: ApiPayload) => {
     const newParams = new URLSearchParams(searchParams.toString());
     Object.entries(filters).forEach(([key, value]) => {
       if (Array.isArray(value)) {

@@ -5,14 +5,14 @@ import {
 } from 'lucide-react';
 
 const categories = [
-  { icon: Wrench, label: 'Sửa chữa', count: 1200, categoryId: 3 },
-  { icon: HomeIcon, label: 'Vệ sinh', count: 850, categoryId: 1 },
-  { icon: Heart, label: 'Làm đẹp', count: 2300, categoryId: 4 },
-  { icon: Briefcase, label: 'Tư vấn', count: 450, categoryId: 8 },
-  { icon: Palette, label: 'Thiết kế', count: 680, categoryId: 9 },
-  { icon: Smartphone, label: 'Công nghệ', count: 1100, categoryId: 10 },
-  { icon: Utensils, label: 'Nấu ăn', count: 920, categoryId: 11 },
-  { icon: BookOpen, label: 'Giáo dục', count: 1450, categoryId: 12 },
+  { icon: Wrench, label: 'Sửa chữa', hint: 'Điện nước, thiết bị', categoryId: 3 },
+  { icon: HomeIcon, label: 'Vệ sinh', hint: 'Nhà cửa, máy lạnh', categoryId: 1 },
+  { icon: Heart, label: 'Làm đẹp', hint: 'Chăm sóc tại nhà', categoryId: 4 },
+  { icon: Briefcase, label: 'Tư vấn', hint: 'Trao đổi theo nhu cầu', categoryId: 8 },
+  { icon: Palette, label: 'Thiết kế', hint: 'Sáng tạo, nội dung', categoryId: 9 },
+  { icon: Smartphone, label: 'Công nghệ', hint: 'Thiết bị, phần mềm', categoryId: 10 },
+  { icon: Utensils, label: 'Nấu ăn', hint: 'Bữa ăn, sự kiện', categoryId: 11 },
+  { icon: BookOpen, label: 'Giáo dục', hint: 'Học tập, kỹ năng', categoryId: 12 },
 ];
 
 export function CategoryGrid() {
@@ -75,7 +75,7 @@ export function CategoryGrid() {
                     {cat.label}
                   </h3>
                   <p className="text-[11px] font-semibold text-slate-blue dark:text-slate-400 leading-none">
-                    {cat.count}+ thợ.
+                    {cat.hint}
                   </p>
                 </div>
               </Link>

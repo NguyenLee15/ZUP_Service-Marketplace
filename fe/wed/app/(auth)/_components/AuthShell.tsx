@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ReactNode } from 'react';
-import { CheckCircle2, Home, ShieldCheck, Sparkles, Wrench } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -57,7 +57,7 @@ export function AuthShell({
             <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 shadow-lg shadow-sky-500/20 shrink-0 flex items-center justify-center bg-slate-950">
               <Image
                 src="/logo.png"
-                alt="ZUP Logo Sidebar - Đăng nhập tài khoản dịch vụ"
+                alt="Zup"
                 width={40}
                 height={40}
                 priority

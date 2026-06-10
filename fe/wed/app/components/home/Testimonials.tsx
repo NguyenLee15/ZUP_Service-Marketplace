@@ -5,30 +5,30 @@ import { Card } from '@/components/ui/card';
 
 const testimonials = [
   {
-    name: "Hoàng Anh.",
-    location: "Gia chủ tại Hà Nội.",
-    initials: "HA.",
-    content: "\"Tôi cần gấp kỹ thuật viên sửa thiết bị giặt giũ do sự cố tràn ngập nước ra sàn. Thật may, chỉ chục phút sau khi đăng đơn, tay nghề viên đã chủ động gọi điện hỗ trợ. Hơn nữa, chi phí báo trước vô cùng chi tiết. Do đó, gia chủ hoàn toàn thư thái lòng.\"",
+    name: "Hoàng Anh",
+    location: "Khách hàng tại Hà Nội",
+    initials: "HA",
+    content: "Tôi đặt sửa máy giặt và nhận được báo giá trước khi thợ đến. Lịch hẹn, tin nhắn và trạng thái đơn đều nằm trong một chỗ nên dễ theo dõi.",
   },
   {
-    name: "Minh Thư.",
-    location: "Gia chủ tại Đà Nẵng.",
-    initials: "MT.",
-    content: "\"Tổ hỗ trợ dọn dẹp nhà cửa thi công rất đúng giờ và chuyên nghiệp. Ngoài ra, nhân viên vệ sinh lau dọn tỉ mỉ mọi góc khuất bụi bặm. Vì thế, không gian sống trở nên sáng sủa trong lành. Nhờ đó, người tiêu dùng cực kỳ tín nhiệm.\"",
+    name: "Minh Thư",
+    location: "Khách hàng tại Đà Nẵng",
+    initials: "MT",
+    content: "Tôi thích nhất là có thể xem thông tin dịch vụ và đánh giá trước khi đặt. Khi cần đổi lịch, tôi nhắn trực tiếp trong đơn nên không bị rối.",
   },
   {
-    name: "Phan Thành.",
-    location: "Gia chủ tại TP.HCM.",
-    initials: "PT.",
-    content: "\"Trước kia gia đình băn khoăn khi tìm đối tác khôi phục điện nước uy tín. Tuy nhiên, ứng dụng thông minh này đã tháo gỡ hoàn toàn trăn trở đó. Đặc biệt là hồ sơ năng lực và bình luận của người dùng trước rất khách quan. Từ đó, tôi dễ dàng đưa ra quyết định tối ưu.\"",
+    name: "Phan Thành",
+    location: "Khách hàng tại TP.HCM",
+    initials: "PT",
+    content: "Trước khi xác nhận, tôi xem được giá tham khảo và trao đổi thêm với thợ. Sau khi hoàn tất, tôi vẫn có lịch sử đơn để kiểm tra lại khi cần.",
   },
 ];
 
 const stats = [
-  { value: '45,000+', label: 'Đơn thành công', color: 'text-cyan-400' },
-  { value: '98.7%',   label: 'Hài lòng',       color: 'text-emerald-400' },
-  { value: '100%',    label: 'Thợ kiểm định',   color: 'text-blue-400' },
-  { value: '24/7',    label: 'Hỗ trợ',          color: 'text-amber-400' },
+  { value: 'Rõ giá', label: 'Báo giá trước khi làm', color: 'text-cyan-400' },
+  { value: 'Có hồ sơ', label: 'Thông tin thợ để so sánh', color: 'text-emerald-400' },
+  { value: 'Theo dõi', label: 'Lịch sử đơn và tin nhắn', color: 'text-blue-400' },
+  { value: 'Hỗ trợ', label: 'Kênh xử lý khi phát sinh', color: 'text-amber-400' },
 ];
 
 export function Testimonials() {
@@ -36,10 +36,10 @@ export function Testimonials() {
     <section id="danh-gia-khach-hang" className="space-y-8">
       <div className="text-center">
         <h2 id="y-kien-khach-hang" className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance text-slate-100">
-          Khách hàng nói gì?.
+          Khách hàng nói gì?
         </h2>
         <p className="max-w-2xl mx-auto text-base md:text-lg leading-relaxed text-slate-400">
-          Sự hài lòng của khách hàng là minh chứng rõ ràng nhất cho chất lượng dịch vụ trên nền tảng Zup.
+          Những phản hồi dưới đây mô tả cách Zup giúp việc đặt dịch vụ tại nhà rõ ràng và dễ theo dõi hơn.
         </p>
       </div>
 

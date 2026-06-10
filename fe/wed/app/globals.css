@@ -41,7 +41,7 @@
   transform: scale(0.95);
 }
 
-/* PWA App Feel */
+/* Safe-area padding for legacy installed sessions. PWA registration is disabled. */
 @media (display-mode: standalone) {
   .themed-shell {
     padding-top: env(safe-area-inset-top);

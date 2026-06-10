@@ -10,10 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
 import {
-  AlertCircle, Loader2, User, Image as ImageIcon, Clock,
-  Sparkles, ShieldCheck, Scale, Info, ArrowLeft, FileText,
+  AlertCircle, Loader2, Image as ImageIcon, Clock,
+  Sparkles, ShieldCheck, Info, ArrowLeft, FileText,
   MapPin, Banknote, Gavel, CheckCircle2, AlertTriangle,
-  MessageSquare, Camera, ChevronRight, Shield, Zap
+  Camera, Shield, Zap
 } from 'lucide-react';
 
 // --- AI Summary Parser ---
@@ -38,11 +38,11 @@ function parseAiSummary(raw: string | null | undefined): AiParsedSummary | null 
       confidence: parsed.confidence ?? parsed.confidenceScore ?? 75,
       confidenceLabel: parsed.confidenceLabel ?? (parsed.confidence >= 80 ? 'Highly Reliable' : parsed.confidence >= 60 ? 'Moderate' : 'Low Confidence'),
       recommendation: parsed.recommendation ?? parsed.suggestedAction ?? 'Không có đề xuất',
-      evidencePoints: (parsed.evidencePoints ?? parsed.evidence ?? []).map((e: any) => ({
+      evidencePoints: (parsed.evidencePoints ?? parsed.evidence ?? []).map((e: ApiPayload) => ({
         type: e.type ?? 'neutral',
         text: typeof e === 'string' ? e : e.text ?? e.description ?? '',
       })),
-      anomalies: (parsed.anomalies ?? parsed.redFlags ?? []).map((a: any) => ({
+      anomalies: (parsed.anomalies ?? parsed.redFlags ?? []).map((a: ApiPayload) => ({
         type: a.type ?? 'warning',
         text: typeof a === 'string' ? a : a.text ?? a.description ?? '',
       })),
@@ -110,7 +110,7 @@ export default function AdminDisputeDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [dispute, setDispute] = useState<any>(null);
+  const [dispute, setDispute] = useState<ApiPayload>(null);
   const [loading, setLoading] = useState(true);
   const [decision, setDecision] = useState<'COMPLETE' | 'PENALIZE' | null>(null);
   const [reason, setReason] = useState('');
@@ -164,7 +164,7 @@ export default function AdminDisputeDetailPage() {
       });
       const refreshRes = await adminApi.getDisputeDetail(Number(id));
       setDispute(refreshRes.data.data);
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: 'Lỗi xử lý phán quyết',
         description: err.response?.data?.error?.message || err.response?.data?.message || err.message,
@@ -422,7 +422,7 @@ export default function AdminDisputeDetailPage() {
                     Bằng chứng khách hàng ({dispute.evidences.length})
                   </p>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {dispute.evidences.map((ev: any, i: number) => (
+                    {dispute.evidences.map((ev: ApiPayload, i: number) => (
                       <button
                         key={i}
                         onClick={() => setLightboxUrl(ev.fileUrl)}
@@ -501,9 +501,9 @@ export default function AdminDisputeDetailPage() {
                 </div>
               </CardHeader>
               <CardContent className="pt-4">
-                {booking?.attachments?.filter((a: any) => a.type === 'RESULT').length > 0 ? (
+                {booking?.attachments?.filter((a: ApiPayload) => a.type === 'RESULT').length > 0 ? (
                   <div className="grid grid-cols-2 gap-2">
-                    {booking.attachments.filter((a: any) => a.type === 'RESULT').map((att: any, i: number) => (
+                    {booking.attachments.filter((a: ApiPayload) => a.type === 'RESULT').map((att: ApiPayload, i: number) => (
                       <button
                         key={i}
                         onClick={() => setLightboxUrl(att.fileUrl)}

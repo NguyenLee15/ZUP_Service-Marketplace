@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 
 export function SocialShareWidget() {
   const [copied, setCopied] = useState(false);
-  const shareUrl = 'https://zup.vn';
-  const shareTitle = 'ZUP Marketplace - Nền tảng kết nối dịch vụ tiện ích tại nhà hàng đầu';
+  const shareUrl =
+    typeof window === 'undefined' ? '/' : window.location.origin;
+  const shareTitle = 'Zup - Đặt dịch vụ tại nhà rõ ràng hơn';
 
   const handleCopy = async () => {
     try {
@@ -24,10 +25,10 @@ export function SocialShareWidget() {
     <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl shadow-lg shadow-sky-950/20 w-full md:max-w-xs xl:max-w-md shrink-0">
       <div className="flex items-center gap-2 mb-3">
         <Share2 className="w-4 h-4 text-cyan-400" />
-        <div className="text-sm font-bold uppercase tracking-widest text-slate-300">Chia sẻ ZUP.</div>
+        <div className="text-sm font-bold uppercase tracking-widest text-slate-300">Chia sẻ Zup</div>
       </div>
       <p className="text-xs text-slate-400 leading-relaxed mb-4">
-        Giúp bạn bè và gia đình tiếp cận các thợ sửa chữa, dọn dẹp nhà cửa chuyên nghiệp và uy tín nhất.
+        Giúp bạn bè và gia đình tìm dịch vụ tại nhà với thông tin rõ ràng hơn.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <a
@@ -69,7 +70,7 @@ export function SocialShareWidget() {
           aria-label="Sao chép liên kết"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}
-          {copied ? 'Đã sao chép' : 'Copy link'}
+          {copied ? 'Đã sao chép' : 'Sao chép liên kết'}
         </button>
       </div>
     </div>

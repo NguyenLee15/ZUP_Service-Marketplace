@@ -11,7 +11,7 @@ async function getProviderProfile(id: string) {
     if (!res.ok) return null;
     const json = await res.json();
     return json.data;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

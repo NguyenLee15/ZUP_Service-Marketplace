@@ -47,6 +47,7 @@ export default function RegisterPage() {
 
   const [gsiReady, setGsiReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -95,12 +96,40 @@ export default function RegisterPage() {
     setFieldErrors(newErrors);
   };
 
+  const getRegisterErrors = () => {
+    const errors: Record<string, string> = {};
+    if (!fullName.trim()) errors.fullName = 'Họ tên không được để trống';
+    else if (fullName.trim().length < 2) errors.fullName = 'Họ tên quá ngắn';
+
+    if (!email.trim()) errors.email = 'Email không được để trống';
+    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Email không hợp lệ';
+
+    if (!phone.trim()) errors.phone = 'Số điện thoại không được để trống';
+    else if (!/^0\d{9}$/.test(phone.trim())) errors.phone = 'Số điện thoại phải là 10 chữ số bắt đầu bằng 0';
+
+    if (!password) errors.password = 'Mật khẩu không được để trống';
+    else if (password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+
+    if (!confirmPassword) errors.confirmPassword = 'Vui lòng nhập lại mật khẩu';
+    else if (password !== confirmPassword) errors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+
+    return errors;
+  };
+
+  const focusFirstError = (errors: Record<string, string>) => {
+    const firstField = Object.keys(errors)[0];
+    if (!firstField) return;
+    window.setTimeout(() => document.getElementById(firstField)?.focus(), 0);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
+    const errors = getRegisterErrors();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      focusFirstError(errors);
       return;
     }
 
@@ -230,21 +259,43 @@ export default function RegisterPage() {
     [router, setTokens, setUser, toast],
   );
 
+  const handleGoogleFallbackClick = useCallback(() => {
+    if (!googleClientId) {
+      setError('Chưa cấu hình đăng nhập Google. Vui lòng đăng ký bằng email.');
+      return;
+    }
+
+    const google = getGoogleIdentity();
+    if (!google) {
+      setError('Google chưa tải xong. Vui lòng thử lại sau vài giây.');
+      return;
+    }
+
+    try {
+      google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleResponse,
+      });
+      google.accounts.id.prompt();
+    } catch {
+      setError('Không thể mở đăng nhập Google. Vui lòng đăng ký bằng email.');
+    }
+  }, [googleClientId, handleGoogleResponse]);
+
   useEffect(() => {
     const google = getGoogleIdentity();
     if (!gsiReady || !googleBtnRef.current || !google) return;
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setError('Chưa cấu hình đăng nhập Google. Vui lòng đăng ký bằng email.');
+    if (!googleClientId) {
       return;
     }
 
     const timer = setTimeout(() => {
       if (!googleBtnRef.current) return;
       try {
+        googleBtnRef.current.innerHTML = '';
         google.accounts.id.initialize({
-          client_id: clientId,
+          client_id: googleClientId,
           callback: handleGoogleResponse,
         });
         google.accounts.id.renderButton(googleBtnRef.current, {
@@ -260,14 +311,7 @@ export default function RegisterPage() {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [gsiReady, handleGoogleResponse]);
-
-  const isFormValid =
-    fullName.trim().length >= 2 &&
-    email.includes('@') &&
-    /^0\d{9}$/.test(phone) &&
-    password.length >= 6 &&
-    password === confirmPassword;
+  }, [gsiReady, googleClientId, handleGoogleResponse]);
 
   return (
     <AuthShell
@@ -455,7 +499,7 @@ export default function RegisterPage() {
 
           <Button
             type="submit"
-            disabled={!isFormValid || loading || Object.keys(fieldErrors).length > 0}
+            disabled={loading}
             className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue"
           >
             {loading ? 'Đang xử lý…' : 'Đăng ký'}
@@ -466,9 +510,22 @@ export default function RegisterPage() {
           <div
             ref={googleBtnRef}
             id="google-register-btn"
-            className="flex min-h-11 w-full items-center justify-center"
+            className="flex min-h-11 w-full items-center justify-center rounded-xl border border-platinum-tint bg-white"
             aria-label="Đăng ký bằng Google"
-          />
+          >
+            <button
+              type="button"
+              onClick={handleGoogleFallbackClick}
+              className="flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-midnight-indigo transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+            >
+              {googleClientId ? 'Đăng ký với Google' : 'Google chưa được cấu hình'}
+            </button>
+          </div>
+          {!googleClientId && (
+            <p className="text-center text-xs leading-5 text-slate-blue">
+              Hiện có thể đăng ký bằng email. Google sẽ bật sau khi cấu hình OAuth.
+            </p>
+          )}
 
           <p className="text-center text-xs leading-5 text-slate-blue">
             Bằng việc đăng ký, bạn đồng ý với điều khoản dịch vụ của Zup.

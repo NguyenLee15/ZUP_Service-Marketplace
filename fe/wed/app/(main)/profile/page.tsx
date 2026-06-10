@@ -63,7 +63,7 @@ export default function ProfilePage() {
         setAvatar(u.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.email}`)
         profileForm.reset({ fullName: u.fullName || '', phone: u.phone || '' })
       })
-      .catch((err: any) => {
+      .catch((err: ApiPayload) => {
         if (err?.response?.status === 401) {
           useAuthStore.getState().logout()
           router.push('/login')
@@ -93,7 +93,7 @@ export default function ProfilePage() {
       const res = await (await import('@/lib/axios')).default.patch('/users/profile', formData)
       setUser(res.data.data)
       showSuccess('Cập nhật hồ sơ thành công')
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       showError(err?.response?.data?.message || 'Không thể cập nhật hồ sơ. Vui lòng thử lại.')
     }
   }
@@ -106,7 +106,7 @@ export default function ProfilePage() {
       })
       showSuccess('Đổi mật khẩu thành công')
       passwordForm.reset()
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       showError(err?.response?.data?.message || 'Mật khẩu cũ không đúng. Vui lòng kiểm tra lại.')
     }
   }

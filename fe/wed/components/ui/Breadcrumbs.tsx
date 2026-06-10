@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
@@ -23,10 +24,172 @@ const routeMap: Record<string, string> = {
   compare: "So sánh",
 };
 
+type DynamicCrumbType =
+  | "service"
+  | "provider"
+  | "booking"
+  | "admin-booking"
+  | "admin-dispute"
+  | "admin-kyc";
+
+type DynamicCrumb = {
+  cacheKey: string;
+  endpoint?: string;
+  fallback: string;
+  type: DynamicCrumbType;
+};
+
+function getStaticLabel(segment: string) {
+  return routeMap[segment] || decodeURIComponent(segment);
+}
+
+function isNumericSegment(segment: string) {
+  return /^\d+$/.test(segment);
+}
+
+function compactLabel(label: unknown) {
+  return typeof label === "string" && label.trim() ? label.trim() : null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function getDynamicCrumb(pathSegments: string[], index: number): DynamicCrumb | null {
+  const segment = pathSegments[index];
+  if (!segment || !isNumericSegment(segment)) return null;
+
+  const href = `/${pathSegments.slice(0, index + 1).join("/")}`;
+  const parent = pathSegments[index - 1];
+  const grandParent = pathSegments[index - 2];
+
+  if (parent === "services") {
+    return {
+      cacheKey: href,
+      endpoint: `/api/services/${segment}`,
+      fallback: "Chi tiết dịch vụ",
+      type: "service",
+    };
+  }
+
+  if (parent === "providers") {
+    return {
+      cacheKey: href,
+      endpoint: `/api/services/providers/${segment}`,
+      fallback: "Hồ sơ nhà cung cấp",
+      type: "provider",
+    };
+  }
+
+  if (parent === "bookings" && grandParent !== "admin") {
+    return {
+      cacheKey: href,
+      endpoint: `/api/bookings/${segment}`,
+      fallback: "Chi tiết đơn hàng",
+      type: "booking",
+    };
+  }
+
+  if (grandParent === "admin" && parent === "bookings") {
+    return {
+      cacheKey: href,
+      fallback: `Đơn #${segment}`,
+      type: "admin-booking",
+    };
+  }
+
+  if (grandParent === "admin" && parent === "disputes") {
+    return {
+      cacheKey: href,
+      fallback: `Khiếu nại #${segment}`,
+      type: "admin-dispute",
+    };
+  }
+
+  if (grandParent === "admin" && parent === "kyc") {
+    return {
+      cacheKey: href,
+      fallback: `KYC #${segment}`,
+      type: "admin-kyc",
+    };
+  }
+
+  return null;
+}
+
+function extractLabel(payload: unknown, type: DynamicCrumbType) {
+  const root = asRecord(payload);
+  const data = asRecord(root.data ?? payload);
+
+  if (type === "service") {
+    return compactLabel(data.name);
+  }
+
+  if (type === "provider") {
+    return compactLabel(data.fullName) || compactLabel(data.name);
+  }
+
+  if (type === "booking") {
+    const service = asRecord(data.service);
+    return (
+      compactLabel(service.name) ||
+      compactLabel(data.serviceName) ||
+      compactLabel(data.title) ||
+      (data.id ? `Chi tiết đơn hàng #${data.id}` : null)
+    );
+  }
+
+  return null;
+}
+
 export function Breadcrumbs() {
   const pathname = usePathname();
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({});
   const isHome = pathname === "/";
   const paths = pathname.split("/").filter(Boolean);
+
+  useEffect(() => {
+    let cancelled = false;
+    const pathSegments = pathname.split("/").filter(Boolean);
+    const dynamicCrumbs = pathSegments
+      .map((_, index) => getDynamicCrumb(pathSegments, index))
+      .filter((crumb): crumb is DynamicCrumb => Boolean(crumb));
+
+    if (dynamicCrumbs.length === 0) return;
+
+    setDynamicLabels((current) => {
+      const next = { ...current };
+      dynamicCrumbs.forEach((crumb) => {
+        if (!next[crumb.cacheKey]) next[crumb.cacheKey] = crumb.fallback;
+      });
+      return next;
+    });
+
+    dynamicCrumbs.forEach((crumb) => {
+      if (!crumb.endpoint) return;
+
+      fetch(crumb.endpoint, {
+        headers: { Accept: "application/json" },
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => {
+          const label = extractLabel(payload, crumb.type);
+          if (!cancelled && label) {
+            setDynamicLabels((current) => ({
+              ...current,
+              [crumb.cacheKey]: label,
+            }));
+          }
+        })
+        .catch(() => {
+          /* Giữ fallback nếu không tải được nhãn breadcrumb. */
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   return (
     <nav
@@ -54,7 +217,11 @@ export function Breadcrumbs() {
           paths.map((path, index) => {
             const href = `/${paths.slice(0, index + 1).join("/")}`;
             const isLast = index === paths.length - 1;
-            const label = routeMap[path] || decodeURIComponent(path);
+            const dynamicCrumb = getDynamicCrumb(paths, index);
+            const label =
+              (dynamicCrumb && dynamicLabels[dynamicCrumb.cacheKey]) ||
+              dynamicCrumb?.fallback ||
+              getStaticLabel(path);
 
             return (
               <li key={path} className="flex items-center">

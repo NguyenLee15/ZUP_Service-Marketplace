@@ -7,7 +7,30 @@ const ALLOWED_IMAGE_HOSTS = new Set([
   'i.pravatar.cc',
 ]);
 
+function toCspOrigin(value?: string) {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+function uniqueCspValues(values: Array<string | null>) {
+  return Array.from(new Set(values.filter(Boolean) as string[])).join(' ');
+}
+
 function createCsp(nonce: string) {
+  const connectSrc = uniqueCspValues([
+    "'self'",
+    toCspOrigin(process.env.NEXT_PUBLIC_APP_URL),
+    toCspOrigin(process.env.BACKEND_URL),
+    toCspOrigin(process.env.NEXT_PUBLIC_WS_URL),
+    'https://accounts.google.com',
+    'https://sandbox.vnpayment.vn',
+    'wss:',
+  ]);
+
   return [
     "default-src 'self'",
     "base-uri 'self'",
@@ -22,8 +45,8 @@ function createCsp(nonce: string) {
     `style-src 'self' 'unsafe-inline' https://accounts.google.com`,
     "img-src 'self' data: blob: https://res.cloudinary.com https://api.dicebear.com https://lh3.googleusercontent.com https://i.pravatar.cc https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org",
     "font-src 'self' data:",
-    "connect-src 'self' https://service-marketplace-gold.vercel.app https://accounts.google.com wss:",
-    "frame-src 'self' https://accounts.google.com https://www.facebook.com",
+    `connect-src ${connectSrc}`,
+    "frame-src 'self' https://accounts.google.com https://www.facebook.com https://sandbox.vnpayment.vn",
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "media-src 'self' data: blob:",

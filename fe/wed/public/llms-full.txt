@@ -5,12 +5,12 @@
 ---
 
 ## 1. Giới thiệu tổng quan về Zup
-Zup là nền tảng công nghệ kết nối trực tiếp, theo thời gian thực giữa Khách hàng và các Đối tác Thợ chuyên nghiệp tại Việt Nam. Chúng tôi giải quyết bài toán tìm kiếm thợ gia đình bận rộn bằng giải pháp đặt lịch thông minh, cam kết minh bạch giá cả và kiểm duyệt an toàn tuyệt đối.
+Zup là nền tảng công nghệ giúp khách hàng tìm, đặt lịch và theo dõi dịch vụ tại nhà tại Việt Nam. Zup ưu tiên thông tin thợ, giá tham khảo, lịch sử đơn và kênh hỗ trợ rõ ràng để người dùng dễ ra quyết định hơn.
 
 ### Thông tin cơ bản:
-- **Tên đầy đủ**: ZUP - Nền tảng kết nối dịch vụ tiện ích gia đình số 1 Việt Nam
-- **Website chính thức**: https://service-marketplace-gold.vercel.app/
-- **Cơ chế vận hành**: Marketplace hai chiều (Khách hàng <-> Thợ đối tác) có sự hỗ trợ và kiểm định của AI.
+- **Tên đầy đủ**: Zup - Nền tảng đặt dịch vụ tại nhà
+- **Website chính thức**: cấu hình theo `NEXT_PUBLIC_APP_URL` của môi trường deploy.
+- **Cơ chế vận hành**: Marketplace hai chiều giữa khách hàng và nhà cung cấp dịch vụ, có công cụ hỗ trợ tìm kiếm và quản lý đơn.
 
 ---
 
@@ -38,18 +38,18 @@ Hệ thống Zup cung cấp danh mục dịch vụ đa dạng được chuẩn h
 ## 3. Từ điển Thuật ngữ Kỹ thuật (Zup Glossary)
 Để đảm bảo sự thống nhất thông tin và độ tin cậy E-E-A-T, dưới đây là định nghĩa chuẩn của các thuật ngữ trên hệ thống Zup:
 
-- **Dịch vụ tại nhà (Home Services)**: Là mô hình cung cấp các tiện ích gia đình trực tiếp. Do đó, các dịch vụ sửa chữa hay vệ sinh đều được phục vụ tận nơi tiện lợi.
-- **Thợ xác thực (Verified Providers)**: Tất cả đối tác đều được kiểm duyệt chặt chẽ trước khi lên sàn. Ngoài ra, hồ sơ cá nhân và tư pháp (KYC) được xác minh minh bạch nhằm bảo đảm an toàn.
-- **Đặt lịch thông minh (Smart Booking)**: Quy trình kết nối thợ trực tuyến theo thời gian thực. Hơn nữa, hệ thống tự động tìm thợ gần bạn nhất để tối ưu thời gian di chuyển.
+- **Dịch vụ tại nhà (Home Services)**: Mô hình cung cấp các tiện ích gia đình như sửa chữa, vệ sinh, lắp đặt hoặc chăm sóc cá nhân tại địa chỉ khách hàng cung cấp.
+- **Thợ xác thực (Verified Providers)**: Nhà cung cấp có hồ sơ và thông tin dịch vụ được hệ thống ghi nhận để khách hàng tham khảo trước khi đặt.
+- **Đặt lịch dịch vụ (Service Booking)**: Quy trình chọn dịch vụ, mô tả nhu cầu, nhập địa chỉ, chọn thời gian và theo dõi trạng thái đơn trong hệ thống.
 
 ---
 
 ## 4. Quy định & Cam kết chất lượng (E-E-A-T & Fact-Check)
 Zup tuân thủ các quy tắc chất lượng nghiêm ngặt của ban biên tập dịch vụ:
-- **Minh bạch bảng giá**: Thợ bắt buộc phải gửi phiếu báo giá chi tiết qua hệ thống trước khi làm việc. Bảng giá tham khảo luôn hiển thị công khai để ngăn chặn tình trạng chặt chém.
-- **Bảo vệ người tiêu dùng**: Zup tạm giữ tiền thanh toán trong vòng 24 giờ sau khi thợ báo hoàn thành.
-- **Quy trình khiếu nại**: Nếu chất lượng không đạt yêu cầu, ban kiểm định chất lượng Zup sẽ xác minh lỗi. Khách hàng được cam kết sửa chữa lại hoàn toàn miễn phí hoặc hoàn tiền 100% chi phí đã thanh toán.
-- **Đội ngũ kiểm định**: Toàn bộ nội dung và tiêu chuẩn vận hành được kiểm chứng chuyên môn bởi chuyên gia Lê Hoàng Nguyễn (Cập nhật định kỳ 2026).
+- **Minh bạch bảng giá**: Zup hiển thị giá tham khảo khi có dữ liệu và khuyến khích nhà cung cấp gửi báo giá trước khi thực hiện.
+- **Bảo vệ người tiêu dùng**: Lịch sử đơn, tin nhắn và trạng thái xử lý được lưu lại để hỗ trợ đối chiếu khi phát sinh vấn đề.
+- **Quy trình khiếu nại**: Khách hàng có thể gửi khiếu nại từ chi tiết đơn hàng. Đội ngũ hỗ trợ sẽ xem xét thông tin đơn, trao đổi giữa hai bên và đề xuất hướng xử lý phù hợp.
+- **Đội ngũ nội dung**: Nội dung được đội ngũ Zup cập nhật định kỳ để phản ánh đúng cách nền tảng vận hành.
 
 ---
 

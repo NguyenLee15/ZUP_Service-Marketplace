@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Sparkles } from 'lucide-react';
 
 interface DynamicQuestionnaireProps {
   serviceName: string;
@@ -106,9 +106,10 @@ export function DynamicQuestionnaire({ serviceName, description, onChange, error
       <div className="pt-2">
         <p className="text-xs font-semibold text-slate-blue mb-2">Mô tả thêm (tùy chọn)</p>
         <Textarea 
+          id="booking-description"
           value={customText} 
           onChange={(e) => setCustomText(e.target.value)}
-          placeholder="Nhập thêm chi tiết về vấn đề của bạn..." 
+          placeholder="Nhập thêm chi tiết về vấn đề của bạn…"
           rows={3}
           className={`resize-none ${error ? 'border-red-500 focus-visible:ring-red-500' : 'border-platinum-tint focus-visible:ring-action-blue'}`} 
         />

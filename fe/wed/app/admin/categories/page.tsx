@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, X } from 'lucide-react';
@@ -53,7 +53,7 @@ export default function CategoriesPage() {
     categoriesApi.getTree()
       .then((res) => {
         // Mặc định expand level 1
-        const addExpand = (cats: any[]): Category[] => {
+        const addExpand = (cats: ApiPayload[]): Category[] => {
           return cats.map((c) => ({
             ...c,
             isExpanded: c.parentId === null,
@@ -98,7 +98,7 @@ export default function CategoriesPage() {
       setEditingId(null);
       setSelectedParentId(null);
       fetchCategories();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Có lỗi xảy ra', variant: 'destructive' });
     } finally {
       setActionLoading(false);
@@ -111,7 +111,7 @@ export default function CategoriesPage() {
       await adminApi.deleteCategory(id);
       toast({ title: 'Đã xóa danh mục' });
       fetchCategories();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Có lỗi xảy ra', variant: 'destructive' });
     }
   };

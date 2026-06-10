@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   MapPin,
   Clock,
   User,
@@ -18,8 +26,6 @@ import {
   ArrowLeft,
   FileText,
   ShieldAlert,
-  CheckCircle,
-  ShieldCheck,
   AlertTriangle,
   Loader2,
   XCircle,
@@ -60,8 +66,8 @@ export default function AdminBookingDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const [booking, setBooking] = useState<any>(null);
-  const [timeline, setTimeline] = useState<any[]>([]);
+  const [booking, setBooking] = useState<ApiPayload>(null);
+  const [timeline, setTimeline] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelReason, setCancelReason] = useState("");
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -114,7 +120,7 @@ export default function AdminBookingDetailPage() {
       setShowCancelModal(false);
       setCancelReason("");
       fetchBookingDetail();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({
         title: "Lỗi",
         description: err.response?.data?.error?.message || err.message,
@@ -478,7 +484,7 @@ export default function AdminBookingDetailPage() {
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
-                  {statusHistory.map((h: any, i: number) => {
+                  {statusHistory.map((h: ApiPayload, i: number) => {
                     const stepStatus = STATUS_MAP[h.toStatus] || {
                       label: h.toStatus,
                       color: "bg-slate-100 text-slate-700 border-slate-200",
@@ -528,17 +534,23 @@ export default function AdminBookingDetailPage() {
         </div>
       </div>
 
-      {/* Cancel Modal */}
-      {showCancelModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <Card className="w-full max-w-md border-slate-200 rounded-2xl shadow-xl animate-in fade-in zoom-in-95 duration-150">
-            <CardHeader className="pb-3 border-b border-slate-100">
-              <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-500" /> Hủy đơn hàng
-                này?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
+      <Dialog
+        open={showCancelModal}
+        onOpenChange={(open) => {
+          setShowCancelModal(open);
+          if (!open) setCancelReason("");
+        }}
+      >
+        <DialogContent className="w-full max-w-md border-slate-200 rounded-2xl shadow-xl">
+          <DialogHeader className="pb-3 border-b border-slate-100">
+            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" /> Hủy đơn hàng này?
+            </DialogTitle>
+            <DialogDescription>
+              Lý do hủy sẽ được lưu vào lịch sử đơn và thông báo cho các bên.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
               <p className="text-xs text-slate-500 leading-relaxed">
                 Hành động này sẽ hủy bỏ đơn hàng và thay đổi trạng thái thành{" "}
                 <span className="font-bold">CANCELLED</span>. Khách hàng và nhà
@@ -546,19 +558,27 @@ export default function AdminBookingDetailPage() {
               </p>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">
+                <label htmlFor="admin-detail-cancel-reason" className="block text-xs font-bold text-slate-700">
                   Lý do hủy đơn *
                 </label>
                 <Textarea
+                  id="admin-detail-cancel-reason"
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Nhập lý do chi tiết để thông báo cho các bên..."
+                  placeholder="Ví dụ: khách hàng yêu cầu hủy vì trùng lịch…"
                   rows={3}
                   className="resize-none border-slate-200 focus:border-red-400 focus:ring-red-400/20 text-sm rounded-lg"
+                  aria-invalid={!cancelReason.trim()}
+                  aria-describedby={!cancelReason.trim() ? "admin-detail-cancel-reason-help" : undefined}
                 />
+                {!cancelReason.trim() && (
+                  <p id="admin-detail-cancel-reason-help" className="text-xs text-red-600">
+                    Vui lòng nhập lý do hủy trước khi xác nhận.
+                  </p>
+                )}
               </div>
 
-              <div className="flex gap-2 justify-end pt-2">
+              <DialogFooter className="pt-2">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -577,17 +597,16 @@ export default function AdminBookingDetailPage() {
                   {actionLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                      Đang xử lý...
+                      Đang xử lý…
                     </>
                   ) : (
-                    "Hủy Đơn Hàng"
+                    "Hủy đơn hàng"
                   )}
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

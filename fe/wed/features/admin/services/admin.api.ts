@@ -2,7 +2,7 @@ import api from '@/lib/axios';
 
 export const adminApi = {
   // Services
-  getServices: (params?: Record<string, any>) =>
+  getServices: (params?: Record<string, ApiPayload>) =>
     api.get('/admin/services', { params }),
 
   approveService: (id: number) =>
@@ -19,11 +19,11 @@ export const adminApi = {
     api.patch(`/admin/disputes/${id}/resolve`, { resolution, refundPercent }),
 
   // Bookings
-  getBookings: (params?: Record<string, any>) =>
+  getBookings: (params?: Record<string, ApiPayload>) =>
     api.get('/admin/bookings', { params }),
 
   // Users
-  getUsers: (params?: Record<string, any>) =>
+  getUsers: (params?: Record<string, ApiPayload>) =>
     api.get('/admin/users', { params }),
 
   lockUser: (id: number, data?: { reason: string }) =>
@@ -33,7 +33,7 @@ export const adminApi = {
     api.patch(`/admin/users/${id}/unlock`),
 
   // KYC
-  getKycRequests: (params?: Record<string, any>) =>
+  getKycRequests: (params?: Record<string, ApiPayload>) =>
     api.get('/admin/kyc', { params }),
 
   getKycDetail: (id: number) =>
@@ -46,10 +46,10 @@ export const adminApi = {
     api.patch(`/admin/kyc/${id}/reject`, { reason }),
 
   // Categories
-  createCategory: (data: any) =>
+  createCategory: (data: ApiPayload) =>
     api.post('/categories', data),
 
-  updateCategory: (id: number, data: any) =>
+  updateCategory: (id: number, data: ApiPayload) =>
     api.patch(`/categories/${id}`, data),
 
   deleteCategory: (id: number) =>

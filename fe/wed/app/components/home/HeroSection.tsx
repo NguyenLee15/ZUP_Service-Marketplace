@@ -41,22 +41,22 @@ export function HeroSection() {
           </div>
           <span className="text-xs sm:text-sm font-semibold text-white/90 ml-1 truncate">
             <span className="hidden sm:inline">
-              <span className="text-white font-bold">10,000+</span> hộ gia đình đã tin dùng.
+              Đặt dịch vụ rõ thông tin, dễ theo dõi.
             </span>
             <span className="sm:hidden">
-              <span className="text-white font-bold">10,000+</span> gia đình tin dùng.
+              Đặt dịch vụ rõ ràng.
             </span>
           </span>
         </div>
 
         <h1 className="mx-auto max-w-[360px] sm:max-w-none text-[2.2rem] min-[420px]:text-4xl sm:text-6xl md:text-7xl lg:text-[72px] font-extrabold mb-5 sm:mb-6 text-white drop-shadow-2xl tracking-normal leading-[1.1] text-balance">
-          Mọi dịch vụ bạn cần, <br className="hidden md:block" />
+          Tìm dịch vụ tại nhà, <br className="hidden md:block" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-teal-400">
-            ngay tại ngôi nhà bạn.
+            rõ ràng từ lúc đặt lịch.
           </span>
         </h1>
         <p className="text-base sm:text-lg md:text-xl text-white/95 mb-6 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
-          Zup tự hào là nền tảng kết nối <strong>dịch vụ tiện ích</strong> số 1 Việt Nam. <strong>Do đó</strong>, chúng tôi cam kết đem lại các giải pháp <strong>nhanh chóng, an toàn</strong> và minh bạch nhất cho tổ ấm của bạn.
+          Zup giúp bạn tìm và đặt <strong>dịch vụ tại nhà</strong> nhanh hơn, với thông tin thợ, giá tham khảo và đánh giá rõ ràng.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">

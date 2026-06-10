@@ -35,13 +35,13 @@ function readJsonBody(text: string) {
   }
 }
 
-function getPayloadData(payload: any) {
+function getPayloadData(payload: ApiPayload) {
   return payload?.data && typeof payload.data === "object"
     ? payload.data
     : payload;
 }
 
-function getAuthTokens(payload: any) {
+function getAuthTokens(payload: ApiPayload) {
   const data = getPayloadData(payload);
   return {
     accessToken:
@@ -51,7 +51,7 @@ function getAuthTokens(payload: any) {
   };
 }
 
-function stripRefreshToken(payload: any) {
+function stripRefreshToken(payload: ApiPayload) {
   const data = getPayloadData(payload);
   if (data && typeof data === "object") {
     delete data.refreshToken;
@@ -117,7 +117,7 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
     if (contentType.includes("multipart/form-data")) {
       // FormData — pass through, let fetch set boundary
       const formData = await req.formData();
-      fetchOptions.body = formData as any;
+      fetchOptions.body = formData as ApiPayload;
       // Do NOT set Content-Type — fetch will auto-set with correct boundary
     } else {
       // JSON or other text body
@@ -172,7 +172,7 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
     // JSON/text responses
     const data = await response.text();
     let responseBody = data;
-    let parsedPayload: any = null;
+    let parsedPayload: ApiPayload = null;
     let authTokens: ReturnType<typeof getAuthTokens> | null = null;
 
     if (responseContentType.includes("application/json")) {

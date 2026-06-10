@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, Wrench } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 import { HeaderSearchBar } from '@/components/layout/HeaderSearchBar';
 import { HomeHeaderAuth } from '@/components/layout/HomeHeaderAuth';
@@ -17,7 +17,7 @@ export function HomeHeader() {
             <div className="h-8 w-8 sm:h-10 sm:w-10 overflow-hidden rounded-xl border border-white/10 shadow-[0_0_18px_rgba(2,132,199,0.4)] shrink-0 flex items-center justify-center bg-slate-950">
               <Image
                 src="/logo.png"
-                alt="ZUP Logo Header - Nền tảng kết nối dịch vụ tiện ích tại nhà"
+                alt="Zup"
                 width={40}
                 height={40}
                 priority
@@ -58,7 +58,7 @@ export function HomeHeader() {
                 </Link>
                 <div className="my-1 h-px bg-white/10" />
                 <Link href="/login" className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
-                  Đăng nhập thành viên.
+                  Đăng nhập
                 </Link>
                 <Link href="/register" className="block rounded-lg px-4 py-3 text-sm font-bold text-cyan-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                   Đăng ký tài khoản

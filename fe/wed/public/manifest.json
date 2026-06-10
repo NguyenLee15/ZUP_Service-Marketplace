@@ -1,7 +1,7 @@
 {
   "name": "Zup Marketplace",
   "short_name": "Zup",
-  "description": "Nền tảng đặt thợ dịch vụ tại gia uy tín hàng đầu",
+  "description": "Nền tảng tìm và đặt dịch vụ tại nhà với thông tin rõ ràng",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -18,11 +18,6 @@ import {
 } from '@/lib/address-options'
 import { useAddressOptions } from '@/hooks/use-address-options'
 
-const DEFAULT_COORDINATES = {
-  latitude: 10.7769,
-  longitude: 106.6963,
-}
-
 const addressSchema = z.object({
   label: z.string().max(50, 'Nhãn địa chỉ tối đa 50 ký tự').optional(),
   province: z.string().min(1, 'Vui lòng chọn tỉnh/thành phố'),
@@ -80,7 +75,6 @@ export default function AddressesPage() {
   const [loading, setLoading] = useState(true)
   const [actionId, setActionId] = useState<number | null>(null)
   const [showModal, setShowModal] = useState(false)
-  const [selectedMap, setSelectedMap] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const { addressOptions, loading: addressOptionsLoading, fallback: addressOptionsFallback } = useAddressOptions()
@@ -134,7 +128,6 @@ export default function AddressesPage() {
 
   const closeModal = () => {
     setShowModal(false)
-    setSelectedMap(false)
     form.reset(emptyAddressValues)
   }
 
@@ -146,8 +139,8 @@ export default function AddressesPage() {
         district: data.district || NEW_ADMIN_DISTRICT_VALUE,
         ward: data.ward,
         addressDetail: data.addressDetail,
-        latitude: selectedMap ? DEFAULT_COORDINATES.latitude : 0,
-        longitude: selectedMap ? DEFAULT_COORDINATES.longitude : 0,
+        latitude: 0,
+        longitude: 0,
         isDefault: data.isDefault,
       })
 
@@ -195,7 +188,6 @@ export default function AddressesPage() {
         <Button
           onClick={() => {
             form.reset(emptyAddressValues)
-            setSelectedMap(false)
             setShowModal(true)
           }}
           className="bg-action-blue hover:bg-glacier-blue text-white flex items-center gap-2 shadow-[var(--brand-shadow-button)]"
@@ -299,35 +291,10 @@ export default function AddressesPage() {
 
             <div className="max-h-[75vh] overflow-y-auto p-6">
               <div className="mb-6 space-y-3">
-                <p className="text-sm font-medium text-foreground">Vị trí trên bản đồ</p>
-                {!selectedMap ? (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMap(true)}
-                    className="flex h-36 w-full items-center justify-center rounded-xl border-2 border-dashed border-platinum-tint bg-cloud-mist transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
-                  >
-                    <div className="text-center">
-                      <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm font-medium text-foreground/80">Chọn vị trí mô phỏng</p>
-                      <p className="text-xs text-muted-foreground">Tọa độ sẽ được gửi kèm địa chỉ</p>
-                    </div>
-                  </button>
-                ) : (
-                  <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-                    <p className="flex items-center gap-2 text-sm text-green-700">
-                      <Check className="w-4 h-4" />
-                      Đã chọn vị trí: {DEFAULT_COORDINATES.latitude}° N, {DEFAULT_COORDINATES.longitude}° E
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-3"
-                      onClick={() => setSelectedMap(false)}
-                    >
-                      Bỏ chọn vị trí
-                    </Button>
-                  </div>
-                )}
+                <p className="text-sm font-medium text-foreground">Địa chỉ thủ công</p>
+                <div className="rounded-xl border border-platinum-tint bg-cloud-mist px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+                  Bản release này chưa bật chọn vị trí trên bản đồ. Vui lòng nhập số nhà, tên đường và phường/xã chính xác để thợ đến đúng nơi.
+                </div>
               </div>
 
               <div className="mb-4 rounded-xl border border-platinum-tint bg-pale-gray/45 px-4 py-3 text-xs text-muted-foreground">
@@ -346,7 +313,7 @@ export default function AddressesPage() {
                   <label htmlFor="address-label" className="mb-2 block text-sm font-medium text-foreground/80">Nhãn địa chỉ</label>
                   <Input
                     id="address-label"
-                    placeholder="Nhà riêng, công ty..."
+                    placeholder="Nhà riêng, công ty…"
                     autoComplete="off"
                     {...form.register('label')}
                   />
@@ -406,7 +373,7 @@ export default function AddressesPage() {
                   <label htmlFor="address-detail" className="mb-2 block text-sm font-medium text-foreground/80">Địa chỉ chi tiết</label>
                   <textarea
                     id="address-detail"
-                    placeholder="Số nhà, tên đường..."
+                    placeholder="Số nhà, tên đường…"
                     autoComplete="street-address"
                     {...form.register('addressDetail')}
                     rows={3}
@@ -443,7 +410,7 @@ export default function AddressesPage() {
                     {form.formState.isSubmitting ? (
                       <span className="inline-flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Đang lưu...
+                        Đang lưu…
                       </span>
                     ) : (
                       'Lưu địa chỉ'

@@ -28,7 +28,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { getSafeServiceImageSrc } from "@/lib/security/image-sources";
 
-export function ServiceDetailClient({ service }: { service: any }) {
+export function ServiceDetailClient({ service }: { service: ApiPayload }) {
   const router = useRouter();
   const { isAuthenticated, user, setUser } = useAuthStore();
   const [currentImage, setCurrentImage] = useState(0);
@@ -56,7 +56,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
       currency: "VND",
     }).format(price);
 
-  const images = (service?.images || []).map((image: any) => ({
+  const images = (service?.images || []).map((image: ApiPayload) => ({
     ...image,
     imageUrl: getSafeServiceImageSrc(image.imageUrl, service),
   }));
@@ -145,7 +145,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
                 <ChevronRight className="w-5 h-5 sm:w-5 sm:h-5" />
               </button>
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                {images.map((_: any, i: number) => (
+                {images.map((_: ApiPayload, i: number) => (
                   <button
                     key={i}
                     aria-label={`Xem ảnh ${i + 1}`}
@@ -289,7 +289,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {service.items.map((item: any) => (
+                    {service.items.map((item: ApiPayload) => (
                       <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td className="p-3 text-slate-100 font-medium">{item.name}</td>
                         <td className="p-3 text-slate-300">{item.unit}</td>
@@ -382,7 +382,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
                 disabled={chatLoading}
               >
                 <MessageSquare className="w-4 h-4 mr-1.5" />
-                {chatLoading ? "Đang mở..." : "Nhắn tin cho thợ"}
+                {chatLoading ? "Đang mở…" : "Nhắn tin cho thợ"}
               </Button>
             </div>
           </CardContent>
@@ -486,7 +486,7 @@ export function ServiceDetailClient({ service }: { service: any }) {
             </p>
           ) : (
             <div className="space-y-4">
-              {reviews.map((review: any) => (
+              {reviews.map((review: ApiPayload) => (
                 <div key={review.id} className="flex gap-3">
                   <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
                     {review.customer?.fullName?.charAt(0)}

@@ -5,20 +5,20 @@ const steps = [
   {
     icon: Search,
     number: '01',
-    title: 'Tìm kiếm nhanh',
-    description: 'Bạn hãy nhập nhu cầu và khu vực cần hỗ trợ. Sau đó, hệ thống sẽ đề xuất ngay danh sách các thợ phù hợp nhất để so sánh trực quan.',
+    title: 'Tìm dịch vụ',
+    description: 'Nhập nhu cầu hoặc chọn danh mục để xem các dịch vụ phù hợp. Bạn có thể so sánh thông tin, giá tham khảo và đánh giá trước khi đặt.',
   },
   {
     icon: ShieldCheck,
     number: '02',
-    title: 'Thợ xác thực',
-    description: 'Tất cả đối tác đều được kiểm duyệt hồ sơ và tay nghề kỹ lưỡng. Hơn nữa, thợ bắt buộc phải vượt qua bài kiểm tra thái độ phục vụ khách hàng.',
+    title: 'Trao đổi và nhận báo giá',
+    description: 'Mô tả yêu cầu, chọn thời gian và địa chỉ. Nhà cung cấp sẽ có thêm thông tin để tư vấn hoặc gửi báo giá trước khi thực hiện.',
   },
   {
     icon: ThumbsUp,
     number: '03',
-    title: 'Đặt lịch rõ ràng',
-    description: 'Bạn dễ dàng theo dõi hành trình di chuyển và trao đổi trực tiếp với thợ. Vì thế, bạn chỉ xác nhận thanh toán khi dịch vụ đã hoàn tất.',
+    title: 'Theo dõi trong một nơi',
+    description: 'Lịch hẹn, tin nhắn, trạng thái đơn và đánh giá sau dịch vụ được lưu lại để bạn dễ kiểm tra khi cần hỗ trợ.',
   },
 ];
 
@@ -32,10 +32,10 @@ export function HowItWorks() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6">
         <div className="text-center mb-8 md:mb-14">
           <Badge className="mb-3 rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-bold tracking-wide text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.16)] md:mb-5 md:px-4 md:py-2 md:text-xs">
-            Quy trình 3 bước.
+            Quy trình 3 bước
           </Badge>
           <h2 id="tieu-de-quy-trinh" className="mb-2 text-2xl font-bold leading-tight text-slate-100 text-balance md:mb-4 md:text-[50px]">
-            Dịch vụ chuyên nghiệp. <br className="hidden md:block" />
+            Đặt dịch vụ rõ ràng <br className="hidden md:block" />
             <span className="text-cyan-300">chỉ trong vài bước.</span>
           </h2>
         </div>
@@ -54,7 +54,7 @@ export function HowItWorks() {
                     <Icon className="h-6 w-6 text-white md:h-8 md:w-8" />
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5 sm:pt-0">
-                    <h3 className="relative z-10 mb-1 text-base font-bold tracking-tight text-slate-100 sm:mb-3 sm:text-xl md:text-2xl">{step.title}.</h3>
+                    <h3 className="relative z-10 mb-1 text-base font-bold tracking-tight text-slate-100 sm:mb-3 sm:text-xl md:text-2xl">{step.title}</h3>
                     <p className="relative z-10 text-xs font-medium leading-relaxed text-slate-400 sm:text-base">
                       {step.description}
                     </p>

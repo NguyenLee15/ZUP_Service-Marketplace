@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
 
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: ApiPayload }> = {
   PENDING: { label: 'Chờ Duyệt', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   ACTIVE: { label: 'Đã Duyệt', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   REJECTED: { label: 'Từ Chối', color: 'bg-red-100 text-red-800', icon: XCircle },
@@ -26,17 +26,17 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
 
 export default function AdminServicesPage() {
   const { toast } = useToast();
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedService, setSelectedService] = useState<any>(null);
+  const [selectedService, setSelectedService] = useState<ApiPayload>(null);
   const [showModal, setShowModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchServices = () => {
     setLoading(true);
-    const params: Record<string, any> = {};
+    const params: Record<string, ApiPayload> = {};
     if (filterStatus !== 'all') params.status = filterStatus;
     adminApi.getServices(params)
       .then((res) => setServices(res.data.data || []))
@@ -53,7 +53,7 @@ export default function AdminServicesPage() {
       toast({ title: 'Đã duyệt dịch vụ' });
       setShowModal(false);
       fetchServices();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
     } finally { setActionLoading(false); }
   };
@@ -67,7 +67,7 @@ export default function AdminServicesPage() {
       setShowModal(false);
       setRejectReason('');
       fetchServices();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
     } finally { setActionLoading(false); }
   };
@@ -77,7 +77,7 @@ export default function AdminServicesPage() {
       await adminApi.hideService(id);
       toast({ title: 'Đã ẩn dịch vụ' });
       fetchServices();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
     }
   };
@@ -123,7 +123,7 @@ export default function AdminServicesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {services.map((service: any) => {
+                  {services.map((service: ApiPayload) => {
                     const sc = statusConfig[service.status] || statusConfig.DRAFT;
                     const StatusIcon = sc.icon;
                     return (

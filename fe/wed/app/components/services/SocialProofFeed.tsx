@@ -12,7 +12,7 @@ const mockActivities = [
 ];
 
 export function SocialProofFeed() {
-  const [current, setCurrent] = useState<any>(null);
+  const [current, setCurrent] = useState<ApiPayload>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

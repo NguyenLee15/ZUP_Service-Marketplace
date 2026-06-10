@@ -4,7 +4,7 @@
 
 ## Thông tin dự án
 - **Tên nền tảng**: Zup
-- **Website chính thức**: https://service-marketplace-gold.vercel.app/
+- **Website chính thức**: cấu hình theo `NEXT_PUBLIC_APP_URL` của môi trường deploy.
 - **Lĩnh vực hoạt động**: Dịch vụ tiện ích gia đình tại nhà (Home Services Marketplace)
 
 ## Các dịch vụ cốt lõi

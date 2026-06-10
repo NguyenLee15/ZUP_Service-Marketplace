@@ -69,6 +69,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [gsiReady, setGsiReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     if (getGoogleIdentity()) {
@@ -123,21 +124,43 @@ export default function LoginPage() {
     [routeAfterAuth, setTokens, setUser],
   );
 
+  const handleGoogleFallbackClick = useCallback(() => {
+    if (!googleClientId) {
+      setError('Chưa cấu hình đăng nhập Google. Vui lòng đăng nhập bằng email.');
+      return;
+    }
+
+    const google = getGoogleIdentity();
+    if (!google) {
+      setError('Google chưa tải xong. Vui lòng thử lại sau vài giây.');
+      return;
+    }
+
+    try {
+      google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleResponse,
+      });
+      google.accounts.id.prompt();
+    } catch {
+      setError('Không thể mở đăng nhập Google. Vui lòng thử email và mật khẩu.');
+    }
+  }, [googleClientId, handleGoogleResponse]);
+
   useEffect(() => {
     const google = getGoogleIdentity();
     if (!gsiReady || !googleBtnRef.current || !google) return;
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setError('Chưa cấu hình đăng nhập Google. Vui lòng đăng nhập bằng email.');
+    if (!googleClientId) {
       return;
     }
 
     const timer = setTimeout(() => {
       if (!googleBtnRef.current) return;
       try {
+        googleBtnRef.current.innerHTML = '';
         google.accounts.id.initialize({
-          client_id: clientId,
+          client_id: googleClientId,
           callback: handleGoogleResponse,
         });
         google.accounts.id.renderButton(googleBtnRef.current, {
@@ -153,7 +176,7 @@ export default function LoginPage() {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [gsiReady, handleGoogleResponse]);
+  }, [gsiReady, googleClientId, handleGoogleResponse]);
 
   const validate = (name: string, value: string) => {
     const newErrors = { ...fieldErrors };
@@ -170,9 +193,34 @@ export default function LoginPage() {
     setFieldErrors(newErrors);
   };
 
+  const getLoginErrors = () => {
+    const errors: Record<string, string> = {};
+    if (!email.trim()) errors.email = 'Email không được để trống';
+    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Email không hợp lệ';
+
+    if (!password) errors.password = 'Mật khẩu không được để trống';
+    else if (password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+
+    return errors;
+  };
+
+  const focusFirstError = (errors: Record<string, string>) => {
+    const firstField = Object.keys(errors)[0];
+    if (!firstField) return;
+    window.setTimeout(() => document.getElementById(firstField)?.focus(), 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const errors = getLoginErrors();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      focusFirstError(errors);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -197,8 +245,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
-  const isValid = email.includes('@') && password.length >= 6;
 
   return (
     <AuthShell
@@ -294,7 +340,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          disabled={!isValid || loading || Object.keys(fieldErrors).length > 0}
+          disabled={loading}
           className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue"
         >
           {loading ? (
@@ -312,9 +358,22 @@ export default function LoginPage() {
         <div
           ref={googleBtnRef}
           id="google-login-btn"
-          className="flex min-h-11 w-full items-center justify-center"
+          className="flex min-h-11 w-full items-center justify-center rounded-xl border border-platinum-tint bg-white"
           aria-label="Đăng nhập bằng Google"
-        />
+        >
+          <button
+            type="button"
+            onClick={handleGoogleFallbackClick}
+            className="flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-midnight-indigo transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+          >
+            {googleClientId ? 'Đăng nhập với Google' : 'Google chưa được cấu hình'}
+          </button>
+        </div>
+        {!googleClientId && (
+          <p className="text-center text-xs leading-5 text-slate-blue">
+            Hiện có thể đăng nhập bằng email. Google sẽ bật sau khi cấu hình OAuth.
+          </p>
+        )}
 
         <p className="text-center text-xs leading-5 text-slate-blue">
           Thông tin đăng nhập được bảo vệ theo phiên làm việc của bạn.

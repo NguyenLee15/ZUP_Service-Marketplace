@@ -1,15 +1,22 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
   Search,
   AlertCircle,
-  X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { adminApi } from '@/features/auth/services/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   PENDING: { label: 'Chờ Báo Giá', color: 'bg-yellow-100 text-yellow-800' },
@@ -23,10 +30,10 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<ApiPayload | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -34,7 +41,7 @@ export default function BookingsPage() {
 
   const fetchBookings = () => {
     setLoading(true);
-    const params: Record<string, any> = {};
+    const params: Record<string, ApiPayload> = {};
     if (filterStatus !== 'all') params.status = filterStatus;
     
     adminApi.getBookings(params)
@@ -59,11 +66,11 @@ export default function BookingsPage() {
   );
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN').format(p) + '₫';
-  const getBookingPrice = (booking: any) =>
+  const getBookingPrice = (booking: ApiPayload) =>
     Number(booking?.quotation?.actualPrice ?? booking?.agreedPrice ?? 0);
-  const getBookingDescription = (booking: any) =>
+  const getBookingDescription = (booking: ApiPayload) =>
     booking?.description || booking?.notes || 'Không có ghi chú chi tiết.';
-  const canAdminCancel = (booking: any) =>
+  const canAdminCancel = (booking: ApiPayload) =>
     booking && !['CANCELLED', 'DONE', 'COMPLETED', 'DISPUTED'].includes(booking.status);
 
   const handleAdminCancel = async () => {
@@ -94,7 +101,7 @@ export default function BookingsPage() {
         <div className="relative flex-1 min-w-[300px]">
           <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Tìm kiếm theo mã, khách hàng, nhà cung cấp hoặc dịch vụ..."
+            placeholder="Tìm kiếm theo mã, khách hàng, nhà cung cấp hoặc dịch vụ…"
             className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -243,44 +250,54 @@ export default function BookingsPage() {
         )}
       </div>
 
-      {showCancelModal && selectedBooking && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
+      <Dialog
+        open={showCancelModal && Boolean(selectedBooking)}
+        onOpenChange={(open) => {
+          setShowCancelModal(open);
+          if (!open) setCancelReason('');
+        }}
+      >
+        {selectedBooking && (
+          <DialogContent className="w-full max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-red-600" />
                 Hủy đơn đặc biệt
-              </CardTitle>
-              <button
-                onClick={() => setShowCancelModal(false)}
-                className="p-1 hover:bg-muted rounded"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </DialogTitle>
+              <DialogDescription>
+                Chỉ dùng khi khách hàng hoặc thợ yêu cầu hủy trong trường hợp đặc biệt.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
               <div className="rounded-lg bg-muted p-3 text-sm">
                 <p className="font-medium text-foreground">
                   #{selectedBooking.bookingCode} · {selectedBooking.service?.name}
                 </p>
                 <p className="text-muted-foreground">
-                  Chỉ dùng khi khách hàng hoặc thợ yêu cầu hủy trong trường hợp đặc biệt.
+                  Lý do sẽ được lưu vào lịch sử đơn và dùng để thông báo cho các bên.
                 </p>
               </div>
-              <label className="block text-sm font-medium text-foreground/80">
+              <label htmlFor="admin-cancel-reason" className="block text-sm font-medium text-foreground/80">
                 Lý do hủy
                 <textarea
+                  id="admin-cancel-reason"
                   value={cancelReason}
                   onChange={(event) => setCancelReason(event.target.value)}
-                  placeholder="Nhập lý do hủy để lưu lịch sử và thông báo cho hai bên..."
+                  placeholder="Ví dụ: khách hàng báo trùng lịch và yêu cầu hủy đơn…"
                   className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   rows={4}
+                  aria-invalid={cancelReason.trim().length > 0 && cancelReason.trim().length < 10}
+                  aria-describedby={
+                    cancelReason.trim().length > 0 && cancelReason.trim().length < 10
+                      ? 'admin-cancel-reason-help'
+                      : undefined
+                  }
                 />
               </label>
               {cancelReason.trim().length > 0 && cancelReason.trim().length < 10 && (
-                <p className="text-sm text-red-600">Lý do cần ít nhất 10 ký tự.</p>
+                <p id="admin-cancel-reason-help" className="text-sm text-red-600">Lý do cần ít nhất 10 ký tự.</p>
               )}
-              <div className="flex justify-end gap-2">
+              <DialogFooter>
                 <Button variant="outline" onClick={() => setShowCancelModal(false)}>
                   Đóng
                 </Button>
@@ -291,11 +308,11 @@ export default function BookingsPage() {
                 >
                   Xác nhận hủy
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }

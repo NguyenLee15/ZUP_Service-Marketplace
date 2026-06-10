@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,7 +10,6 @@ import {
   ZoomOut,
   RotateCw,
   X,
-  Filter,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
 import { Textarea } from '@/components/ui/textarea';
 
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: ApiPayload }> = {
   PENDING: { label: 'Chờ Duyệt', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   APPROVED: { label: 'Đã Duyệt', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   REJECTED: { label: 'Từ Chối', color: 'bg-red-100 text-red-800', icon: XCircle },
@@ -27,12 +26,12 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
 
 export default function KYCPage() {
   const { toast } = useToast();
-  const [kycList, setKycList] = useState<any[]>([]);
+  const [kycList, setKycList] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   
-  const [selectedKYC, setSelectedKYC] = useState<any | null>(null);
+  const [selectedKYC, setSelectedKYC] = useState<ApiPayload | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [imageZoom, setImageZoom] = useState(1);
   const [imageRotation, setImageRotation] = useState(0);
@@ -43,7 +42,7 @@ export default function KYCPage() {
 
   const fetchKyc = () => {
     setLoading(true);
-    const params: Record<string, any> = {};
+    const params: Record<string, ApiPayload> = {};
     if (filterStatus !== 'all') params.status = filterStatus;
     // Tạm thời chưa có filter keyword ở backend cho kyc nhưng có thể filter ở frontend sau
     adminApi.getKycRequests(params)
@@ -68,7 +67,7 @@ export default function KYCPage() {
       setShowDetailModal(false);
       setSelectedKYC(null);
       fetchKyc();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
     } finally {
       setActionLoading(false);
@@ -85,7 +84,7 @@ export default function KYCPage() {
       setSelectedKYC(null);
       setRejectReason('');
       fetchKyc();
-    } catch (err: any) {
+    } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
     } finally {
       setActionLoading(false);

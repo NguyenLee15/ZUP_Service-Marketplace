@@ -30,6 +30,7 @@ export type GoogleIdentityApi = {
           shape?: 'rectangular' | 'pill';
         },
       ) => void;
+      prompt: () => void;
     };
   };
 };

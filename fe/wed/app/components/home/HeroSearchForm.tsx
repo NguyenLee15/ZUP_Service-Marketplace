@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 const QUICK_SEARCHES = ['Vệ sinh máy lạnh', 'Sửa điện nước', 'Dọn dẹp nhà'];
 const SEARCH_PLACEHOLDER = 'Sửa máy lạnh chảy nước…';
-const DEFAULT_LOCATION = 'Hà Nội';
+const DEFAULT_LOCATION = '';
 
 type IconProps = {
   className?: string;
@@ -45,10 +45,11 @@ function MapPinIcon({ className }: IconProps) {
 }
 
 function getQuickSearchHref(keyword: string) {
-  const params = new URLSearchParams({
-    keyword,
-    location: DEFAULT_LOCATION,
-  });
+  const params = new URLSearchParams({ keyword });
+
+  if (DEFAULT_LOCATION) {
+    params.set('location', DEFAULT_LOCATION);
+  }
 
   return `/services?${params.toString()}`;
 }

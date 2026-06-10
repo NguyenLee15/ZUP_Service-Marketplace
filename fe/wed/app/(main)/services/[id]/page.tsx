@@ -19,7 +19,7 @@ async function getServiceDetail(id: string) {
     if (!res.ok) return null;
     const json = await res.json();
     return json.data;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -37,7 +37,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   const title = `${service.name} - ${service.provider?.fullName} | Zup`;
-  const description = service.description?.substring(0, 150) + '...' || 'Khám phá ngay dịch vụ uy tín trên nền tảng Zup.';
+  const description = service.description
+    ? `${service.description.substring(0, 150)}…`
+    : 'Khám phá ngay dịch vụ uy tín trên nền tảng Zup.';
   const defaultImage = '/images/hero_bg.png';
   const imageUrl = getSafeImageSrc(service.images?.[0]?.imageUrl, defaultImage);
 
