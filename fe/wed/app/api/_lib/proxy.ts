@@ -125,9 +125,27 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
       const bodyText = await req.text();
       if (backendPath === "/auth/refresh") {
         const body = readJsonBody(bodyText);
-        if (!body.refreshToken) {
-          body.refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
+        const refreshToken =
+          typeof body.refreshToken === "string" && body.refreshToken.trim()
+            ? body.refreshToken
+            : cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
+
+        if (!refreshToken) {
+          const missingTokenResponse = NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "UNAUTHORIZED",
+                message: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+              },
+            },
+            { status: 401 },
+          );
+          clearAuthCookies(missingTokenResponse);
+          return missingTokenResponse;
         }
+
+        body.refreshToken = refreshToken;
         fetchOptions.body = JSON.stringify(body);
       } else {
         fetchOptions.body = bodyText;

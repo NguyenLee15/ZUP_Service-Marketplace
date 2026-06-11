@@ -44,6 +44,7 @@ instance.interceptors.response.use(
 
     const isAuthEndpoint =
       originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/google') ||
       originalRequest.url?.includes('/auth/refresh') ||
       originalRequest.url?.includes('/auth/register');
 
