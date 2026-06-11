@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserRole, UserStatus } from '@prisma/client';
@@ -297,14 +293,18 @@ describe('AuthService token hardening', () => {
     });
   });
 
-  it('rejects Google login for privileged accounts matched by email', async () => {
-    const loggerErrorSpy = jest
-      .spyOn(Logger.prototype, 'error')
-      .mockImplementation();
+  it('treats Google login for privileged email as a customer account', async () => {
     prisma.user.findFirst.mockResolvedValue(
       googleUserRecord({
         email: 'admin@test.local',
         role: UserRole.ADMIN,
+      }),
+    );
+    prisma.user.update.mockResolvedValue(
+      googleUserRecord({
+        email: 'admin@test.local',
+        googleId: 'google-admin-sub',
+        role: UserRole.CUSTOMER,
       }),
     );
     mockGooglePayload(service, {
@@ -314,13 +314,18 @@ describe('AuthService token hardening', () => {
       sub: 'google-admin-sub',
     });
 
-    await expect(
-      service.googleLogin('google-credential'),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    const result = await service.googleLogin('google-credential');
 
-    expect(prisma.user.update).not.toHaveBeenCalled();
-    expect(prisma.refreshToken.create).not.toHaveBeenCalled();
-    loggerErrorSpy.mockRestore();
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        googleId: 'google-admin-sub',
+        avatarUrl: 'https://avatar.test/admin.png',
+        role: UserRole.CUSTOMER,
+      },
+    });
+    expect(result.data.user.role).toBe(UserRole.CUSTOMER);
+    expect(prisma.refreshToken.create).toHaveBeenCalled();
   });
 });
 
