@@ -398,6 +398,64 @@ describe('AuthService token hardening', () => {
     expect(prisma.refreshToken.create).not.toHaveBeenCalled();
     loggerErrorSpy.mockRestore();
   });
+
+  it('rejects provider Google login when email is not a provider account', async () => {
+    const loggerErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation();
+    prisma.user.findFirst.mockResolvedValue(
+      googleUserRecord({
+        email: 'customer@test.local',
+        role: UserRole.CUSTOMER,
+      }),
+    );
+    mockGooglePayload(service, {
+      email: 'customer@test.local',
+      name: 'Customer User',
+      picture: 'https://avatar.test/customer.png',
+      sub: 'google-customer-sub',
+    });
+
+    await expect(
+      service.providerGoogleLogin('google-credential'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(prisma.user.create).not.toHaveBeenCalled();
+    expect(prisma.refreshToken.create).not.toHaveBeenCalled();
+    loggerErrorSpy.mockRestore();
+  });
+
+  it('links and logs in an existing provider through provider Google login', async () => {
+    const provider = googleUserRecord({
+      email: 'provider@test.local',
+      role: UserRole.PROVIDER,
+      googleId: null,
+    });
+    prisma.user.findFirst.mockResolvedValue(provider);
+    prisma.user.update.mockResolvedValue({
+      ...provider,
+      googleId: 'google-provider-sub',
+      avatarUrl: 'https://avatar.test/provider.png',
+    });
+    mockGooglePayload(service, {
+      email: 'provider@test.local',
+      name: 'Provider User',
+      picture: 'https://avatar.test/provider.png',
+      sub: 'google-provider-sub',
+    });
+
+    const result = await service.providerGoogleLogin('google-credential');
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: provider.id },
+      data: {
+        googleId: 'google-provider-sub',
+        avatarUrl: 'https://avatar.test/provider.png',
+      },
+    });
+    expect(result.data.user.role).toBe(UserRole.PROVIDER);
+    expect(result.data.accessToken).toBe('access-token');
+  });
 });
 
 function refreshRecord(

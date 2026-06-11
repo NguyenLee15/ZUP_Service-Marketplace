@@ -404,14 +404,6 @@ export class AuthService {
         });
       }
 
-      if (!user.googleId) {
-        user = await this.prisma.user.update({
-          where: { id: user.id },
-          data: { googleId, avatarUrl: user.avatarUrl || picture },
-        });
-        this.logger.log(`Linked provider Google account: ${email}`);
-      }
-
       if (user.status === UserStatus.LOCKED) {
         throw new UnauthorizedException({
           code: ErrorCodes.ACCOUNT_LOCKED,
@@ -425,6 +417,14 @@ export class AuthService {
           message:
             'Tài khoản thợ chưa xác thực email. Vui lòng kiểm tra hộp thư.',
         });
+      }
+
+      if (!user.googleId) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { googleId, avatarUrl: user.avatarUrl || picture },
+        });
+        this.logger.log(`Linked Google account to provider: ${email}`);
       }
 
       const tokens = await this.generateTokenPair(
@@ -825,6 +825,48 @@ export class AuthService {
     await this.prisma.loginAttempt.deleteMany({ where: { identifier } });
   }
 
+  private async verifyGoogleCredential(credential: string) {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken: credential,
+      audience: this.getGoogleAudiences(),
+    });
+    const payload = ticket.getPayload();
+    if (!payload) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Google token không hợp lệ',
+      });
+    }
+
+    const { email, name, picture, sub: googleId } = payload;
+    if (!email) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Google token không có email',
+      });
+    }
+
+    return { email, name, picture, googleId };
+  }
+
+  private getGoogleAudiences(): string | string[] {
+    const configuredAudiences = [
+      this.configService.get<string>('GOOGLE_CLIENT_IDS'),
+      this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      this.configService.get<string>('EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID'),
+      this.configService.get<string>('EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID'),
+    ]
+      .filter(Boolean)
+      .join(',');
+
+    const audiences = configuredAudiences
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    return audiences.length > 1 ? audiences : audiences[0];
+  }
+
   private async generateTokenPair(
     tx: PrismaService | Prisma.TransactionClient,
     userId: number,
@@ -860,38 +902,6 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
-  }
-
-  private async verifyGoogleCredential(credential: string) {
-    const ticket = await this.googleClient.verifyIdToken({
-      idToken: credential,
-      audience: this.getGoogleAudiences(),
-    });
-    const payload = ticket.getPayload();
-    if (!payload) {
-      throw new UnauthorizedException({
-        code: ErrorCodes.UNAUTHORIZED,
-        message: 'Google token không hợp lệ',
-      });
-    }
-
-    const { email, name, picture, sub: googleId } = payload;
-    if (!email) {
-      throw new UnauthorizedException({
-        code: ErrorCodes.UNAUTHORIZED,
-        message: 'Google token không có email',
-      });
-    }
-
-    return { email, name, picture, googleId };
-  }
-
-  private getGoogleAudiences() {
-    return [
-      this.configService.get<string>('GOOGLE_CLIENT_ID'),
-      this.configService.get<string>('GOOGLE_ANDROID_CLIENT_ID'),
-      this.configService.get<string>('GOOGLE_IOS_CLIENT_ID'),
-    ].filter((value): value is string => Boolean(value));
   }
 
   private sanitizeUser<T extends { password?: unknown }>(

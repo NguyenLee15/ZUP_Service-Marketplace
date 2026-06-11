@@ -14,6 +14,7 @@ describe('Auth route throttling metadata', () => {
     ['resendOtp', 3],
     ['login', 5],
     ['googleLogin', 10],
+    ['providerGoogleLogin', 10],
     ['refresh', 20],
     ['forgotPassword', 3],
     ['resetPassword', 5],
