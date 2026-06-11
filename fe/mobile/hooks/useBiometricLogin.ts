@@ -33,11 +33,11 @@ export function useBiometricLogin() {
     }
   };
 
-  const enableBiometrics = async (email: string, password: string) => {
+  const enableBiometrics = async (email: string) => {
     try {
       await SecureStore.setItemAsync(BIOMETRICS_ENABLED_KEY, 'true');
       await SecureStore.setItemAsync(BIOMETRICS_EMAIL_KEY, email);
-      await SecureStore.setItemAsync(BIOMETRICS_PASSWORD_KEY, password);
+      await SecureStore.deleteItemAsync(BIOMETRICS_PASSWORD_KEY);
       return true;
     } catch (error) {
       console.warn('Failed to enable biometrics:', error);
@@ -57,7 +57,7 @@ export function useBiometricLogin() {
     }
   };
 
-  const authenticateAndGetCredentials = async () => {
+  const authenticateSession = async () => {
     try {
       const { hasHardware, isEnrolled } = await checkBiometricsSupport();
       if (!hasHardware || !isEnrolled) return null;
@@ -71,14 +71,7 @@ export function useBiometricLogin() {
         disableDeviceFallback: false,
       });
 
-      if (result.success) {
-        const email = await SecureStore.getItemAsync(BIOMETRICS_EMAIL_KEY);
-        const password = await SecureStore.getItemAsync(BIOMETRICS_PASSWORD_KEY);
-        if (email && password) {
-          return { email, password };
-        }
-      }
-      return null;
+      return result.success;
     } catch (error) {
       console.warn('Biometric authentication error:', error);
       return null;
@@ -91,6 +84,6 @@ export function useBiometricLogin() {
     getSavedEmail,
     enableBiometrics,
     disableBiometrics,
-    authenticateAndGetCredentials,
+    authenticateSession,
   };
 }

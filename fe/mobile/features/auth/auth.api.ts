@@ -38,6 +38,9 @@ export const authApi = {
   refreshToken: (refreshToken: string) =>
     api.post('/auth/refresh', { refreshToken }),
 
+  providerGoogleAuth: (credential: string) =>
+    api.post('/auth/provider/google', { credential }),
+
   submitKyc: (data: FormData) =>
     api.post('/users/kyc', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -45,6 +48,6 @@ export const authApi = {
 
   getKycStatus: () => api.get('/users/kyc'),
 
-  updatePushToken: (token: string) => 
+  updatePushToken: (token: string) =>
     api.patch('/users/profile/push-token', { token }),
 };

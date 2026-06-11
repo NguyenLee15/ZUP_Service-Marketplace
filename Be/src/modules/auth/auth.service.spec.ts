@@ -1,4 +1,8 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserRole, UserStatus } from '@prisma/client';
@@ -326,6 +330,73 @@ describe('AuthService token hardening', () => {
     });
     expect(result.data.user.role).toBe(UserRole.CUSTOMER);
     expect(prisma.refreshToken.create).toHaveBeenCalled();
+  });
+
+  it('logs provider in with Google when a provider account already exists', async () => {
+    prisma.user.findFirst.mockResolvedValue(
+      googleUserRecord({
+        email: 'provider@test.local',
+        role: UserRole.PROVIDER,
+      }),
+    );
+    prisma.user.update.mockResolvedValue(
+      googleUserRecord({
+        email: 'provider@test.local',
+        googleId: 'google-provider-sub',
+        role: UserRole.PROVIDER,
+      }),
+    );
+    mockGooglePayload(service, {
+      email: 'provider@test.local',
+      name: 'Provider User',
+      picture: 'https://avatar.test/provider.png',
+      sub: 'google-provider-sub',
+    });
+
+    const result = await service.providerGoogleLogin('google-credential');
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        googleId: 'google-provider-sub',
+        avatarUrl: 'https://avatar.test/provider.png',
+      },
+    });
+    expect(result.data.user.role).toBe(UserRole.PROVIDER);
+    expect(prisma.refreshToken.create).toHaveBeenCalled();
+  });
+
+  it('rejects provider Google login when the matched account is not a provider', async () => {
+    const loggerErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation();
+    prisma.user.findFirst.mockResolvedValue(
+      googleUserRecord({
+        email: 'customer@test.local',
+        role: UserRole.CUSTOMER,
+      }),
+    );
+    mockGooglePayload(service, {
+      email: 'customer@test.local',
+      name: 'Customer User',
+      picture: 'https://avatar.test/customer.png',
+      sub: 'google-customer-sub',
+    });
+
+    try {
+      await service.providerGoogleLogin('google-credential');
+      throw new Error('Expected provider Google login to fail');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UnauthorizedException);
+      expect((err as UnauthorizedException).getResponse()).toMatchObject({
+        message:
+          'Vui lòng đăng ký tài khoản thợ bằng email trước khi dùng Google.',
+      });
+    }
+
+    expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(prisma.refreshToken.create).not.toHaveBeenCalled();
+    loggerErrorSpy.mockRestore();
   });
 });
 

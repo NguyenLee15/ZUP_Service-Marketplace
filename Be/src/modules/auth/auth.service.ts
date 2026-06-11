@@ -308,25 +308,8 @@ export class AuthService {
 
   async googleLogin(credential: string) {
     try {
-      const ticket = await this.googleClient.verifyIdToken({
-        idToken: credential,
-        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
-      });
-      const payload = ticket.getPayload();
-      if (!payload) {
-        throw new UnauthorizedException({
-          code: ErrorCodes.UNAUTHORIZED,
-          message: 'Google token không hợp lệ',
-        });
-      }
-
-      const { email, name, picture, sub: googleId } = payload;
-      if (!email) {
-        throw new UnauthorizedException({
-          code: ErrorCodes.UNAUTHORIZED,
-          message: 'Google token không có email',
-        });
-      }
+      const { email, name, picture, googleId } =
+        await this.verifyGoogleCredential(credential);
 
       // 1. Tìm user theo googleId hoặc email
       let user = await this.prisma.user.findFirst({
@@ -394,6 +377,74 @@ export class AuthService {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error(`Google login error: ${message}`);
+      if (err instanceof UnauthorizedException) throw err;
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Xác thực Google thất bại',
+      });
+    }
+  }
+
+  async providerGoogleLogin(credential: string) {
+    try {
+      const { email, picture, googleId } =
+        await this.verifyGoogleCredential(credential);
+
+      let user = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ googleId }, { email }],
+        },
+      });
+
+      if (!user || user.role !== UserRole.PROVIDER) {
+        throw new UnauthorizedException({
+          code: ErrorCodes.UNAUTHORIZED,
+          message:
+            'Vui lòng đăng ký tài khoản thợ bằng email trước khi dùng Google.',
+        });
+      }
+
+      if (!user.googleId) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { googleId, avatarUrl: user.avatarUrl || picture },
+        });
+        this.logger.log(`Linked provider Google account: ${email}`);
+      }
+
+      if (user.status === UserStatus.LOCKED) {
+        throw new UnauthorizedException({
+          code: ErrorCodes.ACCOUNT_LOCKED,
+          message: 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.',
+        });
+      }
+
+      if (user.status === UserStatus.PENDING) {
+        throw new UnauthorizedException({
+          code: ErrorCodes.UNAUTHORIZED,
+          message:
+            'Tài khoản thợ chưa xác thực email. Vui lòng kiểm tra hộp thư.',
+        });
+      }
+
+      const tokens = await this.generateTokenPair(
+        this.prisma,
+        user.id,
+        user.email,
+        user.role,
+      );
+
+      return {
+        data: {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          user: this.sanitizeUser(user),
+        },
+        message: 'Đăng nhập Google thành công',
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Provider Google login error: ${message}`);
       if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException({
         code: ErrorCodes.UNAUTHORIZED,
@@ -809,6 +860,38 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
+  }
+
+  private async verifyGoogleCredential(credential: string) {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken: credential,
+      audience: this.getGoogleAudiences(),
+    });
+    const payload = ticket.getPayload();
+    if (!payload) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Google token không hợp lệ',
+      });
+    }
+
+    const { email, name, picture, sub: googleId } = payload;
+    if (!email) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Google token không có email',
+      });
+    }
+
+    return { email, name, picture, googleId };
+  }
+
+  private getGoogleAudiences() {
+    return [
+      this.configService.get<string>('GOOGLE_CLIENT_ID'),
+      this.configService.get<string>('GOOGLE_ANDROID_CLIENT_ID'),
+      this.configService.get<string>('GOOGLE_IOS_CLIENT_ID'),
+    ].filter((value): value is string => Boolean(value));
   }
 
   private sanitizeUser<T extends { password?: unknown }>(

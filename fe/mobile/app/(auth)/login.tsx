@@ -6,6 +6,8 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image, Sw
 import { Text, TextInput, Button, useTheme, HelperText, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 import { authApi } from '../../features/auth/auth.api';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { useBiometricLogin } from '../../hooks/useBiometricLogin';
@@ -13,12 +15,31 @@ import { routes } from '../../lib/route-utils';
 import { Colors } from '../../constants/colors';
 import { ProviderDialog } from '../../components/provider/provider-ui';
 import { t } from '../../lib/i18n';
+import { storage } from '../../lib/storage';
+
+WebBrowser.maybeCompleteAuthSession();
+
+function getAuthErrorMessage(error: any, fallback: string) {
+  if (!error?.response) return t('auth.network_error');
+  return error.response?.data?.error?.message || fallback;
+}
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { setTokens, setUser } = useAuthStore();
-  const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, authenticateAndGetCredentials } = useBiometricLogin();
+  const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, authenticateSession } = useBiometricLogin();
+  const googleConfigured = Boolean(
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+      process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
+      process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
+  );
+  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    scopes: ['openid', 'profile', 'email'],
+  });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -77,6 +98,42 @@ export default function LoginScreen() {
     initBiometrics();
   }, []);
 
+  useEffect(() => {
+    if (googleResponse?.type !== 'success') return;
+
+    const signInWithGoogle = async () => {
+      const idToken = googleResponse.authentication?.idToken;
+      if (!idToken) {
+        setError(t('auth.google_token_missing'));
+        return;
+      }
+
+      if (isSubmittingRef.current) return;
+      isSubmittingRef.current = true;
+      setLoading(true);
+      setError('');
+
+      try {
+        const res = await authApi.providerGoogleAuth(idToken);
+        const { accessToken, refreshToken, user } = res.data.data;
+        if (user.role !== 'PROVIDER') {
+          setError(t('auth.provider_only_error'));
+          return;
+        }
+
+        await setTokens(accessToken, refreshToken);
+        setUser(user);
+      } catch (err: any) {
+        setError(getAuthErrorMessage(err, 'Đăng nhập Google thất bại'));
+      } finally {
+        setLoading(false);
+        isSubmittingRef.current = false;
+      }
+    };
+
+    signInWithGoogle();
+  }, [googleResponse, setTokens, setUser]);
+
   const handleBiometricAuth = async () => {
     setError('');
     const enabled = await isBiometricsEnabled();
@@ -94,29 +151,30 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const credentials = await authenticateAndGetCredentials();
-      if (credentials) {
-        setEmail(credentials.email);
-        setPassword(credentials.password);
-        const res = await authApi.login({ email: credentials.email.trim(), password: credentials.password });
-        const { accessToken, refreshToken, user } = res.data.data;
+      const authenticated = await authenticateSession();
+      if (authenticated) {
+        const refreshToken = await storage.getRefreshToken();
+        if (!refreshToken) throw new Error('missing-refresh-token');
 
+        const res = await authApi.refreshToken(refreshToken);
+        const { accessToken, refreshToken: nextRefreshToken } = res.data.data;
+        await setTokens(accessToken, nextRefreshToken);
+
+        const profileRes = await authApi.getProfile();
+        const user = profileRes.data.data;
         if (user.role !== 'PROVIDER') {
           setError(t('auth.provider_only_error'));
-          isSubmittingRef.current = false;
-          setLoading(false);
           setBiometricsEnabledState(false);
           return;
         }
 
-        await setTokens(accessToken, refreshToken);
         setUser(user);
         setBiometricsEnabledState(true);
       } else {
         setBiometricsEnabledState(false);
       }
-    } catch (err: any) {
-      setError(t('auth.biometric_error'));
+    } catch {
+      setError(t('auth.session_expired'));
       setBiometricsEnabledState(false);
     } finally {
       setLoading(false);
@@ -154,7 +212,7 @@ export default function LoginScreen() {
           t('auth.biometric_prompt'),
           'Bật ngay',
           async () => {
-            await enableBiometrics(email.trim(), password);
+            await enableBiometrics(email.trim());
             setBiometricsEnabledState(true);
             await setTokens(accessToken, refreshToken);
             setUser(user);
@@ -165,12 +223,7 @@ export default function LoginScreen() {
       await setTokens(accessToken, refreshToken);
       setUser(user);
     } catch (err: any) {
-      if (!err.response) {
-        setError(t('auth.network_error'));
-        return;
-      }
-      const msg = err.response?.data?.error?.message;
-      setError(msg || t('auth.login_failed'));
+      setError(getAuthErrorMessage(err, t('auth.login_failed')));
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -179,12 +232,11 @@ export default function LoginScreen() {
 
   const handleGoogleLogin = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    showDialog(t('auth.google_login'), t('auth.google_login') + '...');
-  };
-
-  const handleFacebookLogin = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    showDialog(t('auth.facebook_login'), t('auth.facebook_login') + '...');
+    if (!googleConfigured) {
+      setError(t('auth.google_config_missing'));
+      return;
+    }
+    promptGoogleAsync().catch(() => setError('Không thể mở đăng nhập Google. Vui lòng thử lại.'));
   };
 
   return (
@@ -283,10 +335,6 @@ export default function LoginScreen() {
             {t('auth.login')}
           </Button>
 
-          <Pressable style={styles.smsBtnWrap} onPress={() => showDialog(t('general.notification'), t('auth.sms_config'))}>
-            <Text style={[styles.smsBtnText, { color: theme.colors.primary }]}>{t('auth.sms_login')}</Text>
-          </Pressable>
-
           {/* OR Divider */}
           <View style={styles.dividerRow}>
             <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
@@ -302,24 +350,12 @@ export default function LoginScreen() {
                 <Image source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} style={{ width: size, height: size }} />
               )}
               onPress={handleGoogleLogin}
+              disabled={loading || !googleRequest}
               style={[styles.socialBtn, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}
               contentStyle={styles.socialBtnContent}
               labelStyle={[styles.socialLabel, { color: theme.colors.onSurface }]}
             >
               {t('auth.google_login')}
-            </Button>
-
-            <Button
-              mode="outlined"
-              icon={({ size }) => (
-                <Image source={{ uri: 'https://img.icons8.com/color/48/facebook-new.png' }} style={{ width: size, height: size }} />
-              )}
-              onPress={handleFacebookLogin}
-              style={[styles.socialBtn, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}
-              contentStyle={styles.socialBtnContent}
-              labelStyle={[styles.socialLabel, { color: theme.colors.onSurface }]}
-            >
-              {t('auth.facebook_login')}
             </Button>
           </View>
         </View>
@@ -446,14 +482,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.3,
-  },
-  smsBtnWrap: {
-    alignSelf: 'flex-end',
-    marginTop: 4,
-  },
-  smsBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
   },
   dividerRow: {
     flexDirection: 'row',

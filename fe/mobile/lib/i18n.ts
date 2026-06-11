@@ -17,14 +17,11 @@ const DICTIONARY: Record<string, string> = {
   'auth.email_placeholder': 'Email/Số điện thoại/Tên đăng nhập',
   'auth.password': 'Mật khẩu',
   'auth.forgot_password': 'Quên?',
-  'auth.sms_login': 'Đăng nhập bằng SMS',
-  'auth.sms_config': 'Đăng nhập bằng mã SMS OTP đang được cấu hình.',
   'auth.google_login': 'Đăng nhập với Google',
-  'auth.facebook_login': 'Đăng nhập với Facebook',
   'auth.biometric_setup': 'Bảo mật sinh trắc học',
-  'auth.biometric_prompt': 'Bạn có muốn bật đăng nhập bằng Vân tay / FaceID cho lần sau không?',
+  'auth.biometric_prompt': 'Bạn có muốn dùng Vân tay / FaceID để mở khóa phiên đăng nhập cho lần sau không?',
   'auth.biometric_not_enabled': 'Chưa kích hoạt',
-  'auth.biometric_guide': 'Vui lòng đăng nhập thủ công bằng email và mật khẩu một lần, sau đó chọn "Bật ngay" khi được hỏi để kích hoạt đăng nhập sinh trắc học.',
+  'auth.biometric_guide': 'Vui lòng đăng nhập thủ công một lần, sau đó chọn "Bật ngay" khi được hỏi để kích hoạt đăng nhập sinh trắc học.',
   'auth.biometric_off': 'Đã tắt tự động đăng nhập sinh trắc học.',
   'auth.biometric_enable_label': 'Bật xác thực vân tay / FaceID',
   'auth.provider_only_error': 'Ứng dụng này chỉ dành cho Nhà cung cấp dịch vụ',
@@ -32,6 +29,9 @@ const DICTIONARY: Record<string, string> = {
   'auth.validation_error': 'Vui lòng nhập email và mật khẩu',
   'auth.network_error': 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.',
   'auth.login_failed': 'Email hoặc mật khẩu không đúng',
+  'auth.session_expired': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+  'auth.google_config_missing': 'Chưa cấu hình đăng nhập Google cho ứng dụng thợ.',
+  'auth.google_token_missing': 'Không nhận được thông tin xác thực từ Google. Vui lòng thử lại.',
 };
 
 export function t(key: string, fallback?: string): string {

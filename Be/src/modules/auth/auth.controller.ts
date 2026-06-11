@@ -82,6 +82,17 @@ export class AuthController {
   }
 
   /**
+   * POST /auth/provider/google
+   * Đăng nhập thợ bằng Google. Không tự tạo tài khoản thợ.
+   */
+  @Post('provider/google')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  async providerGoogleLogin(@Body() dto: GoogleAuthDto) {
+    return this.authService.providerGoogleLogin(dto.credential);
+  }
+
+  /**
    * POST /auth/refresh
    * Làm mới access token bằng refresh token (rotation)
    */

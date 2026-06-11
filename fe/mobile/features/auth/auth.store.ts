@@ -44,17 +44,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   // Gọi khi app khởi động — khôi phục session
   loadFromStorage: async () => {
     try {
-      const [token, user] = await Promise.all([
-        storage.getAccessToken(),
-        storage.getUser(),
-      ]);
-      if (token && user) {
-        set({ user, isAuthenticated: true, isLoading: false });
-      } else {
+      const token = await storage.getAccessToken();
+      if (!token) {
         set({ isLoading: false });
+        return;
       }
+
+      const res = await api.get('/auth/profile');
+      const user = res.data?.data;
+      if (user?.role !== 'PROVIDER' || user?.status === 'LOCKED') {
+        await storage.clearAll();
+        set({ user: null, isAuthenticated: false, isLoading: false });
+        return;
+      }
+
+      await storage.setUser(user);
+      set({ user, isAuthenticated: true, isLoading: false });
     } catch {
-      set({ isLoading: false });
+      await storage.clearAll();
+      set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },
 
