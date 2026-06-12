@@ -6,7 +6,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "homeservice-customer",
+    "scheme": [
+      "homeservice-customer",
+      "com.googleusercontent.apps.422532889022-3r7vkh1lrvutq4ip3e639nska0537s02"
+    ],
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,

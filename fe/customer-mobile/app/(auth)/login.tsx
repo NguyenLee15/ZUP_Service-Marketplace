@@ -20,6 +20,14 @@ import { storage } from '../../lib/storage';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const GOOGLE_ANDROID_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const GOOGLE_ANDROID_REDIRECT_SCHEME = GOOGLE_ANDROID_CLIENT_ID
+  ? `com.googleusercontent.apps.${GOOGLE_ANDROID_CLIENT_ID.replace('.apps.googleusercontent.com', '')}`
+  : undefined;
+
 type AuthPayload = {
   accessToken?: string;
   refreshToken?: string;
@@ -32,14 +40,11 @@ export default function LoginScreen() {
   const params = useLocalSearchParams<{ message?: string }>();
   const { setTokens, setUser, fetchProfile } = useAuthStore();
   const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, disableBiometrics, authenticate } = useBiometricLogin();
-  const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-  const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
-  const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
   const googleConfigured = Boolean(
     Platform.select({
-      android: googleAndroidClientId,
-      ios: googleIosClientId,
-      default: googleWebClientId,
+      android: GOOGLE_ANDROID_CLIENT_ID,
+      ios: GOOGLE_IOS_CLIENT_ID,
+      default: GOOGLE_WEB_CLIENT_ID,
     }),
   );
 
@@ -440,11 +445,13 @@ function GoogleLoginButton({
   const [pending, setPending] = useState(false);
   const handledResponseRef = useRef<string | null>(null);
   const [request, response, promptGoogleAsync] = Google.useIdTokenAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
     selectAccount: true,
-  });
+  }, Platform.OS === 'android' && GOOGLE_ANDROID_REDIRECT_SCHEME
+    ? { native: `${GOOGLE_ANDROID_REDIRECT_SCHEME}:/oauthredirect` }
+    : {});
 
   useEffect(() => {
     if (!response) return;
