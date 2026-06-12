@@ -1,6 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
-import { Colors } from '../../constants/colors';
+import { Button, Text, useTheme } from 'react-native-paper';
 
 const styles = StyleSheet.create({
   sectionHeader: {
@@ -9,8 +8,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  sectionTitle: { color: Colors.light.text, fontWeight: '900' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  sectionTitle: { fontWeight: '900' },
+  subtitle: { lineHeight: 20 },
 });
 
 export function SectionHeader({
@@ -24,14 +23,16 @@ export function SectionHeader({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const theme = useTheme();
+
   return (
     <View style={styles.sectionHeader}>
       <View style={{ flex: 1 }}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>
+        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="bodySmall" style={styles.subtitle}>
+          <Text variant="bodySmall" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
             {subtitle}
           </Text>
         ) : null}

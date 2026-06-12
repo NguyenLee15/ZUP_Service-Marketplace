@@ -40,7 +40,11 @@ export function CustomerCard({
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.outlineVariant,
-          boxShadow: theme.dark ? '0 10px 30px rgba(0, 0, 0, 0.5)' : '0 10px 30px rgba(15, 23, 42, 0.08)',
+          shadowColor: '#000000',
+          shadowOpacity: theme.dark ? 0.18 : 0.06,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: theme.dark ? 1 : 2,
         },
         style,
       ]}

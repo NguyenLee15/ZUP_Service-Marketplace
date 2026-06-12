@@ -8,12 +8,12 @@ import {
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Button, Text } from 'react-native-paper';
+import { Button, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 
 const styles = StyleSheet.create({
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  subtitle: { lineHeight: 20 },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
   modalBackdrop: {
     position: 'absolute',
@@ -24,7 +24,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.36)',
   },
   sheet: {
-    backgroundColor: Colors.light.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 18,
@@ -37,10 +36,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 5,
     borderRadius: 999,
-    backgroundColor: Colors.light.borderStrong,
     alignSelf: 'center',
   },
-  sheetTitle: { color: Colors.light.text, fontWeight: '900' },
+  sheetTitle: { fontWeight: '900' },
 });
 
 export function ConfirmSheet({
@@ -65,6 +63,8 @@ export function ConfirmSheet({
   onConfirm: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onDismiss}>
@@ -73,13 +73,13 @@ export function ConfirmSheet({
         style={styles.modalRoot}
       >
         <Pressable style={styles.modalBackdrop} onPress={onDismiss} />
-        <View style={[styles.sheet, { paddingBottom: 18 + Math.max(insets.bottom, 10) }]}>
-          <View style={styles.sheetGrabber} />
-          <Text variant="titleLarge" style={styles.sheetTitle}>
+        <View style={[styles.sheet, { backgroundColor: theme.colors.surface, paddingBottom: 18 + Math.max(insets.bottom, 10) }]}>
+          <View style={[styles.sheetGrabber, { backgroundColor: theme.colors.outline }]} />
+          <Text variant="titleLarge" style={[styles.sheetTitle, { color: theme.colors.onSurface }]}>
             {title}
           </Text>
           {description ? (
-            <Text variant="bodyMedium" style={styles.subtitle}>
+            <Text variant="bodyMedium" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
               {description}
             </Text>
           ) : null}
@@ -92,7 +92,7 @@ export function ConfirmSheet({
               mode="contained"
               loading={loading}
               disabled={loading}
-              buttonColor={destructive ? Colors.light.error : Colors.light.primary}
+              buttonColor={destructive ? activeColors.error : activeColors.primary}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
                 onConfirm();

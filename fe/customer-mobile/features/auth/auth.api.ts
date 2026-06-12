@@ -3,6 +3,10 @@ import api from '../../lib/axios';
 export const authApi = {
   login: (data: { email: string; password: string }) => api.post('/auth/login', data),
 
+  googleLogin: (data: { credential: string }) => api.post('/auth/google', data),
+
+  refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
+
   register: (data: {
     fullName: string;
     email: string;

@@ -6,20 +6,42 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image, Sw
 import { Text, TextInput, Button, useTheme, HelperText, IconButton } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 import { authApi } from '../../features/auth/auth.api';
 import { useAuthStore } from '../../features/auth/auth.store';
+import type { CustomerUser } from '../../features/auth/auth.store';
 import { useBiometricLogin } from '../../hooks/useBiometricLogin';
 import { routes } from '../../lib/route-utils';
 import { isValidEmail, normalizeEmail } from '../../features/auth/auth.validation';
 import { CustomerDialog } from '../../components/customer/customer-ui';
 import { t } from '../../lib/i18n';
+import { storage } from '../../lib/storage';
+
+WebBrowser.maybeCompleteAuthSession();
+
+type AuthPayload = {
+  accessToken?: string;
+  refreshToken?: string;
+  user?: CustomerUser;
+};
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ message?: string }>();
   const { setTokens, setUser, fetchProfile } = useAuthStore();
-  const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, authenticateAndGetCredentials } = useBiometricLogin();
+  const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, disableBiometrics, authenticate } = useBiometricLogin();
+  const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+  const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+  const googleConfigured = Boolean(
+    Platform.select({
+      android: googleAndroidClientId,
+      ios: googleIosClientId,
+      default: googleWebClientId,
+    }),
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -81,6 +103,34 @@ export default function LoginScreen() {
     initBiometrics();
   }, []);
 
+  const completeLogin = async (payload: AuthPayload, enableBiometricPrompt = false) => {
+    const user = payload?.user;
+
+    if (!payload?.accessToken || !payload?.refreshToken || !user) {
+      throw new Error('Invalid login response');
+    }
+
+    if (user.role !== 'CUSTOMER') {
+      setError(t('auth.provider_error'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      return false;
+    }
+
+    await setTokens(payload.accessToken, payload.refreshToken);
+    setUser(user);
+    await fetchProfile().catch(() => {});
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    router.replace(routes.tabs.home);
+
+    if (enableBiometricPrompt) {
+      setTimeout(() => {
+        promptBiometricSetup().catch(() => {});
+      }, 500);
+    }
+
+    return true;
+  };
+
   const handleBiometricLogin = async () => {
     setError('');
     const enabled = await isBiometricsEnabled();
@@ -99,42 +149,27 @@ export default function LoginScreen() {
 
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      const credentials = await authenticateAndGetCredentials();
-      if (credentials) {
-        setEmail(credentials.email);
-        setPassword(credentials.password);
-        
-        const res = await authApi.login({ 
-          email: normalizeEmail(credentials.email), 
-          password: credentials.password 
-        });
-        const payload = res.data?.data;
-        const user = payload?.user;
-
-        if (!payload?.accessToken || !payload?.refreshToken || !user) {
-          throw new Error('Invalid login response');
-        }
-
-        if (user.role !== 'CUSTOMER') {
-          setError(t('auth.provider_error'));
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-          isSubmittingRef.current = false;
-          setLoading(false);
+      const authenticated = await authenticate();
+      if (authenticated) {
+        const refreshToken = await storage.getRefreshToken();
+        if (!refreshToken) {
+          await disableBiometrics();
+          await storage.clearAll();
+          setError(t('auth.session_expired'));
           setBiometricsEnabledState(false);
           return;
         }
 
-        await setTokens(payload.accessToken, payload.refreshToken);
-        setUser(user);
-        await fetchProfile().catch(() => {});
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        setBiometricsEnabledState(true);
-        router.replace(routes.tabs.home);
+        const res = await authApi.refresh(refreshToken);
+        const completed = await completeLogin(res.data?.data || {}, false);
+        setBiometricsEnabledState(completed);
       } else {
         setBiometricsEnabledState(false);
       }
-    } catch (err: any) {
-      setError(t('auth.biometric_error'));
+    } catch {
+      await disableBiometrics();
+      await storage.clearAll();
+      setError(t('auth.session_expired'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setBiometricsEnabledState(false);
     } finally {
@@ -143,7 +178,7 @@ export default function LoginScreen() {
     }
   };
 
-  const promptBiometricSetup = async (emailStr: string, passStr: string) => {
+  const promptBiometricSetup = async () => {
     const { hasHardware, isEnrolled } = await checkBiometricsSupport();
     if (!hasHardware || !isEnrolled) return;
 
@@ -155,7 +190,7 @@ export default function LoginScreen() {
       t('auth.biometric_prompt'),
       'Kích hoạt',
       async () => {
-        await enableBiometrics(emailStr, passStr);
+        await enableBiometrics();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         setBiometricsEnabledState(true);
       }
@@ -183,38 +218,12 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      const currentEmail = normalizeEmail(email);
-      const currentPassword = password;
-
-      const res = await authApi.login({ 
-        email: currentEmail, 
-        password: currentPassword 
+      const res = await authApi.login({
+        email: normalizeEmail(email),
+        password
       });
       const payload = res.data?.data;
-      const user = payload?.user;
-
-      if (!payload?.accessToken || !payload?.refreshToken || !user) {
-        throw new Error('Invalid login response');
-      }
-
-      // Chỉ cho phép Customer đăng nhập
-      if (user.role !== 'CUSTOMER') {
-        setError(t('auth.provider_error'));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-        return;
-      }
-
-      await setTokens(payload.accessToken, payload.refreshToken);
-      setUser(user);
-      await fetchProfile().catch(() => {});
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-
-      router.replace(routes.tabs.home);
-
-      // Check if biometric login is supported but not enabled yet
-      setTimeout(() => {
-        promptBiometricSetup(currentEmail, currentPassword).catch(() => {});
-      }, 500);
+      await completeLogin(payload || {}, true);
     } catch (err: any) {
       if (!err.response) {
         setError(t('auth.network_error'));
@@ -230,14 +239,23 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    showDialog(t('auth.google_login'), t('auth.google_login') + '...');
-  };
+  const handleGoogleCredential = async (credential: string) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setLoading(true);
+    setError('');
 
-  const handleFacebookLogin = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    showDialog(t('auth.facebook_login'), t('auth.facebook_login') + '...');
+    try {
+      const res = await authApi.googleLogin({ credential });
+      const completed = await completeLogin(res.data?.data || {}, true);
+      if (!completed) setError(t('auth.google_error'));
+    } catch {
+      setError(t('auth.google_error'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    } finally {
+      setLoading(false);
+      isSubmittingRef.current = false;
+    }
   };
 
   return (
@@ -264,7 +282,7 @@ export default function LoginScreen() {
         />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.surface }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]} keyboardShouldPersistTaps="handled">
         {/* Styled Logo */}
         <View style={styles.logoWrap}>
           <Image
@@ -274,8 +292,7 @@ export default function LoginScreen() {
           />
         </View>
 
-        {/* E-commerce Clean Flat Inputs */}
-        <View style={styles.form}>
+          <View style={styles.form}>
           {successMessage ? (
             <Text style={styles.successMessageText}>{successMessage}</Text>
           ) : null}
@@ -284,45 +301,47 @@ export default function LoginScreen() {
             label={t('auth.email_placeholder')}
             value={email}
             onChangeText={setEmail}
-            mode="flat"
+            mode="outlined"
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
             left={<TextInput.Icon icon="account-outline" color={theme.colors.onSurfaceVariant} />}
-            style={[styles.inputFlat, { backgroundColor: 'transparent' }]}
-            underlineColor={theme.colors.outlineVariant}
-            activeUnderlineColor={theme.colors.primary}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outlineVariant}
+            activeOutlineColor={theme.colors.primary}
             textColor={theme.colors.onSurface}
           />
 
-          <View style={styles.passwordWrapper}>
-            <TextInput
-              label={t('auth.password')}
-              value={password}
-              onChangeText={setPassword}
-              mode="flat"
-              secureTextEntry={!showPassword}
-              autoComplete="password"
-              left={<TextInput.Icon icon="lock-outline" color={theme.colors.onSurfaceVariant} />}
-              style={[styles.inputFlat, { backgroundColor: 'transparent' }]}
-              underlineColor={theme.colors.outlineVariant}
-              activeUnderlineColor={theme.colors.primary}
-              textColor={theme.colors.onSurface}
-            />
-            <View style={styles.passwordRightActions}>
-              <IconButton
+          <TextInput
+            label={t('auth.password')}
+            value={password}
+            onChangeText={setPassword}
+            mode="outlined"
+            secureTextEntry={!showPassword}
+            autoComplete="password"
+            left={<TextInput.Icon icon="lock-outline" color={theme.colors.onSurfaceVariant} />}
+            right={
+              <TextInput.Icon
                 icon={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                iconColor={theme.colors.onSurfaceVariant}
+                color={theme.colors.onSurfaceVariant}
                 onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeBtn}
+                forceTextInputFocus={false}
               />
-              <View style={[styles.verticalDivider, { backgroundColor: theme.colors.outlineVariant }]} />
-              <Pressable onPress={() => router.push(routes.auth.forgotPassword)}>
-                <Text style={[styles.forgotText, { color: theme.colors.primary }]}>{t('auth.forgot_password')}</Text>
-              </Pressable>
-            </View>
-          </View>
+            }
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
+            outlineColor={theme.colors.outlineVariant}
+            activeOutlineColor={theme.colors.primary}
+            textColor={theme.colors.onSurface}
+          />
+          <Pressable
+            onPress={() => router.push(routes.auth.forgotPassword)}
+            style={styles.forgotWrap}
+            hitSlop={8}
+          >
+            <Text style={[styles.forgotText, { color: theme.colors.primary }]}>
+              Quên mật khẩu?
+            </Text>
+          </Pressable>
 
           {error ? <HelperText type="error" visible style={styles.helperText}>{error}</HelperText> : null}
 
@@ -340,45 +359,24 @@ export default function LoginScreen() {
             {t('auth.login')}
           </Button>
 
-          <Pressable style={styles.smsBtnWrap} onPress={() => showDialog(t('general.notification'), t('auth.sms_config'))}>
-            <Text style={[styles.smsBtnText, { color: theme.colors.primary }]}>{t('auth.sms_login')}</Text>
-          </Pressable>
+          {googleConfigured ? (
+            <>
+              {/* OR Divider */}
+              <View style={styles.dividerRow}>
+                <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+                <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>HOẶC</Text>
+                <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+              </View>
 
-          {/* OR Divider */}
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
-            <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>HOẶC</Text>
-            <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
-          </View>
-
-          {/* Social login buttons */}
-          <View style={styles.socialContainer}>
-            <Button
-              mode="outlined"
-              icon={({ size }) => (
-                <Image source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} style={{ width: size, height: size }} />
-              )}
-              onPress={handleGoogleLogin}
-              style={[styles.socialBtn, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}
-              contentStyle={styles.socialBtnContent}
-              labelStyle={[styles.socialLabel, { color: theme.colors.onSurface }]}
-            >
-              {t('auth.google_login')}
-            </Button>
-
-            <Button
-              mode="outlined"
-              icon={({ size }) => (
-                <Image source={{ uri: 'https://img.icons8.com/color/48/facebook-new.png' }} style={{ width: size, height: size }} />
-              )}
-              onPress={handleFacebookLogin}
-              style={[styles.socialBtn, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}
-              contentStyle={styles.socialBtnContent}
-              labelStyle={[styles.socialLabel, { color: theme.colors.onSurface }]}
-            >
-              {t('auth.facebook_login')}
-            </Button>
-          </View>
+              <GoogleLoginButton
+                loading={loading}
+                onCredential={handleGoogleCredential}
+                borderColor={theme.colors.outlineVariant}
+                backgroundColor={theme.colors.surface}
+                labelColor={theme.colors.onSurface}
+              />
+            </>
+          ) : null}
         </View>
 
         {/* Footer Account Registration */}
@@ -426,6 +424,77 @@ export default function LoginScreen() {
   );
 }
 
+function GoogleLoginButton({
+  loading,
+  onCredential,
+  borderColor,
+  backgroundColor,
+  labelColor,
+}: {
+  loading: boolean;
+  onCredential: (credential: string) => Promise<void>;
+  borderColor: string;
+  backgroundColor: string;
+  labelColor: string;
+}) {
+  const [pending, setPending] = useState(false);
+  const handledResponseRef = useRef<string | null>(null);
+  const [request, response, promptGoogleAsync] = Google.useIdTokenAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    selectAccount: true,
+  });
+
+  useEffect(() => {
+    if (!response) return;
+
+    if (response.type !== 'success') {
+      setPending(false);
+      return;
+    }
+
+    const credential = response.params?.id_token;
+    if (!credential) {
+      setPending(false);
+      return;
+    }
+
+    if (handledResponseRef.current === credential) return;
+    handledResponseRef.current = credential;
+
+    onCredential(credential).finally(() => {
+      setPending(false);
+    });
+  }, [onCredential, response]);
+
+  const handlePress = () => {
+    if (!request || pending || loading) return;
+    setPending(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    promptGoogleAsync().catch(() => {
+      setPending(false);
+    });
+  };
+
+  return (
+    <Button
+      mode="outlined"
+      icon={({ size }) => (
+        <Image source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} style={{ width: size, height: size }} />
+      )}
+      onPress={handlePress}
+      loading={pending}
+      disabled={loading || pending || !request}
+      style={[styles.socialBtn, { borderColor, backgroundColor }]}
+      contentStyle={styles.socialBtnContent}
+      labelStyle={[styles.socialLabel, { color: labelColor }]}
+    >
+      {t('auth.google_login')}
+    </Button>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   headerBar: {
@@ -450,7 +519,7 @@ const styles = StyleSheet.create({
   },
   logoWrap: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 28,
   },
   logoImage: {
     width: 88,
@@ -460,33 +529,13 @@ const styles = StyleSheet.create({
   form: {
     gap: 16,
   },
-  inputFlat: {
-    paddingHorizontal: 0,
-    height: 56,
+  input: {
+    minHeight: 56,
   },
-  passwordWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  passwordRightActions: {
-    position: 'absolute',
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 56,
-  },
-  eyeBtn: {
-    margin: 0,
-  },
-  verticalDivider: {
-    width: 1,
-    height: 20,
-    marginHorizontal: 8,
-  },
+  forgotWrap: { alignSelf: 'flex-end', marginTop: -6, minHeight: 32, justifyContent: 'center' },
   forgotText: {
     fontSize: 14,
     fontWeight: '600',
-    paddingRight: 4,
   },
   helperText: {
     margin: 0,
@@ -504,14 +553,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.3,
   },
-  smsBtnWrap: {
-    alignSelf: 'flex-end',
-    marginTop: 4,
-  },
-  smsBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -527,9 +568,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.2,
-  },
-  socialContainer: {
-    gap: 12,
   },
   socialBtn: {
     borderRadius: 8,

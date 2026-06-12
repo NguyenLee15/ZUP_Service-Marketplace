@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
@@ -26,11 +27,18 @@ export function usePushNotifications() {
           ? current.status
           : (await Notifications.requestPermissionsAsync()).status;
       if (finalStatus !== 'granted') return;
-      const token = await Notifications.getExpoPushTokenAsync();
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ||
+        Constants.easConfig?.projectId;
+      const token = await Notifications.getExpoPushTokenAsync(
+        projectId ? { projectId } : undefined,
+      );
       if (mounted) setExpoPushToken(token.data);
     }
 
-    register().catch(() => {});
+    register().catch((error) => {
+      if (__DEV__) console.warn('Failed to register push notifications:', error);
+    });
     return () => {
       mounted = false;
     };

@@ -2,8 +2,6 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
 const BIOMETRICS_ENABLED_KEY = 'biometrics_enabled';
-const BIOMETRICS_EMAIL_KEY = 'biometrics_email';
-const BIOMETRICS_PASSWORD_KEY = 'biometrics_password';
 
 export function useBiometricLogin() {
   const checkBiometricsSupport = async () => {
@@ -25,22 +23,12 @@ export function useBiometricLogin() {
     }
   };
 
-  const getSavedEmail = async () => {
-    try {
-      return await SecureStore.getItemAsync(BIOMETRICS_EMAIL_KEY);
-    } catch {
-      return null;
-    }
-  };
-
-  const enableBiometrics = async (email: string, password: string) => {
+  const enableBiometrics = async () => {
     try {
       await SecureStore.setItemAsync(BIOMETRICS_ENABLED_KEY, 'true');
-      await SecureStore.setItemAsync(BIOMETRICS_EMAIL_KEY, email);
-      await SecureStore.setItemAsync(BIOMETRICS_PASSWORD_KEY, password);
       return true;
     } catch (error) {
-      console.warn('Failed to enable biometrics:', error);
+      if (__DEV__) console.warn('Failed to enable biometrics:', error);
       return false;
     }
   };
@@ -48,22 +36,20 @@ export function useBiometricLogin() {
   const disableBiometrics = async () => {
     try {
       await SecureStore.setItemAsync(BIOMETRICS_ENABLED_KEY, 'false');
-      await SecureStore.deleteItemAsync(BIOMETRICS_EMAIL_KEY);
-      await SecureStore.deleteItemAsync(BIOMETRICS_PASSWORD_KEY);
       return true;
     } catch (error) {
-      console.warn('Failed to disable biometrics:', error);
+      if (__DEV__) console.warn('Failed to disable biometrics:', error);
       return false;
     }
   };
 
-  const authenticateAndGetCredentials = async () => {
+  const authenticate = async () => {
     try {
       const { hasHardware, isEnrolled } = await checkBiometricsSupport();
-      if (!hasHardware || !isEnrolled) return null;
+      if (!hasHardware || !isEnrolled) return false;
 
       const enabled = await isBiometricsEnabled();
-      if (!enabled) return null;
+      if (!enabled) return false;
 
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Xác thực để đăng nhập tài khoản Zup',
@@ -71,26 +57,18 @@ export function useBiometricLogin() {
         disableDeviceFallback: false,
       });
 
-      if (result.success) {
-        const email = await SecureStore.getItemAsync(BIOMETRICS_EMAIL_KEY);
-        const password = await SecureStore.getItemAsync(BIOMETRICS_PASSWORD_KEY);
-        if (email && password) {
-          return { email, password };
-        }
-      }
-      return null;
+      return result.success;
     } catch (error) {
-      console.warn('Biometric authentication error:', error);
-      return null;
+      if (__DEV__) console.warn('Biometric authentication error:', error);
+      return false;
     }
   };
 
   return {
     checkBiometricsSupport,
     isBiometricsEnabled,
-    getSavedEmail,
     enableBiometrics,
     disableBiometrics,
-    authenticateAndGetCredentials,
+    authenticate,
   };
 }

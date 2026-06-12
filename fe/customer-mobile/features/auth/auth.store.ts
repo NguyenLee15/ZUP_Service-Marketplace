@@ -40,28 +40,38 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   loadFromStorage: async () => {
     try {
-      const [token, user] = await Promise.all([
-        storage.getAccessToken(),
-        storage.getUser<CustomerUser>(),
-      ]);
-      if (token && user?.role === 'CUSTOMER') {
-        set({ user, isAuthenticated: true, isLoading: false });
-      } else {
-        if (token) await storage.clearAll();
-        set({ isLoading: false });
+      const token = await storage.getAccessToken();
+      if (!token) {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+        return;
       }
+
+      const res = await api.get('/auth/profile');
+      const user = unwrapData<CustomerUser>(res);
+      if (user?.role === 'CUSTOMER' && user.status !== 'LOCKED') {
+        await storage.setUser(user);
+        set({ user, isAuthenticated: true, isLoading: false });
+        return;
+      }
+
+      await storage.clearAll();
+      set({ user: null, isAuthenticated: false, isLoading: false });
     } catch {
-      set({ isLoading: false });
+      await storage.clearAll();
+      set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },
 
   fetchProfile: async () => {
     const res = await api.get('/auth/profile');
     const user = unwrapData<CustomerUser>(res);
-    if (user?.role === 'CUSTOMER') {
+    if (user?.role === 'CUSTOMER' && user.status !== 'LOCKED') {
       set({ user, isAuthenticated: true });
       storage.setUser(user);
+      return;
     }
+    await storage.clearAll();
+    set({ user: null, isAuthenticated: false });
   },
 
   logout: async () => {

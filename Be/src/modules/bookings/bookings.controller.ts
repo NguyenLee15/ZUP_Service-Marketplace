@@ -11,8 +11,10 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  Res,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -36,6 +38,7 @@ import {
 import { BookingDisputeService } from './booking-dispute.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 import { BookingQueryService } from './booking-query.service';
+import { CustomerBookingExportService } from './customer-booking-export.service';
 import { BookingListQueryDto } from './dto/booking-query.dto';
 import {
   CreateBookingDto,
@@ -59,6 +62,7 @@ export class BookingsController {
     private readonly bookingLifecycleService: BookingLifecycleService,
     private readonly bookingDisputeService: BookingDisputeService,
     private readonly bookingQueryService: BookingQueryService,
+    private readonly customerBookingExportService: CustomerBookingExportService,
   ) {}
 
   /** POST /bookings — Customer tạo booking */
@@ -95,6 +99,28 @@ export class BookingsController {
     );
   }
 
+  @Get('export-pdf')
+  @ApiOperation({ summary: 'Export current customer booking history as PDF' })
+  @UseGuards(RolesGuard)
+  @Roles('CUSTOMER')
+  async exportHistoryPdf(
+    @CurrentUser('id') userId: number,
+    @Query() filters: { from?: string; to?: string; status?: string },
+    @Res() res: Response,
+  ) {
+    const pdfDoc = await this.customerBookingExportService.exportHistoryPdf(
+      userId,
+      filters,
+    );
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=customer-bookings-${filters.from || 'all'}-${filters.to || new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+    pdfDoc.pipe(res);
+    pdfDoc.end();
+  }
+
   /** GET /bookings/:id — Xem chi tiết booking */
   @Get(':id/timeline')
   @ApiOperation({ summary: 'Get current user booking timeline' })
@@ -103,6 +129,28 @@ export class BookingsController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.bookingQueryService.getTimeline(id, userId);
+  }
+
+  @Get(':id/receipt-pdf')
+  @ApiOperation({ summary: 'Export current customer booking receipt as PDF' })
+  @UseGuards(RolesGuard)
+  @Roles('CUSTOMER')
+  async exportReceiptPdf(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
+    const pdfDoc = await this.customerBookingExportService.exportReceiptPdf(
+      userId,
+      id,
+    );
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=booking-${id}-receipt.pdf`,
+    );
+    pdfDoc.pipe(res);
+    pdfDoc.end();
   }
 
   @Get(':id')

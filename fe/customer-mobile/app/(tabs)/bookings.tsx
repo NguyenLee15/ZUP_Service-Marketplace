@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button, Chip, Text } from 'react-native-paper';
+import { Button, Chip, Text, useTheme } from 'react-native-paper';
 import {
   CustomerCard,
   CustomerHeader,
@@ -15,9 +14,9 @@ import {
 import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../constants/booking-status';
 import { Colors } from '../../constants/colors';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { formatCurrency, formatDateTime } from '../../lib/format';
 import { stableKey, toRouteId, routes } from '../../lib/route-utils';
-import { useBookingsList, BookingListItem } from '../../features/booking/hooks/useBookingsList';
+import { useBookingsList } from '../../features/booking/hooks/useBookingsList';
+import { exportBookingHistoryPdf } from '../../lib/customer-pdf-export';
 
 const FILTERS = [
   'ALL',
@@ -63,11 +62,25 @@ export default function BookingsScreen() {
     refresh,
     openSearch,
   } = useBookingsList();
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [message, setMessage] = useState('');
 
   const empty = getEmptyState(status);
   const data = isInitialLoading
     ? [{ id: 's1' }, { id: 's2' }, { id: 's3' }, { id: 's4' }]
     : bookings;
+  const handleExportPdf = async () => {
+    setMessage('');
+    setExportingPdf(true);
+    try {
+      await exportBookingHistoryPdf({ bookings, filters: { status } });
+      setMessage('Đã tạo báo cáo PDF lịch sử đặt dịch vụ.');
+    } catch {
+      setMessage('Không thể xuất báo cáo PDF. Vui lòng thử lại sau.');
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   return (
     <FlashList
@@ -93,6 +106,32 @@ export default function BookingsScreen() {
             <InlineMessage tone="warning" message="Đang ngoại tuyến. Dữ liệu gần nhất vẫn được giữ lại nếu có." />
           ) : null}
           <StatusFilters status={status} onChange={setStatus} />
+          <CustomerCard contentStyle={styles.exportCardContent}>
+            <View style={styles.exportCopy}>
+              <Text variant="titleSmall" style={styles.exportTitle}>
+                Báo cáo lịch sử đặt dịch vụ
+              </Text>
+              <Text variant="bodySmall" style={styles.exportDescription}>
+                Xuất các đơn đang hiển thị thành PDF để lưu hoặc chia sẻ khi cần.
+              </Text>
+            </View>
+            <Button
+              mode="outlined"
+              icon="file-pdf-box"
+              loading={exportingPdf}
+              disabled={exportingPdf || isInitialLoading}
+              onPress={handleExportPdf}
+              style={styles.exportButton}
+            >
+              Xuất PDF
+            </Button>
+          </CustomerCard>
+          {message ? (
+            <InlineMessage
+              tone={message.includes('Không') ? 'error' : 'success'}
+              message={message}
+            />
+          ) : null}
           {isError ? (
             <View style={styles.errorBlock}>
               <InlineMessage tone="error" message="Không thể tải danh sách đơn hàng." />
@@ -140,11 +179,13 @@ function StatusFilters({
   status: string;
   onChange: (status: string) => void;
 }) {
+  const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
       {FILTERS.map((item) => {
         const selected = status === item;
-        const color = item === 'ALL' ? Colors.light.primary : BOOKING_STATUS_COLOR[item] || Colors.light.primary;
+        const color = item === 'ALL' ? activeColors.primary : BOOKING_STATUS_COLOR[item] || activeColors.primary;
         return (
           <Chip
             key={item}
@@ -159,10 +200,10 @@ function StatusFilters({
               styles.filterChip,
               selected
                 ? { backgroundColor: color, borderColor: color }
-                : { backgroundColor: '#FFFFFF', borderColor: Colors.light.border },
+                : { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant },
             ]}
             textStyle={{
-              color: selected ? '#FFFFFF' : Colors.light.textSecondary,
+              color: selected ? '#FFFFFF' : theme.colors.onSurfaceVariant,
               fontWeight: selected ? '800' : '700',
               fontSize: 13,
             }}
@@ -197,6 +238,11 @@ const styles = StyleSheet.create({
   filterChip: { borderRadius: 16, height: 34, justifyContent: 'center' },
   errorBlock: { gap: 8 },
   retryButton: { alignSelf: 'flex-start', borderRadius: 12 },
+  exportCardContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  exportCopy: { flex: 1, gap: 2 },
+  exportTitle: { fontWeight: '900' },
+  exportDescription: { lineHeight: 18 },
+  exportButton: { borderRadius: 12 },
   cardContent: { gap: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   codeText: { color: Colors.light.primary, fontWeight: '900' },

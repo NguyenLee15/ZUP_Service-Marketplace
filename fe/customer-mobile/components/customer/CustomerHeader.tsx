@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
-import { Colors } from '../../constants/colors';
+import { Text, useTheme } from 'react-native-paper';
 import { Spacing } from '../../constants/spacing';
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.md },
-  title: { color: Colors.light.text, fontWeight: '800' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  title: { fontWeight: '800' },
+  subtitle: { lineHeight: 20 },
 });
 
 export function CustomerHeader({
@@ -19,14 +18,16 @@ export function CustomerHeader({
   subtitle?: string;
   action?: ReactNode;
 }) {
+  const theme = useTheme();
+
   return (
     <View style={styles.header}>
       <View style={{ flex: 1 }}>
-        <Text variant="headlineSmall" style={styles.title}>
+        <Text variant="headlineSmall" style={[styles.title, { color: theme.colors.onSurface }]}>
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="bodyMedium" style={styles.subtitle}>
+          <Text variant="bodyMedium" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
             {subtitle}
           </Text>
         ) : null}

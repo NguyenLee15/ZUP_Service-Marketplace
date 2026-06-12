@@ -23,6 +23,7 @@ import { chatApi } from "../../../features/chat/chat.api";
 import { getApiErrorMessage, unwrapData } from "../../../lib/api-response";
 import { formatCurrency, formatDateTime } from "../../../lib/format";
 import { toRouteId, routes } from "../../../lib/route-utils";
+import { exportBookingReceiptPdf } from "../../../lib/customer-pdf-export";
 
 type BookingActionType = "confirm" | "reject" | "cancel" | "accept" | "rebook";
 type SheetType = "reject" | "cancel" | "accept" | null;
@@ -191,6 +192,7 @@ export default function BookingDetailScreen() {
   const [sheet, setSheet] = useState<SheetType>(null);
   const [message, setMessage] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const bookingQuery = useQuery({
     queryKey: ["booking", bookingId],
@@ -310,6 +312,20 @@ export default function BookingDetailScreen() {
     actionMutation.mutate({ type: sheet === "reject" ? "reject" : "cancel" });
   };
 
+  const handleExportReceipt = async () => {
+    if (!booking) return;
+    setMessage("");
+    setExportingPdf(true);
+    try {
+      await exportBookingReceiptPdf(booking);
+      setMessage("Đã tạo biên nhận PDF.");
+    } catch {
+      setMessage("Không thể xuất biên nhận PDF. Vui lòng thử lại sau.");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   if (!validBookingId) {
     return (
       <View style={styles.screen}>
@@ -413,8 +429,10 @@ export default function BookingDetailScreen() {
           booking={booking}
           loading={actionMutation.isPending}
           chatLoading={chatLoading}
+          exportLoading={exportingPdf}
           onCancel={() => setSheet("cancel")}
           onChat={openChat}
+          onExportReceipt={handleExportReceipt}
           onTrack={() => router.push(routes.booking.track(String(bookingId)))}
           onReview={() => router.push(routes.booking.review(String(bookingId)))}
           onDispute={() =>
@@ -658,8 +676,10 @@ function ActionSection({
   booking,
   loading,
   chatLoading,
+  exportLoading,
   onCancel,
   onChat,
+  onExportReceipt,
   onTrack,
   onReview,
   onDispute,
@@ -669,8 +689,10 @@ function ActionSection({
   booking: BookingDetail;
   loading: boolean;
   chatLoading: boolean;
+  exportLoading: boolean;
   onCancel: () => void;
   onChat: () => void;
+  onExportReceipt: () => void;
   onTrack: () => void;
   onReview: () => void;
   onDispute: () => void;
@@ -681,6 +703,16 @@ function ActionSection({
   return (
     <View style={styles.actions}>
       <ActionGroup title="Theo dõi & liên hệ">
+        <Button
+          mode="outlined"
+          icon="file-pdf-box"
+          loading={exportLoading}
+          disabled={exportLoading}
+          onPress={onExportReceipt}
+          style={styles.actionButton}
+        >
+          Xuất biên nhận PDF
+        </Button>
         <Button
           mode="outlined"
           icon="chat-outline"

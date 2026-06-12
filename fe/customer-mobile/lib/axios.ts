@@ -20,6 +20,26 @@ let failedQueue: Array<{
   reject: (error: unknown) => void;
 }> = [];
 
+const AUTH_ENDPOINTS_WITHOUT_REFRESH = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/google',
+  '/auth/refresh',
+  '/auth/verify-otp',
+  '/auth/forgot-password',
+];
+
+function shouldSkipRefresh(url?: string) {
+  if (!url) return false;
+  return AUTH_ENDPOINTS_WITHOUT_REFRESH.some((endpoint) => url.startsWith(endpoint));
+}
+
+function createSessionExpiredError() {
+  const error = new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+  error.name = 'SESSION_EXPIRED';
+  return error;
+}
+
 function processQueue(error: unknown, token: string | null = null) {
   failedQueue.forEach((promise) => {
     if (error) promise.reject(error);
@@ -32,7 +52,11 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status !== 401 || originalRequest?._retry) {
+    if (
+      error.response?.status !== 401 ||
+      originalRequest?._retry ||
+      shouldSkipRefresh(originalRequest?.url)
+    ) {
       return Promise.reject(error);
     }
 
@@ -69,7 +93,7 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null);
       await storage.clearAll();
-      return Promise.reject(refreshError);
+      return Promise.reject(createSessionExpiredError());
     } finally {
       isRefreshing = false;
     }

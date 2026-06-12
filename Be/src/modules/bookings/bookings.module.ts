@@ -25,6 +25,7 @@ import { BookingLifecycleService } from './booking-lifecycle.service';
 import { BookingDisputeService } from './booking-dispute.service';
 import { BookingQueryService } from './booking-query.service';
 import { ProviderDashboardService } from './provider-dashboard.service';
+import { CustomerBookingExportService } from './customer-booking-export.service';
 import { BookingCommissionService } from './booking-commission.service';
 import { BookingSharedService } from './booking-shared.service';
 import { BookingTimeoutService } from './booking-timeout.service';
@@ -63,6 +64,7 @@ import { BookingTimeoutService } from './booking-timeout.service';
     BookingDisputeService,
     BookingQueryService,
     ProviderDashboardService,
+    CustomerBookingExportService,
     TrackingGateway,
     ...(isCronEnabled() ? [BookingsCron] : []),
     ...(isWorkerEnabled() ? [BookingsProcessor, DisputeProcessor] : []),
@@ -72,6 +74,7 @@ import { BookingTimeoutService } from './booking-timeout.service';
     BookingDisputeService,
     BookingQueryService,
     ProviderDashboardService,
+    CustomerBookingExportService,
     BookingCommissionService,
     BookingSharedService,
     BookingTimeoutService,
