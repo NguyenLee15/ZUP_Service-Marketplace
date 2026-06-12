@@ -14,13 +14,15 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://service-marketplace-prod-free.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://service-marketplace-prod-free.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "422532889022-io4134s1uuc7nstujs97grm3qagfnb2e.apps.googleusercontent.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://service-marketplace-prod-free.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://service-marketplace-prod-free.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "422532889022-io4134s1uuc7nstujs97grm3qagfnb2e.apps.googleusercontent.com"
       }
     }
   },

@@ -1,11 +1,11 @@
 /**
  * Auth store — Zustand + SecureStore persistence
  */
-import { create } from 'zustand';
-import { storage } from '../../lib/storage';
-import api from '../../lib/axios';
+import { create } from "zustand";
+import { storage } from "../../lib/storage";
+import api from "../../lib/axios";
 
-interface User {
+export interface ProviderUser {
   id: number;
   email: string;
   fullName: string;
@@ -16,11 +16,11 @@ interface User {
 }
 
 interface AuthState {
-  user: User | null;
+  user: ProviderUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 
-  setUser: (user: User) => void;
+  setUser: (user: ProviderUser) => void;
   setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   loadFromStorage: () => Promise<void>;
   fetchProfile: () => Promise<void>;
@@ -46,20 +46,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const token = await storage.getAccessToken();
       if (!token) {
-        set({ isLoading: false });
-        return;
-      }
-
-      const res = await api.get('/auth/profile');
-      const user = res.data?.data;
-      if (user?.role !== 'PROVIDER' || user?.status === 'LOCKED') {
-        await storage.clearAll();
         set({ user: null, isAuthenticated: false, isLoading: false });
         return;
       }
 
-      await storage.setUser(user);
-      set({ user, isAuthenticated: true, isLoading: false });
+      const res = await api.get("/auth/profile");
+      const user = res.data?.data as ProviderUser | undefined;
+      if (user?.role === "PROVIDER" && user.status !== "LOCKED") {
+        await storage.setUser(user);
+        set({ user, isAuthenticated: true, isLoading: false });
+        return;
+      }
+
+      await storage.clearAll();
+      set({ user: null, isAuthenticated: false, isLoading: false });
     } catch {
       await storage.clearAll();
       set({ user: null, isAuthenticated: false, isLoading: false });
@@ -68,13 +68,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   fetchProfile: async () => {
     try {
-      const res = await api.get('/users/profile');
-      if (res.data?.data) {
-        const user = res.data.data;
-        set({ user });
+      const res = await api.get("/users/profile");
+      const user = res.data?.data as ProviderUser | undefined;
+      if (user?.role === "PROVIDER" && user.status !== "LOCKED") {
+        set({ user, isAuthenticated: true });
         storage.setUser(user);
+        return;
       }
-    } catch {}
+      await storage.clearAll();
+      set({ user: null, isAuthenticated: false });
+    } catch {
+      await storage.clearAll();
+      set({ user: null, isAuthenticated: false });
+    }
   },
 
   logout: async () => {

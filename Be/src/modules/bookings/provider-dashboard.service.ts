@@ -17,6 +17,16 @@ export interface ProviderDashboardFilters {
 
 type ProviderReportType = 'overview' | 'revenue' | 'status' | 'bookings';
 
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Chờ xác nhận',
+  QUOTED: 'Đã báo giá',
+  CONFIRMED: 'Đã xác nhận',
+  IN_PROGRESS: 'Đang thực hiện',
+  DONE: 'Hoàn thành',
+  DISPUTED: 'Khiếu nại',
+  CANCELLED: 'Đã hủy',
+};
+
 type NormalizedProviderFilters = {
   from?: Date;
   to?: Date;
@@ -132,18 +142,10 @@ export class ProviderDashboardService {
     const stats = await this.getProviderStats(providerId, filters);
     const rows = await this.getProviderReportRows(providerId, filters);
 
-    const fonts = {
-      Helvetica: {
-        normal: 'Helvetica',
-        bold: 'Helvetica-Bold',
-        italics: 'Helvetica-Oblique',
-        bolditalics: 'Helvetica-BoldOblique',
-      },
-    };
-    const printer = new PdfPrinter(fonts);
+    const printer = new PdfPrinter(this.getFonts());
     const content: Content[] = [
       {
-        text: 'HomeService Marketplace',
+        text: 'Zup Đối Tác',
         fontSize: 18,
         bold: true,
       },
@@ -154,107 +156,79 @@ export class ProviderDashboardService {
         margin: [0, 0, 0, 10],
       },
       {
-        text: `Ngay xuat: ${new Date().toLocaleString('vi-VN')}`,
+        text: `Ngày xuất: ${this.formatDateTime(new Date())}`,
         margin: [0, 0, 0, 4],
       },
       {
-        text: `Dieu kien loc: ${stats.filterSummary}`,
+        text: `Điều kiện lọc: ${stats.filterSummary}`,
         margin: [0, 0, 0, 16],
       },
     ];
 
     if (normalized.reportType === 'overview') {
-      content.push({
-        table: {
-          headerRows: 1,
-          widths: ['*', '*'],
-          body: [
-            ['Chi so', 'Gia tri'],
-            ['Tong don hang', stats.totalBookings],
-            ['Doanh thu', `${stats.totalRevenue.toLocaleString('vi-VN')} VND`],
-            [
-              'Hoa hong da tru',
-              `${stats.commissionPaid.toLocaleString('vi-VN')} VND`,
-            ],
-            ['Hoan thanh', stats.doneBookings],
-            ['Da huy', stats.cancelledBookings],
-            ['Danh gia trung binh', Number(stats.avgRating).toFixed(1)],
-            ['Ty le huy', `${stats.cancelRate.toFixed(1)}%`],
+      content.push(
+        this.simpleTable(
+          ['Chỉ số', 'Giá trị'],
+          [
+            ['Tổng đơn hàng', stats.totalBookings],
+            ['Doanh thu', this.formatCurrency(stats.totalRevenue)],
+            ['Hoa hồng đã trừ', this.formatCurrency(stats.commissionPaid)],
+            ['Hoàn thành', stats.doneBookings],
+            ['Đã hủy', stats.cancelledBookings],
+            ['Đánh giá trung bình', Number(stats.avgRating).toFixed(1)],
+            ['Tỷ lệ hủy', `${stats.cancelRate.toFixed(1)}%`],
           ],
-        },
-        layout: 'lightHorizontalLines',
-      });
+        ),
+      );
     }
 
     if (['overview', 'revenue'].includes(normalized.reportType)) {
       content.push(
-        { text: 'Doanh thu theo ky', bold: true, margin: [0, 18, 0, 6] },
-        {
-          table: {
-            headerRows: 1,
-            widths: ['*', '*'],
-            body: [
-              ['Ky', 'Doanh thu'],
-              ...(stats.revenueData.length
-                ? stats.revenueData.map((item) => [
-                    item.period,
-                    `${Number(item.revenue).toLocaleString('vi-VN')} VND`,
-                  ])
-                : [['-', '0 VND']]),
-            ],
-          },
-          layout: 'lightHorizontalLines',
-        },
+        { text: 'Doanh thu theo kỳ', bold: true, margin: [0, 18, 0, 6] },
+        this.simpleTable(
+          ['Kỳ', 'Doanh thu'],
+          stats.revenueData.map((item) => [
+            item.period,
+            this.formatCurrency(Number(item.revenue)),
+          ]),
+        ),
       );
     }
 
     if (['overview', 'status'].includes(normalized.reportType)) {
       content.push(
-        { text: 'Trang thai don hang', bold: true, margin: [0, 18, 0, 6] },
-        {
-          table: {
-            headerRows: 1,
-            widths: ['*', 'auto'],
-            body: [
-              ['Trang thai', 'So don'],
-              ...stats.statusData.map((item) => [item.status, item.count]),
-            ],
-          },
-          layout: 'lightHorizontalLines',
-        },
+        { text: 'Trạng thái đơn hàng', bold: true, margin: [0, 18, 0, 6] },
+        this.simpleTable(
+          ['Trạng thái', 'Số đơn'],
+          stats.statusData.map((item) => [
+            STATUS_LABELS[item.status] || item.status,
+            item.count,
+          ]),
+        ),
       );
     }
 
     if (['overview', 'bookings'].includes(normalized.reportType)) {
       content.push(
-        { text: 'Don hang trong bao cao', bold: true, margin: [0, 18, 0, 6] },
-        {
-          table: {
-            headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto'],
-            body: [
-              ['Ma don', 'Dich vu', 'Trang thai', 'Gia tri'],
-              ...(rows.length
-                ? rows.map((booking) => [
-                    booking.bookingCode,
-                    booking.service?.name || '-',
-                    booking.status,
-                    booking.quotation?.actualPrice
-                      ? `${Number(booking.quotation.actualPrice).toLocaleString('vi-VN')} VND`
-                      : '-',
-                  ])
-                : [['-', 'Chua co du lieu', '-', '-']]),
-            ],
-          },
-          layout: 'lightHorizontalLines',
-        },
+        { text: 'Đơn hàng trong báo cáo', bold: true, margin: [0, 18, 0, 6] },
+        this.simpleTable(
+          ['Mã đơn', 'Dịch vụ', 'Trạng thái', 'Giá trị'],
+          rows.map((booking) => [
+            booking.bookingCode,
+            booking.service?.name || '-',
+            STATUS_LABELS[booking.status] || booking.status,
+            booking.quotation?.actualPrice
+              ? this.formatCurrency(Number(booking.quotation.actualPrice))
+              : '-',
+          ]),
+        ),
       );
     }
 
     content.push({
       columns: [
-        { text: 'Nha cung cap', alignment: 'center' },
-        { text: 'Nguoi xac nhan', alignment: 'center' },
+        { text: 'Nhà cung cấp', alignment: 'center' },
+        { text: 'Người xác nhận', alignment: 'center' },
       ],
       margin: [0, 32, 0, 0],
     });
@@ -262,7 +236,7 @@ export class ProviderDashboardService {
     const docDefinition: TDocumentDefinitions = {
       pageSize: 'A4',
       pageMargins: [36, 42, 36, 48],
-      defaultStyle: { font: 'Helvetica' },
+      defaultStyle: { font: 'Helvetica', fontSize: 10 },
       content,
     };
 
@@ -286,16 +260,16 @@ export class ProviderDashboardService {
 
     worksheet.addRows([
       {
-        metric: 'Loai bao cao',
+        metric: 'Loại báo cáo',
         value: this.providerReportTitle(normalized.reportType),
       },
-      { metric: 'Dieu kien loc', value: stats.filterSummary },
-      { metric: 'Tong don hang', value: stats.totalBookings },
+      { metric: 'Điều kiện lọc', value: stats.filterSummary },
+      { metric: 'Tổng đơn hàng', value: stats.totalBookings },
       { metric: 'Doanh thu', value: stats.totalRevenue },
-      { metric: 'Hoa hong da tru', value: stats.commissionPaid },
-      { metric: 'Hoan thanh', value: stats.doneBookings },
-      { metric: 'Da huy', value: stats.cancelledBookings },
-      { metric: 'Ty le huy', value: stats.cancelRate },
+      { metric: 'Hoa hồng đã trừ', value: stats.commissionPaid },
+      { metric: 'Hoàn thành', value: stats.doneBookings },
+      { metric: 'Đã hủy', value: stats.cancelledBookings },
+      { metric: 'Tỷ lệ hủy', value: stats.cancelRate },
       { metric: 'Generated At', value: new Date().toLocaleString('vi-VN') },
     ]);
 
@@ -332,7 +306,7 @@ export class ProviderDashboardService {
           code: booking.bookingCode,
           service: booking.service?.name,
           customer: booking.customer?.fullName,
-          status: booking.status,
+          status: STATUS_LABELS[booking.status] || booking.status,
           value: booking.quotation?.actualPrice
             ? Number(booking.quotation.actualPrice)
             : 0,
@@ -464,10 +438,10 @@ export class ProviderDashboardService {
 
   private providerReportTitle(type: ProviderReportType) {
     const labels: Record<ProviderReportType, string> = {
-      overview: 'Bao cao tong quan',
-      revenue: 'Bao cao doanh thu',
-      status: 'Bao cao trang thai don',
-      bookings: 'Bao cao danh sach don',
+      overview: 'Báo cáo tổng quan',
+      revenue: 'Báo cáo doanh thu',
+      status: 'Báo cáo trạng thái đơn',
+      bookings: 'Báo cáo danh sách đơn',
     };
     return labels[type];
   }
@@ -487,14 +461,64 @@ export class ProviderDashboardService {
 
   private describeProviderDashboardFilters(filters: NormalizedProviderFilters) {
     const parts = [
-      `loai ${this.providerReportTitle(filters.reportType).toLowerCase()}`,
-      filters.from ? `tu ${filters.from.toISOString().slice(0, 10)}` : '',
-      filters.to ? `den ${filters.to.toISOString().slice(0, 10)}` : '',
-      filters.status ? `trang thai ${filters.status}` : '',
-      filters.categoryId ? `danh muc #${filters.categoryId}` : '',
-      filters.serviceId ? `dich vu #${filters.serviceId}` : '',
-      `nhom theo ${filters.groupBy}`,
+      `loại ${this.providerReportTitle(filters.reportType).toLowerCase()}`,
+      filters.from ? `từ ${this.formatDate(filters.from)}` : '',
+      filters.to ? `đến ${this.formatDate(filters.to)}` : '',
+      filters.status
+        ? `trạng thái ${STATUS_LABELS[filters.status] || filters.status}`
+        : '',
+      filters.categoryId ? `danh mục #${filters.categoryId}` : '',
+      filters.serviceId ? `dịch vụ #${filters.serviceId}` : '',
+      `nhóm theo ${this.groupByLabel(filters.groupBy)}`,
     ].filter(Boolean);
-    return parts.join(', ') || 'tat ca du lieu';
+    return parts.join(', ') || 'tất cả dữ liệu';
+  }
+
+  private getFonts() {
+    return {
+      Helvetica: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique',
+      },
+    };
+  }
+
+  private simpleTable(headers: string[], rows: Array<Array<string | number>>) {
+    return {
+      table: {
+        headerRows: 1,
+        widths: headers.map(() => '*'),
+        body: [
+          headers.map((header) => ({ text: header, bold: true })),
+          ...(rows.length ? rows : [headers.map(() => '-')]),
+        ],
+      },
+      layout: 'lightHorizontalLines',
+    };
+  }
+
+  private formatDateTime(date: Date) {
+    return new Intl.DateTimeFormat('vi-VN', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    }).format(date);
+  }
+
+  private formatDate(date: Date) {
+    return new Intl.DateTimeFormat('vi-VN', {
+      dateStyle: 'short',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    }).format(date);
+  }
+
+  private formatCurrency(value: number) {
+    return `${Math.round(value || 0).toLocaleString('vi-VN')} VND`;
+  }
+
+  private groupByLabel(groupBy: 'day' | 'week' | 'month') {
+    return { day: 'ngày', week: 'tuần', month: 'tháng' }[groupBy];
   }
 }

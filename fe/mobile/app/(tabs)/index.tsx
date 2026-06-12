@@ -9,11 +9,18 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { Button, Text, TouchableRipple, useTheme } from "react-native-paper";
+import {
+  Button,
+  SegmentedButtons,
+  Text,
+  TouchableRipple,
+  useTheme,
+} from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LineChart, PieChart } from "react-native-chart-kit";
 import * as FileSystem from "expo-file-system/legacy";
+import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useAuthStore } from "../../features/auth/auth.store";
 import { routes } from "../../lib/route-utils";
@@ -42,6 +49,7 @@ interface Stats {
   doneCount: number;
   filterSummary?: string;
   revenueData?: Array<{ period: string; revenue: number }>;
+  statusData?: Array<{ status: string; count: number }>;
 }
 
 type Message = {
@@ -96,6 +104,89 @@ function displayDate(value?: string) {
   return new Date(value).toLocaleDateString("vi-VN");
 }
 
+function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function createProviderReportPdfFallback({
+  stats,
+  reportLabel,
+  reportSummary,
+  formatCurrency,
+}: {
+  stats: Stats | null;
+  reportLabel: string;
+  reportSummary: string;
+  formatCurrency: (amount: number) => string;
+}) {
+  const rows = [
+    ["Tổng đơn", stats?.totalBookings ?? 0],
+    ["Doanh thu", formatCurrency(stats?.totalRevenue ?? 0)],
+    [
+      "Đánh giá",
+      stats?.avgRating ? `${Number(stats.avgRating).toFixed(1)}/5` : "—",
+    ],
+    [
+      "Tỷ lệ hủy",
+      stats?.cancelRate != null
+        ? `${Number(stats.cancelRate).toFixed(1)}%`
+        : "—",
+    ],
+    ["Chờ xác nhận", stats?.pendingCount ?? 0],
+    ["Đang thực hiện", stats?.inProgressCount ?? 0],
+    ["Hoàn thành", stats?.doneCount ?? 0],
+  ];
+
+  const revenueRows = stats?.revenueData?.length
+    ? stats.revenueData
+    : [{ period: "Chưa có dữ liệu", revenue: 0 }];
+
+  return `<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; margin: 28px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    h2 { font-size: 15px; margin: 22px 0 8px; }
+    .muted { color: #475569; font-size: 12px; margin-bottom: 18px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 9px 6px; text-align: left; font-size: 12px; }
+    th { background: #f1f5f9; font-weight: 700; }
+    .signature { display: flex; justify-content: space-between; margin-top: 40px; color: #475569; }
+  </style>
+</head>
+<body>
+  <h1>Zup Đối Tác</h1>
+  <div class="muted">${escapeHtml(reportLabel)} · ${escapeHtml(reportSummary)}<br/>Xuất lúc ${escapeHtml(new Date().toLocaleString("vi-VN"))}</div>
+  <h2>Chỉ số chính</h2>
+  <table>
+    <tbody>${rows
+      .map(
+        ([label, value]) =>
+          `<tr><td>${escapeHtml(label)}</td><td><strong>${escapeHtml(value)}</strong></td></tr>`,
+      )
+      .join("")}</tbody>
+  </table>
+  <h2>Doanh thu theo kỳ</h2>
+  <table>
+    <thead><tr><th>Kỳ</th><th>Doanh thu</th></tr></thead>
+    <tbody>${revenueRows
+      .map(
+        (item) =>
+          `<tr><td>${escapeHtml(item.period)}</td><td>${escapeHtml(formatCurrency(Number(item.revenue)))}</td></tr>`,
+      )
+      .join("")}</tbody>
+  </table>
+  <div class="signature"><span>Nhà cung cấp</span><span>Người xác nhận</span></div>
+</body>
+</html>`;
+}
+
 async function getFreshAccessToken() {
   const refreshToken = await storage.getRefreshToken();
   if (!refreshToken) return storage.getAccessToken();
@@ -128,12 +219,13 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { user } = useAuthStore();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
   const [message, setMessage] = useState<Message>(null);
   const [period, setPeriod] = useState<PeriodKey>("month");
   const [groupBy, setGroupBy] = useState<"day" | "week" | "month">("week");
@@ -191,13 +283,21 @@ export default function DashboardScreen() {
   }, [fetchData]);
 
   const handleExport = async (type: "pdf" | "excel") => {
-    setExporting(true);
+    setExporting(type);
     setMessage(null);
     try {
       const token = await getFreshAccessToken();
       if (!token) throw new Error("Phiên đăng nhập đã hết hạn.");
 
-      const query = new URLSearchParams(reportParams).toString();
+      const query = new URLSearchParams(
+        Object.entries(reportParams).reduce(
+          (acc, [key, value]) => {
+            if (value) acc[key] = value;
+            return acc;
+          },
+          {} as Record<string, string>,
+        ),
+      ).toString();
       const extension = type === "pdf" ? "pdf" : "xlsx";
       const range = `${reportParams.from || "tat-ca"}-${reportParams.to || new Date().toISOString().slice(0, 10)}`;
       const fileUri = `${FileSystem.documentDirectory}provider-${reportType}-${range}-${Date.now()}.${extension}`;
@@ -224,15 +324,46 @@ export default function DashboardScreen() {
         tone: "success",
         text: `Đã tạo báo cáo ${selectedReportLabel} (${type.toUpperCase()}).`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      if (type === "pdf") {
+        try {
+          const html = createProviderReportPdfFallback({
+            stats,
+            reportLabel: selectedReportLabel,
+            reportSummary,
+            formatCurrency,
+          });
+          const result = await Print.printToFileAsync({
+            html,
+            base64: false,
+          });
+          const isAvailable = await Sharing.isAvailableAsync();
+          if (isAvailable) {
+            await Sharing.shareAsync(result.uri, {
+              mimeType: "application/pdf",
+              dialogTitle: `Báo cáo ${selectedReportLabel}`,
+            });
+          }
+          setMessage({
+            tone: "warning",
+            text: "Máy chủ chưa xuất được PDF, app đã tạo bản báo cáo tạm để bạn chia sẻ.",
+          });
+          return;
+        } catch {
+          // Fall through to the friendly error below.
+        }
+      }
+
+      const friendlyMessage =
+        error instanceof Error
+          ? error.message
+          : "Không thể xuất báo cáo. Vui lòng thử lại sau.";
       setMessage({
         tone: "error",
-        text:
-          error?.message ||
-          "Không thể xuất báo cáo. Vui lòng thử lại sau.",
+        text: friendlyMessage,
       });
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
@@ -259,19 +390,19 @@ export default function DashboardScreen() {
       name: "Chờ xác nhận",
       population: stats?.pendingCount || 0,
       color: Colors.light.statusPending,
-      legendFontColor: Colors.light.textSecondary,
+      legendFontColor: activeColors.textSecondary,
     },
     {
       name: "Đang làm",
       population: stats?.inProgressCount || 0,
       color: Colors.light.statusInProgress,
-      legendFontColor: Colors.light.textSecondary,
+      legendFontColor: activeColors.textSecondary,
     },
     {
       name: "Hoàn thành",
       population: stats?.doneCount || 0,
       color: Colors.light.statusDone,
-      legendFontColor: Colors.light.textSecondary,
+      legendFontColor: activeColors.textSecondary,
     },
   ];
   const hasStatusData = statusChartData.some((item) => item.population > 0);
@@ -285,7 +416,7 @@ export default function DashboardScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={[Colors.light.primary]}
+          colors={[activeColors.primary]}
         />
       }
     >
@@ -302,7 +433,7 @@ export default function DashboardScreen() {
             <MaterialCommunityIcons
               name="bell-outline"
               size={22}
-              color={Colors.light.text}
+            color={activeColors.text}
             />
           </TouchableRipple>
         }
@@ -319,11 +450,11 @@ export default function DashboardScreen() {
         accessibilityLabel="Kiểm tra trạng thái nhận đơn"
       >
         <View style={styles.onlineText}>
-          <View style={[styles.onlineIcon, { backgroundColor: `${Colors.light.success}18` }]}>
+          <View style={[styles.onlineIcon, { backgroundColor: `${activeColors.success}18` }]}>
             <MaterialCommunityIcons
               name="briefcase-check-outline"
               size={24}
-              color={Colors.light.success}
+              color={activeColors.success}
             />
           </View>
           <View style={{ flex: 1 }}>
@@ -337,7 +468,7 @@ export default function DashboardScreen() {
         </View>
         <ProviderStatusChip
           label={user?.status === "ACTIVE" ? "Hoạt động" : "Kiểm tra"}
-          color={user?.status === "ACTIVE" ? Colors.light.success : Colors.light.warning}
+          color={user?.status === "ACTIVE" ? activeColors.success : activeColors.warning}
         />
       </ProviderCard>
 
@@ -354,52 +485,47 @@ export default function DashboardScreen() {
           <MaterialCommunityIcons
             name="tune-variant"
             size={22}
-            color={Colors.light.primary}
+            color={activeColors.primary}
           />
         </View>
         <Text variant="labelSmall" style={styles.filterLabel}>
           Thời gian
         </Text>
-        <View style={styles.filterRow}>
-          {PERIOD_OPTIONS.map((item) => (
-            <Button
-              key={item.key}
-              mode={period === item.key ? "contained" : "outlined"}
-              compact
-              onPress={() => setPeriod(item.key as PeriodKey)}
-              style={styles.filterButton}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </View>
+        <SegmentedButtons
+          value={period}
+          onValueChange={(value) => setPeriod(value as PeriodKey)}
+          buttons={PERIOD_OPTIONS.map((item) => ({
+            value: item.key,
+            label: item.label,
+          }))}
+          style={styles.segmented}
+        />
         <Text variant="labelSmall" style={styles.filterLabel}>
           Nhóm số liệu
         </Text>
-        <View style={styles.filterRow}>
-          {GROUP_OPTIONS.map((item) => (
-            <Button
-              key={item.key}
-              mode={groupBy === item.key ? "contained-tonal" : "outlined"}
-              compact
-              onPress={() => setGroupBy(item.key as "day" | "week" | "month")}
-              style={styles.filterButton}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </View>
+        <SegmentedButtons
+          value={groupBy}
+          onValueChange={(value) =>
+            setGroupBy(value as "day" | "week" | "month")
+          }
+          buttons={GROUP_OPTIONS.map((item) => ({
+            value: item.key,
+            label: item.label,
+          }))}
+          style={styles.segmented}
+        />
         <Text variant="labelSmall" style={styles.filterLabel}>
           Loại báo cáo
         </Text>
-        <View style={styles.filterRow}>
+        <View style={styles.reportTypeGrid}>
           {REPORT_TYPE_OPTIONS.map((item) => (
             <Button
               key={item.key}
               mode={reportType === item.key ? "contained" : "outlined"}
               compact
               onPress={() => setReportType(item.key)}
-              style={styles.filterButton}
+              style={styles.reportTypeButton}
+              contentStyle={styles.reportTypeContent}
             >
               {item.label}
             </Button>
@@ -453,7 +579,7 @@ export default function DashboardScreen() {
           <View style={styles.chipRow}>
             <ProviderStatusChip
               label={`Chờ xác nhận: ${stats?.pendingCount ?? 0}`}
-              color={Colors.light.statusPending}
+              color={activeColors.statusPending}
               onPress={() =>
                 router.push({
                   pathname: routes.tabs.bookings,
@@ -463,7 +589,7 @@ export default function DashboardScreen() {
             />
             <ProviderStatusChip
               label={`Đang thực hiện: ${stats?.inProgressCount ?? 0}`}
-              color={Colors.light.statusInProgress}
+              color={activeColors.statusInProgress}
               onPress={() =>
                 router.push({
                   pathname: routes.tabs.bookings,
@@ -473,7 +599,7 @@ export default function DashboardScreen() {
             />
             <ProviderStatusChip
               label={`Hoàn thành: ${stats?.doneCount ?? 0}`}
-              color={Colors.light.statusDone}
+              color={activeColors.statusDone}
               onPress={() =>
                 router.push({
                   pathname: routes.tabs.bookings,
@@ -527,12 +653,12 @@ export default function DashboardScreen() {
               width={chartWidth}
               height={220}
               chartConfig={{
-                backgroundColor: Colors.light.surface,
-                backgroundGradientFrom: Colors.light.surface,
-                backgroundGradientTo: Colors.light.surface,
+                backgroundColor: activeColors.surface,
+                backgroundGradientFrom: activeColors.surface,
+                backgroundGradientTo: activeColors.surface,
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
-                labelColor: () => Colors.light.textSecondary,
+                labelColor: () => activeColors.textSecondary,
                 propsForDots: { r: "3" },
               }}
               bezier
@@ -556,7 +682,7 @@ export default function DashboardScreen() {
               color={Colors.light.error}
             />
             <Text variant="labelMedium" style={styles.exportLabel}>
-              PDF
+              {exporting === "pdf" ? "Đang tạo…" : "PDF"}
             </Text>
           </View>
         </ProviderCard>
@@ -572,7 +698,7 @@ export default function DashboardScreen() {
               color={Colors.light.success}
             />
             <Text variant="labelMedium" style={styles.exportLabel}>
-              Excel
+              {exporting === "excel" ? "Đang tạo…" : "Excel"}
             </Text>
           </View>
         </ProviderCard>
@@ -668,12 +794,9 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.light.surface,
     borderWidth: 1,
-    borderColor: Colors.light.border,
   },
   onlineCard: {
-    borderColor: Colors.light.borderStrong,
   },
   onlineContent: {
     minHeight: 76,
@@ -696,9 +819,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   kpiRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  cardTitle: { color: Colors.light.text, fontWeight: "700" },
+  cardTitle: { fontWeight: "700" },
   cardDescription: {
-    color: Colors.light.textSecondary,
     marginTop: 2,
     lineHeight: 18,
   },
@@ -709,30 +831,35 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   filterLabel: {
-    color: Colors.light.textSecondary,
     fontWeight: "700",
     marginTop: 14,
   },
-  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
-  filterButton: { borderRadius: 12 },
+  segmented: { marginTop: 10 },
+  reportTypeGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10,
+  },
+  reportTypeButton: { borderRadius: 10, minWidth: "47%" },
+  reportTypeContent: { minHeight: 42 },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chartCard: { paddingHorizontal: 0, alignItems: "center" },
   chart: { borderRadius: 12 },
   exportRow: { flexDirection: "row", gap: 12 },
   exportCard: { flex: 1 },
   exportContent: { alignItems: "center", gap: 8 },
-  exportLabel: { color: Colors.light.text, fontWeight: "700" },
+  exportLabel: { fontWeight: "700" },
   bookingRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   bookingCode: { color: Colors.light.primary, fontWeight: "700" },
-  bookingTitle: { color: Colors.light.text, fontWeight: "700", marginTop: 4 },
-  bookingMeta: { color: Colors.light.textSecondary, marginTop: 2 },
+  bookingTitle: { fontWeight: "700", marginTop: 4 },
+  bookingMeta: { marginTop: 2 },
   bookingFooter: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
   },
-  bookingDate: { color: Colors.light.textSecondary, marginLeft: 4 },
+  bookingDate: { marginLeft: 4 },
 });

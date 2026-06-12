@@ -89,6 +89,7 @@ export function ProviderCard({
   accessibilityLabel?: string;
 }) {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
   return (
     <Card
       mode="contained"
@@ -99,7 +100,7 @@ export function ProviderCard({
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.outlineVariant,
-          boxShadow: theme.dark ? '0 10px 30px rgba(0, 0, 0, 0.5)' : '0 10px 30px rgba(15, 23, 42, 0.08)',
+          boxShadow: activeColors.cardShadow,
         },
         style,
       ]}
@@ -174,7 +175,10 @@ export function ProviderStatusChip({
       onPress={onPress}
       style={[
         styles.statusChip,
-        { backgroundColor: selected ? chipColor : `${chipColor}16`, borderColor: `${chipColor}40` },
+        {
+          backgroundColor: selected ? chipColor : `${chipColor}14`,
+          borderColor: `${chipColor}45`,
+        },
       ]}
       textStyle={[styles.statusChipText, { color: selected ? '#FFFFFF' : chipColor }]}
     >
@@ -319,11 +323,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
   },
   cardContent: {
-    padding: 16,
+    padding: 14,
   },
   metricCard: {
     flex: 1,
@@ -334,9 +338,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   metricIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -352,11 +356,12 @@ const styles = StyleSheet.create({
   },
   statusChip: {
     borderWidth: 1,
-    borderRadius: 999,
+    borderRadius: 10,
     minHeight: 36,
+    justifyContent: 'center',
   },
   statusChipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
   message: {
@@ -364,7 +369,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
   },
   messageText: {
@@ -380,7 +385,7 @@ const styles = StyleSheet.create({
   emptyIcon: {
     width: 64,
     height: 64,
-    borderRadius: 20,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -396,7 +401,7 @@ const styles = StyleSheet.create({
   },
   emptyButton: {
     marginTop: 16,
-    borderRadius: 999,
+    borderRadius: 10,
   },
   loadingState: {
     alignItems: 'center',
@@ -419,7 +424,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: 10,
   },
   sectionActionText: {
     fontWeight: '700',

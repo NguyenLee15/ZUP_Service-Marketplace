@@ -2,7 +2,7 @@
  * Wallet Tab - Provider wallet, VNPay sandbox and manual transfer requests.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Chip, Modal, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -38,10 +38,16 @@ type WalletRequest = {
 };
 
 const MANUAL_BANK_INFO = {
-  bankName: 'MB Bank',
-  accountNumber: '0583489535',
-  holder: 'LE VAN NGUYEN',
+  bankName: process.env.EXPO_PUBLIC_PROVIDER_DEPOSIT_BANK_NAME || '',
+  accountNumber: process.env.EXPO_PUBLIC_PROVIDER_DEPOSIT_ACCOUNT_NUMBER || '',
+  holder: process.env.EXPO_PUBLIC_PROVIDER_DEPOSIT_ACCOUNT_HOLDER || '',
 };
+
+const MANUAL_DEPOSIT_ENABLED = Boolean(
+  MANUAL_BANK_INFO.bankName &&
+    MANUAL_BANK_INFO.accountNumber &&
+    MANUAL_BANK_INFO.holder,
+);
 
 function generateManualDepositCode() {
   const now = new Date();
@@ -67,7 +73,9 @@ export default function WalletScreen() {
   const [hasMore, setHasMore] = useState(true);
 
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const [depositMode, setDepositMode] = useState<'vnpay' | 'manual'>('manual');
+  const [depositMode, setDepositMode] = useState<'vnpay' | 'manual'>(
+    MANUAL_DEPOSIT_ENABLED ? 'manual' : 'vnpay',
+  );
   const [depositAmount, setDepositAmount] = useState('');
   const [transferCode, setTransferCode] = useState('');
   const [depositError, setDepositError] = useState('');
@@ -151,7 +159,12 @@ export default function WalletScreen() {
   };
 
   const openDepositModal = () => {
-    if (!transferCode) setTransferCode(generateManualDepositCode());
+    if (MANUAL_DEPOSIT_ENABLED && !transferCode) {
+      setTransferCode(generateManualDepositCode());
+    }
+    if (!MANUAL_DEPOSIT_ENABLED) {
+      setDepositMode('vnpay');
+    }
     setShowDepositModal(true);
   };
 
@@ -165,7 +178,7 @@ export default function WalletScreen() {
     setDepositError('');
     setDepositLoading(true);
     try {
-      if (depositMode === 'manual') {
+      if (depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED) {
         const code = transferCode || generateManualDepositCode();
         await walletApi.createManualDeposit({ amount, transferCode: code });
         setShowDepositModal(false);
@@ -454,28 +467,35 @@ export default function WalletScreen() {
           }}
           contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
         >
-          <Text variant="titleMedium" style={styles.modalTitle}>
-            Nạp tiền vào ví
-          </Text>
-          <SegmentedButtons
-            value={depositMode}
-            onValueChange={value => {
-              setDepositMode(value as 'vnpay' | 'manual');
-              setDepositError('');
-              if (value === 'manual' && !transferCode) setTransferCode(generateManualDepositCode());
-            }}
-            buttons={[
-              { value: 'manual', label: 'Chuyển khoản' },
-              { value: 'vnpay', label: 'VNPAY sandbox' },
-            ]}
-          />
+          <ScrollView
+            contentContainerStyle={styles.modalScroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Text variant="titleMedium" style={styles.modalTitle}>
+              Nạp tiền vào ví
+            </Text>
+          {MANUAL_DEPOSIT_ENABLED ? (
+            <SegmentedButtons
+              value={depositMode}
+              onValueChange={value => {
+                setDepositMode(value as 'vnpay' | 'manual');
+                setDepositError('');
+                if (value === 'manual' && !transferCode) setTransferCode(generateManualDepositCode());
+              }}
+              buttons={[
+                { value: 'manual', label: 'Chuyển khoản' },
+                { value: 'vnpay', label: 'VNPAY sandbox' },
+              ]}
+            />
+          ) : null}
           <Text variant="bodySmall" style={styles.modalDescription}>
-            {depositMode === 'manual'
+            {depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED
               ? 'Chuyển khoản thật vào tài khoản nền tảng, sau đó gửi yêu cầu để admin xác nhận.'
-              : 'Thanh toán mô phỏng qua VNPAY sandbox.'}
+              : 'Thanh toán thử nghiệm qua VNPAY sandbox. Giao dịch này chưa thu tiền thật.'}
           </Text>
 
-          {depositMode === 'manual' && (
+          {depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED && (
             <View style={styles.bankInfo}>
               <Text variant="labelLarge" style={styles.bankInfoTitle}>
                 Thông tin nhận chuyển khoản
@@ -511,7 +531,7 @@ export default function WalletScreen() {
             style={styles.amountInput}
           />
 
-          {depositMode === 'manual' && (
+          {depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED && (
             <TextInput
               label="Mã giao dịch tự tạo"
               value={transferCode}
@@ -538,11 +558,12 @@ export default function WalletScreen() {
             style={styles.primaryButton}
             contentStyle={styles.buttonContent}
           >
-            {depositLoading ? 'Đang xử lý...' : depositMode === 'manual' ? 'Gửi yêu cầu nạp' : 'Thanh toán qua VNPAY'}
+            {depositLoading ? 'Đang xử lý...' : depositMode === 'manual' ? 'Gửi yêu cầu nạp' : 'Thanh toán thử nghiệm qua VNPAY'}
           </Button>
-          <Button mode="text" onPress={() => setShowDepositModal(false)} style={styles.cancelButton}>
-            Hủy
-          </Button>
+            <Button mode="text" onPress={() => setShowDepositModal(false)} style={styles.cancelButton}>
+              Hủy
+            </Button>
+          </ScrollView>
         </Modal>
 
         <Modal
@@ -553,9 +574,14 @@ export default function WalletScreen() {
           }}
           contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
         >
-          <Text variant="titleMedium" style={styles.modalTitle}>
-            Rút tiền về ngân hàng
-          </Text>
+          <ScrollView
+            contentContainerStyle={styles.modalScroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Text variant="titleMedium" style={styles.modalTitle}>
+              Rút tiền về ngân hàng
+            </Text>
           <Text variant="bodySmall" style={styles.modalDescription}>
             Admin sẽ chuyển khoản thủ công sau khi kiểm tra yêu cầu. Số tiền tối thiểu là 50.000đ.
           </Text>
@@ -611,9 +637,10 @@ export default function WalletScreen() {
           >
             {withdrawLoading ? 'Đang gửi...' : 'Gửi yêu cầu rút'}
           </Button>
-          <Button mode="text" onPress={() => setShowWithdrawModal(false)} style={styles.cancelButton}>
-            Hủy
-          </Button>
+            <Button mode="text" onPress={() => setShowWithdrawModal(false)} style={styles.cancelButton}>
+              Hủy
+            </Button>
+          </ScrollView>
         </Modal>
       </Portal>
     </ProviderScreen>
@@ -742,8 +769,11 @@ const styles = StyleSheet.create({
   },
   modal: {
     margin: 20,
-    padding: 20,
-    borderRadius: 18,
+    maxHeight: '86%',
+    borderRadius: 14,
+  },
+  modalScroll: {
+    padding: 18,
     gap: 12,
   },
   modalTitle: {

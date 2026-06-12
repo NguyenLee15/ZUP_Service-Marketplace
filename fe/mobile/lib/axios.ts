@@ -3,14 +3,14 @@
  * - Tự động gắn Authorization header
  * - Tự động refresh token khi 401
  */
-import axios from 'axios';
-import { API_BASE_URL } from '../constants/api';
-import { storage } from './storage';
+import axios from "axios";
+import { API_BASE_URL } from "../constants/api";
+import { storage } from "./storage";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
 });
 
 // Request interceptor — gắn token
@@ -26,10 +26,34 @@ api.interceptors.request.use(async (config) => {
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
-  reject: (error: any) => void;
+  reject: (error: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const AUTH_ENDPOINTS_WITHOUT_REFRESH = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/provider/google",
+  "/auth/refresh",
+  "/auth/verify-otp",
+  "/auth/forgot-password",
+];
+
+const shouldSkipRefresh = (url?: string) => {
+  if (!url) return false;
+  return AUTH_ENDPOINTS_WITHOUT_REFRESH.some((endpoint) =>
+    url.startsWith(endpoint),
+  );
+};
+
+const createSessionExpiredError = () => {
+  const error = new Error(
+    "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  );
+  error.name = "SESSION_EXPIRED";
+  return error;
+};
+
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token!);
@@ -41,23 +65,10 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    const isAuthEndpoint =
-      originalRequest?.url?.includes('/auth/login') ||
-      originalRequest?.url?.includes('/auth/register') ||
-      originalRequest?.url?.includes('/auth/verify-otp') ||
-      originalRequest?.url?.includes('/auth/resend-otp') ||
-      originalRequest?.url?.includes('/auth/forgot-password') ||
-      originalRequest?.url?.includes('/auth/reset-password') ||
-      originalRequest?.url?.includes('/auth/change-password') ||
-      originalRequest?.url?.includes('/auth/google') ||
-      originalRequest?.url?.includes('/auth/provider/google') ||
-      originalRequest?.url?.includes('/auth/refresh');
-
     if (
       error.response?.status === 401 &&
-      originalRequest &&
       !originalRequest._retry &&
-      !isAuthEndpoint
+      !shouldSkipRefresh(originalRequest?.url)
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -76,7 +87,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = await storage.getRefreshToken();
-        if (!refreshToken) throw new Error('No refresh token');
+        if (!refreshToken) throw new Error("No refresh token");
 
         const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
           refreshToken,
@@ -94,7 +105,7 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         await storage.clearAll();
         // Navigation sẽ redirect về login qua auth check trong root layout
-        return Promise.reject(refreshError);
+        return Promise.reject(createSessionExpiredError());
       } finally {
         isRefreshing = false;
       }

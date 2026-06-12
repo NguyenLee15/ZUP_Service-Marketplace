@@ -55,6 +55,7 @@ export default function BookingsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ status?: string }>();
   const bookingSignal = useNotificationStore((state) => state.bookingSignal);
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
 
   const [activeTab, setActiveTab] = useState(params.status || '');
   const [bookings, setBookings] = useState<any[]>([]);
@@ -180,7 +181,7 @@ export default function BookingsScreen() {
             <MaterialCommunityIcons
               name="calendar-clock-outline"
               size={14}
-              color={Colors.light.textSecondary}
+              color={activeColors.textSecondary}
             />
             <Text variant="labelSmall" style={styles.footerText}>
               {item.desiredTime
@@ -210,7 +211,7 @@ export default function BookingsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[Colors.light.primary]}
+            colors={[activeColors.primary]}
           />
         }
         onEndReached={onEndReached}
@@ -231,7 +232,7 @@ export default function BookingsScreen() {
               placeholder="Tìm mã đơn, khách hàng, dịch vụ…"
               style={styles.search}
               inputStyle={styles.searchInput}
-              iconColor={Colors.light.textSecondary}
+              iconColor={activeColors.textSecondary}
               accessibilityLabel="Tìm kiếm đơn hàng"
             />
 
@@ -248,7 +249,7 @@ export default function BookingsScreen() {
                   color={
                     activeTab === tab.value
                       ? Colors.light.primary
-                      : Colors.light.textSecondary
+                      : activeColors.textSecondary
                   }
                   onPress={() => setActiveTab(tab.value)}
                 />
@@ -260,7 +261,7 @@ export default function BookingsScreen() {
           loading ? (
             <ActivityIndicator
               style={{ marginTop: 40 }}
-              color={Colors.light.primary}
+              color={activeColors.primary}
             />
           ) : (
             <ProviderEmptyState
@@ -282,7 +283,7 @@ export default function BookingsScreen() {
           hasMore && bookings.length > 0 ? (
             <ActivityIndicator
               style={{ paddingVertical: 16 }}
-              color={Colors.light.primary}
+              color={activeColors.primary}
             />
           ) : null
         }
@@ -322,20 +323,17 @@ const styles = StyleSheet.create({
   listContent: { padding: 16, paddingBottom: 112, gap: 10 },
   headerContent: { gap: 12, marginBottom: 2 },
   search: {
-    borderRadius: 14,
-    backgroundColor: Colors.light.surface,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.light.border,
-    boxShadow: Colors.light.cardShadow,
   },
   searchInput: { fontSize: 14 },
   tabRow: { gap: 8, paddingVertical: 2 },
   bookingCard: { marginBottom: 0 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   bookingCode: { color: Colors.light.primary, fontWeight: '700' },
-  bookingTitle: { color: Colors.light.text, fontWeight: '700', marginTop: 4 },
+  bookingTitle: { fontWeight: '700', marginTop: 4 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 9 },
-  infoText: { color: Colors.light.textSecondary, flex: 1 },
+  infoText: { flex: 1 },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -343,11 +341,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
     gap: 8,
   },
   footerItem: { flexDirection: 'row', alignItems: 'center' },
-  footerText: { color: Colors.light.textSecondary, marginLeft: 4 },
+  footerText: { marginLeft: 4 },
   price: {
     color: Colors.light.primary,
     fontWeight: '700',
