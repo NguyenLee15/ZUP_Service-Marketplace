@@ -52,6 +52,9 @@ type LoginErrorLike = {
 const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const googleAndroidRedirectScheme = googleAndroidClientId
+  ? `com.googleusercontent.apps.${googleAndroidClientId.replace(".apps.googleusercontent.com", "")}`
+  : undefined;
 const googleProviderConfigured = Boolean(
   Platform.select({
     android: googleAndroidClientId,
@@ -533,7 +536,9 @@ function ProviderGoogleLoginButton({
     iosClientId: googleIosClientId,
     webClientId: googleWebClientId,
     selectAccount: true,
-  });
+  }, Platform.OS === "android" && googleAndroidRedirectScheme
+    ? { native: `${googleAndroidRedirectScheme}:/oauthredirect` }
+    : {});
 
   useEffect(() => {
     if (response?.type === "success") {

@@ -7,7 +7,10 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "scheme": "homeservice-provider",
+    "scheme": [
+      "homeservice-provider",
+      "com.googleusercontent.apps.422532889022-io4134s1uuc7nstujs97grm3qagfnb2e"
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
