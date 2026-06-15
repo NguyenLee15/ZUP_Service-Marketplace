@@ -4,9 +4,12 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.min(Math.max(insets.bottom, 6), 18);
 
   return (
     <Tabs
@@ -14,33 +17,35 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
-          left: 12,
-          right: 12,
-          bottom: 12,
+          left: 10,
+          right: 10,
+          bottom: 6,
           backgroundColor: theme.dark
-            ? 'rgba(17, 24, 39, 0.96)'
+            ? 'rgba(23, 32, 51, 0.97)'
             : 'rgba(255, 255, 255, 0.96)',
           borderTopColor: theme.colors.outlineVariant,
           borderTopWidth: 1,
-          height: 66,
-          paddingBottom: 8,
-          paddingTop: 6,
-          borderRadius: 18,
-          elevation: 8,
+          height: 52 + bottomInset,
+          paddingBottom: bottomInset,
+          paddingTop: 4,
+          borderRadius: 15,
+          elevation: 6,
           shadowColor: '#000',
-          shadowOpacity: 0.28,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: theme.dark ? 0.24 : 0.10,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 6 },
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
+          fontSize: 10.5,
+          fontWeight: '700',
         },
         tabBarItemStyle: {
-          borderRadius: 16,
-          minHeight: 48,
+          borderRadius: 12,
+          minHeight: 44,
+          paddingTop: 2,
         },
       }}
     >

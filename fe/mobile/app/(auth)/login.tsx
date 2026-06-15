@@ -67,11 +67,16 @@ WebBrowser.maybeCompleteAuthSession();
 
 function getLoginErrorMessage(error: unknown, fallback: string) {
   const candidate = error as LoginErrorLike;
-  return (
+  const message =
     candidate.response?.data?.error?.message ||
-    candidate.response?.data?.message ||
-    fallback
-  );
+    candidate.response?.data?.message;
+
+  if (!message) return fallback;
+  if (/refreshToken|credential|client id|invalid_request|jwt|token/i.test(message)) {
+    return fallback;
+  }
+
+  return message;
 }
 
 export default function LoginScreen() {
@@ -433,7 +438,7 @@ export default function LoginScreen() {
             <ProviderGoogleLoginButton
               disabled={loading}
               onCredential={handleGoogleCredential}
-              onError={() => setError(t("auth.google_failed"))}
+              onError={(message) => setError(message || t("auth.google_failed"))}
             />
           )}
         </View>
@@ -527,7 +532,7 @@ function ProviderGoogleLoginButton({
 }: {
   disabled: boolean;
   onCredential: (credential: string) => Promise<void>;
-  onError: () => void;
+  onError: (message?: string) => void;
 }) {
   const theme = useTheme();
   const handledCredentialRef = useRef<string | null>(null);
@@ -560,7 +565,11 @@ function ProviderGoogleLoginButton({
       mode="outlined"
       icon="google"
       onPress={() => {
-        void promptAsync();
+        promptAsync().then((result) => {
+          if (result.type === "error") {
+            onError(t("auth.google_failed"));
+          }
+        }).catch(() => onError(t("auth.google_failed")));
       }}
       disabled={disabled || !request}
       style={[styles.googleBtn, { borderColor: theme.colors.outlineVariant }]}
@@ -578,8 +587,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: Platform.OS === "ios" ? 44 : 20,
-    height: Platform.OS === "ios" ? 88 : 68,
+    paddingTop: Platform.OS === "ios" ? 42 : 16,
+    height: Platform.OS === "ios" ? 84 : 62,
     borderBottomWidth: 1,
   },
   backBtn: { margin: 0 },
@@ -591,17 +600,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 22,
     paddingBottom: 32,
   },
   logoWrap: {
     alignItems: "center",
-    marginBottom: 28,
+    marginBottom: 22,
   },
   logoImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 16,
+    width: 64,
+    height: 64,
+    borderRadius: 14,
   },
   form: {
     gap: 12,

@@ -34,7 +34,7 @@ export function CustomerScreen({
       style={[styles.screen, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: 104 + Math.max(insets.bottom, 12) },
+        { paddingBottom: 82 + Math.min(Math.max(insets.bottom, 6), 18) },
         contentStyle,
       ]}
       contentInsetAdjustmentBehavior="automatic"

@@ -19,6 +19,6 @@ export const stackScreenOptions = {
 };
 
 export const tabLabelStyle = {
-  fontSize: 11,
+  fontSize: 10.5,
   fontWeight: '700' as const,
 };

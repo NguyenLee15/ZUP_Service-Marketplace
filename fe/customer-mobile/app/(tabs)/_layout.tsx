@@ -7,7 +7,7 @@ import { tabLabelStyle } from '../../constants/navigation';
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const bottomInset = Math.max(insets.bottom, 10);
+  const bottomInset = Math.min(Math.max(insets.bottom, 6), 18);
 
   return (
     <Tabs
@@ -18,24 +18,25 @@ export default function TabsLayout() {
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
-          left: 12,
-          right: 12,
-          bottom: 10,
-          height: 58 + bottomInset,
+          left: 10,
+          right: 10,
+          bottom: 6,
+          height: 52 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 6,
-          borderRadius: 20,
+          paddingTop: 4,
+          borderRadius: 15,
           borderTopWidth: 1,
           borderTopColor: theme.colors.outlineVariant,
           backgroundColor: theme.colors.surface,
           shadowColor: '#000000',
-          shadowOpacity: 0.08,
-          shadowRadius: 14,
+          shadowOpacity: theme.dark ? 0.24 : 0.10,
+          shadowRadius: 12,
           shadowOffset: { width: 0, height: 6 },
-          elevation: 8,
+          elevation: 6,
         },
         tabBarItemStyle: {
-          paddingTop: 4,
+          minHeight: 44,
+          paddingTop: 2,
         },
         tabBarLabelStyle: tabLabelStyle,
       }}

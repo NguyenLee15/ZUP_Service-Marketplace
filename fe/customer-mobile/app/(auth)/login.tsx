@@ -34,6 +34,31 @@ type AuthPayload = {
   user?: CustomerUser;
 };
 
+type LoginErrorLike = {
+  response?: {
+    data?: {
+      error?: {
+        message?: string;
+      };
+      message?: string;
+    };
+  };
+};
+
+function getLoginErrorMessage(error: unknown, fallback: string) {
+  const candidate = error as LoginErrorLike;
+  const message =
+    candidate.response?.data?.error?.message ||
+    candidate.response?.data?.message;
+
+  if (!message) return fallback;
+  if (/refreshToken|credential|client id|invalid_request|jwt|token/i.test(message)) {
+    return fallback;
+  }
+
+  return message;
+}
+
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
@@ -229,14 +254,13 @@ export default function LoginScreen() {
       });
       const payload = res.data?.data;
       await completeLogin(payload || {}, true);
-    } catch (err: any) {
-      if (!err.response) {
+    } catch (err: unknown) {
+      if (!(err as LoginErrorLike).response) {
         setError(t('auth.network_error'));
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
         return;
       }
-      const msg = err.response?.data?.error?.message;
-      setError(msg || 'Email hoặc mật khẩu không chính xác');
+      setError(getLoginErrorMessage(err, 'Email hoặc mật khẩu không chính xác'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     } finally {
       setLoading(false);
@@ -254,8 +278,12 @@ export default function LoginScreen() {
       const res = await authApi.googleLogin({ credential });
       const completed = await completeLogin(res.data?.data || {}, true);
       if (!completed) setError(t('auth.google_error'));
-    } catch {
-      setError(t('auth.google_error'));
+    } catch (err: unknown) {
+      if (!(err as LoginErrorLike).response) {
+        setError(t('auth.network_error'));
+      } else {
+        setError(getLoginErrorMessage(err, t('auth.google_error')));
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     } finally {
       setLoading(false);
@@ -376,6 +404,7 @@ export default function LoginScreen() {
               <GoogleLoginButton
                 loading={loading}
                 onCredential={handleGoogleCredential}
+                onError={() => setError(t('auth.google_error'))}
                 borderColor={theme.colors.outlineVariant}
                 backgroundColor={theme.colors.surface}
                 labelColor={theme.colors.onSurface}
@@ -432,12 +461,14 @@ export default function LoginScreen() {
 function GoogleLoginButton({
   loading,
   onCredential,
+  onError,
   borderColor,
   backgroundColor,
   labelColor,
 }: {
   loading: boolean;
   onCredential: (credential: string) => Promise<void>;
+  onError: () => void;
   borderColor: string;
   backgroundColor: string;
   labelColor: string;
@@ -457,12 +488,16 @@ function GoogleLoginButton({
     if (!response) return;
 
     if (response.type !== 'success') {
+      if (response.type === 'error') {
+        onError();
+      }
       setPending(false);
       return;
     }
 
     const credential = response.params?.id_token;
     if (!credential) {
+      onError();
       setPending(false);
       return;
     }
@@ -473,13 +508,21 @@ function GoogleLoginButton({
     onCredential(credential).finally(() => {
       setPending(false);
     });
-  }, [onCredential, response]);
+  }, [onCredential, onError, response]);
 
   const handlePress = () => {
     if (!request || pending || loading) return;
     setPending(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    promptGoogleAsync().catch(() => {
+    promptGoogleAsync().then((result) => {
+      if (result.type === 'error') {
+        onError();
+      }
+      if (result.type !== 'success') {
+        setPending(false);
+      }
+    }).catch(() => {
+      onError();
       setPending(false);
     });
   };
@@ -508,8 +551,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 48 : 24,
-    height: Platform.OS === 'ios' ? 96 : 76,
+    paddingTop: Platform.OS === 'ios' ? 42 : 16,
+    height: Platform.OS === 'ios' ? 84 : 62,
     borderBottomWidth: 1,
   },
   backBtn: { margin: 0 },
@@ -520,21 +563,21 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 28,
-    paddingTop: 36,
+    paddingHorizontal: 24,
+    paddingTop: 22,
     paddingBottom: 40,
   },
   logoWrap: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 22,
   },
   logoImage: {
-    width: 88,
-    height: 88,
-    borderRadius: 20,
+    width: 64,
+    height: 64,
+    borderRadius: 14,
   },
   form: {
-    gap: 16,
+    gap: 12,
   },
   input: {
     minHeight: 56,
@@ -564,7 +607,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 18,
+    marginVertical: 10,
     gap: 12,
   },
   dividerLine: {
@@ -591,7 +634,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 40,
+    marginTop: 30,
     marginBottom: 20,
   },
   footerText: {

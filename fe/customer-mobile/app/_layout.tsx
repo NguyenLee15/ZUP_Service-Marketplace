@@ -73,12 +73,16 @@ export default function RootLayout() {
       secondary: activeColors.secondary,
       background: activeColors.background,
       surface: activeColors.surface,
+      surfaceDisabled: activeColors.surfaceMuted,
       surfaceVariant: activeColors.surfaceVariant,
       outline: activeColors.borderStrong,
       outlineVariant: activeColors.border,
+      onPrimary: '#FFFFFF',
       onSurface: activeColors.text,
       onSurfaceVariant: activeColors.textSecondary,
+      onSurfaceDisabled: activeColors.textTertiary,
       error: activeColors.error,
+      onError: '#FFFFFF',
     },
   };
 
@@ -159,7 +163,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bootInitial: {
-    color: '#FFFFFF',
+    color: '#111827',
     fontSize: 28,
     fontWeight: '900',
   },

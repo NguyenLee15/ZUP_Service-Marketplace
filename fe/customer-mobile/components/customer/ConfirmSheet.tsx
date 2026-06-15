@@ -73,7 +73,7 @@ export function ConfirmSheet({
         style={styles.modalRoot}
       >
         <Pressable style={styles.modalBackdrop} onPress={onDismiss} />
-        <View style={[styles.sheet, { backgroundColor: theme.colors.surface, paddingBottom: 18 + Math.max(insets.bottom, 10) }]}>
+        <View style={[styles.sheet, { backgroundColor: theme.colors.surface, paddingBottom: 16 + Math.min(Math.max(insets.bottom, 6), 18) }]}>
           <View style={[styles.sheetGrabber, { backgroundColor: theme.colors.outline }]} />
           <Text variant="titleLarge" style={[styles.sheetTitle, { color: theme.colors.onSurface }]}>
             {title}
