@@ -78,7 +78,7 @@ function buildSearchParams({
     sort: filters.sort,
     lat: filters.lat,
     lng: filters.lng,
-    radiusKm: filters.radiusKm || 10,
+    radiusKm: filters.radiusKm || 30,
     page,
     limit: PAGE_SIZE,
   };

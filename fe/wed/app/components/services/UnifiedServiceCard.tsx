@@ -244,9 +244,9 @@ export function UnifiedServiceCard({
           </div>
         )}
 
-        {service.distance && (
+        {(service.distanceKm ?? service.distance) !== undefined && (
           <Badge className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 border-0 bg-midnight-indigo/70 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
-            {service.distance.toFixed(1)} km
+            {(service.distanceKm ?? service.distance)?.toFixed(1)} km
           </Badge>
         )}
 

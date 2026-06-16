@@ -31,7 +31,7 @@ export class ServiceSearchService {
     const page = Math.max(1, dto.page || 1);
     const limit = Math.min(Math.max(1, dto.limit || 20), 50);
     const isLocationSearch = this.hasLocationFilter(dto);
-    const radiusKm = Math.min(Math.max(1, dto.radiusKm || 10), 50);
+    const radiusKm = Math.min(Math.max(1, dto.radiusKm || 30), 50);
     const cacheKey = this.buildSearchCacheKey(dto, page, limit);
     const cached = this.getCachedSearchResult<SearchServicesResult>(cacheKey);
 
@@ -164,11 +164,7 @@ export class ServiceSearchService {
           (service.distanceKm ?? Number.POSITIVE_INFINITY) <= radiusKm,
       );
 
-      if (nearbyData.length > 0) {
-        mappedData = nearbyData;
-      } else if (mappedData.length > 0) {
-        locationExpanded = true;
-      }
+      mappedData = nearbyData;
     }
 
     const total = isLocationSearch

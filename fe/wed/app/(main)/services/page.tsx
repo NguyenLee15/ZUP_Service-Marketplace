@@ -34,7 +34,7 @@ const DEFAULT_SEARCH_LOCATION = {
   lng: 105.8522,
   label: 'Hà Nội',
 };
-const DEFAULT_RADIUS_KM = 10;
+const DEFAULT_RADIUS_KM = 30;
 
 type SearchMeta = {
   total: number;
