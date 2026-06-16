@@ -40,6 +40,13 @@ export default function ServiceFormScreen() {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
+  type ServiceItem = { name: string; unit: string; price: string };
+  const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemUnit, setNewItemUnit] = useState('Lần');
+  const [newItemPrice, setNewItemPrice] = useState('');
+  const [showAddItem, setShowAddItem] = useState(false);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -58,6 +65,13 @@ export default function ServiceFormScreen() {
         setDescription(data.description || '');
         setBasePrice(String(data.basePrice || data.referencePrice || ''));
         if (data.category) setSelectedCategory(data.category);
+        if (data.items && Array.isArray(data.items)) {
+          setServiceItems(data.items.map((it: any) => ({
+            name: it.name,
+            unit: it.unit,
+            price: String(it.price)
+          })));
+        }
       } catch {
         setMessage({ tone: 'warning', text: 'Không đọc được dữ liệu dịch vụ hiện tại.' });
       }
@@ -81,6 +95,27 @@ export default function ServiceFormScreen() {
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddItem = () => {
+    if (!newItemName.trim() || !newItemPrice.replace(/[^0-9]/g, '')) {
+      setMessage({ tone: 'warning', text: 'Vui lòng nhập tên và giá hạng mục.' });
+      return;
+    }
+    setServiceItems(prev => [...prev, {
+      name: newItemName.trim(),
+      unit: newItemUnit.trim() || 'Lần',
+      price: newItemPrice.replace(/[^0-9]/g, '')
+    }]);
+    setNewItemName('');
+    setNewItemUnit('Lần');
+    setNewItemPrice('');
+    setShowAddItem(false);
+    setMessage(null);
+  };
+
+  const removeItem = (index: number) => {
+    setServiceItems(prev => prev.filter((_, i) => i !== index));
   };
 
   const validate = () => {
@@ -110,6 +145,15 @@ export default function ServiceFormScreen() {
       images.forEach((img, index) => {
         formData.append('images', { uri: img.uri, name: `service_${index}.jpg`, type: 'image/jpeg' } as any);
       });
+
+      if (serviceItems.length > 0) {
+        const parsedItems = serviceItems.map(it => ({
+          name: it.name,
+          unit: it.unit,
+          price: Number(it.price)
+        }));
+        formData.append('items', JSON.stringify(parsedItems));
+      }
 
       if (isEditing) await serviceApi.updateService(Number(id), formData);
       else await serviceApi.createService(formData);
@@ -199,6 +243,62 @@ export default function ServiceFormScreen() {
           <Text variant="bodySmall" style={styles.helperText}>
             Giá này giúp khách ước tính chi phí. Bạn vẫn có thể báo giá cụ thể trong từng đơn.
           </Text>
+        </ProviderCard>
+
+        <ProviderCard contentStyle={styles.section}>
+          <ProviderSectionHeader title="Bảng giá hạng mục" />
+          <Text variant="bodySmall" style={styles.helperText}>
+            Các hạng mục nhỏ trong dịch vụ (vd: Thay ổ cắm, Vệ sinh máy...). Thợ sẽ dùng để tính tiền.
+          </Text>
+
+          {serviceItems.map((item, index) => (
+            <View key={index} style={styles.itemRow}>
+              <View style={{ flex: 1 }}>
+                <Text variant="bodyMedium" style={{ fontWeight: '600', color: activeColors.text }}>{item.name}</Text>
+                <Text variant="bodySmall" style={{ color: activeColors.textSecondary }}>
+                  {Number(item.price).toLocaleString('vi-VN')}đ / {item.unit}
+                </Text>
+              </View>
+              <IconButton icon="close" size={20} iconColor={activeColors.error} onPress={() => removeItem(index)} />
+            </View>
+          ))}
+
+          {showAddItem ? (
+            <View style={styles.addItemForm}>
+              <TextInput
+                label="Tên hạng mục"
+                value={newItemName}
+                onChangeText={setNewItemName}
+                mode="outlined"
+                style={styles.input}
+              />
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TextInput
+                  label="Đơn vị (vd: Lần)"
+                  value={newItemUnit}
+                  onChangeText={setNewItemUnit}
+                  mode="outlined"
+                  style={[styles.input, { flex: 1 }]}
+                />
+                <TextInput
+                  label="Giá (VNĐ)"
+                  value={newItemPrice}
+                  onChangeText={setNewItemPrice}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  style={[styles.input, { flex: 1 }]}
+                />
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                <Button onPress={() => setShowAddItem(false)}>Hủy</Button>
+                <Button mode="contained-tonal" onPress={handleAddItem}>Thêm</Button>
+              </View>
+            </View>
+          ) : (
+            <Button icon="plus" mode="outlined" onPress={() => setShowAddItem(true)} style={{ marginTop: 8 }}>
+              Thêm hạng mục
+            </Button>
+          )}
         </ProviderCard>
 
         <ProviderCard contentStyle={styles.section}>
@@ -363,6 +463,20 @@ const getStyles = (theme: any, activeColors: any) => StyleSheet.create({
     padding: 12,
   },
   closeButton: {
+    marginTop: 8,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: activeColors.border,
+  },
+  addItemForm: {
+    gap: 10,
+    backgroundColor: activeColors.surfaceVariant,
+    padding: 12,
+    borderRadius: 12,
     marginTop: 8,
   },
 });
