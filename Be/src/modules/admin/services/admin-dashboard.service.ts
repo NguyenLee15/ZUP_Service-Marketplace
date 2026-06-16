@@ -68,7 +68,7 @@ export class AdminDashboardService {
         _count: { id: true },
       }),
       this.prisma.quotation.findMany({
-        where: { booking: { ...bookingWhere, status: BookingStatus.DONE } },
+        where: { booking: { ...bookingWhere, status: BookingStatus.DONE }, status: 'ACCEPTED' },
         select: { actualPrice: true, commissionRateSnapshot: true },
       }),
     ]);
@@ -116,7 +116,7 @@ export class AdminDashboardService {
           _count: { id: true },
         }),
         this.prisma.quotation.findMany({
-          where: { booking: { ...bookingWhere, status: BookingStatus.DONE } },
+          where: { booking: { ...bookingWhere, status: BookingStatus.DONE }, status: 'ACCEPTED' },
           select: {
             actualPrice: true,
             commissionRateSnapshot: true,
@@ -231,8 +231,8 @@ export class AdminDashboardService {
             item.service?.name || '-',
             item.provider?.fullName || '-',
             STATUS_LABELS[item.status] || item.status,
-            item.quotation?.actualPrice
-              ? this.formatCurrency(Number(item.quotation.actualPrice))
+            (item.quotations && item.quotations.length > 0)
+              ? this.formatCurrency(item.quotations.reduce((s, q) => s + Number(q.actualPrice), 0))
               : '-',
           ]),
         ),
@@ -322,8 +322,8 @@ export class AdminDashboardService {
         provider: item.provider?.fullName,
         customer: item.customer?.fullName,
         status: STATUS_LABELS[item.status] || item.status,
-        value: item.quotation?.actualPrice
-          ? Number(item.quotation.actualPrice)
+        value: (item.quotations && item.quotations.length > 0)
+          ? item.quotations.reduce((s, q) => s + Number(q.actualPrice), 0)
           : 0,
         createdAt: this.formatDateTime(item.createdAt),
       })),
@@ -358,7 +358,7 @@ export class AdminDashboardService {
         service: { select: { id: true, name: true } },
         provider: { select: { id: true, fullName: true } },
         customer: { select: { id: true, fullName: true } },
-        quotation: true,
+        quotations: { where: { status: 'ACCEPTED' } },
       },
       orderBy: { createdAt: 'desc' },
       take: 30,

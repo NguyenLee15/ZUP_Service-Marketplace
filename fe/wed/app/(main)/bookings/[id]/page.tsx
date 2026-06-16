@@ -178,6 +178,14 @@ export default function BookingDetailPage() {
   const isCustomer = user?.id === booking.customerId;
   const statusHistory =
     timeline.length > 0 ? timeline : booking.statusHistories || [];
+
+  const originalQuote = booking.quotations?.find(
+    (q: any) => q.type === "ORIGINAL",
+  );
+  const supplementaryQuotes = booking.quotations?.filter(
+    (q: any) => q.type === "SUPPLEMENTARY",
+  ) || [];
+
   const cancelDialogCopy =
     booking.status === BookingStatus.QUOTED
       ? {
@@ -425,7 +433,7 @@ export default function BookingDetailPage() {
       )}
 
       {/* Báo giá và các hạng mục chi tiết sau khảo sát */}
-      {booking.quotation && (
+      {originalQuote && (
         <Card className="glass-panel rounded-2xl border-0 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-action-blue/10 via-transparent to-transparent pointer-events-none" />
           <CardHeader className="pb-2">
@@ -435,8 +443,8 @@ export default function BookingDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3 text-sm">
-            {booking.quotation.quotationItems &&
-            booking.quotation.quotationItems.length > 0 ? (
+            {originalQuote.quotationItems &&
+            originalQuote.quotationItems.length > 0 ? (
               <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
@@ -453,7 +461,7 @@ export default function BookingDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {booking.quotation.quotationItems.map((item: ApiPayload) => {
+                    {originalQuote.quotationItems.map((item: ApiPayload) => {
                       const originallyOrdered = booking.bookingItems?.some(
                         (bItem: ApiPayload) =>
                           bItem.name.toLowerCase().trim() ===
@@ -472,7 +480,7 @@ export default function BookingDetailPage() {
                             {item.name}
                             {!originallyOrdered && (
                               <span className="ml-1.5 inline-block text-[9px] px-1 py-0.2 bg-amber-500/20 rounded font-bold uppercase tracking-wider">
-                                Phát sinh
+                                Thay đổi
                               </span>
                             )}
                           </td>
@@ -496,7 +504,7 @@ export default function BookingDetailPage() {
                   Tổng chi phí thực tế:
                 </span>
                 <span className="font-extrabold text-xl text-action-blue">
-                  {formatPrice(Number(booking.quotation.actualPrice))}
+                  {formatPrice(Number(originalQuote.actualPrice))}
                 </span>
               </div>
               <div className="flex justify-between items-center py-1">
@@ -504,22 +512,125 @@ export default function BookingDetailPage() {
                   Thời gian thực hiện dự kiến:
                 </span>
                 <span className="font-semibold text-xs text-foreground/90">
-                  {booking.quotation.estimatedTime}
+                  {originalQuote.estimatedTime}
                 </span>
               </div>
             </div>
 
-            {booking.quotation.note && (
+            {originalQuote.note && (
               <div className="text-muted-foreground mt-2 text-xs bg-pale-gray/40 dark:bg-white/5 p-3 rounded-xl border border-white/5">
                 <span className="font-semibold text-foreground block mb-1">
                   💬 Ghi chú từ thợ:
                 </span>
-                {booking.quotation.note}
+                {originalQuote.note}
               </div>
             )}
           </CardContent>
         </Card>
       )}
+
+      {/* Báo giá bổ sung */}
+      {supplementaryQuotes.map((suppQuote: any, index: number) => (
+        <Card key={suppQuote.id} className="glass-panel rounded-2xl border-amber-500/50 border-l-4 relative overflow-hidden mt-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-amber-600 flex items-center justify-between gap-2 font-bold">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                Báo giá phát sinh #{index + 1}
+              </div>
+              {suppQuote.status === "PENDING" && (
+                <Badge variant="outline" className="text-amber-500 border-amber-500 bg-amber-50">
+                  Đang chờ duyệt
+                </Badge>
+              )}
+              {suppQuote.status === "ACCEPTED" && (
+                <Badge variant="outline" className="text-green-500 border-green-500 bg-green-50">
+                  Đã đồng ý
+                </Badge>
+              )}
+              {suppQuote.status === "REJECTED" && (
+                <Badge variant="outline" className="text-red-500 border-red-500 bg-red-50">
+                  Đã từ chối
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3 text-sm">
+            {suppQuote.quotationItems && suppQuote.quotationItems.length > 0 ? (
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 overflow-hidden">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-amber-500/10 text-amber-900 dark:text-amber-100 border-b border-amber-500/20">
+                      <th className="p-2.5 font-semibold">Hạng mục phát sinh</th>
+                      <th className="p-2.5 font-semibold text-center w-24">Số lượng</th>
+                      <th className="p-2.5 font-semibold text-right w-24">Thành tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {suppQuote.quotationItems.map((item: ApiPayload) => (
+                      <tr key={item.id} className="border-b border-amber-500/10">
+                        <td className="p-2.5 font-medium">{item.name}</td>
+                        <td className="p-2.5 text-center">{item.quantity} {item.unit}</td>
+                        <td className="p-2.5 text-right font-bold text-amber-700 dark:text-amber-300">
+                          {formatPrice(Number(item.price) * item.quantity)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+
+            <div className="flex justify-between items-center py-1 mt-2 border-t border-amber-500/20 pt-2">
+              <span className="text-muted-foreground text-xs">Tổng phát sinh:</span>
+              <span className="font-extrabold text-lg text-amber-600">
+                {formatPrice(Number(suppQuote.actualPrice))}
+              </span>
+            </div>
+
+            {suppQuote.note && (
+              <div className="text-muted-foreground mt-2 text-xs bg-amber-500/5 p-3 rounded-xl border border-amber-500/10">
+                <span className="font-semibold text-amber-800 block mb-1">💬 Lý do phát sinh:</span>
+                {suppQuote.note}
+              </div>
+            )}
+
+            {suppQuote.status === "PENDING" && isCustomer && (
+              <div className="flex gap-2 mt-4 pt-2">
+                <Button
+                  onClick={() =>
+                    handleAction(
+                      () => bookingsApi.confirmSupplementaryQuote(booking.id, suppQuote.id),
+                      "Đã đồng ý báo giá phát sinh",
+                    )
+                  }
+                  disabled={actionLoading}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white h-9 text-xs"
+                >
+                  <CheckCircle className="w-3.5 h-3.5 mr-1" /> Đồng ý
+                </Button>
+                <Button
+                  onClick={() => {
+                    // Mở dialog từ chối, ta có thể dùng chung cancel dialog hoặc prompt
+                    const reason = window.prompt("Lý do từ chối báo giá phát sinh này?");
+                    if (reason) {
+                      handleAction(
+                        () => bookingsApi.rejectSupplementaryQuote(booking.id, suppQuote.id, reason),
+                        "Đã từ chối báo giá phát sinh",
+                      );
+                    }
+                  }}
+                  variant="outline"
+                  disabled={actionLoading}
+                  className="flex-1 border-red-200 text-red-600 h-9 text-xs"
+                >
+                  <XCircle className="w-3.5 h-3.5 mr-1" /> Từ chối
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
 
       {/* Review */}
       {booking.review && (

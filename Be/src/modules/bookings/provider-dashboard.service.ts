@@ -55,7 +55,7 @@ export class ProviderDashboardService {
         _count: { id: true },
       }),
       this.prisma.quotation.findMany({
-        where: { booking: { ...where, status: BookingStatus.DONE } },
+        where: { booking: { ...where, status: BookingStatus.DONE }, status: 'ACCEPTED' },
         select: {
           actualPrice: true,
           commissionRateSnapshot: true,
@@ -217,8 +217,8 @@ export class ProviderDashboardService {
             booking.bookingCode,
             booking.service?.name || '-',
             STATUS_LABELS[booking.status] || booking.status,
-            booking.quotation?.actualPrice
-              ? this.formatCurrency(Number(booking.quotation.actualPrice))
+            (booking.quotations && booking.quotations.length > 0)
+              ? this.formatCurrency(booking.quotations.reduce((s, q) => s + Number(q.actualPrice), 0))
               : '-',
           ]),
         ),
@@ -307,8 +307,8 @@ export class ProviderDashboardService {
           service: booking.service?.name,
           customer: booking.customer?.fullName,
           status: STATUS_LABELS[booking.status] || booking.status,
-          value: booking.quotation?.actualPrice
-            ? Number(booking.quotation.actualPrice)
+          value: (booking.quotations && booking.quotations.length > 0)
+            ? booking.quotations.reduce((s, q) => s + Number(q.actualPrice), 0)
             : 0,
           createdAt: booking.createdAt.toLocaleString('vi-VN'),
         })),
@@ -331,7 +331,7 @@ export class ProviderDashboardService {
       include: {
         service: { select: { id: true, name: true } },
         customer: { select: { id: true, fullName: true } },
-        quotation: true,
+        quotations: { where: { status: 'ACCEPTED' } },
       },
       orderBy: { createdAt: 'desc' },
       take: 30,

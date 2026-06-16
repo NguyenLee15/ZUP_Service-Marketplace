@@ -40,7 +40,7 @@ export class CustomerBookingExportService {
           select: { id: true, fullName: true, phone: true, email: true },
         },
         provider: { select: { id: true, fullName: true, phone: true } },
-        quotation: { include: { quotationItems: true } },
+        quotations: { where: { status: 'ACCEPTED' }, include: { quotationItems: true } },
         bookingItems: true,
         review: true,
       },
@@ -54,11 +54,12 @@ export class CustomerBookingExportService {
     }
 
     const printer = new PdfPrinter(this.getFonts());
-    const items = booking.quotation?.quotationItems?.length
-      ? booking.quotation.quotationItems
+    const acceptedQuotations = booking.quotations || [];
+    const items = acceptedQuotations.length
+      ? acceptedQuotations.flatMap(q => q.quotationItems || [])
       : booking.bookingItems;
-    const amount = booking.quotation?.actualPrice
-      ? Number(booking.quotation.actualPrice)
+    const amount = acceptedQuotations.length
+      ? acceptedQuotations.reduce((sum, q) => sum + Number(q.actualPrice), 0)
       : items.reduce(
           (sum, item) =>
             sum +
@@ -137,7 +138,7 @@ export class CustomerBookingExportService {
         include: {
           service: { select: { id: true, name: true } },
           provider: { select: { id: true, fullName: true } },
-          quotation: true,
+          quotations: { where: { status: 'ACCEPTED' } },
         },
         orderBy: { createdAt: 'desc' },
         take: 100,
@@ -156,10 +157,10 @@ export class CustomerBookingExportService {
     const cancelled =
       statusCounts.find((item) => item.status === BookingStatus.CANCELLED)
         ?._count.id || 0;
-    const totalAmount = rows.reduce(
-      (sum, item) => sum + Number(item.quotation?.actualPrice || 0),
-      0,
-    );
+    const totalAmount = rows.reduce((sum, item) => {
+      const qs = item.quotations || [];
+      return sum + qs.reduce((qSum, q) => qSum + Number(q.actualPrice || 0), 0);
+    }, 0);
 
     const printer = new PdfPrinter(this.getFonts());
     const content: Content[] = [
@@ -192,8 +193,8 @@ export class CustomerBookingExportService {
           booking.service?.name || '-',
           booking.provider?.fullName || '-',
           STATUS_LABELS[booking.status] || booking.status,
-          booking.quotation?.actualPrice
-            ? this.formatCurrency(Number(booking.quotation.actualPrice))
+          (booking.quotations && booking.quotations.length > 0)
+            ? this.formatCurrency(booking.quotations.reduce((s, q) => s + Number(q.actualPrice), 0))
             : '-',
         ]),
       ),

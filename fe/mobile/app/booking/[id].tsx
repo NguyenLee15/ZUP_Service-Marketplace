@@ -105,6 +105,13 @@ export default function BookingDetailScreen() {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState("");
 
+  const [showSuppQuoteModal, setShowSuppQuoteModal] = useState(false);
+  const [suppQuoteNote, setSuppQuoteNote] = useState("");
+  const [suppQuoteError, setSuppQuoteError] = useState("");
+  const [suppQuoteItems, setSuppQuoteItems] = useState<
+    { name: string; unit: string; price: number; quantity: number }[]
+  >([]);
+
   const [resultImages, setResultImages] = useState<
     ImagePicker.ImagePickerAsset[]
   >([]);
@@ -201,6 +208,47 @@ export default function BookingDetailScreen() {
     setNewItemQty("1");
     setQuoteError("");
   };
+
+  const handleUpdateSuppItemQty = (index: number, newQty: number) => {
+    if (newQty < 1) return;
+    setSuppQuoteItems((prev) =>
+      prev.map((item, idx) =>
+        idx === index ? { ...item, quantity: newQty } : item,
+      ),
+    );
+  };
+
+  const handleRemoveSuppQuoteItem = (index: number) => {
+    setSuppQuoteItems((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleAddSuppItem = () => {
+    const name = newItemName.trim();
+    const unit = newItemUnit.trim();
+    const price = Number(newItemPrice.replace(/[^0-9]/g, ""));
+    const qty = Number(newItemQty) || 1;
+
+    if (!name) {
+      setSuppQuoteError("Vui lòng nhập tên hạng mục phát sinh.");
+      return;
+    }
+    if (!unit) {
+      setSuppQuoteError("Vui lòng nhập đơn vị tính.");
+      return;
+    }
+    if (isNaN(price) || price <= 0) {
+      setSuppQuoteError("Vui lòng nhập đơn giá hợp lệ.");
+      return;
+    }
+
+    setSuppQuoteItems((prev) => [...prev, { name, unit, price, quantity: qty }]);
+    setNewItemName("");
+    setNewItemUnit("");
+    setNewItemPrice("");
+    setNewItemQty("1");
+    setSuppQuoteError("");
+  };
+
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -385,6 +433,33 @@ export default function BookingDetailScreen() {
     } catch (err: any) {
       setQuoteError(
         err?.response?.data?.error?.message || "Gửi báo giá thất bại.",
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSendSuppQuote = async () => {
+    if (suppQuoteItems.length === 0) {
+      setSuppQuoteError("Vui lòng thêm ít nhất một hạng mục báo giá bổ sung.");
+      return;
+    }
+
+    setActionLoading(true);
+    setSuppQuoteError("");
+    try {
+      await bookingApi.sendSupplementaryQuote(Number(id), {
+        note: suppQuoteNote.trim(),
+        items: suppQuoteItems,
+      });
+      setShowSuppQuoteModal(false);
+      setSuppQuoteNote("");
+      setSuppQuoteItems([]);
+      setMessage({ tone: "success", text: "Đã gửi báo giá phát sinh cho khách hàng." });
+      await fetchBooking();
+    } catch (err: any) {
+      setSuppQuoteError(
+        err?.response?.data?.error?.message || "Gửi báo giá phát sinh thất bại.",
       );
     } finally {
       setActionLoading(false);
@@ -1005,22 +1080,38 @@ export default function BookingDetailScreen() {
             </Button>
           )}
           {booking.status === "IN_PROGRESS" && (
-            <Button
-              mode="contained"
-              onPress={handleComplete}
-              loading={actionLoading}
-              disabled={actionLoading || resultImages.length === 0}
-              style={[
-                styles.actionButton,
-                styles.singleAction,
-                { backgroundColor: activeColors.success },
-              ]}
-              icon="check-circle-outline"
-              contentStyle={styles.actionContent}
-            >
-              {actionLoading ? "Đang xử lý…" : "Hoàn thành"}
-            </Button>
+            <View style={{ gap: 8 }}>
+              <Button
+                mode="contained"
+                onPress={handleComplete}
+                loading={actionLoading}
+                disabled={actionLoading || resultImages.length === 0}
+                style={[
+                  styles.actionButton,
+                  styles.singleAction,
+                  { backgroundColor: activeColors.success },
+                ]}
+                icon="check-circle-outline"
+                contentStyle={styles.actionContent}
+              >
+                {actionLoading ? "Đang xử lý…" : "Hoàn thành"}
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => setShowSuppQuoteModal(true)}
+                disabled={actionLoading}
+                style={[
+                  styles.actionButton,
+                  styles.singleAction,
+                ]}
+                icon="plus-circle-outline"
+                contentStyle={styles.actionContent}
+              >
+                Báo giá phát sinh
+              </Button>
+            </View>
           )}
+
         </View>
       )}
 
@@ -1310,6 +1401,208 @@ export default function BookingDetailScreen() {
             {actionLoading ? "Đang xử lý…" : "Xác nhận hủy"}
           </Button>
           <Button mode="text" onPress={() => setShowCancelModal(false)}>
+            Đóng
+          </Button>
+        </Modal>
+      </Portal>
+
+      <Portal>
+        <Modal
+          visible={showSuppQuoteModal}
+          onDismiss={() => {
+            setShowSuppQuoteModal(false);
+            setSuppQuoteError("");
+          }}
+          contentContainerStyle={[
+            styles.modal,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
+          <Text variant="titleMedium" style={styles.modalTitle}>
+            Gửi báo giá phát sinh
+          </Text>
+          {suppQuoteError ? (
+            <ProviderInlineMessage tone="error" message={suppQuoteError} />
+          ) : null}
+
+          <Text
+            variant="labelMedium"
+            style={{
+              color: activeColors.textSecondary,
+              fontWeight: "700",
+              marginTop: 4,
+            }}
+          >
+            Chi tiết hạng mục bổ sung:
+          </Text>
+          <ScrollView
+            style={styles.modalItemsScroll}
+            contentContainerStyle={{ gap: 8 }}
+          >
+            {suppQuoteItems.map((item, index) => (
+              <View key={index} style={styles.modalItemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    variant="bodyMedium"
+                    style={{ fontWeight: "700", color: activeColors.text }}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text
+                    variant="bodySmall"
+                    style={{ color: activeColors.textTertiary }}
+                  >
+                    {formatPrice(item.price)} / {item.unit}
+                  </Text>
+                </View>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
+                  <IconButton
+                    icon="minus-circle-outline"
+                    size={22}
+                    onPress={() =>
+                      handleUpdateSuppItemQty(index, item.quantity - 1)
+                    }
+                    style={{ margin: 0 }}
+                  />
+                  <Text
+                    variant="bodyMedium"
+                    style={{
+                      fontWeight: "700",
+                      minWidth: 20,
+                      textAlign: "center",
+                      color: activeColors.text,
+                    }}
+                  >
+                    {item.quantity}
+                  </Text>
+                  <IconButton
+                    icon="plus-circle-outline"
+                    size={22}
+                    onPress={() =>
+                      handleUpdateSuppItemQty(index, item.quantity + 1)
+                    }
+                    style={{ margin: 0 }}
+                  />
+                  <IconButton
+                    icon="trash-can-outline"
+                    iconColor={activeColors.error}
+                    size={20}
+                    onPress={() => handleRemoveSuppQuoteItem(index)}
+                    style={{ margin: 0 }}
+                  />
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.addItemSection}>
+            <Text
+              variant="labelMedium"
+              style={{ color: activeColors.primaryLight, fontWeight: "700" }}
+            >
+              + Thêm hạng mục:
+            </Text>
+            <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
+              <TextInput
+                label="Tên hạng mục"
+                value={newItemName}
+                onChangeText={setNewItemName}
+                mode="outlined"
+                style={{ flex: 2 }}
+                dense
+              />
+              <TextInput
+                label="Đơn vị"
+                value={newItemUnit}
+                onChangeText={setNewItemUnit}
+                mode="outlined"
+                style={{ flex: 1 }}
+                dense
+                placeholder="mét, cái"
+              />
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 6,
+                marginTop: 6,
+                alignItems: "center",
+              }}
+            >
+              <TextInput
+                label="Đơn giá (đ)"
+                value={newItemPrice}
+                onChangeText={setNewItemPrice}
+                mode="outlined"
+                keyboardType="numeric"
+                style={{ flex: 2 }}
+                dense
+              />
+              <TextInput
+                label="Số lượng"
+                value={newItemQty}
+                onChangeText={setNewItemQty}
+                mode="outlined"
+                keyboardType="numeric"
+                style={{ flex: 1 }}
+                dense
+              />
+              <Button
+                mode="contained"
+                onPress={handleAddSuppItem}
+                style={{
+                  borderRadius: 8,
+                  height: 40,
+                  justifyContent: "center",
+                }}
+                contentStyle={{ height: 40 }}
+              >
+                Thêm
+              </Button>
+            </View>
+          </View>
+
+          <View style={styles.modalTotalRow}>
+            <Text variant="bodyMedium" style={styles.mutedText}>
+              Tổng cộng phát sinh:
+            </Text>
+            <Text variant="titleMedium" style={styles.modalTotalText}>
+              {formatPrice(
+                suppQuoteItems.reduce(
+                  (sum, item) => sum + item.price * item.quantity,
+                  0,
+                ),
+              )}
+            </Text>
+          </View>
+
+          <TextInput
+            label="Ghi chú thêm"
+            value={suppQuoteNote}
+            onChangeText={setSuppQuoteNote}
+            mode="outlined"
+            multiline
+            numberOfLines={3}
+            left={
+              <TextInput.Icon
+                icon="note-text"
+                accessibilityLabel="Ghi chú"
+              />
+            }
+          />
+          <Button
+            mode="contained"
+            onPress={handleSendSuppQuote}
+            loading={actionLoading}
+            disabled={actionLoading || suppQuoteItems.length === 0}
+            style={styles.primaryButton}
+            contentStyle={styles.actionContent}
+          >
+            {actionLoading ? "Đang gửi…" : "Gửi báo giá bổ sung"}
+          </Button>
+          <Button mode="text" onPress={() => setShowSuppQuoteModal(false)}>
             Đóng
           </Button>
         </Modal>

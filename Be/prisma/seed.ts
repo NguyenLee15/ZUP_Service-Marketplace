@@ -872,7 +872,7 @@ async function main() {
           },
         ],
       },
-      quotation: {
+      quotations: {
         create: {
           actualPrice: 300000,
           commissionRateSnapshot: 10,
@@ -917,7 +917,7 @@ async function main() {
           },
         ],
       },
-      quotation: {
+      quotations: {
         create: {
           actualPrice: 370000,
           commissionRateSnapshot: 10,
@@ -996,7 +996,7 @@ async function main() {
           },
         ],
       },
-      quotation: {
+      quotations: {
         create: {
           actualPrice: 380000,
           commissionRateSnapshot: 10,
@@ -1043,7 +1043,7 @@ async function main() {
           },
         ],
       },
-      quotation: {
+      quotations: {
         create: {
           actualPrice: 350000,
           commissionRateSnapshot: 10,

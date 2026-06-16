@@ -22,6 +22,8 @@ import {
   CreateBookingDto,
   RejectQuoteDto,
   SendQuoteDto,
+  SendSupplementaryQuoteDto,
+  RejectSupplementaryDto,
 } from './dto/bookings.dto';
 
 @Injectable()
@@ -648,6 +650,170 @@ export class BookingLifecycleService {
     );
 
     return result;
+  }
+
+  async providerSendSupplementaryQuote(
+    providerId: number,
+    bookingId: number,
+    dto: SendSupplementaryQuoteDto,
+  ) {
+    const booking = await this.shared.checkBooking(bookingId, {
+      providerId,
+      status: BookingStatus.IN_PROGRESS,
+    });
+
+    const existingSupplementaryCount = await this.prisma.quotation.count({
+      where: { bookingId, type: 'SUPPLEMENTARY' },
+    });
+
+    if (existingSupplementaryCount >= 3) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Đã vượt quá số lần báo giá phát sinh tối đa (3 lần)',
+      });
+    }
+
+    const pendingSupplementary = await this.prisma.quotation.findFirst({
+      where: { bookingId, type: 'SUPPLEMENTARY', status: 'PENDING' },
+    });
+
+    if (pendingSupplementary) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Vẫn còn báo giá phát sinh đang chờ duyệt',
+      });
+    }
+
+    if (!dto.items || dto.items.length === 0) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Vui lòng cung cấp danh sách hạng mục phát sinh',
+      });
+    }
+
+    const actualPrice = dto.items.reduce(
+      (sum, item) => sum + Number(item.price) * item.quantity,
+      0,
+    );
+
+    const originalQuote = await this.prisma.quotation.findFirst({
+      where: { bookingId, type: 'ORIGINAL' },
+    });
+
+    const commissionRate =
+      originalQuote?.commissionRateSnapshot ||
+      await this.bookingCommissionService.getCurrentCommissionRate();
+
+    const createdQuotation = await this.prisma.$transaction(async (tx) => {
+      const q = await tx.quotation.create({
+        data: {
+          bookingId,
+          type: 'SUPPLEMENTARY',
+          status: 'PENDING',
+          actualPrice,
+          commissionRateSnapshot: commissionRate,
+          estimatedTime: '',
+          note: dto.note,
+        },
+      });
+
+      const quotationItems = dto.items.map((item) => ({
+        quotationId: q.id,
+        name: item.name,
+        unit: item.unit,
+        price: item.price,
+        quantity: item.quantity,
+      }));
+
+      await tx.quotationItem.createMany({ data: quotationItems });
+
+      return tx.quotation.findUnique({
+        where: { id: q.id },
+        include: { quotationItems: true },
+      });
+    });
+
+    await this.shared.addStatusHistory(
+      bookingId,
+      BookingStatus.IN_PROGRESS,
+      BookingStatus.IN_PROGRESS,
+      providerId,
+      'Nhà cung cấp gửi báo giá phát sinh',
+    );
+
+    await this.shared.notify(
+      booking.customerId,
+      'SUPPLEMENTARY_QUOTE_RECEIVED',
+      'Bạn có báo giá phát sinh mới',
+      `Đơn #${booking.bookingCode}: Báo giá phát sinh ${actualPrice.toLocaleString('vi-VN')}₫`,
+      bookingId,
+    );
+
+    return {
+      data: createdQuotation,
+      message: 'Đã gửi báo giá phát sinh',
+    };
+  }
+
+  async customerReplySupplementaryQuote(
+    customerId: number,
+    bookingId: number,
+    quotationId: number,
+    isAccepted: boolean,
+    reason?: string,
+  ) {
+    const booking = await this.shared.checkBooking(bookingId, {
+      customerId,
+      status: BookingStatus.IN_PROGRESS,
+    });
+
+    const quotation = await this.prisma.quotation.findUnique({
+      where: { id: quotationId },
+    });
+
+    if (
+      !quotation ||
+      quotation.bookingId !== bookingId ||
+      quotation.type !== 'SUPPLEMENTARY' ||
+      quotation.status !== 'PENDING'
+    ) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Báo giá phát sinh không hợp lệ hoặc đã được xử lý',
+      });
+    }
+
+    const newStatus = isAccepted ? 'ACCEPTED' : 'REJECTED';
+
+    const updated = await this.prisma.quotation.update({
+      where: { id: quotationId },
+      data: { status: newStatus },
+      include: { quotationItems: true },
+    });
+
+    await this.shared.addStatusHistory(
+      bookingId,
+      BookingStatus.IN_PROGRESS,
+      BookingStatus.IN_PROGRESS,
+      customerId,
+      isAccepted
+        ? 'Khách hàng đồng ý báo giá phát sinh'
+        : `Khách hàng từ chối báo giá phát sinh: ${reason}`,
+    );
+
+    await this.shared.notify(
+      booking.providerId,
+      isAccepted
+        ? 'SUPPLEMENTARY_QUOTE_ACCEPTED'
+        : 'SUPPLEMENTARY_QUOTE_REJECTED',
+      isAccepted
+        ? 'Khách hàng đồng ý phát sinh'
+        : 'Khách hàng từ chối phát sinh',
+      `Đơn #${booking.bookingCode}: Khách hàng đã ${isAccepted ? 'đồng ý' : 'từ chối'} báo giá phát sinh`,
+      bookingId,
+    );
+
+    return { data: updated, message: 'Đã xử lý báo giá phát sinh' };
   }
 
   async cancelByProvider(

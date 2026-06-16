@@ -27,7 +27,7 @@ export class BookingQueryService {
         provider: {
           select: { id: true, fullName: true, avatarUrl: true, phone: true },
         },
-        quotation: {
+        quotations: {
           include: { quotationItems: true },
         },
         bookingItems: true,

@@ -37,20 +37,20 @@ export class BookingCommissionService {
   ) {
     const tx = txClient || this.prisma;
 
-    const quotation = await tx.quotation.findUnique({
-      where: { bookingId },
+    const quotations = await tx.quotation.findMany({
+      where: { bookingId, status: 'ACCEPTED' },
     });
-    if (!quotation) return;
+    if (quotations.length === 0) return;
 
     const booking = await tx.booking.findUnique({
       where: { id: bookingId },
     });
     if (!booking) return;
 
-    const fee =
-      (Number(quotation.actualPrice) *
-        Number(quotation.commissionRateSnapshot)) /
-      100;
+    const fee = quotations.reduce(
+      (sum, q) => sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
+      0
+    );
 
     const executeDeduction = async (dbTx: Prisma.TransactionClient) => {
       const wallet = await dbTx.providerWallet.update({

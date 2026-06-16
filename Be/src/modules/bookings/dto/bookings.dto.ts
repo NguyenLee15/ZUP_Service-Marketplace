@@ -110,6 +110,25 @@ export class RejectQuoteDto {
   reason: string;
 }
 
+export class SendSupplementaryQuoteDto {
+  @IsString()
+  @IsOptional()
+  note?: string;
+
+  @IsArray()
+  @Transform(({ value }) => parseJsonArrayValue(value))
+  @ValidateNested({ each: true })
+  @Type(() => CreateQuotationItemDto)
+  items: CreateQuotationItemDto[];
+}
+
+export class ConfirmSupplementaryDto {}
+
+export class RejectSupplementaryDto {
+  @IsString()
+  reason: string;
+}
+
 export class DisputeDto {
   @IsString()
   reason: string;

@@ -326,7 +326,7 @@ model Booking {
   customer           User                   @relation("CustomerBooking", fields: [customerId], references: [id])
   provider           User                   @relation("ProviderBooking", fields: [providerId], references: [id])
   service            Service                @relation(fields: [serviceId], references: [id])
-  quotation          Quotation?
+  quotations         Quotation[]
   attachments        BookingAttachment[]
   statusHistories    BookingStatusHistory[]
   conversation       Conversation?
@@ -345,11 +345,13 @@ model Booking {
 /// Bảng quotations — commission_rate_snapshot chốt cứng % lúc gửi báo giá
 model Quotation {
   id                     Int             @id @default(autoincrement())
-  bookingId              Int             @unique @map("booking_id")
+  bookingId              Int             @map("booking_id")
   actualPrice            Decimal         @map("actual_price") @db.Decimal(15, 2)
   commissionRateSnapshot Decimal         @map("commission_rate_snapshot") @db.Decimal(5, 2)
   estimatedTime          String          @map("estimated_time") @db.VarChar(100)
   note                   String?         @db.Text
+  type                   String          @default("ORIGINAL") @db.VarChar(20) // ORIGINAL, SUPPLEMENTARY
+  status                 String          @default("ACCEPTED") @db.VarChar(20) // ACCEPTED, PENDING, REJECTED
   booking                Booking         @relation(fields: [bookingId], references: [id])
   quotationItems         QuotationItem[]
 

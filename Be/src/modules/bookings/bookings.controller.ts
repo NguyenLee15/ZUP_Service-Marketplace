@@ -48,6 +48,8 @@ import {
   RejectQuoteDto,
   DisputeDto,
   ResolveDisputeDto,
+  SendSupplementaryQuoteDto,
+  RejectSupplementaryDto,
 } from './dto/bookings.dto';
 
 // ===== Customer Booking Controller =====
@@ -182,6 +184,42 @@ export class BookingsController {
     @Body() dto: RejectQuoteDto,
   ) {
     return this.bookingLifecycleService.customerRejectQuote(userId, id, dto);
+  }
+
+  /** PATCH /bookings/:id/supplementary-quotes/:quoteId/confirm — Customer đồng ý báo giá bổ sung */
+  @Patch(':id/supplementary-quotes/:quoteId/confirm')
+  @UseGuards(RolesGuard)
+  @Roles('CUSTOMER')
+  async confirmSupplementaryQuote(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('quoteId', ParseIntPipe) quoteId: number,
+  ) {
+    return this.bookingLifecycleService.customerReplySupplementaryQuote(
+      userId,
+      id,
+      quoteId,
+      true,
+    );
+  }
+
+  /** PATCH /bookings/:id/supplementary-quotes/:quoteId/reject — Customer từ chối báo giá bổ sung */
+  @Patch(':id/supplementary-quotes/:quoteId/reject')
+  @UseGuards(RolesGuard)
+  @Roles('CUSTOMER')
+  async rejectSupplementaryQuote(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('quoteId', ParseIntPipe) quoteId: number,
+    @Body() dto: RejectSupplementaryDto,
+  ) {
+    return this.bookingLifecycleService.customerReplySupplementaryQuote(
+      userId,
+      id,
+      quoteId,
+      false,
+      dto.reason,
+    );
   }
 
   /** PATCH /bookings/:id/accept — Customer nghiệm thu */
@@ -353,6 +391,21 @@ export class ProviderBookingsController {
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
     return this.bookingLifecycleService.sendQuote(userId, id, dto, files);
+  }
+
+  /** POST /provider/bookings/:id/supplementary-quotes — Provider gửi báo giá bổ sung */
+  @Post(':id/supplementary-quotes')
+  @ApiOperation({ summary: 'Provider sends a supplementary quotation' })
+  async sendSupplementaryQuote(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SendSupplementaryQuoteDto,
+  ) {
+    return this.bookingLifecycleService.providerSendSupplementaryQuote(
+      userId,
+      id,
+      dto,
+    );
   }
 
   /** PATCH /provider/bookings/:id/start */

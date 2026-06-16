@@ -42,7 +42,7 @@ export class BookingsProcessor extends WorkerHost {
     return this.prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
-        include: { quotation: true },
+        include: { quotations: { where: { status: 'ACCEPTED' } } },
       });
 
       if (!booking || booking.status !== 'DONE' || booking.autoCompletedAt) {
@@ -67,22 +67,22 @@ export class BookingsProcessor extends WorkerHost {
       });
 
       // 3. Trừ hoa hồng
-      if (booking.quotation) {
-        const commissionFee =
-          (Number(booking.quotation.actualPrice) *
-            Number(booking.quotation.commissionRateSnapshot)) /
-          100;
+      const acceptedQuotations = booking.quotations || [];
+      const commissionFee = acceptedQuotations.reduce(
+        (sum, q) => sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
+        0
+      );
 
-        if (commissionFee > 0) {
-          const wallet = await tx.providerWallet.update({
-            where: { providerId: booking.providerId },
-            data: { balance: { decrement: commissionFee } },
-          });
+      if (commissionFee > 0) {
+        const wallet = await tx.providerWallet.update({
+          where: { providerId: booking.providerId },
+          data: { balance: { decrement: commissionFee } },
+        });
 
-          await tx.walletTransaction.create({
-            data: {
-              walletId: wallet.id,
-              amount: -commissionFee,
+        await tx.walletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            amount: -commissionFee,
               type: 'COMMISSION',
               status: 'SUCCESS',
               bookingId: booking.id,
@@ -94,7 +94,6 @@ export class BookingsProcessor extends WorkerHost {
               where: { id: wallet.id },
               data: { isRestricted: true },
             });
-          }
         }
       }
     });

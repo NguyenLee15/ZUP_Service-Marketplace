@@ -59,6 +59,12 @@ export const bookingsApi = {
   rejectQuote: (id: number, reason: string) =>
     api.patch(`/bookings/${id}/reject-quote`, { reason }),
 
+  confirmSupplementaryQuote: (id: number, suppQuoteId: number) =>
+    api.patch(`/bookings/${id}/confirm-supplementary-quote`, { suppQuoteId }),
+
+  rejectSupplementaryQuote: (id: number, suppQuoteId: number, reason: string) =>
+    api.patch(`/bookings/${id}/reject-supplementary-quote`, { suppQuoteId, reason }),
+
   accept: (id: number) => api.patch(`/bookings/${id}/accept`),
 
   dispute: (id: number, formData: FormData) =>
