@@ -1,14 +1,17 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { StyleSheet, View } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { CustomerCard } from './CustomerCard';
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   serviceContent: { flexDirection: 'row', gap: 12 },
-  serviceImage: { width: 92, height: 92, borderRadius: 14, backgroundColor: Colors.light.surfaceVariant },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  serviceImage: { width: 92, height: 92, borderRadius: 14, backgroundColor: activeColors.surfaceVariant },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
 });
 
 export function ServiceSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <CustomerCard contentStyle={styles.serviceContent}>
       <View style={[styles.serviceImage, styles.skeleton]} />

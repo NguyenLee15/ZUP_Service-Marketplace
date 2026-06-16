@@ -23,7 +23,9 @@
       "package": "com.homeservice.customer",
       "permissions": [
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -57,6 +59,12 @@
             "proguardRules": "./proguard-rules.pro",
             "enableMinifyInReleaseBuilds": true
           }
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần quyền truy cập vị trí để tìm dịch vụ gần bạn nhất."
         }
       ],
       "expo-font"

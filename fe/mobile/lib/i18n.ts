@@ -15,9 +15,9 @@ const DICTIONARY: Record<string, string> = {
   "auth.login": "Đăng nhập",
   "auth.register": "Đăng ký",
   "auth.no_account": "Bạn chưa có tài khoản? ",
-  "auth.email_placeholder": "Email/Số điện thoại/Tên đăng nhập",
+  "auth.email_placeholder": "Email",
   "auth.password": "Mật khẩu",
-  "auth.forgot_password": "Quên?",
+  "auth.forgot_password": "Quên mật khẩu?",
   "auth.biometric_setup": "Bảo mật sinh trắc học",
   "auth.biometric_prompt":
     "Bạn có muốn dùng Vân tay / FaceID để mở khóa phiên đăng nhập cho lần sau không?",

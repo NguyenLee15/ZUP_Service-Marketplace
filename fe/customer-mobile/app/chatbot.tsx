@@ -1,3 +1,4 @@
+import { useActiveColors } from '../hooks/useActiveColors';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated } from "react-native";
 import {
@@ -221,6 +222,8 @@ function messageFromResponse(
 }
 
 export default function ChatbotScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const queryClient = useQueryClient();
   const listRef = useRef<any>(null);
@@ -581,6 +584,8 @@ function SessionStrip({
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.sessionRow}>
       {sessions.slice(0, 4).map((session) => (
@@ -601,6 +606,8 @@ function SessionStrip({
 // MessageBubble, ChatbotServiceCard and ActionCard are imported from '../features/chatbot/components/ChatBubble'
 
 function TypingIndicator() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const dot1 = useRef(new Animated.Value(0.3)).current;
   const dot2 = useRef(new Animated.Value(0.3)).current;
   const dot3 = useRef(new Animated.Value(0.3)).current;
@@ -649,6 +656,8 @@ function TypingIndicator() {
 }
 
 function LoadingBubble() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.messageWrap}>
       <View style={styles.aiMessageHeader}>
@@ -666,7 +675,7 @@ function LoadingBubble() {
             <TypingIndicator />
             <Text
               variant="labelSmall"
-              style={{ color: Colors.light.textSecondary }}
+              style={{ color: activeColors.textSecondary }}
             >
               Trợ lý đang phân tích...
             </Text>
@@ -677,8 +686,8 @@ function LoadingBubble() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   listContent: { padding: 16, paddingBottom: 20 },
   headerWrap: { gap: 12, marginBottom: 12 },
   errorBlock: { gap: 10 },
@@ -686,7 +695,7 @@ const styles = StyleSheet.create({
   sessionChip: { maxWidth: "48%", borderRadius: 999 },
   messageWrap: { marginBottom: 10 },
   bubble: { maxWidth: "94%" },
-  userBubble: { backgroundColor: Colors.light.primarySoft },
+  userBubble: { backgroundColor: activeColors.primarySoft },
   assistantBubble: {
     backgroundColor: "#ECFDF5",
     borderColor: "#D1FAE5",
@@ -698,7 +707,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
   },
   aiMessageHeader: { flexDirection: "row", gap: 8, alignItems: "center" },
   aiAvatar: {
@@ -709,11 +718,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  messageText: { color: Colors.light.text, lineHeight: 22 },
+  messageText: { color: activeColors.text, lineHeight: 22 },
   embeddedCards: { gap: 10, marginTop: 12 },
   serviceCard: {
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: activeColors.border,
     borderRadius: 14,
     padding: 10,
     gap: 10,
@@ -724,39 +733,39 @@ const styles = StyleSheet.create({
     width: 78,
     height: 78,
     borderRadius: 12,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
   imageFallback: {
     width: 78,
     height: 78,
     borderRadius: 12,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
   serviceInfo: { flex: 1, gap: 4 },
-  serviceTitle: { color: Colors.light.text, fontWeight: "900" },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 19 },
+  serviceTitle: { color: activeColors.text, fontWeight: "900" },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 19 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  metaText: { color: Colors.light.textSecondary, fontWeight: "800" },
-  priceText: { color: Colors.light.primary, fontWeight: "900" },
+  metaText: { color: activeColors.textSecondary, fontWeight: "800" },
+  priceText: { color: activeColors.primary, fontWeight: "900" },
   actionRow: { flexDirection: "row", gap: 8 },
   actionButton: { flex: 1, borderRadius: 10 },
   actionCard: {
     marginTop: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: `${Colors.light.primary}33`,
-    backgroundColor: Colors.light.primarySoft,
+    borderColor: `${activeColors.primary}33`,
+    backgroundColor: activeColors.primarySoft,
     borderRadius: 14,
     gap: 8,
   },
-  actionTitle: { color: Colors.light.text, fontWeight: "900" },
+  actionTitle: { color: activeColors.text, fontWeight: "900" },
   inputShell: {
     padding: 12,
     paddingBottom: 18,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: activeColors.border,
     backgroundColor: "#FFFFFF",
   },
   quickReplyRow: {
@@ -775,11 +784,11 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 16,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 2,
   },
-  sendButtonDisabled: { backgroundColor: Colors.light.borderStrong },
+  sendButtonDisabled: { backgroundColor: activeColors.borderStrong },
   roundedButton: { borderRadius: 12 },
 });

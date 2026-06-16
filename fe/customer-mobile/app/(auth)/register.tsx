@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text, TextInput, useTheme } from 'react-native-paper';
@@ -30,6 +31,8 @@ type RegisterField = keyof RegisterForm;
 type PasswordStrength = 'weak' | 'medium' | 'strong' | 'empty';
 
 export default function RegisterScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const theme = useTheme();
   const [form, setForm] = useState<RegisterForm>({
@@ -174,9 +177,9 @@ export default function RegisterScreen() {
                 Haptics.selectionAsync().catch(() => {});
                 router.back();
               }}
-              style={[styles.backButton, { borderColor: Colors.light.border }]}
+              style={[styles.backButton, { borderColor: activeColors.border }]}
             >
-              <MaterialCommunityIcons name="chevron-left" size={26} color={Colors.light.text} />
+              <MaterialCommunityIcons name="chevron-left" size={26} color={activeColors.text} />
             </Pressable>
             <View style={{ flex: 1 }} />
           </View>
@@ -201,7 +204,7 @@ export default function RegisterScreen() {
               onBlur={() => handleBlur('fullName')}
               autoCapitalize="words"
               textContentType="name"
-              left={<TextInput.Icon icon="account-outline" color={Colors.light.primary} />}
+              left={<TextInput.Icon icon="account-outline" color={activeColors.primary} />}
               error={Boolean(fieldErrors.fullName)}
               disabled={loading}
               returnKeyType="next"
@@ -225,7 +228,7 @@ export default function RegisterScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               textContentType="emailAddress"
-              left={<TextInput.Icon icon="email-outline" color={Colors.light.primary} />}
+              left={<TextInput.Icon icon="email-outline" color={activeColors.primary} />}
               error={Boolean(fieldErrors.email)}
               disabled={loading}
               returnKeyType="next"
@@ -247,7 +250,7 @@ export default function RegisterScreen() {
               onBlur={() => handleBlur('phone')}
               keyboardType="phone-pad"
               textContentType="telephoneNumber"
-              left={<TextInput.Icon icon="phone-outline" color={Colors.light.primary} />}
+              left={<TextInput.Icon icon="phone-outline" color={activeColors.primary} />}
               error={Boolean(fieldErrors.phone)}
               disabled={loading}
               returnKeyType="next"
@@ -269,11 +272,11 @@ export default function RegisterScreen() {
               onBlur={() => handleBlur('password')}
               secureTextEntry={!showPassword}
               textContentType="newPassword"
-              left={<TextInput.Icon icon="lock-outline" color={Colors.light.primary} />}
+              left={<TextInput.Icon icon="lock-outline" color={activeColors.primary} />}
               right={
                 <TextInput.Icon
                   icon={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  color={Colors.light.textSecondary}
+                  color={activeColors.textSecondary}
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
                     setShowPassword((value) => !value);
@@ -316,11 +319,11 @@ export default function RegisterScreen() {
               onBlur={() => handleBlur('confirmPassword')}
               secureTextEntry={!showConfirmPassword}
               textContentType="newPassword"
-              left={<TextInput.Icon icon="lock-check-outline" color={Colors.light.primary} />}
+              left={<TextInput.Icon icon="lock-check-outline" color={activeColors.primary} />}
               right={
                 <TextInput.Icon
                   icon={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                  color={Colors.light.textSecondary}
+                  color={activeColors.textSecondary}
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
                     setShowConfirmPassword((value) => !value);
@@ -361,8 +364,8 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  keyboard: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  keyboard: { flex: 1, backgroundColor: activeColors.background },
   content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 24, gap: 20 },
   header: { gap: 8, marginBottom: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
@@ -375,8 +378,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
-  title: { color: Colors.light.text, fontWeight: '900', letterSpacing: -0.5 },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 22, fontSize: 14 },
+  title: { color: activeColors.text, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 22, fontSize: 14 },
   cardContent: { gap: 6 },
   inputContainer: { marginBottom: 2 },
   inputOutline: { borderRadius: 14 },
@@ -385,8 +388,8 @@ const styles = StyleSheet.create({
   strengthTrack: { height: 4, width: '100%', backgroundColor: '#E2E8F0', borderRadius: 2, overflow: 'hidden' },
   strengthBar: { height: '100%', borderRadius: 2 },
   strengthLabel: { fontSize: 11, fontWeight: '700' },
-  primaryButton: { borderRadius: 14, marginTop: 12, shadowColor: Colors.light.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 6 },
+  primaryButton: { borderRadius: 14, marginTop: 12, shadowColor: activeColors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 6 },
   buttonContent: { height: 54 },
   buttonLabel: { fontSize: 16, fontWeight: '800' },
-  disclaimer: { textAlign: 'center', color: Colors.light.textSecondary, marginTop: 12, paddingHorizontal: 12, fontSize: 11, lineHeight: 16 },
+  disclaimer: { textAlign: 'center', color: activeColors.textSecondary, marginTop: 12, paddingHorizontal: 12, fontSize: 11, lineHeight: 16 },
 });

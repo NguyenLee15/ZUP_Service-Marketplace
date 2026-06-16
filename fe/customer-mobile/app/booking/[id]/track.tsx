@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
@@ -174,6 +175,8 @@ function fullAddress(booking?: TrackingBooking | null) {
 }
 
 export default function TrackingScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const isOnline = useNetworkStatus();
@@ -343,7 +346,7 @@ export default function TrackingScreen() {
     );
   }
 
-  const statusColor = BOOKING_STATUS_COLOR[status] || Colors.light.textSecondary;
+  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
   const timelineSteps = getTrackingSteps(status);
 
   return (
@@ -386,9 +389,9 @@ export default function TrackingScreen() {
           {/* ConnectionBadge floating trên map */}
           <View style={styles.connectionBadge}>
             <View style={[styles.connectionDot, {
-              backgroundColor: connectionState === 'connected' ? Colors.light.success
-                : connectionState === 'connecting' ? Colors.light.warning
-                : Colors.light.error
+              backgroundColor: connectionState === 'connected' ? activeColors.success
+                : connectionState === 'connecting' ? activeColors.warning
+                : activeColors.error
             }]} />
             <Text variant="labelSmall" style={styles.connectionBadgeText}>
               {connectionState === 'connected' ? 'Realtime'
@@ -415,7 +418,7 @@ export default function TrackingScreen() {
           <MaterialCommunityIcons
             name={location?.source === 'live' ? 'crosshairs-gps' : 'map-marker-outline'}
             size={22}
-            color={location ? Colors.light.primary : Colors.light.textSecondary}
+            color={location ? activeColors.primary : activeColors.textSecondary}
           />
           <View style={{ flex: 1 }}>
             <Text variant="titleSmall" style={styles.titleText}>
@@ -456,6 +459,8 @@ function ProviderInfoCard({
   phone: string | null;
   locationMeta: string;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const handleCall = () => {
     if (!phone) return;
     Linking.openURL(`tel:${phone}`).catch(() => {});
@@ -465,7 +470,7 @@ function ProviderInfoCard({
     <CustomerCard>
       <View style={styles.providerRow}>
         <View style={styles.providerAvatar}>
-          <MaterialCommunityIcons name="account-hard-hat" size={24} color={Colors.light.primary} />
+          <MaterialCommunityIcons name="account-hard-hat" size={24} color={activeColors.primary} />
         </View>
         <View style={{ flex: 1 }}>
           <Text variant="titleSmall" style={styles.titleText}>
@@ -491,6 +496,8 @@ function ProviderInfoCard({
 }
 
 function SummaryCard({ booking, statusColor }: { booking: TrackingBooking; statusColor: string }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const status = booking.status || 'Không rõ';
   const address = fullAddress(booking);
 
@@ -517,6 +524,8 @@ function SummaryCard({ booking, statusColor }: { booking: TrackingBooking; statu
 }
 
 function NoLocationCard({ trackable, status }: { trackable: boolean; status: string }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -535,7 +544,7 @@ function NoLocationCard({ trackable, status }: { trackable: boolean; status: str
       <View style={styles.noLocation}>
         <View style={styles.emptyMapIcon}>
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <MaterialCommunityIcons name="map-marker-radius-outline" size={28} color={Colors.light.primary} />
+            <MaterialCommunityIcons name="map-marker-radius-outline" size={28} color={activeColors.primary} />
           </Animated.View>
         </View>
         <View style={{ flex: 1 }}>
@@ -554,9 +563,11 @@ function NoLocationCard({ trackable, status }: { trackable: boolean; status: str
 }
 
 function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; text: string }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.infoRow}>
-      <MaterialCommunityIcons name={icon} size={17} color={Colors.light.textSecondary} />
+      <MaterialCommunityIcons name={icon} size={17} color={activeColors.textSecondary} />
       <Text variant="bodySmall" style={styles.infoText} numberOfLines={2}>
         {text}
       </Text>
@@ -565,6 +576,8 @@ function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof MaterialCom
 }
 
 function TrackingSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.cardBlock}>
       <View style={[styles.skeleton, { width: '54%', height: 28 }]} />
@@ -587,25 +600,25 @@ function TrackingSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   content: { padding: 16, paddingBottom: 120, gap: 16 },
   headerBlock: { gap: 5, paddingTop: 12 },
-  headerTitle: { color: Colors.light.text, fontWeight: '900' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  headerTitle: { color: activeColors.text, fontWeight: '900' },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
   cardBlock: { gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
-  codeText: { color: Colors.light.primary, fontWeight: '900' },
-  titleText: { color: Colors.light.text, fontWeight: '900' },
+  codeText: { color: activeColors.primary, fontWeight: '900' },
+  titleText: { color: activeColors.text, fontWeight: '900' },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
-  infoText: { flex: 1, color: Colors.light.textSecondary, lineHeight: 19 },
+  infoText: { flex: 1, color: activeColors.textSecondary, lineHeight: 19 },
   mapShell: {
     height: 340,
     borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.light.border,
-    backgroundColor: Colors.light.surfaceVariant,
+    borderColor: activeColors.border,
+    backgroundColor: activeColors.surfaceVariant,
     position: 'relative',
   },
   map: { flex: 1 },
@@ -629,7 +642,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -637,7 +650,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -646,7 +659,7 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 18,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -654,5 +667,5 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: 10 },
   flexButton: { flex: 1, borderRadius: 12 },
   roundedButton: { alignSelf: 'center', borderRadius: 12 },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
 });

@@ -9,6 +9,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Button,
   SegmentedButtons,
@@ -217,9 +218,11 @@ async function getFreshAccessToken() {
 export default function DashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { user } = useAuthStore();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(theme, activeColors, insets);
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
@@ -389,19 +392,19 @@ export default function DashboardScreen() {
     {
       name: "Chờ xác nhận",
       population: stats?.pendingCount || 0,
-      color: Colors.light.statusPending,
+      color: activeColors.statusPending,
       legendFontColor: activeColors.textSecondary,
     },
     {
       name: "Đang làm",
       population: stats?.inProgressCount || 0,
-      color: Colors.light.statusInProgress,
+      color: activeColors.statusInProgress,
       legendFontColor: activeColors.textSecondary,
     },
     {
       name: "Hoàn thành",
       population: stats?.doneCount || 0,
-      color: Colors.light.statusDone,
+      color: activeColors.statusDone,
       legendFontColor: activeColors.textSecondary,
     },
   ];
@@ -433,7 +436,7 @@ export default function DashboardScreen() {
             <MaterialCommunityIcons
               name="bell-outline"
               size={22}
-            color={activeColors.text}
+              color={activeColors.text}
             />
           </TouchableRipple>
         }
@@ -679,7 +682,7 @@ export default function DashboardScreen() {
             <MaterialCommunityIcons
               name="file-pdf-box"
               size={32}
-              color={Colors.light.error}
+              color={activeColors.error}
             />
             <Text variant="labelMedium" style={styles.exportLabel}>
               {exporting === "pdf" ? "Đang tạo…" : "PDF"}
@@ -695,7 +698,7 @@ export default function DashboardScreen() {
             <MaterialCommunityIcons
               name="file-excel-box"
               size={32}
-              color={Colors.light.success}
+              color={activeColors.success}
             />
             <Text variant="labelMedium" style={styles.exportLabel}>
               {exporting === "excel" ? "Đang tạo…" : "Excel"}
@@ -763,14 +766,14 @@ export default function DashboardScreen() {
                         booking.status as keyof typeof BOOKING_STATUS_LABEL
                       ] || booking.status
                     }
-                    color={Colors.light.statusPending}
+                    color={activeColors.statusPending}
                   />
                 </View>
                 <View style={styles.bookingFooter}>
                   <MaterialCommunityIcons
                     name="calendar-outline"
                     size={14}
-                    color={Colors.light.textSecondary}
+                    color={activeColors.textSecondary}
                   />
                   <Text variant="labelSmall" style={styles.bookingDate}>
                     {new Date(booking.desiredTime).toLocaleDateString("vi-VN")}
@@ -785,9 +788,9 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, activeColors: any, insets: any) => StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 112, gap: 16 },
+  content: { padding: 16, paddingBottom: 76 + insets.bottom, gap: 16 },
   iconButton: {
     width: 42,
     height: 42,
@@ -851,7 +854,7 @@ const styles = StyleSheet.create({
   exportContent: { alignItems: "center", gap: 8 },
   exportLabel: { fontWeight: "700" },
   bookingRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  bookingCode: { color: Colors.light.primary, fontWeight: "700" },
+  bookingCode: { color: activeColors.primary, fontWeight: "700" },
   bookingTitle: { fontWeight: "700", marginTop: 4 },
   bookingMeta: { marginTop: 2 },
   bookingFooter: {

@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function TabsLayout() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const bottomInset = Math.min(Math.max(insets.bottom, 6), 18);
+  const bottomInset = Math.min(Math.max(insets.bottom, 4), 12);
 
   return (
     <Tabs
@@ -22,13 +22,13 @@ export default function TabsLayout() {
           position: 'absolute',
           left: 10,
           right: 10,
-          bottom: 6,
+          bottom: 4,
           backgroundColor: theme.dark
             ? 'rgba(23, 32, 51, 0.97)'
             : 'rgba(255, 255, 255, 0.96)',
           borderTopColor: theme.colors.outlineVariant,
           borderTopWidth: 1,
-          height: 52 + bottomInset,
+          height: 48 + bottomInset,
           paddingBottom: bottomInset,
           paddingTop: 4,
           borderRadius: 15,
@@ -44,7 +44,7 @@ export default function TabsLayout() {
         },
         tabBarItemStyle: {
           borderRadius: 12,
-          minHeight: 44,
+          minHeight: 40,
           paddingTop: 2,
         },
       }}

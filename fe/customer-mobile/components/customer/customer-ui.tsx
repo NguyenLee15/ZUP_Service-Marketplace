@@ -11,6 +11,7 @@ export { BottomActionBar } from './BottomActionBar';
 export { ConfirmSheet } from './ConfirmSheet';
 export { Timeline } from './Timeline';
 export { CustomerDialog } from './CustomerDialog';
+export { LocationPicker } from './LocationPicker';
 
 // Re-exports from Feature modules for backward compatibility
 export { ServiceCard } from '../../features/service/components/ServiceCard';

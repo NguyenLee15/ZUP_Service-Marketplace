@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { Image } from 'expo-image';
@@ -122,6 +123,8 @@ function normalizeServiceId(value?: string) {
 }
 
 export default function CreateBookingScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { serviceId: rawServiceId, reorderId } = useLocalSearchParams<{ serviceId: string; reorderId?: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -332,7 +335,7 @@ export default function CreateBookingScreen() {
                   </Text>
                 ) : null}
               </View>
-              {oldBookingId > 0 ? <StatusChip label="Đặt lại" color={Colors.light.info} /> : null}
+              {oldBookingId > 0 ? <StatusChip label="Đặt lại" color={activeColors.info} /> : null}
             </View>
           </CustomerCard>
         ) : (
@@ -500,7 +503,7 @@ export default function CreateBookingScreen() {
             </Text>
             {service?.referencePrice ? (
               <View style={styles.priceSummaryRow}>
-                <MaterialCommunityIcons name="tag-outline" size={16} color={Colors.light.primary} />
+                <MaterialCommunityIcons name="tag-outline" size={16} color={activeColors.primary} />
                 <Text variant="labelMedium" style={styles.priceSummaryText}>
                   Giá tham khảo: {formatCurrency(service.referencePrice)}
                 </Text>
@@ -572,6 +575,8 @@ export default function CreateBookingScreen() {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.section}>
       <Text variant="titleMedium" style={styles.sectionTitle}>
@@ -591,11 +596,13 @@ function SectionWithIcon({
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   children: React.ReactNode;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.section}>
       <View style={styles.sectionIconRow}>
         <View style={styles.sectionIconWrap}>
-          <MaterialCommunityIcons name={icon} size={16} color={Colors.light.primary} />
+          <MaterialCommunityIcons name={icon} size={16} color={activeColors.primary} />
         </View>
         <Text variant="titleMedium" style={styles.sectionTitle}>
           {title}
@@ -615,6 +622,8 @@ function AddressCard({
   selected: boolean;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <Pressable
       onPress={onPress}
@@ -634,7 +643,7 @@ function AddressCard({
             </Text>
           </View>
           <View style={styles.addressBadgeRow}>
-            {address.isDefault ? <StatusChip label="Mặc định" color={Colors.light.success} /> : null}
+            {address.isDefault ? <StatusChip label="Mặc định" color={activeColors.success} /> : null}
             {selected ? (
               <View style={styles.selectedCheck}>
                 <MaterialCommunityIcons name="check" size={14} color="#FFF" />
@@ -662,6 +671,8 @@ function OptionPicker({
   onSelect: (value: string) => void;
   onClose: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const [search, setSearch] = useState('');
   const filteredOptions = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -683,7 +694,7 @@ function OptionPicker({
             {title}
           </Text>
           <Pressable onPress={onClose} accessibilityRole="button" style={styles.closeButton}>
-            <MaterialCommunityIcons name="close" size={22} color={Colors.light.text} />
+            <MaterialCommunityIcons name="close" size={22} color={activeColors.text} />
           </Pressable>
         </View>
         <TextInput
@@ -719,39 +730,39 @@ function OptionPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   centerContent: { flexGrow: 1, justifyContent: 'center' },
   section: { gap: 10 },
-  sectionTitle: { color: Colors.light.text, fontWeight: '900' },
+  sectionTitle: { color: activeColors.text, fontWeight: '900' },
   sectionIconRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionIconWrap: {
     width: 28,
     height: 28,
     borderRadius: 10,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleText: { color: Colors.light.text, fontWeight: '900' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
-  priceText: { color: Colors.light.primary, fontWeight: '900' },
+  titleText: { color: activeColors.text, fontWeight: '900' },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
+  priceText: { color: activeColors.primary, fontWeight: '900' },
   priceSummaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  priceSummaryText: { color: Colors.light.primary, fontWeight: '900' },
+  priceSummaryText: { color: activeColors.primary, fontWeight: '900' },
   serviceCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   formBlock: { gap: 12 },
-  fieldLabel: { color: Colors.light.textSecondary, fontWeight: '800' },
+  fieldLabel: { color: activeColors.textSecondary, fontWeight: '800' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderRadius: 999 },
   addressList: { gap: 8 },
-  addressCard: { borderColor: Colors.light.border },
-  addressCardSelected: { borderColor: Colors.light.primary, borderWidth: 2 },
+  addressCard: { borderColor: activeColors.border },
+  addressCardSelected: { borderColor: activeColors.primary, borderWidth: 2 },
   addressHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   addressBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   selectedCheck: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -762,7 +773,7 @@ const styles = StyleSheet.create({
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.34)' },
   sheet: {
     maxHeight: '76%',
-    backgroundColor: Colors.light.surface,
+    backgroundColor: activeColors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 16,
@@ -772,18 +783,18 @@ const styles = StyleSheet.create({
     width: 42,
     height: 5,
     borderRadius: 999,
-    backgroundColor: Colors.light.borderStrong,
+    backgroundColor: activeColors.borderStrong,
     alignSelf: 'center',
   },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  sheetTitle: { color: Colors.light.text, fontWeight: '900' },
+  sheetTitle: { color: activeColors.text, fontWeight: '900' },
   closeButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
   optionList: { gap: 8, paddingBottom: 18 },
   roundedButton: { borderRadius: 12 },
@@ -794,7 +805,7 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 1,
     borderRadius: 12,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
   photoRemoveBtn: {
     position: 'absolute',

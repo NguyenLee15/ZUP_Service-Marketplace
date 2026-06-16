@@ -4,6 +4,7 @@ import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProviderCard, ProviderInlineMessage, ProviderMetricCard, ProviderPageHeader } from '../../components/provider/provider-ui';
 import { dashboardApi } from '../../features/booking/booking.api';
@@ -28,8 +29,10 @@ const ranges = [
 
 export default function ProviderAnalyticsScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [range, setRange] = useState<(typeof ranges)[number]['key']>('30d');
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,9 +89,9 @@ export default function ProviderAnalyticsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[activeColors.primary]} />
       }
     >
       <ProviderPageHeader
@@ -102,12 +105,12 @@ export default function ProviderAnalyticsScreen() {
       <ProviderCard>
         <View style={styles.filterHeader}>
           <View>
-            <Text variant="titleSmall" style={styles.cardTitle}>Khoảng thời gian</Text>
-            <Text variant="bodySmall" style={styles.cardDescription}>
+            <Text variant="titleSmall" style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Khoảng thời gian</Text>
+            <Text variant="bodySmall" style={[styles.cardDescription, { color: theme.colors.onSurfaceVariant }]}>
               Dữ liệu dùng cho phân tích xu hướng thu nhập và hiệu suất.
             </Text>
           </View>
-          <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={Colors.light.primaryLight} />
+          <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={activeColors.primaryLight} />
         </View>
         <View style={styles.rangeRow}>
           {ranges.map((item) => (
@@ -133,8 +136,8 @@ export default function ProviderAnalyticsScreen() {
 
       <ProviderCard contentStyle={styles.chartCard}>
         <View style={styles.sectionTitleRow}>
-          <Text variant="titleMedium" style={styles.cardTitle}>Xu hướng doanh thu</Text>
-          <Text variant="labelSmall" style={styles.netLabel}>Đã trừ 15% hoa hồng</Text>
+          <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Xu hướng doanh thu</Text>
+          <Text variant="labelSmall" style={[styles.netLabel, { color: activeColors.success }]}>Đã trừ 15% hoa hồng</Text>
         </View>
         <LineChart
           data={{
@@ -144,12 +147,12 @@ export default function ProviderAnalyticsScreen() {
           width={chartWidth}
           height={220}
           chartConfig={{
-            backgroundColor: Colors.light.surface,
-            backgroundGradientFrom: Colors.light.surface,
-            backgroundGradientTo: Colors.light.surface,
+            backgroundColor: activeColors.surface,
+            backgroundGradientFrom: activeColors.surface,
+            backgroundGradientTo: activeColors.surface,
             decimalPlaces: 0,
             color: (opacity = 1) => `rgba(6, 182, 212, ${opacity})`,
-            labelColor: () => Colors.light.textSecondary,
+            labelColor: () => activeColors.textSecondary,
             propsForDots: { r: '3' },
           }}
           bezier
@@ -159,12 +162,12 @@ export default function ProviderAnalyticsScreen() {
 
       <ProviderCard>
         <View style={styles.aiHeader}>
-          <View style={styles.aiIcon}>
-            <MaterialCommunityIcons name="auto-fix" size={24} color={Colors.light.success} />
+          <View style={[styles.aiIcon, { backgroundColor: `${activeColors.success}16`, borderColor: `${activeColors.success}44` }]}>
+            <MaterialCommunityIcons name="auto-fix" size={24} color={activeColors.success} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text variant="titleMedium" style={styles.cardTitle}>Gợi ý tối ưu thu nhập</Text>
-            <Text variant="bodySmall" style={styles.cardDescription}>
+            <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Gợi ý tối ưu thu nhập</Text>
+            <Text variant="bodySmall" style={[styles.cardDescription, { color: theme.colors.onSurfaceVariant }]}>
               Online vào khung 18:00-21:00 và ưu tiên các quận có đơn đang chờ để tăng khả năng chốt đơn.
             </Text>
           </View>
@@ -189,16 +192,15 @@ function getRangeParams(range: '7d' | '30d' | 'month') {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 112, gap: 16 },
+  content: { padding: 16, gap: 16 },
   filterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
   },
-  cardTitle: { color: Colors.light.text, fontWeight: '800' },
+  cardTitle: { fontWeight: '800' },
   cardDescription: {
-    color: Colors.light.textSecondary,
     marginTop: 4,
     lineHeight: 18,
   },
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  netLabel: { color: Colors.light.success, fontWeight: '700' },
+  netLabel: { fontWeight: '700' },
   chart: { borderRadius: 16 },
   aiHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   aiIcon: {
@@ -222,8 +224,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.successBg,
     borderWidth: 1,
-    borderColor: `${Colors.light.success}44`,
   },
 });

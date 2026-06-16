@@ -22,6 +22,8 @@ type MessageState = {
 
 export default function ServiceFormScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(theme, activeColors);
   const router = useRouter();
   const { id, serviceData } = useLocalSearchParams<{ id?: string; serviceData?: string }>();
 
@@ -279,7 +281,7 @@ export default function ServiceFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, activeColors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -292,18 +294,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   input: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: activeColors.surface,
   },
   categoryButton: {
     borderRadius: 12,
-    borderColor: Colors.light.borderStrong,
+    borderColor: activeColors.borderStrong,
   },
   categoryButtonContent: {
     justifyContent: 'flex-start',
     minHeight: 48,
   },
   helperText: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     lineHeight: 18,
   },
   imageGrid: {
@@ -316,7 +318,7 @@ const styles = StyleSheet.create({
     height: 92,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
   previewImage: {
     width: '100%',
@@ -346,7 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   modalTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '800',
     marginBottom: 10,
   },
@@ -354,10 +356,10 @@ const styles = StyleSheet.create({
     maxHeight: 320,
   },
   radioLabel: {
-    color: Colors.light.text,
+    color: activeColors.text,
   },
   emptyCategory: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     padding: 12,
   },
   closeButton: {

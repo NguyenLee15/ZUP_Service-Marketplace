@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
@@ -12,7 +12,9 @@ import {
   InlineMessage,
   ServiceCard,
   ServiceSkeleton,
+  LocationPicker,
 } from '../../components/customer/customer-ui';
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { Colors } from '../../constants/colors';
 import { stableKey, toRouteId, routes } from '../../lib/route-utils';
 import { useSearchFilters, SearchService, SearchCategory } from '../../features/service/hooks/useSearchFilters';
@@ -48,6 +50,8 @@ function formatPrice(value?: string) {
 }
 
 export default function SearchScreen() {
+  const activeColors = useActiveColors();
+  const styles = useMemo(() => getStyles(activeColors), [activeColors]);
   const router = useRouter();
   const {
     query,
@@ -78,7 +82,12 @@ export default function SearchScreen() {
     toggleAiMode,
     categoriesQueryLoading,
     debouncedQuery,
+    location,
+    setManualLocation,
+    resetToGps,
   } = useSearchFilters();
+
+  const [locationPickerVisible, setLocationPickerVisible] = useState(false);
 
   const skeletonRows = useMemo(
     () => [{ id: 's1' }, { id: 's2' }, { id: 's3' }, { id: 's4' }],
@@ -132,6 +141,18 @@ export default function SearchScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.quickFiltersContainer}
             >
+              <Chip
+                icon="map-marker-outline"
+                mode="flat"
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setLocationPickerVisible(true);
+                }}
+                style={[styles.quickFilterChip, styles.locationChip]}
+              >
+                {location?.label || 'Vị trí hiện tại'}
+              </Chip>
+
               <Chip
                 icon="star-outline"
                 selected={minRating === '4.5'}
@@ -289,6 +310,14 @@ export default function SearchScreen() {
           );
         }}
       />
+      
+      <LocationPicker
+        visible={locationPickerVisible}
+        onDismiss={() => setLocationPickerVisible(false)}
+        currentLocation={location}
+        onSelectManual={setManualLocation}
+        onSelectGps={resetToGps}
+      />
 
       <ConfirmSheet
         visible={filterOpen}
@@ -425,6 +454,8 @@ function FilterSummary({
   onClearPrice: () => void;
   onClearAi: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = useMemo(() => getStyles(activeColors), [activeColors]);
   if (!aiMode && !categoryName && !minRating && !maxPrice) return null;
   return (
     <View style={styles.summaryWrap}>
@@ -453,6 +484,8 @@ function FilterSummary({
 }
 
 function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  const activeColors = useActiveColors();
+  const styles = useMemo(() => getStyles(activeColors), [activeColors]);
   return (
     <View style={styles.filterGroup}>
       <Text variant="titleSmall" style={styles.filterTitle}>
@@ -463,7 +496,7 @@ function FilterGroup({ title, children }: { title: string; children: React.React
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   listContent: { padding: 16, paddingBottom: 112 },
   headerContent: { gap: 12, marginBottom: 12 },
   separator: { height: 12 },
@@ -479,14 +512,15 @@ const styles = StyleSheet.create({
   filterTitle: { color: Colors.light.text, fontWeight: '900' },
   helperText: { color: Colors.light.textSecondary, lineHeight: 18 },
   sheetActions: { alignItems: 'flex-start' },
-  quickFiltersContainer: { gap: 8, paddingBottom: 4, marginTop: 4 },
-  quickFilterChip: { height: 32, borderRadius: 16 },
-  quickFilterChipActive: { backgroundColor: Colors.light.primarySoft, borderColor: Colors.light.primary },
+  quickFiltersContainer: { gap: 8, paddingHorizontal: 16, paddingBottom: 8 },
+  quickFilterChip: { borderRadius: 20 },
+  quickFilterChipActive: { backgroundColor: activeColors.primarySoft, borderColor: activeColors.primary, borderWidth: 1 },
+  locationChip: { backgroundColor: activeColors.surfaceVariant },
   emptyContainer: { gap: 24, paddingVertical: 12 },
   trendsSection: { gap: 12, paddingHorizontal: 16, marginTop: 12 },
-  trendsTitle: { color: Colors.light.text, fontWeight: '800' },
+  trendsTitle: { color: activeColors.text, fontWeight: '800' },
   trendsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  trendChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.light.surfaceVariant, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  trendText: { fontSize: 13, color: Colors.light.text, fontWeight: '700' },
+  trendChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: activeColors.surfaceVariant, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  trendText: { fontSize: 13, color: activeColors.text, fontWeight: '700' },
   pressed: { opacity: 0.72 },
 });

@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
@@ -120,6 +121,8 @@ function getHomeErrorMessage(failed?: HomeData['failed']) {
 }
 
 export default function HomeScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const { user } = useAuthStore();
   const isOnline = useNetworkStatus();
@@ -207,7 +210,7 @@ export default function HomeScreen() {
                 accessibilityLabel="Mở thông báo"
               >
                 <View>
-                  <MaterialCommunityIcons name="bell-outline" size={24} color={Colors.light.text} />
+                  <MaterialCommunityIcons name="bell-outline" size={24} color={activeColors.text} />
                   {unreadBadge ? (
                     unreadBadge.label ? (
                       <Animated.View style={[styles.badge, { opacity: bellPulseAnim }]}>
@@ -299,6 +302,8 @@ export default function HomeScreen() {
 // ─── Fake Search Bar ─────────────────────────────────────────────────────────
 
 function FakeSearchBar({ onPress }: { onPress: () => void }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -324,11 +329,11 @@ function FakeSearchBar({ onPress }: { onPress: () => void }) {
       accessibilityHint="Tìm kiếm dịch vụ theo nhu cầu"
       style={({ pressed }) => [styles.fakeSearch, pressed && styles.fakeSearchPressed]}
     >
-      <MaterialCommunityIcons name="magnify" size={20} color={Colors.light.primary} />
+      <MaterialCommunityIcons name="magnify" size={20} color={activeColors.primary} />
       <Animated.Text style={[styles.fakeSearchText, { opacity: fadeAnim }]} numberOfLines={1}>
         {SEARCH_PLACEHOLDERS[placeholderIndex]}
       </Animated.Text>
-      <MaterialCommunityIcons name="tune-variant" size={18} color={Colors.light.textSecondary} />
+      <MaterialCommunityIcons name="tune-variant" size={18} color={activeColors.textSecondary} />
     </Pressable>
   );
 }
@@ -344,6 +349,8 @@ function HomeHero({
   onSearch: () => void;
   onChatbot: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const scaleAnim = useRef(new Animated.Value(0.96)).current;
 
   useEffect(() => {
@@ -399,7 +406,7 @@ function HomeHero({
             accessibilityRole="button"
             accessibilityLabel="Tìm dịch vụ"
           >
-            <MaterialCommunityIcons name="magnify" size={18} color={Colors.light.primary} />
+            <MaterialCommunityIcons name="magnify" size={18} color={activeColors.primary} />
             <Text style={styles.heroPrimaryBtnText}>Tìm dịch vụ</Text>
           </Pressable>
           <Pressable
@@ -431,6 +438,8 @@ function FeaturedSection({
   onOpenSearch: () => void;
   onOpenService: (service: HomeService) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.section}>
       <SectionHeader
@@ -473,6 +482,8 @@ function FeaturedServiceCard({
   service: HomeService;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.featuredCard}>
       <View style={styles.featuredBadge}>
@@ -485,6 +496,8 @@ function FeaturedServiceCard({
 }
 
 function FeaturedSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <CustomerCard style={styles.featuredCard} contentStyle={styles.featuredSkeletonContent}>
       <View style={[styles.skeletonBlock, styles.featuredSkeletonImage]} />
@@ -495,7 +508,7 @@ function FeaturedSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   listContent: { padding: 16, paddingBottom: 112 },
   headerContent: { gap: 16, marginBottom: 12 },
   separator: { height: 12 },
@@ -507,9 +520,9 @@ const styles = StyleSheet.create({
     minWidth: 20,
     height: 20,
     borderRadius: 999,
-    backgroundColor: Colors.light.error,
+    backgroundColor: activeColors.error,
     borderWidth: 2,
-    borderColor: Colors.light.surface,
+    borderColor: activeColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -522,33 +535,33 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.light.error,
+    backgroundColor: activeColors.error,
     borderWidth: 2,
-    borderColor: Colors.light.surface,
+    borderColor: activeColors.surface,
   },
   // Fake Search Bar
   fakeSearch: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: activeColors.surface,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: Colors.light.border,
+    borderColor: activeColors.border,
     paddingHorizontal: 14,
     paddingVertical: 13,
     boxShadow: '0 2px 8px rgba(11,124,255,0.06)',
   },
-  fakeSearchPressed: { opacity: 0.80, borderColor: Colors.light.primary },
+  fakeSearchPressed: { opacity: 0.80, borderColor: activeColors.primary },
   fakeSearchText: {
     flex: 1,
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontSize: 15,
   },
   // Hero Card
   heroCard: {
     borderRadius: 20,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     padding: 20,
     gap: 16,
     overflow: 'hidden',
@@ -593,7 +606,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
   },
-  heroPrimaryBtnText: { color: Colors.light.primary, fontWeight: '900', fontSize: 14 },
+  heroPrimaryBtnText: { color: activeColors.primary, fontWeight: '900', fontSize: 14 },
   heroSecondaryBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -628,19 +641,19 @@ const styles = StyleSheet.create({
   featuredBadgeText: { color: '#FFF', fontWeight: '900', fontSize: 11 },
   featuredSkeletonContent: { gap: 10 },
   featuredSkeletonImage: { width: 92, height: 92, borderRadius: 14 },
-  skeletonBlock: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeletonBlock: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   // Category chips (kept for backward compat)
   categoryChip: {
     width: 118,
     minHeight: 82,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.light.border,
-    backgroundColor: Colors.light.surface,
+    borderColor: activeColors.border,
+    backgroundColor: activeColors.surface,
     padding: 12,
     gap: 8,
     justifyContent: 'center',
-    boxShadow: Colors.light.cardShadow,
+    boxShadow: activeColors.cardShadow,
   },
   pressed: { opacity: 0.72 },
 });

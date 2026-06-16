@@ -36,9 +36,7 @@ export function ServiceCard({ service, onPress }: { service: any; onPress: () =>
   const imageUrl = service?.images?.[0]?.imageUrl;
   const price = Number(service?.referencePrice || 0);
   
-  // Dynamic realistic distance indicator based on service ID
-  const rawId = Number(service?.id || 0);
-  const distance = service?.distance || (rawId % 3 === 0 ? 0.8 : (rawId % 3 === 1 ? 1.5 : 2.4));
+  const distance = service?.distanceKm ?? service?.distance;
 
   return (
     <Pressable
@@ -72,11 +70,15 @@ export function ServiceCard({ service, onPress }: { service: any; onPress: () =>
               <Text variant="labelSmall" style={styles.metaText}>
                 {Number(service?.avgRating || 0).toFixed(1)} ({service?.totalReviews || 0})
               </Text>
-              <Text style={styles.dividerDot}>•</Text>
-              <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors.light.textSecondary} />
-              <Text variant="labelSmall" style={styles.metaText}>
-                {distance.toFixed(1)} km
-              </Text>
+              {distance !== undefined && (
+                <>
+                  <Text style={styles.dividerDot}>•</Text>
+                  <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors.light.textSecondary} />
+                  <Text variant="labelSmall" style={styles.metaText}>
+                    {distance.toFixed(1)} km
+                  </Text>
+                </>
+              )}
             </View>
             <Text variant="titleSmall" style={styles.price}>
               {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}

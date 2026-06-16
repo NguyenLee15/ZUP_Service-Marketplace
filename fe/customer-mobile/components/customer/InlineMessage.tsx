@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,7 +15,7 @@ const toneIcon: Record<Tone, IconName> = {
   neutral: 'information-outline',
 };
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   message: { flexDirection: 'row', gap: 8, borderRadius: 14, borderWidth: 1, padding: 12, alignItems: 'flex-start' },
   messageText: { flex: 1, fontWeight: '600', lineHeight: 18 },
 });
@@ -28,6 +29,7 @@ export function InlineMessage({
 }) {
   const theme = useTheme();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(activeColors);
 
   const color = {
     info: activeColors.info,

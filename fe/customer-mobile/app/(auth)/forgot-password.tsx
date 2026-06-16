@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
@@ -22,6 +23,8 @@ type ForgotPasswordForm = {
 type ForgotPasswordField = keyof ForgotPasswordForm;
 
 export default function ForgotPasswordScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const [form, setForm] = useState<ForgotPasswordForm>({ email: '' });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors<ForgotPasswordField>>({});
@@ -98,9 +101,9 @@ export default function ForgotPasswordScreen() {
                   Haptics.selectionAsync().catch(() => {});
                   router.back();
                 }}
-                style={[styles.backButton, { borderColor: Colors.light.border }]}
+                style={[styles.backButton, { borderColor: activeColors.border }]}
               >
-                <MaterialCommunityIcons name="chevron-left" size={26} color={Colors.light.text} />
+                <MaterialCommunityIcons name="chevron-left" size={26} color={activeColors.text} />
               </Pressable>
               <View style={{ flex: 1 }} />
             </View>
@@ -118,8 +121,8 @@ export default function ForgotPasswordScreen() {
         {message ? (
           <CustomerCard style={styles.successCard} contentStyle={styles.successCardContent}>
             <View style={styles.successIconWrapper}>
-              <View style={[styles.successIconOuter, { backgroundColor: `${Colors.light.success}16` }]}>
-                <MaterialCommunityIcons name="email-outline" size={54} color={Colors.light.success} />
+              <View style={[styles.successIconOuter, { backgroundColor: `${activeColors.success}16` }]}>
+                <MaterialCommunityIcons name="email-outline" size={54} color={activeColors.success} />
               </View>
               <View style={styles.successBadge}>
                 <MaterialCommunityIcons name="check" size={16} color="#FFFFFF" />
@@ -179,7 +182,7 @@ export default function ForgotPasswordScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 textContentType="emailAddress"
-                left={<TextInput.Icon icon="email-outline" color={Colors.light.primary} />}
+                left={<TextInput.Icon icon="email-outline" color={activeColors.primary} />}
                 error={Boolean(fieldErrors.email)}
                 disabled={loading}
                 returnKeyType="done"
@@ -224,8 +227,8 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  keyboard: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  keyboard: { flex: 1, backgroundColor: activeColors.background },
   content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 24, gap: 20 },
   header: { gap: 8, marginBottom: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
@@ -238,17 +241,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
-  title: { color: Colors.light.text, fontWeight: '900', letterSpacing: -0.5 },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 22, fontSize: 14 },
+  title: { color: activeColors.text, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 22, fontSize: 14 },
   cardContent: { gap: 8, paddingVertical: 8 },
   inputContainer: { marginBottom: 2 },
   inputOutline: { borderRadius: 14 },
   helperText: { paddingLeft: 4 },
-  primaryButton: { borderRadius: 14, marginTop: 8, shadowColor: Colors.light.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 6 },
-  secondaryButton: { borderRadius: 14, borderWidth: 1.5, borderColor: Colors.light.border },
+  primaryButton: { borderRadius: 14, marginTop: 8, shadowColor: activeColors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 6 },
+  secondaryButton: { borderRadius: 14, borderWidth: 1.5, borderColor: activeColors.border },
   buttonContent: { height: 54 },
   buttonLabel: { fontSize: 16, fontWeight: '800' },
-  secondaryButtonLabel: { fontSize: 16, fontWeight: '800', color: Colors.light.text },
+  secondaryButtonLabel: { fontSize: 16, fontWeight: '800', color: activeColors.text },
   textButton: { marginTop: 4 },
 
   // Success view styling
@@ -275,9 +278,9 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     borderColor: '#FFFFFF',
   },
-  successTitle: { color: Colors.light.text, fontWeight: '900', letterSpacing: -0.5, marginTop: 4 },
-  successDescription: { textAlign: 'center', color: Colors.light.textSecondary, lineHeight: 22, fontSize: 14, paddingHorizontal: 4 },
-  emailHighlight: { color: Colors.light.text, fontWeight: '800', fontSize: 15 },
-  spamNotice: { textAlign: 'center', color: Colors.light.textSecondary, fontStyle: 'italic', fontSize: 11, lineHeight: 16, paddingHorizontal: 8 },
+  successTitle: { color: activeColors.text, fontWeight: '900', letterSpacing: -0.5, marginTop: 4 },
+  successDescription: { textAlign: 'center', color: activeColors.textSecondary, lineHeight: 22, fontSize: 14, paddingHorizontal: 4 },
+  emailHighlight: { color: activeColors.text, fontWeight: '800', fontSize: 15 },
+  spamNotice: { textAlign: 'center', color: activeColors.textSecondary, fontStyle: 'italic', fontSize: 11, lineHeight: 16, paddingHorizontal: 8 },
   successActions: { width: '100%', gap: 10, marginTop: 10 },
 });

@@ -1,9 +1,10 @@
 import { Redirect, Stack } from 'expo-router';
-import { stackScreenOptions } from '../../constants/navigation';
+import { useStackScreenOptions } from '../../hooks/useStackScreenOptions';
 import { useAuthStore } from '../../features/auth/auth.store';
 
 export default function ChatRoomLayout() {
   const { isAuthenticated, isLoading } = useAuthStore();
+  const screenOptions = useStackScreenOptions();
 
   // Guard: chưa xác thực → về login (tránh bypass bằng deep link)
   if (!isLoading && !isAuthenticated) {
@@ -11,7 +12,7 @@ export default function ChatRoomLayout() {
   }
 
   return (
-    <Stack screenOptions={stackScreenOptions}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen name="[id]/index" options={{ title: 'Trò chuyện' }} />
     </Stack>
   );

@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View, Pressable, Alert } from 'react-native';
 import { Image } from 'expo-image';
@@ -32,6 +33,8 @@ function getAvatarLabel(name?: string | null) {
 }
 
 export default function EditProfileScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const queryClient = useQueryClient();
   const { user, fetchProfile } = useAuthStore();
   const [form, setForm] = useState<ProfileForm>({
@@ -189,7 +192,7 @@ export default function EditProfileScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
                 setAvatar(null);
               }}
-              textColor={Colors.light.error}
+              textColor={activeColors.error}
               style={styles.resetAvatarButton}
             >
               Hủy ảnh đã chọn
@@ -208,7 +211,7 @@ export default function EditProfileScreen() {
               onChangeText={(fullName) => updateForm({ fullName })}
               autoCapitalize="words"
               textContentType="name"
-              left={<TextInput.Icon icon="account-outline" color={Colors.light.textSecondary} />}
+              left={<TextInput.Icon icon="account-outline" color={activeColors.textSecondary} />}
               error={Boolean(validationMessage && form.fullName.trim().length < 2)}
               outlineStyle={styles.outlineStyle}
               style={styles.textInput}
@@ -228,7 +231,7 @@ export default function EditProfileScreen() {
               onChangeText={(phone) => updateForm({ phone })}
               keyboardType="phone-pad"
               textContentType="telephoneNumber"
-              left={<TextInput.Icon icon="phone-outline" color={Colors.light.textSecondary} />}
+              left={<TextInput.Icon icon="phone-outline" color={activeColors.textSecondary} />}
               error={Boolean(form.phone.trim() && !VIETNAM_PHONE_REGEX.test(form.phone.trim()))}
               outlineStyle={styles.outlineStyle}
               style={styles.textInput}
@@ -263,7 +266,7 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   avatarCard: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -279,7 +282,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderRadius: 54,
     borderWidth: 4,
-    borderColor: Colors.light.primarySoft,
+    borderColor: activeColors.primarySoft,
     backgroundColor: '#FFFFFF',
   },
   avatar: {
@@ -293,7 +296,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
   },
   avatarText: {
     color: '#FFFFFF',
@@ -304,7 +307,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -2,
     bottom: -2,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -314,12 +317,12 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   avatarLabel: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontWeight: '700',
   },
   resetAvatarButton: {
     borderRadius: 10,
-    borderColor: Colors.light.error,
+    borderColor: activeColors.error,
   },
   form: {
     gap: 16,
@@ -334,18 +337,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   errorText: {
-    color: Colors.light.error,
+    color: activeColors.error,
     fontWeight: '700',
     marginLeft: 4,
   },
   hintText: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     marginLeft: 4,
   },
   saveButton: {
     borderRadius: 16,
     marginTop: 8,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
   },
   saveButtonContent: {
     height: 48,

@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 88,
+    paddingBottom: 76,
     gap: 16,
   },
   pageHeader: {
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   card: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
   },
   cardContent: {

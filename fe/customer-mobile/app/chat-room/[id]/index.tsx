@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -86,6 +87,8 @@ function getConnectionSubtitle(state: ConnectionState, typing: boolean) {
 }
 
 export default function ChatRoomScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { id, providerName = 'Nhà cung cấp' } = useLocalSearchParams<{
     id: string;
     providerName?: string;
@@ -365,7 +368,7 @@ export default function ChatRoomScreen() {
               <Text variant="bodySmall" numberOfLines={1}>
                 {attachedImage.fileName || 'Ảnh đính kèm'}
               </Text>
-              <Text variant="labelSmall" style={{ color: Colors.light.textSecondary }}>
+              <Text variant="labelSmall" style={{ color: activeColors.textSecondary }}>
                 {((attachedImage.fileSize || 0) / 1024).toFixed(1)} KB
               </Text>
             </View>
@@ -406,7 +409,7 @@ export default function ChatRoomScreen() {
             accessibilityRole="button"
             accessibilityLabel="Đính kèm hình ảnh"
           >
-            <MaterialCommunityIcons name="image-outline" size={22} color={Colors.light.primary} />
+            <MaterialCommunityIcons name="image-outline" size={22} color={activeColors.primary} />
           </Pressable>
           <TextInput
             mode="outlined"
@@ -448,6 +451,8 @@ function MessageBubble({
   recalling: boolean;
   onRecall: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const mine = isMine(message);
   const ai = message.senderType === 'AI';
   const recalled = Boolean(message.recalledAt);
@@ -463,7 +468,7 @@ function MessageBubble({
       >
         {recalled ? (
           <View style={styles.recalledRow}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={16} color={Colors.light.textSecondary} />
+            <MaterialCommunityIcons name="alert-circle-outline" size={16} color={activeColors.textSecondary} />
             <Text variant="bodyMedium" style={styles.recalledText}>
               Tin nhắn đã được thu hồi
             </Text>
@@ -499,7 +504,7 @@ function MessageBubble({
             loading={recalling}
             disabled={recalling}
             onPress={onRecall}
-            labelStyle={mine ? { color: Colors.light.primary } : undefined}
+            labelStyle={mine ? { color: activeColors.primary } : undefined}
             accessibilityLabel="Thu hồi tin nhắn của tôi"
           >
             Thu hồi
@@ -510,8 +515,8 @@ function MessageBubble({
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   listContent: { padding: 16, paddingBottom: 20 },
   headerWrap: { gap: 10, marginBottom: 12 },
   messageWrap: { marginBottom: 8 },
@@ -523,20 +528,20 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   mineBubble: {
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 4,
   },
   aiBubble: { backgroundColor: '#ECFDF5', borderColor: '#BBF7D0' },
-  messageText: { color: Colors.light.text, lineHeight: 21 },
-  recalledText: { color: Colors.light.textSecondary, fontStyle: 'italic' },
+  messageText: { color: activeColors.text, lineHeight: 21 },
+  recalledText: { color: activeColors.textSecondary, fontStyle: 'italic' },
   messageMeta: { flexDirection: 'row', justifyContent: 'flex-end', gap: 6, marginTop: 4 },
-  metaText: { color: Colors.light.textSecondary },
+  metaText: { color: activeColors.textSecondary },
   inputShell: {
     padding: 12,
     paddingBottom: 18,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: activeColors.border,
     backgroundColor: '#FFFFFF',
   },
   suggestionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
@@ -547,16 +552,16 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 16,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
   },
-  sendButtonDisabled: { backgroundColor: Colors.light.borderStrong },
+  sendButtonDisabled: { backgroundColor: activeColors.borderStrong },
   recalledRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  bubbleImage: { width: 220, height: 160, borderRadius: 12, backgroundColor: Colors.light.surfaceVariant },
-  mineMessageText: { color: Colors.light.text },
-  mineMetaText: { color: Colors.light.textSecondary },
+  bubbleImage: { width: 220, height: 160, borderRadius: 12, backgroundColor: activeColors.surfaceVariant },
+  mineMessageText: { color: activeColors.text },
+  mineMetaText: { color: activeColors.textSecondary },
   // Image attachments UI
   attachmentPreview: {
     flexDirection: 'row',
@@ -582,7 +587,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: activeColors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,

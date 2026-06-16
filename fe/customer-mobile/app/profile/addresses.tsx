@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useMemo, useState } from 'react';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -71,16 +72,18 @@ function getAddressIcon(label?: string | null): string {
   return 'map-marker-outline';
 }
 
-function getAddressColor(label?: string | null): string {
+function getAddressColor(label?: string | null, activeColors?: any): string {
   const text = String(label || '').toLowerCase();
-  if (text.includes('nhà') || text.includes('home')) return Colors.light.primary;
+  if (text.includes('nhà') || text.includes('home')) return activeColors.primary;
   if (text.includes('cơ quan') || text.includes('công ty') || text.includes('văn phòng') || text.includes('office') || text.includes('work')) {
     return '#7C3AED';
   }
-  return Colors.light.secondary;
+  return activeColors.secondary;
 }
 
 export default function AddressesScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const queryClient = useQueryClient();
   const { addressOptions, loading: optionsLoading, fallback } = useAddressOptions();
   const [form, setForm] = useState<AddressForm>(emptyForm);
@@ -247,7 +250,7 @@ export default function AddressesScreen() {
               </Text>
             </View>
             {form.id ? (
-              <Button mode="text" onPress={resetForm} textColor={Colors.light.error}>
+              <Button mode="text" onPress={resetForm} textColor={activeColors.error}>
                 Hủy sửa
               </Button>
             ) : null}
@@ -271,7 +274,7 @@ export default function AddressesScreen() {
                 <MaterialCommunityIcons
                   name="home-outline"
                   size={16}
-                  color={form.label === 'Nhà riêng' ? '#FFFFFF' : Colors.light.textSecondary}
+                  color={form.label === 'Nhà riêng' ? '#FFFFFF' : activeColors.textSecondary}
                 />
                 <Text
                   style={[
@@ -296,7 +299,7 @@ export default function AddressesScreen() {
                 <MaterialCommunityIcons
                   name="briefcase-outline"
                   size={16}
-                  color={form.label === 'Văn phòng' ? '#FFFFFF' : Colors.light.textSecondary}
+                  color={form.label === 'Văn phòng' ? '#FFFFFF' : activeColors.textSecondary}
                 />
                 <Text
                   style={[
@@ -320,7 +323,7 @@ export default function AddressesScreen() {
                 <MaterialCommunityIcons
                   name="map-marker-outline"
                   size={16}
-                  color={isCustomLabel ? '#FFFFFF' : Colors.light.textSecondary}
+                  color={isCustomLabel ? '#FFFFFF' : activeColors.textSecondary}
                 />
                 <Text
                   style={[
@@ -409,7 +412,7 @@ function toPayload(form: AddressForm) {
 function AddressCard({
   address,
   defaultLoading,
-  defaultLoading: _dfL, // ignore duplicate warning if any
+  defaultLoading: _dfL,
   deleteLoading,
   onEdit,
   onSetDefault,
@@ -422,8 +425,10 @@ function AddressCard({
   onSetDefault: () => void;
   onDelete: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const icon = getAddressIcon(address.label);
-  const color = getAddressColor(address.label);
+  const color = getAddressColor(address.label, activeColors);
 
   return (
     <CustomerCard>
@@ -485,7 +490,7 @@ function AddressCard({
               icon="delete-outline"
               loading={deleteLoading}
               disabled={deleteLoading}
-              textColor={Colors.light.error}
+              textColor={activeColors.error}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
                 onDelete();
@@ -512,6 +517,8 @@ function PickerField({
   disabled?: boolean;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <Pressable
       onPress={disabled ? undefined : onPress}
@@ -549,6 +556,8 @@ function OptionPicker({
   onDismiss: () => void;
   onSelect: (value: string) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const [query, setQuery] = useState('');
   const filtered = useMemo(
     () => options.filter((option) => option.toLowerCase().includes(query.trim().toLowerCase())),
@@ -564,7 +573,7 @@ function OptionPicker({
           <Text variant="titleLarge" style={styles.title}>
             {title}
           </Text>
-          <Button mode="text" onPress={onDismiss} textColor={Colors.light.textSecondary}>
+          <Button mode="text" onPress={onDismiss} textColor={activeColors.textSecondary}>
             Đóng
           </Button>
         </View>
@@ -588,7 +597,7 @@ function OptionPicker({
                 hitSlop={4}
               >
                 <Text style={[styles.optionText, item === value && styles.optionSelected]}>{item}</Text>
-                {item === value ? <MaterialCommunityIcons name="check" size={20} color={Colors.light.primary} /> : null}
+                {item === value ? <MaterialCommunityIcons name="check" size={20} color={activeColors.primary} /> : null}
               </Pressable>
             )}
           />
@@ -598,9 +607,9 @@ function OptionPicker({
   );
 }
 
-const styles = StyleSheet.create({
-  title: { color: Colors.light.text, fontWeight: '900' },
-  muted: { color: Colors.light.textSecondary, lineHeight: 18 },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  title: { color: activeColors.text, fontWeight: '900' },
+  muted: { color: activeColors.textSecondary, lineHeight: 18 },
   form: { gap: 16 },
   formHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   button: { borderRadius: 16, height: 48, justifyContent: 'center' },
@@ -611,7 +620,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     maxHeight: '78%',
-    backgroundColor: Colors.light.surface,
+    backgroundColor: activeColors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 16,
@@ -621,29 +630,29 @@ const styles = StyleSheet.create({
     width: 36,
     height: 5,
     borderRadius: 3,
-    backgroundColor: Colors.light.borderStrong,
+    backgroundColor: activeColors.borderStrong,
     alignSelf: 'center',
     marginBottom: 4,
   },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  search: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 14 },
+  search: { backgroundColor: activeColors.surfaceVariant, borderRadius: 14 },
   optionRow: {
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: activeColors.border,
     paddingHorizontal: 6,
     gap: 12,
   },
   optionRowActive: {
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     borderRadius: 10,
     borderBottomWidth: 0,
   },
-  optionText: { flex: 1, color: Colors.light.text, fontWeight: '700' },
-  optionSelected: { color: Colors.light.primary },
+  optionText: { flex: 1, color: activeColors.text, fontWeight: '700' },
+  optionSelected: { color: activeColors.primary },
   addressCardRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   addressIconCircle: {
     width: 44,
@@ -653,17 +662,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addressContentBody: { flex: 1, gap: 10 },
-  addressLabelText: { color: Colors.light.text, fontWeight: '900' },
-  addressDetailsText: { color: Colors.light.textSecondary, lineHeight: 18, marginTop: 2 },
+  addressLabelText: { color: activeColors.text, fontWeight: '900' },
+  addressDetailsText: { color: activeColors.textSecondary, lineHeight: 18, marginTop: 2 },
   rowAlign: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   defaultBadge: { backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   defaultBadgeText: { color: '#15803D', fontSize: 11, fontWeight: '800' },
   addressHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  actionButton: { borderRadius: 10, borderColor: Colors.light.border },
+  actionButton: { borderRadius: 10, borderColor: activeColors.border },
   actionButtonLabel: { fontSize: 12, fontWeight: '700' },
   labelSelectionGroup: { gap: 8 },
-  labelSelectionTitle: { color: Colors.light.text, fontWeight: '800', marginLeft: 4 },
+  labelSelectionTitle: { color: activeColors.text, fontWeight: '800', marginLeft: 4 },
   segmentedButtonsContainer: { flexDirection: 'row', gap: 10, marginBottom: 4 },
   segmentedButton: {
     flex: 1,
@@ -674,11 +683,11 @@ const styles = StyleSheet.create({
     gap: 6,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: activeColors.border,
     backgroundColor: '#FFFFFF',
   },
-  segmentedButtonActive: { backgroundColor: Colors.light.primary, borderColor: Colors.light.primary },
-  segmentedButtonText: { fontSize: 13, color: Colors.light.textSecondary, fontWeight: '700' },
+  segmentedButtonActive: { backgroundColor: activeColors.primary, borderColor: activeColors.primary },
+  segmentedButtonText: { fontSize: 13, color: activeColors.textSecondary, fontWeight: '700' },
   segmentedButtonTextActive: { color: '#FFFFFF' },
   outlineStyle: { borderRadius: 14 },
   textInput: { backgroundColor: '#FFFFFF' },

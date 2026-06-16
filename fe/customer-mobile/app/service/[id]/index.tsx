@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -131,6 +132,8 @@ function isValidId(value: number) {
 }
 
 export default function ServiceDetailScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const serviceId = Number(id);
@@ -312,7 +315,7 @@ export default function ServiceDetailScreen() {
 
             {hasReferencePrice ? (
               <View style={styles.estimateBox}>
-                <MaterialCommunityIcons name="cash-multiple" size={16} color={Colors.light.primary} />
+                <MaterialCommunityIcons name="cash-multiple" size={16} color={activeColors.primary} />
                 <Text variant="bodySmall" style={styles.estimateText}>
                   Khoảng giá ước tính: {formatCurrency(estimateLow)} - {formatCurrency(estimateHigh)}
                 </Text>
@@ -406,10 +409,12 @@ function Gallery({
   imageIndex: number;
   onSelect: (index: number) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   if (images.length === 0) {
     return (
       <View style={styles.galleryFallback}>
-        <MaterialCommunityIcons name="image-off-outline" size={42} color={Colors.light.primary} />
+        <MaterialCommunityIcons name="image-off-outline" size={42} color={activeColors.primary} />
         <Text variant="bodyMedium" style={styles.subtitle}>
           Dịch vụ chưa có ảnh minh họa
         </Text>
@@ -469,6 +474,8 @@ function ProviderCard({
   stats?: ProviderStats | null;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const providerColor = useMemo(() => getAvatarColor(provider?.fullName), [provider?.fullName]);
 
   return (
@@ -487,7 +494,7 @@ function ProviderCard({
               {provider?.fullName || 'Nhà cung cấp'}
             </Text>
             <View style={styles.verifiedBadge}>
-              <MaterialCommunityIcons name="check-decagram" size={14} color={Colors.light.success} />
+              <MaterialCommunityIcons name="check-decagram" size={14} color={activeColors.success} />
               <Text variant="labelSmall" style={styles.verifiedBadgeText}>Đã xác minh</Text>
             </View>
           </View>
@@ -506,7 +513,7 @@ function ProviderCard({
           </View>
         </View>
         {provider?.id ? (
-          <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.light.textSecondary} style={{ marginLeft: 4 }} />
+          <MaterialCommunityIcons name="chevron-right" size={24} color={activeColors.textSecondary} style={{ marginLeft: 4 }} />
         ) : null}
       </View>
     </CustomerCard>
@@ -514,6 +521,8 @@ function ProviderCard({
 }
 
 function StatItem({ label, value }: { label: string; value: string }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.statItem}>
       <Text variant="labelSmall" style={styles.statValue} numberOfLines={1}>
@@ -527,6 +536,8 @@ function StatItem({ label, value }: { label: string; value: string }) {
 }
 
 function ReviewCard({ review }: { review: ReviewItem }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const avatarColor = useMemo(() => getAvatarColor(review.customer?.fullName), [review.customer?.fullName]);
   const initials = useMemo(() => getInitial(review.customer?.fullName), [review.customer?.fullName]);
 
@@ -564,6 +575,8 @@ function ReviewCard({ review }: { review: ReviewItem }) {
 }
 
 function DetailSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.skeletonScreen}>
       <View style={[styles.skeleton, { width: '74%', height: 28 }]} />
@@ -583,19 +596,19 @@ function DetailSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   content: { padding: 16, paddingBottom: 112, gap: 16 },
   contentWithBottomBar: { padding: 16, paddingBottom: 144, gap: 16 },
   titleBlock: { gap: 4 },
-  title: { color: Colors.light.text, fontWeight: '900', lineHeight: 34 },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 19 },
+  title: { color: activeColors.text, fontWeight: '900', lineHeight: 34 },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 19 },
   gallery: { gap: 10 },
-  mainImage: { width: '100%', height: 250, borderRadius: 22, backgroundColor: Colors.light.surfaceVariant },
+  mainImage: { width: '100%', height: 250, borderRadius: 22, backgroundColor: activeColors.surfaceVariant },
   galleryFallback: {
     height: 220,
     borderRadius: 22,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
@@ -617,12 +630,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 2,
     borderColor: 'transparent',
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
-  thumbnailSelected: { borderColor: Colors.light.primary },
+  thumbnailSelected: { borderColor: activeColors.primary },
   infoBlock: { gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  price: { color: Colors.light.primary, fontWeight: '900' },
+  price: { color: activeColors.primary, fontWeight: '900' },
   ratingPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -630,47 +643,47 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
-  ratingText: { color: Colors.light.text, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  description: { color: Colors.light.textSecondary, lineHeight: 22 },
-  metaText: { color: Colors.light.text, fontWeight: '800' },
+  ratingText: { color: activeColors.text, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  description: { color: activeColors.textSecondary, lineHeight: 22 },
+  metaText: { color: activeColors.text, fontWeight: '800' },
   providerCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   providerInfo: { flex: 1, gap: 4 },
-  providerName: { color: Colors.light.text, fontWeight: '900', marginRight: 4 },
+  providerName: { color: activeColors.text, fontWeight: '900', marginRight: 4 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   statItem: {
     flex: 1,
     borderRadius: 12,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
     paddingHorizontal: 8,
     paddingVertical: 7,
   },
-  statValue: { color: Colors.light.text, fontWeight: '900', textAlign: 'center', fontVariant: ['tabular-nums'] },
-  statLabel: { color: Colors.light.textSecondary, textAlign: 'center' },
+  statValue: { color: activeColors.text, fontWeight: '900', textAlign: 'center', fontVariant: ['tabular-nums'] },
+  statLabel: { color: activeColors.textSecondary, textAlign: 'center' },
   section: { gap: 10 },
   reviewCard: { gap: 8 },
-  reviewName: { color: Colors.light.text, fontWeight: '900', flex: 1 },
+  reviewName: { color: activeColors.text, fontWeight: '900', flex: 1 },
   reviewRating: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   retryButton: { borderRadius: 12, alignSelf: 'center' },
   bottomButton: { flex: 1, borderRadius: 12 },
   skeletonScreen: { gap: 14 },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 12 },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 12 },
   // Styled new components
-  infoCard: { borderColor: Colors.light.border },
+  infoCard: { borderColor: activeColors.border },
   estimateBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
     marginTop: 4,
   },
-  estimateText: { color: Colors.light.primary, fontWeight: '700' },
-  infoDivider: { height: 1, backgroundColor: Colors.light.border, marginVertical: 8 },
-  infoLabel: { color: Colors.light.textSecondary, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
+  estimateText: { color: activeColors.primary, fontWeight: '700' },
+  infoDivider: { height: 1, backgroundColor: activeColors.border, marginVertical: 8 },
+  infoLabel: { color: activeColors.textSecondary, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
   serviceActiveChip: { borderRadius: 999, height: 32 },
   providerAvatarCircle: {
     width: 58,
@@ -685,15 +698,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: `${Colors.light.success}15`,
+    backgroundColor: `${activeColors.success}15`,
     borderRadius: 6,
     paddingHorizontal: 5,
     paddingVertical: 2,
   },
-  verifiedBadgeText: { color: Colors.light.success, fontSize: 10, fontWeight: '700' },
-  verticalDivider: { width: 1, height: 24, backgroundColor: Colors.light.border, alignSelf: 'center' },
-  divider: { height: 1, backgroundColor: Colors.light.border, marginVertical: 4 },
-  reviewCardOuter: { borderColor: Colors.light.border },
+  verifiedBadgeText: { color: activeColors.success, fontSize: 10, fontWeight: '700' },
+  verticalDivider: { width: 1, height: 24, backgroundColor: activeColors.border, alignSelf: 'center' },
+  divider: { height: 1, backgroundColor: activeColors.border, marginVertical: 4 },
+  reviewCardOuter: { borderColor: activeColors.border },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   reviewAvatar: {
     width: 32,
@@ -703,5 +716,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   reviewAvatarText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 },
-  reviewDivider: { height: 1, backgroundColor: Colors.light.border, marginVertical: 6, opacity: 0.6 },
+  reviewDivider: { height: 1, backgroundColor: activeColors.border, marginVertical: 6, opacity: 0.6 },
 });

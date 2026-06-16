@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { Button, IconButton, TextInput, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authApi } from '../../features/auth/auth.api';
 import { Colors } from '../../constants/colors';
 import {
@@ -17,6 +18,7 @@ import {
 export default function ChangePasswordScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ tone: 'warning' | 'error'; text: string } | null>(null);
@@ -57,7 +59,7 @@ export default function ChangePasswordScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]} contentInsetAdjustmentBehavior="automatic">
         <ProviderPageHeader
           title="Đổi mật khẩu"
           subtitle="Dùng mật khẩu mạnh để bảo vệ tài khoản provider."
@@ -84,7 +86,7 @@ export default function ChangePasswordScreen() {
               />
             }
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
             accessibilityLabel="Mật khẩu hiện tại"
           />
           <TextInput
@@ -103,7 +105,7 @@ export default function ChangePasswordScreen() {
               />
             }
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
             accessibilityLabel="Mật khẩu mới"
           />
           <TextInput
@@ -115,7 +117,7 @@ export default function ChangePasswordScreen() {
             }}
             secureTextEntry={!showNewPass}
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
             accessibilityLabel="Xác nhận mật khẩu mới"
           />
         </ProviderCard>
@@ -141,14 +143,12 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 40,
     gap: 14,
   },
   formSection: {
     gap: 12,
   },
   input: {
-    backgroundColor: Colors.light.surface,
   },
   submitButton: {
     borderRadius: 12,

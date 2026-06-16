@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -183,6 +184,8 @@ function fullAddress(booking: BookingDetail) {
 }
 
 export default function BookingDetailScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const bookingId = Number(id);
@@ -376,7 +379,7 @@ export default function BookingDetailScreen() {
 
   const status = booking.status || "PENDING";
   const statusColor =
-    BOOKING_STATUS_COLOR[status] || Colors.light.textSecondary;
+    BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
 
   return (
     <View style={styles.screen}>
@@ -495,6 +498,8 @@ function SummaryCard({
   booking: BookingDetail;
   statusColor: string;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const providerInitials = useMemo(() => {
     if (!booking.provider?.fullName) return "P";
     const parts = booking.provider.fullName.trim().split(/\s+/);
@@ -619,6 +624,8 @@ function QuoteCard({
   onConfirm: () => void;
   onReject: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <CustomerCard style={styles.quoteCard}>
       <View style={styles.cardBlock}>
@@ -626,7 +633,7 @@ function QuoteCard({
           <MaterialCommunityIcons
             name="tag-outline"
             size={20}
-            color={Colors.light.primary}
+            color={activeColors.primary}
           />
           <Text variant="titleMedium" style={styles.titleText}>
             Báo giá từ nhà cung cấp
@@ -699,6 +706,8 @@ function ActionSection({
   onAccept: () => void;
   onRebook: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const status = booking.status || "";
   return (
     <View style={styles.actions}>
@@ -766,7 +775,7 @@ function ActionSection({
             disabled={loading}
             onPress={onCancel}
             style={[styles.actionButton, styles.dangerButton]}
-            textColor={Colors.light.error}
+            textColor={activeColors.error}
           >
             Hủy đơn
           </Button>
@@ -815,6 +824,8 @@ function ActionGroup({
   title: string;
   children: React.ReactNode;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <CustomerCard>
       <View style={styles.cardBlock}>
@@ -834,12 +845,14 @@ function InfoRow({
   icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
   text: string;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.infoRow}>
       <MaterialCommunityIcons
         name={icon}
         size={17}
-        color={Colors.light.textSecondary}
+        color={activeColors.textSecondary}
       />
       <Text variant="bodySmall" style={styles.infoText} numberOfLines={2}>
         {text}
@@ -849,6 +862,8 @@ function InfoRow({
 }
 
 function DetailSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.cardBlock}>
       <View style={[styles.skeleton, { width: "68%", height: 26 }]} />
@@ -871,12 +886,12 @@ function DetailSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   content: { padding: 16, paddingBottom: 120, gap: 16 },
   headerBlock: { gap: 5 },
-  headerTitle: { color: Colors.light.text, fontWeight: "900" },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  headerTitle: { color: activeColors.text, fontWeight: "900" },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
   statusRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
   cardBlock: { gap: 10 },
   rowBetween: {
@@ -885,25 +900,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
   },
-  codeText: { color: Colors.light.primary, fontWeight: "900" },
-  titleText: { color: Colors.light.text, fontWeight: "900" },
-  description: { color: Colors.light.textSecondary, lineHeight: 22 },
+  codeText: { color: activeColors.primary, fontWeight: "900" },
+  titleText: { color: activeColors.text, fontWeight: "900" },
+  description: { color: activeColors.textSecondary, lineHeight: 22 },
   infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 7 },
-  infoText: { flex: 1, color: Colors.light.textSecondary, lineHeight: 19 },
-  priceText: { color: Colors.light.primary, fontWeight: "900" },
+  infoText: { flex: 1, color: activeColors.textSecondary, lineHeight: 19 },
+  priceText: { color: activeColors.primary, fontWeight: "900" },
   quoteCard: {
-    borderColor: Colors.light.primary,
+    borderColor: activeColors.primary,
     borderWidth: 2,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
   },
   quoteHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   actionRow: { flexDirection: "row", gap: 10 },
   flexButton: { flex: 1, borderRadius: 12 },
   actions: { gap: 12 },
   actionButton: { borderRadius: 12 },
-  dangerButton: { borderColor: `${Colors.light.error}55` },
+  dangerButton: { borderColor: `${activeColors.error}55` },
   retryButton: { alignSelf: "center", borderRadius: 12 },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   providerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -914,21 +929,21 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { color: Colors.light.primary, fontWeight: "bold", fontSize: 16 },
+  avatarText: { color: activeColors.primary, fontWeight: "bold", fontSize: 16 },
   infoLabel: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  infoValue: { color: Colors.light.text, fontWeight: "700" },
+  infoValue: { color: activeColors.text, fontWeight: "700" },
   divider: {
     height: 1,
-    backgroundColor: Colors.light.border,
+    backgroundColor: activeColors.border,
     marginVertical: 6,
   },
   priceRow: {
@@ -937,6 +952,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 4,
   },
-  actualPriceText: { color: Colors.light.success, fontWeight: "900" },
-  quotePriceText: { color: Colors.light.primary, fontWeight: "900" },
+  actualPriceText: { color: activeColors.success, fontWeight: "900" },
+  quotePriceText: { color: activeColors.primary, fontWeight: "900" },
 });

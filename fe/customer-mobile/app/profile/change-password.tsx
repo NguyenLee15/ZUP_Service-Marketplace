@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -23,6 +24,8 @@ function validatePasswordForm(form: PasswordForm) {
 }
 
 export default function ChangePasswordScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const [form, setForm] = useState<PasswordForm>({
     currentPassword: '',
     newPassword: '',
@@ -87,7 +90,7 @@ export default function ChangePasswordScreen() {
 
       <View style={styles.securityHeaderContainer}>
         <View style={styles.securityShieldCircle}>
-          <MaterialCommunityIcons name="shield-lock-outline" size={44} color={Colors.light.primary} />
+          <MaterialCommunityIcons name="shield-lock-outline" size={44} color={activeColors.primary} />
         </View>
         <Text variant="titleMedium" style={styles.securityHeaderTitle}>
           Bảo mật tài khoản
@@ -132,7 +135,7 @@ export default function ChangePasswordScreen() {
               <MaterialCommunityIcons
                 name={isLengthValid ? "check-circle" : "circle-outline"}
                 size={18}
-                color={isLengthValid ? Colors.light.success : Colors.light.textSecondary}
+                color={isLengthValid ? activeColors.success : activeColors.textSecondary}
               />
               <Text style={[styles.checklistText, isLengthValid && styles.checklistTextSuccess]}>
                 Mật khẩu mới tối thiểu 6 ký tự
@@ -143,7 +146,7 @@ export default function ChangePasswordScreen() {
               <MaterialCommunityIcons
                 name={form.newPassword && form.currentPassword ? (isDifferent ? "check-circle" : "close-circle") : "circle-outline"}
                 size={18}
-                color={form.newPassword && form.currentPassword ? (isDifferent ? Colors.light.success : Colors.light.error) : Colors.light.textSecondary}
+                color={form.newPassword && form.currentPassword ? (isDifferent ? activeColors.success : activeColors.error) : activeColors.textSecondary}
               />
               <Text style={[
                 styles.checklistText,
@@ -157,7 +160,7 @@ export default function ChangePasswordScreen() {
               <MaterialCommunityIcons
                 name={form.confirmPassword ? (isMatch ? "check-circle" : "close-circle") : "circle-outline"}
                 size={18}
-                color={form.confirmPassword ? (isMatch ? Colors.light.success : Colors.light.error) : Colors.light.textSecondary}
+                color={form.confirmPassword ? (isMatch ? activeColors.success : activeColors.error) : activeColors.textSecondary}
               />
               <Text style={[
                 styles.checklistText,
@@ -202,6 +205,8 @@ function PasswordInput({
   onToggle: () => void;
   onChangeText: (value: string) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <TextInput
       label={label}
@@ -212,7 +217,7 @@ function PasswordInput({
       textContentType="password"
       autoCapitalize="none"
       error={error}
-      left={<TextInput.Icon icon="lock-outline" color={Colors.light.textSecondary} />}
+      left={<TextInput.Icon icon="lock-outline" color={activeColors.textSecondary} />}
       right={<TextInput.Icon icon={visible ? 'eye-off-outline' : 'eye-outline'} onPress={onToggle} />}
       outlineStyle={styles.outlineStyle}
       style={styles.textInput}
@@ -220,9 +225,9 @@ function PasswordInput({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   form: { gap: 16 },
-  button: { borderRadius: 16, backgroundColor: Colors.light.primary, marginTop: 8 },
+  button: { borderRadius: 16, backgroundColor: activeColors.primary, marginTop: 8 },
   buttonContent: { height: 48 },
   securityHeaderContainer: {
     alignItems: 'center',
@@ -235,17 +240,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
   },
   securityHeaderTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '900',
   },
   securityHeaderSubtitle: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -257,7 +262,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   checklistTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '800',
     marginBottom: 2,
   },
@@ -268,13 +273,13 @@ const styles = StyleSheet.create({
   },
   checklistText: {
     fontSize: 13,
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontWeight: '600',
   },
   checklistTextSuccess: {
-    color: Colors.light.success,
+    color: activeColors.success,
   },
   checklistTextError: {
-    color: Colors.light.error,
+    color: activeColors.error,
   },
 });

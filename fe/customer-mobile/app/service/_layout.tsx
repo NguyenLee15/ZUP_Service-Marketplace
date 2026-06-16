@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
-import { stackScreenOptions } from '../../constants/navigation';
+import { useStackScreenOptions } from '../../hooks/useStackScreenOptions';
 
 export default function ServiceLayout() {
+  const screenOptions = useStackScreenOptions();
   return (
-    <Stack screenOptions={stackScreenOptions}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen name="[id]/index" options={{ title: 'Chi tiết dịch vụ' }} />
     </Stack>
   );

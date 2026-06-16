@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
@@ -18,6 +19,8 @@ const OTP_LENGTH = 6;
 const RESEND_SECONDS = 60;
 
 export default function OtpScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const { email = '' } = useLocalSearchParams<{ email: string }>();
   const inputRef = useRef<any>(null);
@@ -132,9 +135,9 @@ export default function OtpScreen() {
                 Haptics.selectionAsync().catch(() => {});
                 router.back();
               }}
-              style={[styles.backButton, { borderColor: Colors.light.border }]}
+              style={[styles.backButton, { borderColor: activeColors.border }]}
             >
-              <MaterialCommunityIcons name="chevron-left" size={26} color={Colors.light.text} />
+              <MaterialCommunityIcons name="chevron-left" size={26} color={activeColors.text} />
             </Pressable>
             <View style={{ flex: 1 }} />
           </View>
@@ -168,13 +171,13 @@ export default function OtpScreen() {
                   key={index}
                   style={[
                     styles.otpBox,
-                    { borderColor: isFocused ? Colors.light.primary : Colors.light.border },
+                    { borderColor: isFocused ? activeColors.primary : activeColors.border },
                     isFocused && styles.otpBoxFocused,
                     Boolean(fieldError) && styles.otpBoxError,
                   ]}
                 >
                   <Text style={styles.otpDigit}>{digit}</Text>
-                  {isFocused && <View style={[styles.cursor, { backgroundColor: Colors.light.primary }]} />}
+                  {isFocused && <View style={[styles.cursor, { backgroundColor: activeColors.primary }]} />}
                 </View>
               );
             })}
@@ -215,7 +218,7 @@ export default function OtpScreen() {
             <MaterialCommunityIcons
               name="clock-outline"
               size={16}
-              color={countdown > 0 ? Colors.light.textSecondary : Colors.light.primary}
+              color={countdown > 0 ? activeColors.textSecondary : activeColors.primary}
             />
             <Button
               mode="text"
@@ -225,7 +228,7 @@ export default function OtpScreen() {
               disabled={!hasEmail || resendLoading || countdown > 0}
               labelStyle={[
                 styles.resendLabel,
-                { color: countdown > 0 ? Colors.light.textSecondary : Colors.light.primary },
+                { color: countdown > 0 ? activeColors.textSecondary : activeColors.primary },
               ]}
             >
               {countdown > 0 ? `Gửi lại mã sau ${countdown}s` : 'Gửi lại mã OTP'}
@@ -237,8 +240,8 @@ export default function OtpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  keyboard: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  keyboard: { flex: 1, backgroundColor: activeColors.background },
   content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 24, gap: 20 },
   header: { gap: 8, marginBottom: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
@@ -251,9 +254,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
-  title: { color: Colors.light.text, fontWeight: '900', letterSpacing: -0.5 },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 22, fontSize: 14 },
-  emailHighlight: { color: Colors.light.text, fontWeight: '800' },
+  title: { color: activeColors.text, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 22, fontSize: 14 },
+  emailHighlight: { color: activeColors.text, fontWeight: '800' },
   cardContent: { gap: 12, paddingVertical: 12 },
   otpGrid: {
     flexDirection: 'row',
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
   },
   otpBoxFocused: {
     backgroundColor: '#FFFFFF',
-    shadowColor: Colors.light.primary,
+    shadowColor: activeColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -286,7 +289,7 @@ const styles = StyleSheet.create({
   otpDigit: {
     fontSize: 22,
     fontWeight: '800',
-    color: Colors.light.text,
+    color: activeColors.text,
   },
   cursor: {
     position: 'absolute',
@@ -301,7 +304,7 @@ const styles = StyleSheet.create({
     opacity: 0,
   },
   helperText: { textAlign: 'center', fontWeight: '600' },
-  primaryButton: { borderRadius: 14, marginTop: 8, shadowColor: Colors.light.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 6 },
+  primaryButton: { borderRadius: 14, marginTop: 8, shadowColor: activeColors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 6 },
   buttonContent: { height: 54 },
   buttonLabel: { fontSize: 16, fontWeight: '800' },
   resendContainer: {

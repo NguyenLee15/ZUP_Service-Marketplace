@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -129,6 +130,8 @@ function getAvatarLabel(name?: string | null) {
 }
 
 export default function ProviderProfileScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const providerId = Number(id);
@@ -294,6 +297,8 @@ export default function ProviderProfileScreen() {
 }
 
 function ProviderHero({ provider }: { provider: ProviderProfile }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const address = getProviderAddress(provider);
   const providerColor = useMemo(() => getAvatarColor(provider.fullName), [provider.fullName]);
 
@@ -315,13 +320,13 @@ function ProviderHero({ provider }: { provider: ProviderProfile }) {
               {provider.fullName || 'Nhà cung cấp'}
             </Text>
             <View style={styles.verifiedBadge}>
-              <MaterialCommunityIcons name="check-decagram" size={16} color={Colors.light.success} />
+              <MaterialCommunityIcons name="check-decagram" size={16} color={activeColors.success} />
               <Text variant="labelSmall" style={styles.verifiedBadgeText}>Đã xác minh</Text>
             </View>
           </View>
           {provider.phone || provider.email ? (
             <View style={styles.contactRow}>
-              <MaterialCommunityIcons name="phone-outline" size={14} color={Colors.light.textSecondary} />
+              <MaterialCommunityIcons name="phone-outline" size={14} color={activeColors.textSecondary} />
               <Text variant="bodySmall" style={styles.subtitle} numberOfLines={1}>
                 {provider.phone || provider.email}
               </Text>
@@ -329,7 +334,7 @@ function ProviderHero({ provider }: { provider: ProviderProfile }) {
           ) : null}
           {address ? (
             <View style={styles.infoRow}>
-              <MaterialCommunityIcons name="map-marker-outline" size={15} color={Colors.light.textSecondary} />
+              <MaterialCommunityIcons name="map-marker-outline" size={15} color={activeColors.textSecondary} />
               <Text variant="bodySmall" style={styles.infoText} numberOfLines={2}>
                 {address}
               </Text>
@@ -342,17 +347,19 @@ function ProviderHero({ provider }: { provider: ProviderProfile }) {
 }
 
 function StatsGrid({ provider }: { provider: ProviderProfile }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const stats = provider.stats || {};
   const metrics = provider.metrics || {};
 
   return (
     <View style={styles.statsGrid}>
       <MetricCard icon="star" label="Đánh giá" value={formatMetric(stats.avgRating, '/5')} color="#FBBF24" />
-      <MetricCard icon="comment-quote-outline" label="Lượt đánh giá" value={formatMetric(stats.totalReviews)} color={Colors.light.primary} />
-      <MetricCard icon="briefcase-check-outline" label="Dịch vụ" value={formatMetric(stats.totalServices)} color={Colors.light.success} />
-      <MetricCard icon="timer-outline" label="Phản hồi TB" value={formatMetric(metrics.avgResponseHours, 'h')} color={Colors.light.info} />
+      <MetricCard icon="comment-quote-outline" label="Lượt đánh giá" value={formatMetric(stats.totalReviews)} color={activeColors.primary} />
+      <MetricCard icon="briefcase-check-outline" label="Dịch vụ" value={formatMetric(stats.totalServices)} color={activeColors.success} />
+      <MetricCard icon="timer-outline" label="Phản hồi TB" value={formatMetric(metrics.avgResponseHours, 'h')} color={activeColors.info} />
       <MetricCard icon="progress-check" label="Hoàn thành" value={formatMetric(metrics.completionRate, '%')} color="#7C3AED" />
-      <MetricCard icon="check-decagram-outline" label="Đơn hoàn tất" value={formatMetric(metrics.totalCompleted)} color={Colors.light.success} />
+      <MetricCard icon="check-decagram-outline" label="Đơn hoàn tất" value={formatMetric(metrics.totalCompleted)} color={activeColors.success} />
     </View>
   );
 }
@@ -368,6 +375,8 @@ function MetricCard({
   value: string;
   color: string;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <CustomerCard style={styles.metricCardOuter}>
       <View style={styles.metricContent}>
@@ -400,6 +409,8 @@ function ServicesHeader({
   onSearchChange: (value: string) => void;
   onSortChange: (value: SortOption) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.servicesHeader}>
       <View style={styles.rowBetween}>
@@ -453,6 +464,8 @@ function ProviderServiceCard({
   onChat: () => void;
   onBook: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const imageUrl = service.images?.[0]?.imageUrl || null;
   const price = Number(service.referencePrice || 0);
   const rating = Number(service.avgRating || 0);
@@ -471,7 +484,7 @@ function ProviderServiceCard({
           <Image source={{ uri: imageUrl }} style={styles.serviceImage} contentFit="cover" transition={160} />
         ) : (
           <View style={styles.imageFallback}>
-            <MaterialCommunityIcons name="wrench-outline" size={28} color={Colors.light.primary} />
+            <MaterialCommunityIcons name="wrench-outline" size={28} color={activeColors.primary} />
           </View>
         )}
         <View style={styles.serviceInfo}>
@@ -531,6 +544,8 @@ function ProviderServiceCard({
 }
 
 function ServiceListSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.skeletonWrap}>
       {[0, 1, 2].map((item) => (
@@ -549,48 +564,48 @@ function ServiceListSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   listContent: { padding: 16, paddingBottom: 112 },
   headerWrap: { gap: 14, marginBottom: 12 },
   heroRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   heroInfo: { flex: 1, gap: 7 },
   rowBetween: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
-  providerName: { color: Colors.light.text, fontWeight: '900', flex: 1 },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  providerName: { color: activeColors.text, fontWeight: '900', flex: 1 },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
-  infoText: { flex: 1, color: Colors.light.textSecondary, lineHeight: 19 },
+  infoText: { flex: 1, color: activeColors.textSecondary, lineHeight: 19 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   metricCard: { width: '31%', minWidth: 104 },
   metricContent: { gap: 6, alignItems: 'center', justifyContent: 'center' },
-  metricLabel: { color: Colors.light.textSecondary, fontWeight: '800' },
-  metricValue: { color: Colors.light.text, fontWeight: '900' },
+  metricLabel: { color: activeColors.textSecondary, fontWeight: '800' },
+  metricValue: { color: activeColors.text, fontWeight: '900' },
   servicesHeader: { gap: 10 },
-  sectionTitle: { color: Colors.light.text, fontWeight: '900' },
+  sectionTitle: { color: activeColors.text, fontWeight: '900' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   sortChip: { borderRadius: 999 },
   serviceContent: { flexDirection: 'row', gap: 12 },
-  serviceImage: { width: 94, height: 94, borderRadius: 14, backgroundColor: Colors.light.surfaceVariant },
+  serviceImage: { width: 94, height: 94, borderRadius: 14, backgroundColor: activeColors.surfaceVariant },
   imageFallback: {
     width: 94,
     height: 94,
     borderRadius: 14,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   serviceInfo: { flex: 1, gap: 5 },
-  serviceTitle: { color: Colors.light.text, fontWeight: '900' },
+  serviceTitle: { color: activeColors.text, fontWeight: '900' },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { color: Colors.light.textSecondary, fontWeight: '800' },
-  priceText: { color: Colors.light.primary, fontWeight: '900' },
+  metaText: { color: activeColors.textSecondary, fontWeight: '800' },
+  priceText: { color: activeColors.primary, fontWeight: '900' },
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   actionButton: { flex: 1, borderRadius: 12 },
   skeletonWrap: { gap: 12 },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   // Styled new components
-  heroCard: { borderColor: Colors.light.border },
-  avatarBorder: { borderWidth: 2, borderColor: Colors.light.primarySoft, borderRadius: 999, padding: 2 },
+  heroCard: { borderColor: activeColors.border },
+  avatarBorder: { borderWidth: 2, borderColor: activeColors.primarySoft, borderRadius: 999, padding: 2 },
   providerAvatarCircle: {
     width: 66,
     height: 66,
@@ -604,14 +619,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: `${Colors.light.success}15`,
+    backgroundColor: `${activeColors.success}15`,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 3,
   },
-  verifiedBadgeText: { color: Colors.light.success, fontSize: 10, fontWeight: '700' },
+  verifiedBadgeText: { color: activeColors.success, fontSize: 10, fontWeight: '700' },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metricCardOuter: { width: '31%', minWidth: 104, borderColor: Colors.light.border },
+  metricCardOuter: { width: '31%', minWidth: 104, borderColor: activeColors.border },
   metricIconWrap: {
     width: 32,
     height: 32,
@@ -620,19 +635,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 2,
   },
-  serviceCardOuter: { borderColor: Colors.light.border },
+  serviceCardOuter: { borderColor: activeColors.border },
   serviceMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   ratingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: `${Colors.light.warning}18`,
+    backgroundColor: `${activeColors.warning}18`,
     borderRadius: 6,
     paddingHorizontal: 5,
     paddingVertical: 2,
   },
   ratingBadgeText: { color: '#D97706', fontSize: 11, fontWeight: '800' },
-  reviewCountText: { color: Colors.light.textSecondary, fontSize: 12 },
-  serviceDivider: { height: 1, backgroundColor: Colors.light.border, marginVertical: 8, opacity: 0.6 },
+  reviewCountText: { color: activeColors.textSecondary, fontSize: 12 },
+  serviceDivider: { height: 1, backgroundColor: activeColors.border, marginVertical: 8, opacity: 0.6 },
   actionContent: { minHeight: 44 },
 });

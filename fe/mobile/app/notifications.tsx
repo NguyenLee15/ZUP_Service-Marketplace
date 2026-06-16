@@ -84,6 +84,8 @@ const getNotificationRoute = (notification: ProviderNotification) => {
 
 export default function NotificationsScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(theme, activeColors);
   const router = useRouter();
   const { setUnreadCount } = useNotificationStore();
 
@@ -228,15 +230,15 @@ export default function NotificationsScreen() {
             styles.iconBg,
             {
               backgroundColor: isUnread
-                ? `${Colors.light.primary}14`
-                : Colors.light.surfaceVariant,
+                ? `${activeColors.primary}14`
+                : activeColors.surfaceVariant,
             },
           ]}
         >
           <MaterialCommunityIcons
             name={icon}
             size={21}
-            color={isUnread ? Colors.light.primary : Colors.light.textSecondary}
+            color={isUnread ? activeColors.primary : activeColors.textSecondary}
           />
         </View>
         <View style={styles.notificationText}>
@@ -265,7 +267,7 @@ export default function NotificationsScreen() {
           size={18}
           loading={deletingId === item.id}
           disabled={deletingId === item.id}
-          iconColor={Colors.light.error}
+          iconColor={activeColors.error}
           onPress={() => handleDelete(item)}
           accessibilityLabel="Xóa thông báo"
           style={styles.deleteButton}
@@ -285,7 +287,7 @@ export default function NotificationsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[Colors.light.primary]}
+            colors={[activeColors.primary]}
           />
         }
         onEndReached={() => {
@@ -376,7 +378,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, activeColors: any) => StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 56,
@@ -392,10 +394,10 @@ const styles = StyleSheet.create({
   filterCard: {
     gap: 10,
     padding: 12,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: activeColors.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: activeColors.border,
   },
   filterChips: {
     flexDirection: "row",
@@ -406,7 +408,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   unreadCard: {
-    borderColor: `${Colors.light.primary}50`,
+    borderColor: `${activeColors.primary}50`,
   },
   notificationContent: {
     flexDirection: "row",
@@ -425,26 +427,26 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   notificationTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: "600",
   },
   unreadTitle: {
     fontWeight: "800",
   },
   notificationMessage: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     marginTop: 3,
     lineHeight: 18,
   },
   notificationTime: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     marginTop: 6,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     marginTop: 8,
   },
   deleteButton: {

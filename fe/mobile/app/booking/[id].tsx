@@ -1,6 +1,3 @@
-/**
- * Booking Detail - provider actions by booking status.
- */
 import { useCallback, useEffect, useState } from "react";
 import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import {
@@ -25,6 +22,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { bookingApi } from "../../features/booking/booking.api";
 import { useNotificationStore } from "../../features/notification/notification.store";
 import {
@@ -57,21 +55,24 @@ type BookingTimelineItem = {
   createdAt?: string | Date | null;
 };
 
-const statusColor = (status: string): string => {
+const getStatusColor = (status: string, activeColors: typeof Colors.light | typeof Colors.dark): string => {
   const map: Record<string, string> = {
-    PENDING: Colors.light.statusPending,
-    QUOTED: Colors.light.statusQuoted,
-    CONFIRMED: Colors.light.statusConfirmed,
-    IN_PROGRESS: Colors.light.statusInProgress,
-    DONE: Colors.light.statusDone,
-    CANCELLED: Colors.light.statusCancelled,
-    DISPUTED: Colors.light.statusDisputed,
+    PENDING: activeColors.statusPending,
+    QUOTED: activeColors.statusQuoted,
+    CONFIRMED: activeColors.statusConfirmed,
+    IN_PROGRESS: activeColors.statusInProgress,
+    DONE: activeColors.statusDone,
+    CANCELLED: activeColors.statusCancelled,
+    DISPUTED: activeColors.statusDisputed,
   };
-  return map[status] || Colors.light.textSecondary;
+  return map[status] || activeColors.textSecondary;
 };
 
 export default function BookingDetailScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const insets = useSafeAreaInsets();
+  const styles = getStyles(theme, activeColors, insets);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const bookingSignal = useNotificationStore((state) => state.bookingSignal);
@@ -506,7 +507,7 @@ export default function BookingDetailScreen() {
     );
   }
 
-  const color = statusColor(booking.status);
+  const color = getStatusColor(booking.status, activeColors);
   const statusLabel =
     BOOKING_STATUS_LABEL[booking.status as BookingStatus] || booking.status;
   const isAwaitingProviderAcceptance =
@@ -534,7 +535,7 @@ export default function BookingDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[Colors.light.primary]}
+            colors={[activeColors.primary]}
           />
         }
         contentContainerStyle={[
@@ -576,7 +577,7 @@ export default function BookingDetailScreen() {
             <MaterialCommunityIcons
               name="calendar-clock-outline"
               size={18}
-              color={Colors.light.textSecondary}
+              color={activeColors.textSecondary}
             />
             <Text variant="bodySmall" style={styles.mutedText}>
               {booking.desiredTime
@@ -896,7 +897,7 @@ export default function BookingDetailScreen() {
                       onPress={() => removeResultImage(index)}
                       accessibilityLabel="Xóa ảnh nghiệm thu"
                       style={styles.removeImageButton}
-                      iconColor={Colors.light.error}
+                      iconColor={activeColors.error}
                     />
                   </View>
                 ))}
@@ -935,10 +936,10 @@ export default function BookingDetailScreen() {
                     mode="outlined"
                     onPress={handleDeclineBooking}
                     disabled={actionLoading}
-                    textColor={Colors.light.error}
+                    textColor={activeColors.error}
                     style={[
                       styles.actionButton,
-                      { borderColor: Colors.light.error },
+                      { borderColor: activeColors.error },
                     ]}
                     icon="close-circle-outline"
                     contentStyle={styles.actionContent}
@@ -960,10 +961,10 @@ export default function BookingDetailScreen() {
                   <Button
                     mode="outlined"
                     onPress={() => setShowCancelModal(true)}
-                    textColor={Colors.light.error}
+                    textColor={activeColors.error}
                     style={[
                       styles.actionButton,
-                      { borderColor: Colors.light.error },
+                      { borderColor: activeColors.error },
                     ]}
                     icon="close-circle-outline"
                     contentStyle={styles.actionContent}
@@ -978,11 +979,11 @@ export default function BookingDetailScreen() {
             <Button
               mode="outlined"
               onPress={() => setShowCancelModal(true)}
-              textColor={Colors.light.error}
+              textColor={activeColors.error}
               style={[
                 styles.actionButton,
                 styles.singleAction,
-                { borderColor: Colors.light.error },
+                { borderColor: activeColors.error },
               ]}
               icon="close-circle-outline"
               contentStyle={styles.actionContent}
@@ -1012,7 +1013,7 @@ export default function BookingDetailScreen() {
               style={[
                 styles.actionButton,
                 styles.singleAction,
-                { backgroundColor: Colors.light.success },
+                { backgroundColor: activeColors.success },
               ]}
               icon="check-circle-outline"
               contentStyle={styles.actionContent}
@@ -1046,7 +1047,7 @@ export default function BookingDetailScreen() {
           <Text
             variant="labelMedium"
             style={{
-              color: Colors.light.textSecondary,
+              color: activeColors.textSecondary,
               fontWeight: "700",
               marginTop: 4,
             }}
@@ -1062,13 +1063,13 @@ export default function BookingDetailScreen() {
                 <View style={{ flex: 1 }}>
                   <Text
                     variant="bodyMedium"
-                    style={{ fontWeight: "700", color: Colors.light.text }}
+                    style={{ fontWeight: "700", color: activeColors.text }}
                   >
                     {item.name}
                   </Text>
                   <Text
                     variant="bodySmall"
-                    style={{ color: Colors.light.textTertiary }}
+                    style={{ color: activeColors.textTertiary }}
                   >
                     {formatPrice(item.price)} / {item.unit}
                   </Text>
@@ -1090,7 +1091,7 @@ export default function BookingDetailScreen() {
                       fontWeight: "700",
                       minWidth: 20,
                       textAlign: "center",
-                      color: Colors.light.text,
+                      color: activeColors.text,
                     }}
                   >
                     {item.quantity}
@@ -1105,7 +1106,7 @@ export default function BookingDetailScreen() {
                   />
                   <IconButton
                     icon="trash-can-outline"
-                    iconColor={Colors.light.error}
+                    iconColor={activeColors.error}
                     size={20}
                     onPress={() => handleRemoveQuoteItem(index)}
                     style={{ margin: 0 }}
@@ -1119,7 +1120,7 @@ export default function BookingDetailScreen() {
           <View style={styles.addItemSection}>
             <Text
               variant="labelMedium"
-              style={{ color: Colors.light.primaryLight, fontWeight: "700" }}
+              style={{ color: activeColors.primaryLight, fontWeight: "700" }}
             >
               + Thêm hạng mục phát sinh:
             </Text>
@@ -1271,7 +1272,7 @@ export default function BookingDetailScreen() {
         >
           <Text
             variant="titleMedium"
-            style={[styles.modalTitle, { color: Colors.light.error }]}
+            style={[styles.modalTitle, { color: activeColors.error }]}
           >
             Hủy đơn hàng
           </Text>
@@ -1302,7 +1303,7 @@ export default function BookingDetailScreen() {
             disabled={actionLoading || !cancelReason.trim()}
             style={[
               styles.primaryButton,
-              { backgroundColor: Colors.light.error },
+              { backgroundColor: activeColors.error },
             ]}
             contentStyle={styles.actionContent}
           >
@@ -1326,16 +1327,17 @@ function InfoRow({
   text: string;
   selectable?: boolean;
 }) {
+  const theme = useTheme();
   return (
-    <View style={styles.infoRow}>
+    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, marginTop: 8 }}>
       <MaterialCommunityIcons
         name={icon}
         size={18}
-        color={Colors.light.textSecondary}
+        color={theme.colors.onSurfaceVariant}
       />
       <Text
         variant="bodyMedium"
-        style={styles.infoText}
+        style={{ flex: 1, color: theme.colors.onSurface, lineHeight: 20 }}
         selectable={selectable}
       >
         {text}
@@ -1344,6 +1346,44 @@ function InfoRow({
   );
 }
 
+const timelineStyles = StyleSheet.create({
+  timelineList: {
+    gap: 14,
+    marginTop: 8,
+  },
+  timelineRow: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "flex-start",
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 5,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  timelineHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  timelineTitle: {
+    flex: 1,
+    fontWeight: "800",
+  },
+  timelineTime: {
+  },
+  timelineNote: {
+    marginTop: 4,
+    lineHeight: 18,
+  },
+});
+
 function ProviderBookingTimeline({
   timeline,
   fallbackStatus,
@@ -1351,6 +1391,8 @@ function ProviderBookingTimeline({
   timeline: BookingTimelineItem[];
   fallbackStatus?: string;
 }) {
+  const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
   const rows =
     timeline.length > 0
       ? timeline
@@ -1363,12 +1405,12 @@ function ProviderBookingTimeline({
   return (
     <ProviderCard>
       <ProviderSectionHeader title="Timeline trạng thái" />
-      <View style={styles.timelineList}>
+      <View style={timelineStyles.timelineList}>
         {rows.map((item, index) => {
           const status =
             item.toStatus || item.fromStatus || fallbackStatus || "PENDING";
           const label = BOOKING_STATUS_LABEL[status as BookingStatus] || status;
-          const color = statusColor(status);
+          const color = getStatusColor(status, activeColors);
           const createdAt = item.createdAt
             ? new Date(item.createdAt).toLocaleString("vi-VN")
             : "";
@@ -1376,22 +1418,22 @@ function ProviderBookingTimeline({
           return (
             <View
               key={`${status}-${item.id || index}`}
-              style={styles.timelineRow}
+              style={timelineStyles.timelineRow}
             >
-              <View style={[styles.timelineDot, { backgroundColor: color }]} />
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineHeader}>
-                  <Text variant="bodyMedium" style={styles.timelineTitle}>
+              <View style={[timelineStyles.timelineDot, { backgroundColor: color }]} />
+              <View style={[timelineStyles.timelineContent, { borderBottomColor: theme.colors.outlineVariant }]}>
+                <View style={timelineStyles.timelineHeader}>
+                  <Text variant="bodyMedium" style={[timelineStyles.timelineTitle, { color: theme.colors.onSurface }]}>
                     {label}
                   </Text>
                   {createdAt ? (
-                    <Text variant="labelSmall" style={styles.timelineTime}>
+                    <Text variant="labelSmall" style={[timelineStyles.timelineTime, { color: theme.colors.onSurfaceVariant }]}>
                       {createdAt}
                     </Text>
                   ) : null}
                 </View>
                 {item.note ? (
-                  <Text variant="bodySmall" style={styles.timelineNote}>
+                  <Text variant="bodySmall" style={[timelineStyles.timelineNote, { color: theme.colors.onSurfaceVariant }]}>
                     {item.note}
                   </Text>
                 ) : null}
@@ -1404,14 +1446,14 @@ function ProviderBookingTimeline({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, activeColors: any, insets: any) => StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 32,
     gap: 14,
   },
   contentWithActions: {
-    paddingBottom: 128,
+    paddingBottom: Math.max(insets.bottom, 16) + 84,
   },
   statusCard: {
     gap: 12,
@@ -1428,15 +1470,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   mutedText: {
-    color: Colors.light.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   statusTitle: {
-    color: Colors.light.text,
+    color: theme.colors.onSurface,
     fontWeight: "800",
     marginTop: 2,
   },
   cardTitle: {
-    color: Colors.light.text,
+    color: theme.colors.onSurface,
     fontWeight: "800",
     marginTop: 8,
   },
@@ -1448,7 +1490,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    color: Colors.light.text,
     lineHeight: 20,
   },
   timelineList: {
@@ -1470,7 +1511,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
   },
   timelineHeader: {
     flexDirection: "row",
@@ -1479,14 +1519,11 @@ const styles = StyleSheet.create({
   },
   timelineTitle: {
     flex: 1,
-    color: Colors.light.text,
     fontWeight: "800",
   },
   timelineTime: {
-    color: Colors.light.textSecondary,
   },
   timelineNote: {
-    color: Colors.light.textSecondary,
     marginTop: 4,
     lineHeight: 18,
   },
@@ -1494,10 +1531,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: theme.colors.surfaceVariant,
   },
   noteText: {
-    color: Colors.light.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 18,
   },
   priceRow: {
@@ -1508,12 +1545,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   priceText: {
-    color: Colors.light.primary,
+    color: theme.colors.primary,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
   disputeCard: {
-    borderColor: `${Colors.light.error}40`,
+    borderColor: `${activeColors.error}40`,
   },
   evidenceRow: {
     gap: 10,
@@ -1523,7 +1560,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 12,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: theme.colors.surfaceVariant,
   },
   imageTile: {
     position: "relative",
@@ -1533,9 +1570,9 @@ const styles = StyleSheet.create({
     top: -8,
     right: -8,
     margin: 0,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: theme.colors.outlineVariant,
   },
   formSection: {
     gap: 12,
@@ -1559,7 +1596,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     padding: 16,
-    paddingBottom: 28,
+    paddingBottom: Math.max(insets.bottom, 16),
     borderTopWidth: 1,
   },
   actionButton: {
@@ -1580,18 +1617,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   modalTitle: {
-    color: Colors.light.text,
     fontWeight: "800",
   },
   itemsContainer: {
     marginTop: 14,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: theme.colors.outlineVariant,
     paddingTop: 12,
     gap: 8,
   },
   itemsHeader: {
-    color: Colors.light.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: "700",
     marginBottom: 4,
   },
@@ -1601,53 +1637,53 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 8,
     paddingHorizontal: 10,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: theme.colors.surfaceVariant,
     borderRadius: 8,
     gap: 8,
   },
   extraItemBadgeRow: {
     borderLeftWidth: 3,
-    borderLeftColor: Colors.light.warning,
-    backgroundColor: Colors.light.warningBg,
+    borderLeftColor: activeColors.warning,
+    backgroundColor: activeColors.warningBg,
   },
   itemBadgeTextContainer: {
     flex: 1,
     gap: 2,
   },
   itemBadgeName: {
-    color: Colors.light.text,
+    color: theme.colors.onSurface,
     fontWeight: "700",
   },
   itemBadgeUnit: {
-    color: Colors.light.textTertiary,
+    color: theme.colors.onSurfaceDisabled,
   },
   itemBadgeRight: {
     alignItems: "flex-end",
     gap: 2,
   },
   itemBadgeQty: {
-    color: Colors.light.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: "600",
   },
   itemBadgeTotal: {
-    color: Colors.light.primaryLight,
+    color: activeColors.primaryLight,
     fontWeight: "700",
   },
   extraBadge: {
-    backgroundColor: Colors.light.warning,
+    backgroundColor: activeColors.warning,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
   },
   extraBadgeText: {
-    color: Colors.light.background,
+    color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "800",
   },
   modalItemsScroll: {
     maxHeight: 180,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: theme.colors.outlineVariant,
     borderRadius: 12,
     padding: 8,
   },
@@ -1657,11 +1693,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: theme.colors.outlineVariant,
   },
   addItemSection: {
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: theme.colors.outlineVariant,
     borderRadius: 12,
     padding: 10,
     gap: 4,
@@ -1673,7 +1709,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   modalTotalText: {
-    color: Colors.light.primary,
+    color: theme.colors.primary,
     fontWeight: "800",
   },
 });

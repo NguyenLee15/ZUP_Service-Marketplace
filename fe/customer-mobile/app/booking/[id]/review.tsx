@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -103,6 +104,8 @@ function getServiceId(booking?: ReviewBooking | null) {
 const QUICK_TAGS = ['Đúng giờ', 'Chuyên nghiệp', 'Sạch sẽ', 'Giá hợp lý', 'Tư vấn tốt', 'Nhanh chóng'];
 
 export default function ReviewScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { triggerReview } = useInAppReview();
@@ -311,7 +314,7 @@ export default function ReviewScreen() {
                     <MaterialCommunityIcons
                       name={star <= rating ? 'star' : 'star-outline'}
                       size={34}
-                      color={star <= rating ? '#FBBF24' : Colors.light.borderStrong}
+                      color={star <= rating ? '#FBBF24' : activeColors.borderStrong}
                     />
                   </Animated.View>
                 </Pressable>
@@ -383,6 +386,8 @@ export default function ReviewScreen() {
 }
 
 function Header({ booking }: { booking: ReviewBooking }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.headerBlock}>
       <Text variant="headlineSmall" style={styles.headerTitle}>
@@ -396,8 +401,10 @@ function Header({ booking }: { booking: ReviewBooking }) {
 }
 
 function BookingSummary({ booking }: { booking: ReviewBooking }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const status = booking.status || 'DONE';
-  const statusColor = BOOKING_STATUS_COLOR[status] || Colors.light.textSecondary;
+  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
   const completedAt = booking.autoCompletedAt || booking.completedAt;
 
   return (
@@ -433,6 +440,8 @@ function BookingSummary({ booking }: { booking: ReviewBooking }) {
 }
 
 function ExistingReviewCard({ review }: { review: BookingReview }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const rating = Number(review.rating || 0);
 
   return (
@@ -444,7 +453,7 @@ function ExistingReviewCard({ review }: { review: BookingReview }) {
               key={star}
               name={star <= rating ? 'star' : 'star-outline'}
               size={22}
-              color={star <= rating ? '#FBBF24' : Colors.light.borderStrong}
+              color={star <= rating ? '#FBBF24' : activeColors.borderStrong}
             />
           ))}
           <Text variant="labelMedium" style={styles.ratingLabel}>
@@ -471,9 +480,11 @@ function ExistingReviewCard({ review }: { review: BookingReview }) {
 }
 
 function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; text: string }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.infoRow}>
-      <MaterialCommunityIcons name={icon} size={17} color={Colors.light.textSecondary} />
+      <MaterialCommunityIcons name={icon} size={17} color={activeColors.textSecondary} />
       <Text variant="bodySmall" style={styles.infoText} numberOfLines={2}>
         {text}
       </Text>
@@ -481,32 +492,32 @@ function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof MaterialCom
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   content: { padding: 16, paddingBottom: 120, gap: 16 },
   headerBlock: { gap: 5, paddingTop: 12 },
-  headerTitle: { color: Colors.light.text, fontWeight: '900' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  headerTitle: { color: activeColors.text, fontWeight: '900' },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
   cardBlock: { gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
-  codeText: { color: Colors.light.primary, fontWeight: '900' },
-  titleText: { color: Colors.light.text, fontWeight: '900' },
+  codeText: { color: activeColors.primary, fontWeight: '900' },
+  titleText: { color: activeColors.text, fontWeight: '900' },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
-  infoText: { flex: 1, color: Colors.light.textSecondary, lineHeight: 19 },
+  infoText: { flex: 1, color: activeColors.textSecondary, lineHeight: 19 },
   starRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 6 },
   starRowSmall: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   starButton: {
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ratingLabel: { color: Colors.light.text, fontWeight: '900' },
-  counter: { color: Colors.light.textSecondary, fontWeight: '800' },
-  counterError: { color: Colors.light.error },
-  commentText: { color: Colors.light.text, lineHeight: 22 },
+  ratingLabel: { color: activeColors.text, fontWeight: '900' },
+  counter: { color: activeColors.textSecondary, fontWeight: '800' },
+  counterError: { color: activeColors.error },
+  commentText: { color: activeColors.text, lineHeight: 22 },
   roundedButton: { borderRadius: 12 },
   submitButton: { borderRadius: 14 },
   submitContent: { minHeight: 48 },
@@ -519,7 +530,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },

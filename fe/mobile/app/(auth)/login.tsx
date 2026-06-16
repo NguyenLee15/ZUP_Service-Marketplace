@@ -464,48 +464,24 @@ export default function LoginScreen() {
         </View>
 
         {/* Bottom Biometrics Row */}
-        {biometricsAvailable && (
+        {/* Bottom Biometrics Row */}
+        {biometricsAvailable && biometricsEnabledState && (
           <View
             style={[
               styles.biometricFooter,
               { borderTopColor: theme.colors.outlineVariant },
             ]}
           >
-            <View style={styles.biometricLabelRow}>
-              <IconButton
-                icon="fingerprint"
-                size={22}
-                iconColor={theme.colors.onSurfaceVariant}
-                style={styles.bioIcon}
-              />
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.biometricText,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                {t("auth.biometric_enable_label")}
-              </Text>
-            </View>
-            <Switch
-              value={biometricsEnabledState}
-              onValueChange={async (value) => {
-                setBiometricsEnabledState(value);
-                if (value) {
-                  await handleBiometricAuth();
-                } else {
-                  await disableBiometrics();
-                  setBiometricsEnabledState(false);
-                  showDialog(
-                    t("general.notification"),
-                    t("auth.biometric_off"),
-                  );
-                }
-              }}
-              trackColor={{ false: "#CBD5E1", true: "#86EFAC" }}
-              thumbColor={biometricsEnabledState ? "#22C55E" : "#F1F5F9"}
-            />
+            <Button
+              mode="text"
+              icon="fingerprint"
+              onPress={handleBiometricAuth}
+              textColor={theme.colors.onSurfaceVariant}
+              style={{ flex: 1 }}
+              labelStyle={{ fontSize: 14, fontWeight: "700" }}
+            >
+              Đăng nhập bằng sinh trắc học
+            </Button>
           </View>
         )}
       </ScrollView>

@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
@@ -93,6 +94,8 @@ function getUnreadCount(conversation: ConversationItem): number {
 }
 
 export default function ChatListScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const conversationsQuery = useQuery({
     queryKey: ['chat', 'conversations'],
@@ -157,6 +160,8 @@ export default function ChatListScreen() {
 }
 
 function PulsingOnlineDot() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const pulse = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
@@ -180,12 +185,14 @@ function ConversationCard({
   conversation: ConversationItem;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const title = getConversationTitle(conversation);
   const subtitle = getConversationSubtitle(conversation);
   const unread = isUnread(conversation);
   const unreadCount = getUnreadCount(conversation);
   const status = conversation.booking?.status || '';
-  const statusColor = BOOKING_STATUS_COLOR[status] || Colors.light.textSecondary;
+  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
   const preview = getLastMessagePreview(conversation);
   const lastAt = conversation.lastMessage?.createdAt || conversation.updatedAt;
   const avatarColor = getAvatarColor(title);
@@ -246,6 +253,8 @@ function ConversationCard({
 }
 
 function ConversationSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.skeletonWrap}>
       {[0, 1, 2].map((item) => (
@@ -264,7 +273,7 @@ function ConversationSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   listContent: { padding: 16, paddingBottom: 112 },
   headerWrap: { gap: 12, marginBottom: 12 },
   errorBlock: { gap: 10 },
@@ -272,12 +281,12 @@ const styles = StyleSheet.create({
   conversationBody: { flex: 1, gap: 6 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  titleText: { color: Colors.light.text, fontWeight: '700', flex: 1 },
-  titleUnread: { fontWeight: '900', color: Colors.light.text },
-  subtitle: { color: Colors.light.textSecondary, flex: 1 },
-  preview: { color: Colors.light.textSecondary, flex: 1 },
-  previewUnread: { color: Colors.light.text, fontWeight: '900' },
-  timeText: { color: Colors.light.textSecondary, maxWidth: 112 },
+  titleText: { color: activeColors.text, fontWeight: '700', flex: 1 },
+  titleUnread: { fontWeight: '900', color: activeColors.text },
+  subtitle: { color: activeColors.textSecondary, flex: 1 },
+  preview: { color: activeColors.textSecondary, flex: 1 },
+  previewUnread: { color: activeColors.text, fontWeight: '900' },
+  timeText: { color: activeColors.textSecondary, maxWidth: 112 },
   // Dynamic avatar
   avatarCircle: {
     width: 48,
@@ -295,18 +304,18 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     borderWidth: 2,
-    borderColor: Colors.light.surface,
+    borderColor: activeColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
   unreadBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '900' },
-  unreadCard: { borderColor: `${Colors.light.primary}55`, backgroundColor: '#F0F7FF' },
+  unreadCard: { borderColor: `${activeColors.primary}55`, backgroundColor: '#F0F7FF' },
   roundedButton: { alignSelf: 'flex-start', borderRadius: 12 },
   skeletonWrap: { gap: 12 },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   avatarSkeleton: { width: 48, height: 48, borderRadius: 24 },
   onlineDot: {
     position: 'absolute',

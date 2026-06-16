@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Avatar, Button, Text, useTheme } from 'react-native-paper';
+import { Avatar, Button, Text, useTheme, Switch } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { authApi } from '../../features/auth/auth.api';
+import { useBiometricLogin } from '../../hooks/useBiometricLogin';
 import { Colors } from '../../constants/colors';
 import { routes } from '../../lib/route-utils';
 import {
@@ -18,6 +20,23 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, disableBiometrics } = useBiometricLogin();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioEnabled, setBioEnabled] = useState(false);
+
+  useEffect(() => {
+    const initBio = async () => {
+      const { hasHardware, isEnrolled } = await checkBiometricsSupport();
+      if (hasHardware && isEnrolled) {
+        setBioAvailable(true);
+        const enabled = await isBiometricsEnabled();
+        setBioEnabled(enabled);
+      }
+    };
+    initBio();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -46,21 +65,21 @@ export default function ProfileScreen() {
           <Avatar.Text
             size={64}
             label={user?.fullName?.charAt(0)?.toUpperCase() || 'P'}
-            style={styles.avatar}
-            color={Colors.light.primary}
+            style={[styles.avatar, { backgroundColor: `${activeColors.primary}14` }]}
+            color={activeColors.primary}
           />
         )}
         <View style={styles.accountInfo}>
-          <Text variant="titleLarge" style={styles.name} selectable>
+          <Text variant="titleLarge" style={[styles.name, { color: activeColors.text }]} selectable>
             {user?.fullName || 'Provider'}
           </Text>
-          <Text variant="bodyMedium" style={styles.email} selectable>
+          <Text variant="bodyMedium" style={[styles.email, { color: activeColors.textSecondary }]} selectable>
             {user?.email || 'Chưa có email'}
           </Text>
           <View style={styles.statusRow}>
             <ProviderStatusChip
               label={user?.status === 'ACTIVE' ? 'Đang hoạt động' : user?.status || 'Chưa rõ trạng thái'}
-              color={user?.status === 'ACTIVE' ? Colors.light.success : Colors.light.warning}
+              color={user?.status === 'ACTIVE' ? activeColors.success : activeColors.warning}
             />
           </View>
         </View>
@@ -80,23 +99,53 @@ export default function ProfileScreen() {
                 <MaterialCommunityIcons name={item.icon as any} size={22} color={theme.colors.primary} />
               </View>
               <View style={styles.menuText}>
-                <Text variant="bodyLarge" style={styles.menuLabel}>
+                <Text variant="bodyLarge" style={[styles.menuLabel, { color: activeColors.text }]}>
                   {item.label}
                 </Text>
-                <Text variant="bodySmall" style={styles.menuDescription} numberOfLines={2}>
+                <Text variant="bodySmall" style={[styles.menuDescription, { color: activeColors.textSecondary }]} numberOfLines={2}>
                   {item.description}
                 </Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.light.textSecondary} />
+              <MaterialCommunityIcons name="chevron-right" size={24} color={activeColors.textSecondary} />
             </View>
           </ProviderCard>
         ))}
       </View>
 
+      {bioAvailable && (
+        <ProviderCard>
+          <View style={styles.menuItem}>
+            <View style={[styles.menuIcon, { backgroundColor: `${Colors.light.success}12` }]}>
+              <MaterialCommunityIcons name="fingerprint" size={22} color={Colors.light.success} />
+            </View>
+            <View style={styles.menuText}>
+              <Text variant="bodyLarge" style={[styles.menuLabel, { color: activeColors.text }]}>
+                Đăng nhập sinh trắc học
+              </Text>
+              <Text variant="bodySmall" style={[styles.menuDescription, { color: activeColors.textSecondary }]} numberOfLines={2}>
+                Sử dụng vân tay/khuôn mặt để đăng nhập
+              </Text>
+            </View>
+            <Switch
+              value={bioEnabled}
+              onValueChange={async (val) => {
+                setBioEnabled(val);
+                if (val) {
+                  await enableBiometrics();
+                } else {
+                  await disableBiometrics();
+                }
+              }}
+              color={theme.colors.primary}
+            />
+          </View>
+        </ProviderCard>
+      )}
+
       <Button
         mode="outlined"
         onPress={handleLogout}
-        style={styles.logoutButton}
+        style={[styles.logoutButton, { borderColor: theme.colors.error }]}
         textColor={theme.colors.error}
         icon="logout"
         accessibilityLabel="Đăng xuất"
@@ -117,20 +166,13 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   avatar: {
-    backgroundColor: `${Colors.light.primary}14`,
   },
   accountInfo: {
     flex: 1,
     minWidth: 0,
   },
-  name: {
-    color: Colors.light.text,
-    fontWeight: '800',
-  },
-  email: {
-    color: Colors.light.textSecondary,
-    marginTop: 2,
-  },
+  name: { fontWeight: '800' },
+  email: { marginTop: 2 },
   statusRow: {
     alignSelf: 'flex-start',
     marginTop: 10,
@@ -154,17 +196,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  menuLabel: {
-    color: Colors.light.text,
-    fontWeight: '700',
-  },
-  menuDescription: {
-    color: Colors.light.textSecondary,
-    marginTop: 2,
-    lineHeight: 18,
-  },
+  menuLabel: { fontWeight: '700' },
+  menuDescription: { marginTop: 2, lineHeight: 18 },
   logoutButton: {
-    borderColor: Colors.light.error,
     borderRadius: 12,
     marginTop: 8,
   },

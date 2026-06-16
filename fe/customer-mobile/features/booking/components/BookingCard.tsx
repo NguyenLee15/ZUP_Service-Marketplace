@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Card, Chip, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,23 +20,23 @@ type BookingListItem = {
   actualPrice?: number | string | null;
 };
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   card: {
-    backgroundColor: Colors.light.surface,
-    borderColor: Colors.light.border,
+    backgroundColor: activeColors.surface,
+    borderColor: activeColors.border,
     borderRadius: 16,
     borderWidth: 1,
-    boxShadow: Colors.light.cardShadow,
+    boxShadow: activeColors.cardShadow,
   },
   cardContent: { padding: 16, gap: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  codeText: { color: Colors.light.primary, fontWeight: '900' },
-  serviceTitle: { color: Colors.light.text, fontWeight: '900' },
+  codeText: { color: activeColors.primary, fontWeight: '900' },
+  serviceTitle: { color: activeColors.text, fontWeight: '900' },
   chip: { borderRadius: 999 },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 19 },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 19 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { color: Colors.light.textSecondary, flex: 1, lineHeight: 19 },
-  divider: { height: 1, backgroundColor: Colors.light.border, marginVertical: 2 },
+  metaText: { color: activeColors.textSecondary, flex: 1, lineHeight: 19 },
+  divider: { height: 1, backgroundColor: activeColors.border, marginVertical: 2 },
   cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   ctaButton: {
     flex: 1,
@@ -48,18 +49,21 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   ctaText: { fontWeight: '900', fontSize: 13 },
-  priceText: { color: Colors.light.primary, fontWeight: '900' },
+  priceText: { color: activeColors.primary, fontWeight: '900' },
 });
 
 export function StatusChip({
   label,
-  color = Colors.light.primary,
+  color,
 }: {
   label: string;
   color?: string;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
+  const chipColor = color || activeColors.primary;
   return (
-    <Chip compact style={[styles.chip, { backgroundColor: `${color}16` }]} textStyle={{ color }}>
+    <Chip compact style={[styles.chip, { backgroundColor: `${chipColor}16` }]} textStyle={{ color: chipColor }}>
       {label}
     </Chip>
   );
@@ -76,24 +80,24 @@ type CtaConfig = {
   textColor: string;
 };
 
-function getCtaConfig(status?: string | null): CtaConfig {
+function getCtaConfig(status?: string | null, activeColors?: any): CtaConfig {
   switch (status) {
     case 'QUOTED':
       return { icon: 'check-circle-outline', label: 'Xem & xác nhận báo giá', bgColor: `${BOOKING_STATUS_COLOR['QUOTED']}18`, textColor: BOOKING_STATUS_COLOR['QUOTED'] };
     case 'IN_PROGRESS':
-      return { icon: 'progress-wrench', label: 'Đang thực hiện', bgColor: `${Colors.light.success}15`, textColor: Colors.light.success };
+      return { icon: 'progress-wrench', label: 'Đang thực hiện', bgColor: `${activeColors.success}15`, textColor: activeColors.success };
     case 'DONE':
-      return { icon: 'star-check-outline', label: 'Xác nhận & đánh giá', bgColor: `${Colors.light.primary}15`, textColor: Colors.light.primary };
+      return { icon: 'star-check-outline', label: 'Xác nhận & đánh giá', bgColor: `${activeColors.primary}15`, textColor: activeColors.primary };
     case 'DISPUTED':
-      return { icon: 'alert-octagon-outline', label: 'Đang tranh chấp', bgColor: `${Colors.light.error}12`, textColor: Colors.light.error };
+      return { icon: 'alert-octagon-outline', label: 'Đang tranh chấp', bgColor: `${activeColors.error}12`, textColor: activeColors.error };
     case 'CANCELLED':
-      return { icon: 'close-circle-outline', label: 'Đơn đã hủy', bgColor: Colors.light.surfaceVariant, textColor: Colors.light.textSecondary };
+      return { icon: 'close-circle-outline', label: 'Đơn đã hủy', bgColor: activeColors.surfaceVariant, textColor: activeColors.textSecondary };
     case 'PENDING':
-      return { icon: 'clock-outline', label: 'Chờ nhà cung cấp xác nhận', bgColor: `${Colors.light.warning}15`, textColor: Colors.light.warning };
+      return { icon: 'clock-outline', label: 'Chờ nhà cung cấp xác nhận', bgColor: `${activeColors.warning}15`, textColor: activeColors.warning };
     case 'CONFIRMED':
       return { icon: 'calendar-check-outline', label: 'Lịch hẹn đã chốt', bgColor: `${BOOKING_STATUS_COLOR['CONFIRMED']}15`, textColor: BOOKING_STATUS_COLOR['CONFIRMED'] };
     default:
-      return { icon: 'arrow-right-circle-outline', label: 'Xem chi tiết đơn hàng', bgColor: Colors.light.surfaceVariant, textColor: Colors.light.textSecondary };
+      return { icon: 'arrow-right-circle-outline', label: 'Xem chi tiết đơn hàng', bgColor: activeColors.surfaceVariant, textColor: activeColors.textSecondary };
   }
 }
 
@@ -104,11 +108,13 @@ export function BookingCard({
   booking: BookingListItem;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const status = booking.status || 'PENDING';
-  const statusColor = BOOKING_STATUS_COLOR[status] || Colors.light.textSecondary;
+  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
   const price = getBookingPrice(booking);
   const address = [booking.addressDetail, booking.ward, booking.province].filter(Boolean).join(', ');
-  const cta = getCtaConfig(status);
+  const cta = getCtaConfig(status, activeColors);
 
   return (
     <Pressable
@@ -140,7 +146,7 @@ export function BookingCard({
 
           {/* Meta: thời gian & địa chỉ */}
           <View style={styles.metaRow}>
-            <MaterialCommunityIcons name="calendar-clock" size={15} color={Colors.light.textSecondary} />
+            <MaterialCommunityIcons name="calendar-clock" size={15} color={activeColors.textSecondary} />
             <Text variant="bodySmall" style={styles.metaText} numberOfLines={1}>
               {formatDateTime(booking.desiredTime)}
             </Text>
@@ -148,7 +154,7 @@ export function BookingCard({
 
           {address ? (
             <View style={styles.metaRow}>
-              <MaterialCommunityIcons name="map-marker-outline" size={15} color={Colors.light.textSecondary} />
+              <MaterialCommunityIcons name="map-marker-outline" size={15} color={activeColors.textSecondary} />
               <Text variant="bodySmall" style={styles.metaText} numberOfLines={1}>
                 {address}
               </Text>

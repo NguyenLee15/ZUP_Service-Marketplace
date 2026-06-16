@@ -1,9 +1,10 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Text } from 'react-native-paper';
 import { Colors } from '../../../constants/colors';
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   section: { gap: 10 },
   horizontalList: { gap: 12, paddingRight: 16 },
   categoryCircleWrapper: {
@@ -18,10 +19,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
   },
   categoryCircleLabel: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '700',
     fontSize: 12,
     textAlign: 'center',
@@ -32,15 +33,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pressed: { opacity: 0.72 },
-  skeletonBlock: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeletonBlock: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
   },
-  sectionTitle: { color: Colors.light.text, fontWeight: '900' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  sectionTitle: { color: activeColors.text, fontWeight: '900' },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
 });
 
 type HomeCategory = {
@@ -80,6 +81,8 @@ export function CategoryShortcut({
   category: HomeCategory;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const icon = getCategoryIcon(category.name);
   const color = getCategoryColor(category.name);
 
@@ -111,6 +114,8 @@ export function CategorySection({
   onOpenSearch: () => void;
   onSelect: (category: HomeCategory) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>

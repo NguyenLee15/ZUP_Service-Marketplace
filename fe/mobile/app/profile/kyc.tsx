@@ -27,6 +27,7 @@ type MessageState = {
 
 export default function KycScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -123,13 +124,13 @@ export default function KycScreen() {
     if (kycStatus === 'APPROVED') {
       return (
         <ProviderCard contentStyle={styles.statusCard}>
-          <View style={[styles.statusIcon, { backgroundColor: `${Colors.light.success}16` }]}>
-            <MaterialCommunityIcons name="check-decagram" size={34} color={Colors.light.success} />
+          <View style={[styles.statusIcon, { backgroundColor: `${activeColors.success}16` }]}>
+            <MaterialCommunityIcons name="check-decagram" size={34} color={activeColors.success} />
           </View>
-          <Text variant="titleMedium" style={[styles.statusTitle, { color: Colors.light.success }]}>
+          <Text variant="titleMedium" style={[styles.statusTitle, { color: activeColors.success }]}>
             Hồ sơ đã được duyệt
           </Text>
-          <Text variant="bodyMedium" style={styles.statusDescription}>
+          <Text variant="bodyMedium" style={[styles.statusDescription, { color: theme.colors.onSurfaceVariant }]}>
             Tài khoản của bạn đã được xác minh và có thể dùng đầy đủ tính năng của nhà cung cấp.
           </Text>
         </ProviderCard>
@@ -139,13 +140,13 @@ export default function KycScreen() {
     if (kycStatus === 'PENDING') {
       return (
         <ProviderCard contentStyle={styles.statusCard}>
-          <View style={[styles.statusIcon, { backgroundColor: `${Colors.light.warning}18` }]}>
-            <MaterialCommunityIcons name="timer-sand" size={34} color={Colors.light.warning} />
+          <View style={[styles.statusIcon, { backgroundColor: `${activeColors.warning}18` }]}>
+            <MaterialCommunityIcons name="timer-sand" size={34} color={activeColors.warning} />
           </View>
-          <Text variant="titleMedium" style={[styles.statusTitle, { color: Colors.light.warning }]}>
+          <Text variant="titleMedium" style={[styles.statusTitle, { color: activeColors.warning }]}>
             Đang chờ duyệt
           </Text>
-          <Text variant="bodyMedium" style={styles.statusDescription}>
+          <Text variant="bodyMedium" style={[styles.statusDescription, { color: theme.colors.onSurfaceVariant }]}>
             Hồ sơ KYC của bạn đang được xét duyệt. Quá trình này thường mất từ 1-2 ngày làm việc.
           </Text>
         </ProviderCard>
@@ -170,19 +171,19 @@ export default function KycScreen() {
   }) => (
     <ProviderCard onPress={onPress} accessibilityLabel={title} contentStyle={styles.uploadContent}>
       <View style={styles.uploadText}>
-        <View style={[styles.uploadIcon, { backgroundColor: asset ? `${Colors.light.success}14` : Colors.light.surfaceVariant }]}>
-          <MaterialCommunityIcons name={asset ? 'check-circle-outline' : icon} size={24} color={asset ? Colors.light.success : theme.colors.primary} />
+        <View style={[styles.uploadIcon, { backgroundColor: asset ? `${activeColors.success}14` : theme.colors.surfaceVariant }]}>
+          <MaterialCommunityIcons name={asset ? 'check-circle-outline' : icon} size={24} color={asset ? activeColors.success : theme.colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text variant="bodyLarge" style={styles.uploadTitle}>
+          <Text variant="bodyLarge" style={[styles.uploadTitle, { color: theme.colors.onSurface }]}>
             {title}
           </Text>
-          <Text variant="bodySmall" style={styles.uploadDescription}>
+          <Text variant="bodySmall" style={[styles.uploadDescription, { color: theme.colors.onSurfaceVariant }]}>
             {asset ? 'Đã chọn ảnh. Chạm để thay ảnh khác.' : description}
           </Text>
         </View>
       </View>
-      {asset ? <Image source={{ uri: asset.uri }} style={styles.previewImage} /> : null}
+      {asset ? <Image source={{ uri: asset.uri }} style={[styles.previewImage, { backgroundColor: theme.colors.surfaceVariant }]} /> : null}
     </ProviderCard>
   );
 
@@ -211,7 +212,7 @@ export default function KycScreen() {
           <View style={styles.statusRow}>
             <ProviderStatusChip
               label={kycStatus === 'REJECTED' ? 'Bị từ chối' : 'Chưa nộp hồ sơ'}
-              color={kycStatus === 'REJECTED' ? Colors.light.error : Colors.light.textSecondary}
+              color={kycStatus === 'REJECTED' ? activeColors.error : theme.colors.onSurfaceVariant}
             />
           </View>
 
@@ -224,10 +225,10 @@ export default function KycScreen() {
           )}
 
           <ProviderCard>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
+            <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
               Ảnh cần chuẩn bị
             </Text>
-            <Text variant="bodySmall" style={styles.sectionDescription}>
+            <Text variant="bodySmall" style={[styles.sectionDescription, { color: theme.colors.onSurfaceVariant }]}>
               Ảnh nên đủ sáng, không bị che góc, chữ trên CCCD đọc được. Chỉ dùng ảnh của chính bạn.
             </Text>
           </ProviderCard>
@@ -293,17 +294,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   statusDescription: {
-    color: Colors.light.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
     marginTop: 8,
   },
   sectionTitle: {
-    color: Colors.light.text,
     fontWeight: '800',
   },
   sectionDescription: {
-    color: Colors.light.textSecondary,
     lineHeight: 18,
     marginTop: 6,
   },
@@ -323,11 +321,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   uploadTitle: {
-    color: Colors.light.text,
     fontWeight: '800',
   },
   uploadDescription: {
-    color: Colors.light.textSecondary,
     lineHeight: 18,
     marginTop: 2,
   },
@@ -335,7 +331,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 168,
     borderRadius: 12,
-    backgroundColor: Colors.light.surfaceVariant,
   },
   submitButton: {
     borderRadius: 12,

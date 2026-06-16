@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
@@ -50,6 +51,8 @@ function getEmptyState(status: string) {
 }
 
 export default function BookingsScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const isOnline = useNetworkStatus();
   const {
@@ -181,6 +184,7 @@ function StatusFilters({
 }) {
   const theme = useTheme();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(activeColors);
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
       {FILTERS.map((item) => {
@@ -217,6 +221,8 @@ function StatusFilters({
 }
 
 function BookingSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <CustomerCard>
       <View style={styles.cardContent}>
@@ -229,7 +235,7 @@ function BookingSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   content: { padding: 16, paddingBottom: 112 },
   headerContent: { gap: 14, marginBottom: 12 },
   headerButton: { borderRadius: 999 },
@@ -245,11 +251,11 @@ const styles = StyleSheet.create({
   exportButton: { borderRadius: 12 },
   cardContent: { gap: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  codeText: { color: Colors.light.primary, fontWeight: '900' },
-  serviceTitle: { color: Colors.light.text, fontWeight: '900' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 19 },
+  codeText: { color: activeColors.primary, fontWeight: '900' },
+  serviceTitle: { color: activeColors.text, fontWeight: '900' },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 19 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { color: Colors.light.textSecondary, flex: 1, lineHeight: 19 },
+  metaText: { color: activeColors.textSecondary, flex: 1, lineHeight: 19 },
   cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   nextAction: {
     flex: 1,
@@ -257,11 +263,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     borderRadius: 999,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
   nextActionText: { flex: 1, fontWeight: '900' },
-  priceText: { color: Colors.light.primary, fontWeight: '900' },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  priceText: { color: activeColors.primary, fontWeight: '900' },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
 });

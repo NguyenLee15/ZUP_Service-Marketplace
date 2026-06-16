@@ -31,6 +31,8 @@ const filters: Array<{ key: FilterKey; label: string }> = [
 
 export default function ServicesScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(theme, activeColors);
   const router = useRouter();
 
   const [services, setServices] = useState<any[]>([]);
@@ -99,17 +101,17 @@ export default function ServicesScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return Colors.light.success;
+        return activeColors.success;
       case 'HIDDEN':
-        return Colors.light.textSecondary;
+        return activeColors.textSecondary;
       case 'PENDING':
-        return Colors.light.warning;
+        return activeColors.warning;
       case 'DRAFT':
-        return Colors.light.primary;
+        return activeColors.primary;
       case 'REJECTED':
-        return Colors.light.error;
+        return activeColors.error;
       default:
-        return Colors.light.textSecondary;
+        return activeColors.textSecondary;
     }
   };
 
@@ -209,7 +211,7 @@ export default function ServicesScreen() {
         data={filteredServices}
         keyExtractor={item => String(item.id)}
         renderItem={renderService}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[activeColors.primary]} />}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerStack}>
@@ -233,7 +235,7 @@ export default function ServicesScreen() {
                 <ProviderStatusChip
                   key={item.key}
                   label={item.label}
-                  color={item.key === 'ALL' ? Colors.light.primary : getStatusColor(item.key)}
+                  color={item.key === 'ALL' ? activeColors.primary : getStatusColor(item.key)}
                   selected={filter === item.key}
                   onPress={() => setFilter(item.key)}
                 />
@@ -277,7 +279,7 @@ export default function ServicesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, activeColors: any) => StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 112,
@@ -303,11 +305,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   serviceTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '800',
   },
   serviceCategory: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     marginTop: 4,
   },
   metaRow: {
@@ -318,13 +320,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
+    borderTopColor: activeColors.border,
   },
   metaLabel: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
   },
   priceText: {
-    color: Colors.light.primary,
+    color: activeColors.primary,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
@@ -334,7 +336,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   switchLabel: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
   },
   actionRow: {
     flexDirection: 'row',

@@ -8,6 +8,7 @@ import { Text, TextInput, IconButton, useTheme, ActivityIndicator, TouchableRipp
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Socket } from 'socket.io-client';
 import { chatApi } from '../../features/chat/chat.api';
 import { getChatSocket } from '../../lib/socket';
@@ -17,6 +18,8 @@ import { ProviderEmptyState } from '../../components/provider/provider-ui';
 
 export default function ChatRoomScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const styles = getStyles(theme, insets);
   const router = useRouter();
   const { id, customerName, serviceName, contextType } = useLocalSearchParams<{
     id: string;
@@ -136,8 +139,8 @@ export default function ChatRoomScreen() {
       <View style={[styles.msgContainer, isMe ? styles.msgRight : styles.msgLeft]}>
         {isAi && (
           <View style={styles.aiLabel}>
-            <MaterialCommunityIcons name="robot-outline" size={12} color={Colors.light.secondary} />
-            <Text variant="labelSmall" style={{ color: Colors.light.secondary, marginLeft: 2 }}>AI</Text>
+            <MaterialCommunityIcons name="robot-outline" size={12} color={theme.colors.secondary} />
+            <Text variant="labelSmall" style={{ color: theme.colors.secondary, marginLeft: 2 }}>AI</Text>
           </View>
         )}
         <View style={[
@@ -145,10 +148,10 @@ export default function ChatRoomScreen() {
           isMe
             ? { backgroundColor: theme.colors.primary }
             : isAi
-              ? { backgroundColor: Colors.light.secondary + '15', borderColor: Colors.light.secondary + '30', borderWidth: 1 }
+              ? { backgroundColor: `${theme.colors.secondary}15`, borderColor: `${theme.colors.secondary}30`, borderWidth: 1 }
               : { backgroundColor: theme.colors.surfaceVariant },
         ]}>
-          <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onBackground }}>
+          <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onSurface }}>
             {item.content}
           </Text>
           <Text variant="labelSmall" style={[styles.time, { color: isMe ? 'rgba(255,255,255,0.6)' : theme.colors.onSurfaceVariant }]}>
@@ -164,7 +167,7 @@ export default function ChatRoomScreen() {
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <View style={styles.header}>
         <IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />
@@ -215,7 +218,7 @@ export default function ChatRoomScreen() {
           <View style={styles.smartReplyHeader}>
             <View style={styles.smartReplyTitleRow}>
               <View style={styles.smartReplyIcon}>
-                <MaterialCommunityIcons name="auto-fix" size={14} color={Colors.light.primary} />
+                <MaterialCommunityIcons name="auto-fix" size={14} color={theme.colors.primary} />
               </View>
               <Text variant="labelSmall" style={styles.smartReplyTitle}>Gợi ý trả lời</Text>
             </View>
@@ -234,8 +237,8 @@ export default function ChatRoomScreen() {
                 style={styles.replyRipple}
               >
                 <View style={[styles.replyChip, index === 0 && styles.replyChipFeatured]}>
-                  {index === 0 && <MaterialCommunityIcons name="lightning-bolt" size={14} color={Colors.light.primary} />}
-                  <Text variant="bodySmall" style={[styles.replyText, index === 0 && { color: Colors.light.primary }]}>
+                  {index === 0 && <MaterialCommunityIcons name="lightning-bolt" size={14} color={theme.colors.primary} />}
+                  <Text variant="bodySmall" style={[styles.replyText, index === 0 && { color: theme.colors.primary }]}>
                     {reply}
                   </Text>
                 </View>
@@ -273,26 +276,26 @@ export default function ChatRoomScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, insets: any) => StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingTop: 44,
+    paddingTop: insets.top > 0 ? insets.top + 8 : 16,
     paddingBottom: 10,
     paddingRight: 16,
     paddingLeft: 8,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: theme.colors.outlineVariant,
   },
   headerTitle: {
-    color: Colors.light.text,
+    color: theme.colors.onSurface,
     fontWeight: '800',
   },
   headerSubtitle: {
-    color: Colors.light.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: 2,
   },
   messageList: { padding: 16, paddingBottom: 8 },
@@ -305,7 +308,7 @@ const styles = StyleSheet.create({
   typingBar: { paddingHorizontal: 20, paddingVertical: 4 },
   smartReplySection: {
     paddingBottom: 12,
-    backgroundColor: Colors.light.background,
+    backgroundColor: theme.colors.background,
   },
   smartReplyHeader: {
     flexDirection: 'row',
@@ -325,14 +328,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: `${Colors.light.primary}14`,
+    backgroundColor: `${theme.colors.primary}14`,
   },
   smartReplyTitle: {
-    color: Colors.light.text,
+    color: theme.colors.onSurface,
     fontWeight: '800',
   },
   smartReplyCount: {
-    color: Colors.light.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '700',
   },
   replyRipple: {
@@ -342,23 +345,30 @@ const styles = StyleSheet.create({
   replyChip: {
     paddingHorizontal: 14,
     paddingVertical: 9,
-    backgroundColor: Colors.light.surface,
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: theme.colors.outlineVariant,
     borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
   replyChipFeatured: {
-    borderColor: `${Colors.light.primary}55`,
-    backgroundColor: `${Colors.light.primary}0D`,
+    borderColor: `${theme.colors.primary}55`,
+    backgroundColor: `${theme.colors.primary}0D`,
   },
   replyText: {
-    color: Colors.light.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '700',
   },
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', padding: 8, paddingBottom: 24, borderTopWidth: 1, gap: 4 },
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    padding: 8,
+    paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 16,
+    borderTopWidth: 1,
+    gap: 4,
+  },
   textInput: { flex: 1, maxHeight: 100 },
   sendBtn: { marginBottom: 4 },
 });

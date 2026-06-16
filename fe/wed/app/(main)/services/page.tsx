@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Service, Category } from '@/types';
 import { ServiceFilterSidebar } from '@/app/components/services/ServiceFilterSidebar';
 import { UnifiedServiceCard } from '@/app/components/services/UnifiedServiceCard';
+import { LocationSelector } from '@/app/components/services/LocationSelector';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useServiceStore } from '@/store/service.store';
 const ServiceMap = dynamic(() => import('@/app/components/services/ServiceMap').then(mod => mod.ServiceMap), { 
@@ -46,7 +47,8 @@ type SearchMeta = {
 type UserLocationState = {
   lat: number;
   lng: number;
-  source: 'fallback' | 'gps';
+  source: 'fallback' | 'gps' | 'manual';
+  label: string;
 };
 
 export default function ServicesSearchPage() {
@@ -73,6 +75,7 @@ function ServicesSearchContent() {
     lat: DEFAULT_SEARCH_LOCATION.lat,
     lng: DEFAULT_SEARCH_LOCATION.lng,
     source: 'fallback',
+    label: DEFAULT_SEARCH_LOCATION.label,
   });
   const [isListening, setIsListening] = useState(false);
   const observerTarget = useRef(null);
@@ -97,12 +100,11 @@ function ServicesSearchContent() {
   }, [searchParams]);
 
   // Get user location
-  useEffect(() => {
+  const fetchGpsLocation = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, source: 'gps' }),
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, source: 'gps', label: 'Vị trí của tôi' }),
         (err) => {
-          // Chỉ log lỗi nếu không phải là do người dùng từ chối quyền
           if (err.code !== err.PERMISSION_DENIED) {
             console.warn('Geolocation error:', err.message);
           }
@@ -111,6 +113,12 @@ function ServicesSearchContent() {
       );
     }
   }, []);
+
+  useEffect(() => {
+    if (userLocation.source !== 'manual') {
+      fetchGpsLocation();
+    }
+  }, [fetchGpsLocation]);
 
   // Voice Search Logic
   const startVoiceSearch = () => {
@@ -301,7 +309,7 @@ function ServicesSearchContent() {
     ? `Không có dịch vụ trong ${meta.radiusKm || DEFAULT_RADIUS_KM} km, đang hiển thị dịch vụ gần nhất`
     : userLocation.source === 'gps'
       ? `Tìm dịch vụ trong bán kính ${meta.radiusKm || DEFAULT_RADIUS_KM} km quanh vị trí của bạn`
-      : `Tìm dịch vụ quanh ${DEFAULT_SEARCH_LOCATION.label}`;
+      : `Tìm dịch vụ quanh ${userLocation.label}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -347,6 +355,16 @@ function ServicesSearchContent() {
             </div>
             
               <div className="flex w-full items-center gap-3 md:w-auto md:pl-4 md:border-l border-border">
+                <LocationSelector 
+                  currentSource={userLocation.source}
+                  currentLabel={userLocation.label}
+                  onSelectManual={(lat, lng, label) => setUserLocation({ lat, lng, source: 'manual', label })}
+                  onSelectGps={() => {
+                    setUserLocation(prev => ({ ...prev, source: 'fallback', label: 'Hà Nội' })); // temporary reset
+                    fetchGpsLocation();
+                  }}
+                />
+
                 <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
                   <SheetTrigger asChild>
                   <Button

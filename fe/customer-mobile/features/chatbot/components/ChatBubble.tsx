@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Button, Card, Text } from 'react-native-paper';
@@ -5,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../../constants/colors';
 import { formatCurrency } from '../../../lib/format';
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   messageWrap: { marginBottom: 12 },
   bubble: {
     maxWidth: '86%',
@@ -15,7 +16,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 18,
   },
   userBubble: {
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     borderBottomRightRadius: 4,
   },
   assistantBubble: {
@@ -24,11 +25,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderBottomLeftRadius: 4,
   },
-  messageText: { color: Colors.light.text, lineHeight: 22 },
+  messageText: { color: activeColors.text, lineHeight: 22 },
   embeddedCards: { gap: 10, marginTop: 12 },
   serviceCard: {
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: activeColors.border,
     borderRadius: 16,
     padding: 12,
     gap: 10,
@@ -40,38 +41,38 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   serviceBody: { flexDirection: 'row', gap: 12 },
-  serviceImage: { width: 84, height: 84, borderRadius: 12, backgroundColor: Colors.light.surfaceVariant },
+  serviceImage: { width: 84, height: 84, borderRadius: 12, backgroundColor: activeColors.surfaceVariant },
   imageFallback: {
     width: 84,
     height: 84,
     borderRadius: 12,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   serviceInfo: { flex: 1, gap: 4 },
-  serviceTitle: { color: Colors.light.text, fontWeight: '900', fontSize: 14 },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 18, fontSize: 12 },
+  serviceTitle: { color: activeColors.text, fontWeight: '900', fontSize: 14 },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 18, fontSize: 12 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { color: Colors.light.textSecondary, fontWeight: '800' },
-  priceText: { color: Colors.light.primary, fontWeight: '900', fontSize: 14 },
+  metaText: { color: activeColors.textSecondary, fontWeight: '800' },
+  priceText: { color: activeColors.primary, fontWeight: '900', fontSize: 14 },
   actionRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   actionButton: { flex: 1, borderRadius: 10 },
   actionCard: {
     marginTop: 12,
     padding: 12,
     borderWidth: 1.5,
-    borderColor: `${Colors.light.primary}25`,
+    borderColor: `${activeColors.primary}25`,
     borderStyle: 'dashed',
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     borderRadius: 16,
     gap: 8,
   },
-  actionTitle: { color: Colors.light.text, fontWeight: '900', fontSize: 14 },
+  actionTitle: { color: activeColors.text, fontWeight: '900', fontSize: 14 },
   roundedButton: { borderRadius: 12, height: 40 },
   card: {
-    backgroundColor: Colors.light.surface,
-    borderColor: Colors.light.border,
+    backgroundColor: activeColors.surface,
+    borderColor: activeColors.border,
     borderWidth: 0,
   },
   cardContent: { padding: 12 },
@@ -91,13 +92,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: `${Colors.light.warning}18`,
+    backgroundColor: `${activeColors.warning}18`,
     borderRadius: 6,
     paddingHorizontal: 5,
     paddingVertical: 2,
   },
   ratingBadgeText: { color: '#D97706', fontSize: 11, fontWeight: '800' },
-  reviewCountText: { color: Colors.light.textSecondary, fontSize: 12 },
+  reviewCountText: { color: activeColors.textSecondary, fontSize: 12 },
 });
 
 type ChatRole = 'user' | 'assistant';
@@ -154,6 +155,8 @@ export function ChatbotServiceCard({
   onBook: () => void;
   onChat: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const imageUrl = service.imageUrl || null;
   return (
     <View style={styles.serviceCard}>
@@ -169,7 +172,7 @@ export function ChatbotServiceCard({
           <Image source={{ uri: imageUrl }} style={styles.serviceImage} contentFit="cover" transition={160} />
         ) : (
           <View style={styles.imageFallback}>
-            <MaterialCommunityIcons name="tools" size={24} color={Colors.light.primary} />
+            <MaterialCommunityIcons name="tools" size={24} color={activeColors.primary} />
           </View>
         )}
         <View style={styles.serviceInfo}>
@@ -232,6 +235,8 @@ export function ActionCard({
   loading: boolean;
   onPress: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.actionCard}>
       <Text variant="titleSmall" style={styles.actionTitle}>
@@ -271,6 +276,8 @@ export function MessageBubble({
   onChatService: (service: ChatbotService) => void;
   onAction: (action: ChatbotAction, citations?: ChatbotCitation[]) => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const mine = item.role === 'user';
   return (
     <View style={[styles.messageWrap, { alignItems: mine ? 'flex-end' : 'flex-start' }]}>

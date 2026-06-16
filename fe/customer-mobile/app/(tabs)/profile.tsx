@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import { useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -43,13 +44,15 @@ function getStatusLabel(status?: string | null) {
   return 'Khách hàng';
 }
 
-function getStatusColor(status?: string | null) {
-  if (status === 'ACTIVE') return Colors.light.success;
-  if (status === 'LOCKED') return Colors.light.error;
-  return Colors.light.textSecondary;
+function getStatusColor(status?: string | null, activeColors?: any) {
+  if (status === 'ACTIVE') return activeColors.success;
+  if (status === 'LOCKED') return activeColors.error;
+  return activeColors.textSecondary;
 }
 
 export default function ProfileScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, logout, fetchProfile } = useAuthStore();
@@ -95,14 +98,14 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const statusColor = getStatusColor(user?.status);
+  const statusColor = getStatusColor(user?.status, activeColors);
   const statusLabel = getStatusLabel(user?.status);
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingBottom: 104 + Math.max(insets.bottom, 12) }]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.light.primary} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={activeColors.primary} />}
       keyboardShouldPersistTaps="handled"
     >
       <CustomerHeader title="Tài khoản" subtitle="Thông tin cá nhân và cài đặt" />
@@ -158,7 +161,7 @@ export default function ProfileScreen() {
               <StatusChip label={statusLabel} color={statusColor} />
               {user.phone ? (
                 <View style={styles.heroPhone}>
-                  <MaterialCommunityIcons name="phone-outline" size={13} color={Colors.light.textSecondary} />
+                  <MaterialCommunityIcons name="phone-outline" size={13} color={activeColors.textSecondary} />
                   <Text variant="labelSmall" style={styles.heroPhoneText}>{user.phone}</Text>
                 </View>
               ) : null}
@@ -171,7 +174,7 @@ export default function ProfileScreen() {
               {/* Wallet / Coin section */}
               <View style={styles.walletSection}>
                 <View style={styles.sectionHeaderRow}>
-                  <MaterialCommunityIcons name="wallet-outline" size={16} color={Colors.light.primary} />
+                  <MaterialCommunityIcons name="wallet-outline" size={16} color={activeColors.primary} />
                   <Text variant="labelSmall" style={styles.walletTitle}>Ví Zup Xu</Text>
                 </View>
                 <Text variant="titleLarge" style={styles.walletBalance}>
@@ -249,7 +252,7 @@ export default function ProfileScreen() {
             <View style={styles.recentList}>
               {recentBookings.map((booking, index) => {
                 const status = booking.status || 'PENDING';
-                const color = BOOKING_STATUS_COLOR[status] || Colors.light.textSecondary;
+                const color = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
                 const bookingId = toRouteId(booking.id);
                 return (
                   <CustomerCard
@@ -358,7 +361,7 @@ export default function ProfileScreen() {
           accessibilityRole="button"
           accessibilityLabel="Đăng xuất khỏi Zup"
         >
-          <MaterialCommunityIcons name="logout" size={20} color={Colors.light.error} />
+          <MaterialCommunityIcons name="logout" size={20} color={activeColors.error} />
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </Pressable>
       )}
@@ -368,7 +371,7 @@ export default function ProfileScreen() {
 
 function ProfileAction({
   icon,
-  color = Colors.light.primary,
+  color,
   title,
   description,
   onPress,
@@ -381,6 +384,9 @@ function ProfileAction({
   onPress: () => void;
   isLast?: boolean;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
+  const actionColor = color || activeColors.primary;
   return (
     <Pressable
       onPress={() => {
@@ -389,7 +395,7 @@ function ProfileAction({
       }}
       style={({ pressed }) => [
         styles.actionItemPressable,
-        pressed && { backgroundColor: Colors.light.surfaceVariant },
+        pressed && { backgroundColor: activeColors.surfaceVariant },
       ]}
     >
       <View style={styles.actionContent}>
@@ -404,15 +410,15 @@ function ProfileAction({
             {description}
           </Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.light.textSecondary} />
+        <MaterialCommunityIcons name="chevron-right" size={20} color={activeColors.textSecondary} />
       </View>
       {!isLast && <View style={styles.actionDivider} />}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   content: { padding: 16, gap: 16 },
   // Hero Card
   heroCard: {
@@ -424,14 +430,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     overflow: 'hidden',
-    boxShadow: Colors.light.cardShadow,
+    boxShadow: activeColors.cardShadow,
   },
   heroBubble1: {
     position: 'absolute',
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: Colors.light.primarySoft,
+    backgroundColor: activeColors.primarySoft,
     top: -90,
     right: -70,
     opacity: 0.9,
@@ -461,7 +467,7 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     borderWidth: 3,
     borderColor: '#FFFFFF',
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
     boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
   },
   avatarFallback: {
@@ -470,7 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     borderWidth: 3,
     borderColor: '#FFFFFF',
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
@@ -483,25 +489,25 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: activeColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
     boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
   },
-  heroName: { color: Colors.light.text, fontWeight: '900', textAlign: 'center' },
-  heroEmail: { color: Colors.light.textSecondary, textAlign: 'center' },
+  heroName: { color: activeColors.text, fontWeight: '900', textAlign: 'center' },
+  heroEmail: { color: activeColors.textSecondary, textAlign: 'center' },
   heroBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
   heroPhone: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroPhoneText: { color: Colors.light.textSecondary },
+  heroPhoneText: { color: activeColors.textSecondary },
   // Sections
   section: { gap: 10 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { color: Colors.light.text, fontWeight: '900' },
-  sectionAction: { color: Colors.light.primary, fontWeight: '700' },
+  sectionTitle: { color: activeColors.text, fontWeight: '900' },
+  sectionAction: { color: activeColors.primary, fontWeight: '700' },
   groupLabel: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontWeight: '900',
     letterSpacing: 0.8,
     paddingLeft: 4,
@@ -512,10 +518,10 @@ const styles = StyleSheet.create({
   recentSkeletonWrap: { gap: 8 },
   recentCardContent: { paddingVertical: 12 },
   recentRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  recentServiceName: { color: Colors.light.text, fontWeight: '900' },
-  recentCode: { color: Colors.light.textSecondary },
+  recentServiceName: { color: activeColors.text, fontWeight: '900' },
+  recentCode: { color: activeColors.textSecondary },
   recentSkeleton: { gap: 8 },
-  recentEmpty: { color: Colors.light.textSecondary, textAlign: 'center', paddingVertical: 4 },
+  recentEmpty: { color: activeColors.textSecondary, textAlign: 'center', paddingVertical: 4 },
   // Action list
   actionList: { gap: 8 },
   actionItemPressable: {
@@ -534,11 +540,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionTitle: { color: Colors.light.text, fontWeight: '900' },
-  muted: { color: Colors.light.textSecondary, lineHeight: 16 },
+  actionTitle: { color: activeColors.text, fontWeight: '900' },
+  muted: { color: activeColors.textSecondary, lineHeight: 16 },
   actionDivider: {
     height: 1,
-    backgroundColor: Colors.light.border,
+    backgroundColor: activeColors.border,
     marginLeft: 70, // Matches icon width (42) + gap (12) + padding left (16)
     marginRight: 16,
   },
@@ -548,16 +554,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: `${Colors.light.error}12`,
+    backgroundColor: `${activeColors.error}12`,
     borderRadius: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: `${Colors.light.error}30`,
+    borderColor: `${activeColors.error}30`,
     marginTop: 8,
   },
-  logoutText: { color: Colors.light.error, fontWeight: '900', fontSize: 15 },
+  logoutText: { color: activeColors.error, fontWeight: '900', fontSize: 15 },
   // Skeleton
-  skeletonBlock: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeletonBlock: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   // Stats & Loyalty
   statsCard: {
     backgroundColor: '#FFFFFF',
@@ -588,23 +594,23 @@ const styles = StyleSheet.create({
   },
   walletTitle: {
     fontWeight: '700',
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   walletBalance: {
     fontWeight: '900',
-    color: Colors.light.text,
+    color: activeColors.text,
     fontSize: 22,
     lineHeight: 28,
   },
   walletUnit: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontSize: 13,
     fontWeight: '500',
   },
   walletEquivalent: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontSize: 11,
   },
   walletLink: {
@@ -612,17 +618,17 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   walletLinkText: {
-    color: Colors.light.primary,
+    color: activeColors.primary,
     fontWeight: '700',
   },
   statDivider: {
     width: 1,
     alignSelf: 'stretch',
-    backgroundColor: Colors.light.border,
+    backgroundColor: activeColors.border,
   },
   progressBarBg: {
     height: 6,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
     borderRadius: 3,
     marginTop: 8,
     marginBottom: 4,
@@ -634,7 +640,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   progressText: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     fontSize: 11,
     lineHeight: 15,
   },

@@ -1,3 +1,4 @@
+import { useActiveColors } from '../hooks/useActiveColors';
 import { useEffect, useMemo, useState, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 import { FlashList } from "@shopify/flash-list";
@@ -85,19 +86,19 @@ function getNotificationIcon(type?: string | null): IconName {
   return "bell-outline";
 }
 
-function getNotificationTone(type?: string | null) {
+function getNotificationTone(type?: string | null, activeColors?: any) {
   const value = String(type || "");
   if (
     value.includes("DISPUTE") ||
     value.includes("DECLINED") ||
     value.includes("TIMEOUT")
   ) {
-    return Colors.light.warning;
+    return activeColors.warning;
   }
   if (value.includes("COMPLETED") || value.includes("ACCEPTED"))
-    return Colors.light.success;
+    return activeColors.success;
   if (value.includes("QUOTE")) return "#7C3AED";
-  return Colors.light.primary;
+  return activeColors.primary;
 }
 
 function getNotificationTarget(item: NotificationItem) {
@@ -143,6 +144,8 @@ function parseNotifications(payload: unknown): NotificationsPayload {
 }
 
 export default function NotificationsScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [connectionState, setConnectionState] =
@@ -521,8 +524,10 @@ function NotificationCard({
   onPress: () => void;
   onDelete: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const unread = isUnreadNotification(item);
-  const color = getNotificationTone(item.type);
+  const color = getNotificationTone(item.type, activeColors);
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
@@ -588,7 +593,7 @@ function NotificationCard({
               size={18}
               loading={deleting}
               disabled={deleting}
-              iconColor={Colors.light.error}
+              iconColor={activeColors.error}
               onPress={onDelete}
               accessibilityLabel="Xóa thông báo"
               style={styles.deleteButton}
@@ -624,6 +629,8 @@ function NotificationCard({
 }
 
 function NotificationSkeleton() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.skeletonWrap}>
       {[0, 1, 2, 3].map((item) => (
@@ -642,7 +649,7 @@ function NotificationSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   listContent: { padding: 16, paddingBottom: 80 },
   headerWrap: { gap: 12, marginBottom: 12 },
   filterCard: {
@@ -651,7 +658,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: activeColors.border,
   },
   filterChips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   filterChip: { borderRadius: 999 },
@@ -671,23 +678,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  titleText: { color: Colors.light.text, fontWeight: "800", flex: 1 },
+  titleText: { color: activeColors.text, fontWeight: "800", flex: 1 },
   unreadTitle: { fontWeight: "900" },
-  contentText: { color: Colors.light.textSecondary, lineHeight: 19 },
+  contentText: { color: activeColors.textSecondary, lineHeight: 19 },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
   },
-  typeText: { color: Colors.light.textSecondary, fontWeight: "800", flex: 1 },
-  timeText: { color: Colors.light.textSecondary },
+  typeText: { color: activeColors.textSecondary, fontWeight: "800", flex: 1 },
+  timeText: { color: activeColors.textSecondary },
   unreadCard: { backgroundColor: "#F3F8FF" },
   unreadDot: { width: 9, height: 9, borderRadius: 5, marginTop: 4 },
   deleteButton: { margin: -8 },
   roundedButton: { alignSelf: "flex-start", borderRadius: 12 },
   skeletonWrap: { gap: 12 },
-  skeleton: { backgroundColor: Colors.light.surfaceVariant, borderRadius: 10 },
+  skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   iconSkeleton: { width: 44, height: 44, borderRadius: 22 },
   verticalIndicator: {
     position: "absolute",

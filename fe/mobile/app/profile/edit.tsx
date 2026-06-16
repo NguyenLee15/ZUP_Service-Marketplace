@@ -6,6 +6,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert } f
 import { Avatar, Button, IconButton, TextInput, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { profileApi } from '../../features/profile/profile.api';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { Colors } from '../../constants/colors';
@@ -18,7 +19,9 @@ import {
 
 export default function ProfileEditScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, fetchProfile } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
@@ -112,7 +115,7 @@ export default function ProfileEditScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]} contentInsetAdjustmentBehavior="automatic">
         <ProviderPageHeader
           title="Chỉnh sửa hồ sơ"
           subtitle="Cập nhật thông tin liên hệ hiển thị cho khách hàng."
@@ -128,8 +131,8 @@ export default function ProfileEditScreen() {
             <Avatar.Text
               size={92}
               label={user?.fullName?.charAt(0)?.toUpperCase() || 'P'}
-              color={Colors.light.primary}
-              style={styles.avatarFallback}
+              color={activeColors.primary}
+              style={[styles.avatarFallback, { backgroundColor: `${activeColors.primary}14` }]}
             />
           )}
           <Button mode="outlined" onPress={pickAvatar} style={styles.avatarButton} icon="camera-outline">
@@ -139,7 +142,7 @@ export default function ProfileEditScreen() {
 
         <ProviderCard contentStyle={styles.formSection}>
           <ProviderSectionHeader title="Thông tin cá nhân" />
-          <TextInput label="Email" value={user?.email || ''} disabled mode="outlined" style={styles.input} />
+          <TextInput label="Email" value={user?.email || ''} disabled mode="outlined" style={[styles.input, { backgroundColor: theme.colors.surface }]} />
           <TextInput
             label="Họ và tên"
             value={fullName}
@@ -148,7 +151,7 @@ export default function ProfileEditScreen() {
               setMessage(null);
             }}
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
             accessibilityLabel="Họ và tên"
           />
           <TextInput
@@ -160,7 +163,7 @@ export default function ProfileEditScreen() {
             }}
             mode="outlined"
             keyboardType="phone-pad"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface }]}
             accessibilityLabel="Số điện thoại"
           />
         </ProviderCard>
@@ -186,7 +189,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 40,
     gap: 14,
   },
   avatarCard: {
@@ -194,7 +196,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatarFallback: {
-    backgroundColor: `${Colors.light.primary}14`,
   },
   avatarButton: {
     borderRadius: 999,
@@ -203,7 +204,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   input: {
-    backgroundColor: Colors.light.surface,
   },
   submitButton: {
     borderRadius: 12,

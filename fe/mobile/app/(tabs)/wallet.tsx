@@ -59,6 +59,8 @@ function generateManualDepositCode() {
 
 export default function WalletScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(theme, activeColors);
 
   const [balance, setBalance] = useState(0);
   const [isRestricted, setIsRestricted] = useState(false);
@@ -259,11 +261,11 @@ export default function WalletScreen() {
   };
 
   const getTxColor = (type: string, status: string) => {
-    if (status === 'PENDING') return Colors.light.warning;
-    if (status === 'FAILED') return Colors.light.error;
-    if (type === 'DEPOSIT') return Colors.light.success;
-    if (type === 'COMMISSION' || type === 'PENALTY' || type === 'WITHDRAWAL') return Colors.light.error;
-    return Colors.light.textSecondary;
+    if (status === 'PENDING') return activeColors.warning;
+    if (status === 'FAILED') return activeColors.error;
+    if (type === 'DEPOSIT') return activeColors.success;
+    if (type === 'COMMISSION' || type === 'PENALTY' || type === 'WITHDRAWAL') return activeColors.error;
+    return activeColors.textSecondary;
   };
 
   const getTxLabel = (type: string) => {
@@ -285,9 +287,9 @@ export default function WalletScreen() {
   };
 
   const getRequestTone = (status: string) => {
-    if (status === 'APPROVED') return Colors.light.success;
-    if (status === 'REJECTED' || status === 'EXPIRED') return Colors.light.error;
-    return Colors.light.warning;
+    if (status === 'APPROVED') return activeColors.success;
+    if (status === 'REJECTED' || status === 'EXPIRED') return activeColors.error;
+    return activeColors.warning;
   };
 
   const copyTransferCode = async () => {
@@ -360,7 +362,7 @@ export default function WalletScreen() {
         <View style={styles.txRight}>
           <Text
             variant="titleSmall"
-            style={[styles.txAmount, { color: item.status === 'FAILED' ? Colors.light.textSecondary : color }]}
+            style={[styles.txAmount, { color: item.status === 'FAILED' ? activeColors.textSecondary : color }]}
             selectable
           >
             {isPositive ? '+' : '-'}
@@ -382,7 +384,7 @@ export default function WalletScreen() {
         data={transactions}
         keyExtractor={item => String(item.id)}
         renderItem={renderTransaction}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[activeColors.primary]} />}
         onEndReached={() => {
           if (hasMore && !loading) fetchTransactions(page + 1);
         }}
@@ -418,7 +420,7 @@ export default function WalletScreen() {
                   </Text>
                 </View>
                 <View style={styles.balanceIcon}>
-                  <MaterialCommunityIcons name="wallet-outline" size={28} color={Colors.light.primary} />
+                  <MaterialCommunityIcons name="wallet-outline" size={28} color={activeColors.primary} />
                 </View>
               </View>
 
@@ -647,7 +649,7 @@ export default function WalletScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, activeColors: any) => StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 112,
@@ -675,10 +677,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   mutedText: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
   },
   balanceText: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
     marginTop: 4,
@@ -689,7 +691,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: `${Colors.light.primary}14`,
+    backgroundColor: `${activeColors.primary}14`,
   },
   requestCard: {
     marginBottom: 8,
@@ -711,7 +713,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   requestTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '700',
   },
   transactionCard: {
@@ -734,11 +736,11 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   txTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '700',
   },
   txMeta: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
   },
   txRight: {
     alignItems: 'flex-end',
@@ -777,28 +779,28 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   modalTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '800',
   },
   modalDescription: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     lineHeight: 18,
   },
   bankInfo: {
     borderRadius: 14,
     padding: 12,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
     gap: 4,
   },
   bankInfoTitle: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '800',
   },
   bankLine: {
-    color: Colors.light.text,
+    color: activeColors.text,
   },
   bankHint: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
     marginTop: 4,
   },
   copyButton: {
@@ -807,7 +809,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   amountInput: {
-    backgroundColor: Colors.light.surface,
+    backgroundColor: activeColors.surface,
   },
   quickAmounts: {
     flexDirection: 'row',
@@ -815,7 +817,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   quickChip: {
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
   primaryButton: {
     borderRadius: 12,

@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../hooks/useActiveColors';
 import type { ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
@@ -12,7 +13,7 @@ import { Button, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 
-const styles = StyleSheet.create({
+const getStyles = (activeColors: any) => StyleSheet.create({
   subtitle: { lineHeight: 20 },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
   modalBackdrop: {
@@ -65,6 +66,7 @@ export function ConfirmSheet({
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(activeColors);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onDismiss}>

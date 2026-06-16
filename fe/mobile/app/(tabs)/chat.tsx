@@ -87,28 +87,28 @@ export default function ChatListScreen() {
           <Avatar.Text
             size={48}
             label={customer?.fullName?.charAt(0) || 'K'}
-            style={styles.avatar}
-            labelStyle={styles.avatarLabel}
+            style={[styles.avatar, { backgroundColor: `${theme.colors.primary}16` }]}
+            labelStyle={[styles.avatarLabel, { color: theme.colors.primary }]}
           />
-          {unread > 0 && <Badge style={styles.badge}>{unread > 9 ? '9+' : unread}</Badge>}
+          {unread > 0 && <Badge style={[styles.badge, { backgroundColor: theme.colors.error }]}>{unread > 9 ? '9+' : unread}</Badge>}
         </View>
 
         <View style={styles.conversationContent}>
           <View style={styles.conversationHeader}>
-            <Text variant="titleSmall" style={[styles.customerName, unread > 0 && styles.unreadText]} numberOfLines={1}>
+            <Text variant="titleSmall" style={[styles.customerName, { color: theme.colors.onSurface }, unread > 0 && { fontWeight: '800' }]} numberOfLines={1}>
               {customer?.fullName || 'Khách hàng'}
             </Text>
-            <Text variant="labelSmall" style={[styles.timeText, unread > 0 && { color: theme.colors.primary }]}>
+            <Text variant="labelSmall" style={{ color: unread > 0 ? theme.colors.primary : theme.colors.onSurfaceVariant }}>
               {lastMessage ? formatTime(lastMessage.createdAt) : ''}
             </Text>
           </View>
           <View style={styles.lastMessageRow}>
-            {isAi && <MaterialCommunityIcons name="robot-outline" size={14} color={Colors.light.secondary} />}
-            <Text variant="bodySmall" style={[styles.lastMessage, unread > 0 && styles.unreadText]} numberOfLines={1}>
+            {isAi && <MaterialCommunityIcons name="robot-outline" size={14} color={theme.colors.secondary} />}
+            <Text variant="bodySmall" style={[styles.lastMessage, { color: unread > 0 ? theme.colors.onSurface : theme.colors.onSurfaceVariant }, unread > 0 && { fontWeight: '800' }]} numberOfLines={1}>
               {lastMessage?.content || 'Chưa có tin nhắn'}
             </Text>
           </View>
-          <Text variant="labelSmall" style={styles.serviceName} numberOfLines={1}>
+          <Text variant="labelSmall" style={[styles.serviceName, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
             {contextName}
           </Text>
         </View>
@@ -122,7 +122,7 @@ export default function ChatListScreen() {
         data={conversations}
         keyExtractor={item => String(item.id)}
         renderItem={renderConversation}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerStack}>
@@ -167,17 +167,15 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatar: {
-    backgroundColor: `${Colors.light.primary}16`,
+    // Dynamic color applied inline
   },
   avatarLabel: {
-    color: Colors.light.primary,
     fontWeight: '800',
   },
   badge: {
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: Colors.light.error,
   },
   conversationContent: {
     flex: 1,
@@ -191,15 +189,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     flex: 1,
-    color: Colors.light.text,
     fontWeight: '700',
-  },
-  unreadText: {
-    fontWeight: '800',
-    color: Colors.light.text,
-  },
-  timeText: {
-    color: Colors.light.textSecondary,
   },
   lastMessageRow: {
     flexDirection: 'row',
@@ -209,10 +199,8 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     flex: 1,
-    color: Colors.light.textSecondary,
   },
   serviceName: {
-    color: Colors.light.textSecondary,
     marginTop: 4,
   },
   loading: {

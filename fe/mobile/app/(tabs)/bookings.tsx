@@ -28,6 +28,7 @@ import {
   ProviderStatusChip,
 } from '../../components/provider/provider-ui';
 
+
 const TABS: { label: string; value: string }[] = [
   { label: 'Tất cả', value: '' },
   { label: 'Chờ xác nhận', value: 'PENDING' },
@@ -37,17 +38,17 @@ const TABS: { label: string; value: string }[] = [
   { label: 'Đã hủy', value: 'CANCELLED' },
 ];
 
-const statusColor = (status: string): string => {
+const getStatusColor = (status: string, activeColors: typeof Colors.light | typeof Colors.dark): string => {
   const map: Record<string, string> = {
-    PENDING: Colors.light.statusPending,
-    QUOTED: Colors.light.statusQuoted,
-    CONFIRMED: Colors.light.statusConfirmed,
-    IN_PROGRESS: Colors.light.statusInProgress,
-    DONE: Colors.light.statusDone,
-    CANCELLED: Colors.light.statusCancelled,
-    DISPUTED: Colors.light.statusDisputed,
+    PENDING: activeColors.statusPending,
+    QUOTED: activeColors.statusQuoted,
+    CONFIRMED: activeColors.statusConfirmed,
+    IN_PROGRESS: activeColors.statusInProgress,
+    DONE: activeColors.statusDone,
+    CANCELLED: activeColors.statusCancelled,
+    DISPUTED: activeColors.statusDisputed,
   };
-  return map[status] || Colors.light.textSecondary;
+  return map[status] || activeColors.textSecondary;
 };
 
 export default function BookingsScreen() {
@@ -142,7 +143,7 @@ export default function BookingsScreen() {
     }).format(price || 0);
 
   const renderBooking = ({ item }: { item: any }) => {
-    const color = statusColor(item.status);
+    const color = getStatusColor(item.status, activeColors);
     return (
       <ProviderCard
         style={styles.bookingCard}
@@ -151,12 +152,12 @@ export default function BookingsScreen() {
       >
         <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
-            <Text variant="labelSmall" style={styles.bookingCode} selectable>
+            <Text variant="labelSmall" style={[styles.bookingCode, { color: theme.colors.primary }]} selectable>
               #{item.bookingCode}
             </Text>
             <Text
               variant="titleSmall"
-              style={styles.bookingTitle}
+              style={[styles.bookingTitle, { color: theme.colors.onSurface }]}
               numberOfLines={1}
             >
               {item.service?.name || 'Dịch vụ'}
@@ -176,21 +177,21 @@ export default function BookingsScreen() {
           text={`${item.district || ''}, ${item.province || ''}`}
         />
 
-        <View style={styles.cardFooter}>
+        <View style={[styles.cardFooter, { borderTopColor: theme.colors.outlineVariant }]}>
           <View style={styles.footerItem}>
             <MaterialCommunityIcons
               name="calendar-clock-outline"
               size={14}
-              color={activeColors.textSecondary}
+              color={theme.colors.onSurfaceVariant}
             />
-            <Text variant="labelSmall" style={styles.footerText}>
+            <Text variant="labelSmall" style={[styles.footerText, { color: theme.colors.onSurfaceVariant }]}>
               {item.desiredTime
                 ? new Date(item.desiredTime).toLocaleDateString('vi-VN')
                 : 'Chưa có lịch'}
             </Text>
           </View>
           {item.quotation && (
-            <Text variant="labelMedium" style={styles.price} selectable>
+            <Text variant="labelMedium" style={[styles.price, { color: theme.colors.primary }]} selectable>
               {formatPrice(Number(item.quotation.actualPrice))}
             </Text>
           )}
@@ -230,9 +231,9 @@ export default function BookingsScreen() {
               value={search}
               onChangeText={setSearch}
               placeholder="Tìm mã đơn, khách hàng, dịch vụ…"
-              style={styles.search}
+              style={[styles.search, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface }]}
               inputStyle={styles.searchInput}
-              iconColor={activeColors.textSecondary}
+              iconColor={theme.colors.onSurfaceVariant}
               accessibilityLabel="Tìm kiếm đơn hàng"
             />
 
@@ -248,8 +249,8 @@ export default function BookingsScreen() {
                   selected={activeTab === tab.value}
                   color={
                     activeTab === tab.value
-                      ? Colors.light.primary
-                      : activeColors.textSecondary
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant
                   }
                   onPress={() => setActiveTab(tab.value)}
                 />
@@ -299,16 +300,17 @@ function InfoRow({
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   text: string;
 }) {
+  const theme = useTheme();
   return (
     <View style={styles.infoRow}>
       <MaterialCommunityIcons
         name={icon}
         size={15}
-        color={Colors.light.textSecondary}
+        color={theme.colors.onSurfaceVariant}
       />
       <Text
         variant="bodySmall"
-        style={styles.infoText}
+        style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}
         numberOfLines={1}
         selectable
       >
@@ -330,7 +332,7 @@ const styles = StyleSheet.create({
   tabRow: { gap: 8, paddingVertical: 2 },
   bookingCard: { marginBottom: 0 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  bookingCode: { color: Colors.light.primary, fontWeight: '700' },
+  bookingCode: { fontWeight: '700' },
   bookingTitle: { fontWeight: '700', marginTop: 4 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 9 },
   infoText: { flex: 1 },
@@ -346,7 +348,6 @@ const styles = StyleSheet.create({
   footerItem: { flexDirection: 'row', alignItems: 'center' },
   footerText: { marginLeft: 4 },
   price: {
-    color: Colors.light.primary,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },

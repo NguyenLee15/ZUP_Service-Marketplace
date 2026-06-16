@@ -19,6 +19,8 @@ import {
 
 export default function ServiceReviewsScreen() {
   const theme = useTheme();
+  const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const styles = getStyles(theme, activeColors);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -58,7 +60,7 @@ export default function ServiceReviewsScreen() {
           key={index}
           name={index <= rating ? 'star' : index - 0.5 === rating ? 'star-half-full' : 'star-outline'}
           size={16}
-          color={Colors.light.warning}
+          color={activeColors.warning}
         />
       ))}
     </View>
@@ -95,7 +97,7 @@ export default function ServiceReviewsScreen() {
         data={reviews}
         keyExtractor={item => String(item.id)}
         renderItem={renderReview}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.light.primary]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[activeColors.primary]} />}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerStack}>
@@ -127,7 +129,7 @@ export default function ServiceReviewsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, activeColors: any) => StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 56,
@@ -145,10 +147,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatar: {
-    backgroundColor: `${Colors.light.primary}16`,
+    backgroundColor: `${activeColors.primary}16`,
   },
   avatarLabel: {
-    color: Colors.light.primary,
+    color: activeColors.primary,
     fontWeight: '800',
   },
   reviewInfo: {
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   customerName: {
-    color: Colors.light.text,
+    color: activeColors.text,
     fontWeight: '800',
   },
   starsRow: {
@@ -164,10 +166,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reviewDate: {
-    color: Colors.light.textSecondary,
+    color: activeColors.textSecondary,
   },
   comment: {
-    color: Colors.light.text,
+    color: activeColors.text,
     lineHeight: 20,
     marginTop: 12,
   },

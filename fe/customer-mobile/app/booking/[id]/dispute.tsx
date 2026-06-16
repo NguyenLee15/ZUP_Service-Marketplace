@@ -1,3 +1,4 @@
+import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -116,6 +117,8 @@ function getDisputeStatusLabel(status?: string | null) {
 }
 
 export default function DisputeScreen() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -469,6 +472,8 @@ export default function DisputeScreen() {
 }
 
 function Header({ booking }: { booking: DisputeBooking }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.headerBlock}>
       <Text variant="headlineSmall" style={styles.headerTitle}>
@@ -482,8 +487,10 @@ function Header({ booking }: { booking: DisputeBooking }) {
 }
 
 function BookingSummary({ booking }: { booking: DisputeBooking }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const status = booking.status || 'DONE';
-  const statusColor = BOOKING_STATUS_COLOR[status] || Colors.light.textSecondary;
+  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
   const completedAt = booking.completedAt || booking.autoCompletedAt;
 
   return (
@@ -509,6 +516,8 @@ function BookingSummary({ booking }: { booking: DisputeBooking }) {
 }
 
 function ExistingDisputeCard({ dispute }: { dispute: BookingDispute }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   const evidences = dispute.evidences || [];
 
   return (
@@ -518,7 +527,7 @@ function ExistingDisputeCard({ dispute }: { dispute: BookingDispute }) {
           <Text variant="titleMedium" style={styles.titleText}>
             Trạng thái tranh chấp
           </Text>
-          <StatusChip label={getDisputeStatusLabel(dispute.status)} color={Colors.light.warning} />
+          <StatusChip label={getDisputeStatusLabel(dispute.status)} color={activeColors.warning} />
         </View>
         <Text variant="bodyMedium" style={styles.reasonText}>
           {dispute.reason || 'Chưa có nội dung tranh chấp.'}
@@ -557,6 +566,8 @@ function EvidencePreview({
   index: number;
   onRemove: () => void;
 }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.evidenceItem}>
       <Image source={{ uri: image.uri }} style={styles.evidenceImage} contentFit="cover" transition={160} />
@@ -576,9 +587,11 @@ function EvidencePreview({
 }
 
 function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; text: string }) {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.infoRow}>
-      <MaterialCommunityIcons name={icon} size={17} color={Colors.light.textSecondary} />
+      <MaterialCommunityIcons name={icon} size={17} color={activeColors.textSecondary} />
       <Text variant="bodySmall" style={styles.infoText} numberOfLines={2}>
         {text}
       </Text>
@@ -587,9 +600,11 @@ function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof MaterialCom
 }
 
 function DisputeWarningCard() {
+  const activeColors = useActiveColors();
+  const styles = getStyles(activeColors);
   return (
     <View style={styles.warningCard}>
-      <MaterialCommunityIcons name="scale-balance" size={24} color={Colors.light.warning} />
+      <MaterialCommunityIcons name="scale-balance" size={24} color={activeColors.warning} />
       <View style={{ flex: 1, gap: 4 }}>
         <Text variant="titleSmall" style={styles.warningTitle}>
           Lưu ý khi khiếu nại
@@ -603,28 +618,28 @@ function DisputeWarningCard() {
 }
 
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.light.background },
+const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: activeColors.background },
   content: { padding: 16, paddingBottom: 120, gap: 16 },
   headerBlock: { gap: 5, paddingTop: 12 },
-  headerTitle: { color: Colors.light.text, fontWeight: '900' },
-  subtitle: { color: Colors.light.textSecondary, lineHeight: 20 },
+  headerTitle: { color: activeColors.text, fontWeight: '900' },
+  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
   cardBlock: { gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
-  codeText: { color: Colors.light.primary, fontWeight: '900' },
-  titleText: { color: Colors.light.text, fontWeight: '900' },
-  reasonText: { color: Colors.light.text, lineHeight: 22 },
+  codeText: { color: activeColors.primary, fontWeight: '900' },
+  titleText: { color: activeColors.text, fontWeight: '900' },
+  reasonText: { color: activeColors.text, lineHeight: 22 },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
-  infoText: { flex: 1, color: Colors.light.textSecondary, lineHeight: 19 },
-  counter: { color: Colors.light.textSecondary, fontWeight: '800' },
-  counterError: { color: Colors.light.error },
+  infoText: { flex: 1, color: activeColors.textSecondary, lineHeight: 19 },
+  counter: { color: activeColors.textSecondary, fontWeight: '800' },
+  counterError: { color: activeColors.error },
   evidenceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   evidenceItem: { width: '30%', minWidth: 92, gap: 5 },
   evidenceImage: {
     width: '100%',
     aspectRatio: 1,
     borderRadius: 14,
-    backgroundColor: Colors.light.surfaceVariant,
+    backgroundColor: activeColors.surfaceVariant,
   },
   removeButton: {
     position: 'absolute',
@@ -637,19 +652,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fileName: { color: Colors.light.textSecondary, fontWeight: '700' },
+  fileName: { color: activeColors.textSecondary, fontWeight: '700' },
   warningCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: `${Colors.light.warning}18`,
+    backgroundColor: `${activeColors.warning}18`,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: `${Colors.light.warning}50`,
+    borderColor: `${activeColors.warning}50`,
     padding: 14,
   },
-  warningTitle: { color: Colors.light.text, fontWeight: '900' },
-  warningText: { color: Colors.light.textSecondary, lineHeight: 20 },
+  warningTitle: { color: activeColors.text, fontWeight: '900' },
+  warningText: { color: activeColors.textSecondary, lineHeight: 20 },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   categoryChip: { borderRadius: 999 },
   evidenceActions: { flexDirection: 'row', gap: 10 },

@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { serviceApi } from '../service.api';
 import { normalizeList, normalizePaginated } from '../../../lib/api-response';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
+import { useUserLocation } from '../../../hooks/useUserLocation';
 
 export type SearchService = {
   id?: number | string;
@@ -29,6 +30,9 @@ export type SearchFilters = {
   maxPrice: string;
   aiMode: boolean;
   sort: string;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
 };
 
 const SORT_PRESETS = [
@@ -72,6 +76,9 @@ function buildSearchParams({
     minRating: filters.minRating || undefined,
     maxPrice: filters.maxPrice || undefined,
     sort: filters.sort,
+    lat: filters.lat,
+    lng: filters.lng,
+    radiusKm: filters.radiusKm || 10,
     page,
     limit: PAGE_SIZE,
   };
@@ -97,6 +104,7 @@ function getCategoryName(categories: SearchCategory[], categoryId?: string) {
 }
 
 export function useSearchFilters() {
+  const { location, setManualLocation, resetToGps } = useUserLocation();
   const router = useRouter();
   const params = useLocalSearchParams<{ categoryId?: string }>();
   const selectedCategoryId = typeof params.categoryId === 'string' ? params.categoryId : '';
@@ -115,8 +123,10 @@ export function useSearchFilters() {
       maxPrice,
       aiMode,
       sort,
+      lat: location.lat,
+      lng: location.lng,
     }),
-    [aiMode, maxPrice, minRating, selectedCategoryId, sort],
+    [aiMode, maxPrice, minRating, selectedCategoryId, sort, location.lat, location.lng],
   );
 
   const activeFilterCount = countActiveFilters(filters);
@@ -141,6 +151,8 @@ export function useSearchFilters() {
       filters.maxPrice,
       filters.sort,
       filters.aiMode,
+      filters.lat,
+      filters.lng,
     ],
     initialPageParam: 1,
     enabled: !isAiWaitingForKeyword,
@@ -230,5 +242,8 @@ export function useSearchFilters() {
     toggleAiMode,
     categoriesQueryLoading: categoriesQuery.isLoading,
     debouncedQuery,
+    location,
+    setManualLocation,
+    resetToGps,
   };
 }
