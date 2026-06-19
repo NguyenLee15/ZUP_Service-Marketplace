@@ -191,7 +191,7 @@ async function fetchCategoryServiceSections(categories: Category[]) {
       (section): section is CategoryServiceSection =>
         section.services.length > 0,
     )
-    .slice(0, 3);
+    .slice(0, 4);
 }
 
 function buildFallbackCategorySections(
@@ -241,7 +241,7 @@ function buildFallbackCategorySections(
 
   return [...existingSections, ...grouped.values()]
     .filter((section) => section.services.length > 0)
-    .slice(0, 3);
+    .slice(0, 4);
 }
 
 export default async function Home() {
@@ -350,7 +350,7 @@ export default async function Home() {
 
           <CategoryGrid />
 
-          {sponsoredServices.length > 0 && (
+          {(sponsoredServices.length > 0 || featuredServices.length > 0) && (
             <section className="space-y-7 animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="space-y-1">
@@ -364,11 +364,16 @@ export default async function Home() {
                     </h2>
                   </div>
                   <p className="text-sm md:text-base text-muted-foreground font-medium">
-                    Dịch vụ đang được giới thiệu
+                    {sponsoredServices.length > 0 
+                      ? "Dịch vụ đang được giới thiệu" 
+                      : "Dịch vụ được đánh giá cao nhất"}
                   </p>
                 </div>
               </div>
-              <FeaturedServices services={sponsoredServices} isSponsored />
+              <FeaturedServices 
+                services={sponsoredServices.length > 0 ? sponsoredServices : featuredServices} 
+                isSponsored={sponsoredServices.length > 0} 
+              />
             </section>
           )}
 

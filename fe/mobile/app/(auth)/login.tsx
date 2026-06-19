@@ -9,7 +9,6 @@ import {
   Platform,
   ScrollView,
   Image,
-  Switch,
   Pressable,
 } from "react-native";
 import {
@@ -26,7 +25,6 @@ import * as Google from "expo-auth-session/providers/google";
 import { authApi } from "../../features/auth/auth.api";
 import { useAuthStore } from "../../features/auth/auth.store";
 import type { ProviderUser } from "../../features/auth/auth.store";
-import { useBiometricLogin } from "../../hooks/useBiometricLogin";
 import { routes } from "../../lib/route-utils";
 import { ProviderDialog } from "../../components/provider/provider-ui";
 import { t } from "../../lib/i18n";
@@ -83,21 +81,11 @@ export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { setTokens, setUser } = useAuthStore();
-  const {
-    checkBiometricsSupport,
-    isBiometricsEnabled,
-    enableBiometrics,
-    disableBiometrics,
-    authenticate,
-  } = useBiometricLogin();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [biometricsAvailable, setBiometricsAvailable] = useState(false);
-  const [biometricsEnabledState, setBiometricsEnabledState] = useState(false);
 
   const [dialogConfig, setDialogConfig] = useState<{
     visible: boolean;
@@ -112,7 +100,6 @@ export default function LoginScreen() {
   });
 
   const isSubmittingRef = useRef(false);
-  const autoTriggerRef = useRef(true);
 
   const showDialog = (
     title: string,
@@ -134,24 +121,7 @@ export default function LoginScreen() {
     });
   };
 
-  useEffect(() => {
-    const initBiometrics = async () => {
-      const { hasHardware, isEnrolled } = await checkBiometricsSupport();
-      const enabled = await isBiometricsEnabled();
-      setBiometricsEnabledState(enabled);
-      if (hasHardware && isEnrolled) {
-        setBiometricsAvailable(true);
-        if (enabled && autoTriggerRef.current) {
-          autoTriggerRef.current = false;
-          // Trigger biometric login automatically
-          setTimeout(() => {
-            handleBiometricAuth();
-          }, 300);
-        }
-      }
-    };
-    initBiometrics();
-  }, []);
+
 
   const completeLogin = async (payload: AuthPayload) => {
     const user = payload?.user;
@@ -169,76 +139,7 @@ export default function LoginScreen() {
     return true;
   };
 
-  const maybeOfferBiometrics = async () => {
-    const { hasHardware, isEnrolled } = await checkBiometricsSupport();
-    const enabled = await isBiometricsEnabled();
-    if (hasHardware && isEnrolled && !enabled) {
-      showDialog(
-        t("auth.biometric_setup"),
-        t("auth.biometric_prompt"),
-        "Bật ngay",
-        async () => {
-          await enableBiometrics();
-          setBiometricsEnabledState(true);
-        },
-      );
-    }
-  };
 
-  const handleBiometricAuth = async () => {
-    setError("");
-    const enabled = await isBiometricsEnabled();
-    if (!enabled) {
-      showDialog(t("auth.biometric_not_enabled"), t("auth.biometric_guide"));
-      setBiometricsEnabledState(false);
-      return;
-    }
-
-    if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
-    setLoading(true);
-
-    try {
-      const authenticated = await authenticate();
-      if (authenticated) {
-        const currentRefreshToken = await storage.getRefreshToken();
-        if (!currentRefreshToken) {
-          await disableBiometrics();
-          await storage.clearAll();
-          setError(t("auth.session_expired"));
-          setBiometricsEnabledState(false);
-          return;
-        }
-
-        const refreshRes = await authApi.refreshToken(currentRefreshToken);
-        const nextAccessToken = refreshRes.data?.data?.accessToken;
-        const nextRefreshToken = refreshRes.data?.data?.refreshToken;
-        if (!nextAccessToken || !nextRefreshToken) {
-          throw new Error("Invalid refresh response");
-        }
-
-        await setTokens(nextAccessToken, nextRefreshToken);
-        const profileRes = await authApi.getProfile();
-        const completed = await completeLogin({
-          accessToken: nextAccessToken,
-          refreshToken: nextRefreshToken,
-          user: profileRes.data?.data,
-        });
-        setBiometricsEnabledState(completed);
-        if (!completed) await disableBiometrics();
-      } else {
-        setBiometricsEnabledState(false);
-      }
-    } catch {
-      await disableBiometrics();
-      await storage.clearAll();
-      setError(t("auth.session_expired"));
-      setBiometricsEnabledState(false);
-    } finally {
-      setLoading(false);
-      isSubmittingRef.current = false;
-    }
-  };
 
   const handleLogin = async () => {
     if (isSubmittingRef.current) return;
@@ -254,9 +155,6 @@ export default function LoginScreen() {
     try {
       const res = await authApi.login({ email: email.trim(), password });
       const completed = await completeLogin(res.data?.data || {});
-      if (!completed) return;
-
-      await maybeOfferBiometrics();
     } catch (err: unknown) {
       if (!(err as LoginErrorLike).response) {
         setError(t("auth.network_error"));
@@ -279,9 +177,6 @@ export default function LoginScreen() {
     try {
       const res = await authApi.providerGoogleLogin({ credential });
       const completed = await completeLogin(res.data?.data || {});
-      if (!completed) return;
-
-      await maybeOfferBiometrics();
     } catch (err: unknown) {
       if (!(err as LoginErrorLike).response) {
         setError(t("auth.network_error"));
@@ -463,27 +358,7 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        {/* Bottom Biometrics Row */}
-        {/* Bottom Biometrics Row */}
-        {biometricsAvailable && biometricsEnabledState && (
-          <View
-            style={[
-              styles.biometricFooter,
-              { borderTopColor: theme.colors.outlineVariant },
-            ]}
-          >
-            <Button
-              mode="text"
-              icon="fingerprint"
-              onPress={handleBiometricAuth}
-              textColor={theme.colors.onSurfaceVariant}
-              style={{ flex: 1 }}
-              labelStyle={{ fontSize: 14, fontWeight: "700" }}
-            >
-              Đăng nhập bằng sinh trắc học
-            </Button>
-          </View>
-        )}
+
       </ScrollView>
 
       {/* Reusable Provider Dialog */}
@@ -647,25 +522,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
   },
-  biometricFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 16,
-    borderTopWidth: 1,
-    marginTop: "auto",
-  },
-  biometricLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  bioIcon: {
-    margin: 0,
-    padding: 0,
-  },
-  biometricText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
+
 });

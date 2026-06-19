@@ -5,7 +5,20 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useActiveColors } from '../../hooks/useActiveColors';
 import { ConfirmSheet } from './ConfirmSheet';
 import * as Haptics from 'expo-haptics';
-import { COMMON_LOCATIONS, LocationSource, UserLocation } from '../../hooks/useUserLocation';
+import { useQuery } from '@tanstack/react-query';
+import { userApi } from '../../features/user/user.api';
+import { normalizeList } from '../../lib/api-response';
+import { COMMON_LOCATIONS, LocationSource, UserLocation, getCoordinatesForProvince } from '../../hooks/useUserLocation';
+
+interface AddressItem {
+  id: number;
+  label?: string | null;
+  province?: string | null;
+  district?: string | null;
+  ward?: string | null;
+  addressDetail?: string | null;
+  isDefault?: boolean | null;
+}
 
 interface LocationPickerProps {
   visible: boolean;
@@ -26,6 +39,12 @@ export function LocationPicker({
   const styles = getStyles(activeColors);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const { data: savedAddresses = [] } = useQuery({
+    queryKey: ['addresses'],
+    queryFn: async () => normalizeList<AddressItem>(await userApi.getAddresses()),
+    enabled: visible,
+  });
+
   const filteredLocations = COMMON_LOCATIONS.filter((loc) =>
     loc.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -43,6 +62,22 @@ export function LocationPicker({
     setSearchQuery('');
     onDismiss();
   };
+
+  const handleSelectSavedAddress = (address: AddressItem) => {
+    Haptics.selectionAsync().catch(() => {});
+    const coords = getCoordinatesForProvince(address.province);
+    const label = address.label || address.addressDetail || 'Địa chỉ đã lưu';
+    onSelectManual(coords.lat, coords.lng, label);
+    setSearchQuery('');
+    onDismiss();
+  };
+
+  function getAddressIcon(label?: string | null): string {
+    const text = String(label || '').toLowerCase();
+    if (text.includes('nhà') || text.includes('home')) return 'home-outline';
+    if (text.includes('cơ quan') || text.includes('công ty') || text.includes('văn phòng') || text.includes('office') || text.includes('work')) return 'briefcase-outline';
+    return 'map-marker-outline';
+  }
 
   return (
     <ConfirmSheet
@@ -86,6 +121,47 @@ export function LocationPicker({
         </Pressable>
 
         <View style={styles.divider} />
+
+        {savedAddresses.length > 0 && !searchQuery ? (
+          <View style={styles.savedSection}>
+            <Text style={styles.sectionTitle}>ĐỊA CHỈ ĐÃ LƯU</Text>
+            {savedAddresses.map((address) => (
+              <Pressable
+                key={address.id}
+                style={[
+                  styles.listItem,
+                  currentLocation.source === 'manual' && currentLocation.label === (address.label || address.addressDetail) && styles.listItemSelected,
+                ]}
+                onPress={() => handleSelectSavedAddress(address)}
+              >
+                <View style={styles.savedIconCircle}>
+                  <MaterialCommunityIcons
+                    name={getAddressIcon(address.label) as any}
+                    size={20}
+                    color={activeColors.primary}
+                  />
+                </View>
+                <View style={styles.savedTextWrap}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.savedLabel}>{address.label || 'Địa chỉ'}</Text>
+                    {address.isDefault && (
+                      <View style={styles.defaultBadge}>
+                        <Text style={styles.defaultBadgeText}>Mặc định</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.savedDetail} numberOfLines={1}>
+                    {[address.addressDetail, address.ward, address.district, address.province].filter(Boolean).join(', ')}
+                  </Text>
+                </View>
+                {currentLocation.source === 'manual' && currentLocation.label === (address.label || address.addressDetail) && (
+                  <MaterialCommunityIcons name="check" size={20} color={activeColors.primary} />
+                )}
+              </Pressable>
+            ))}
+            <View style={styles.divider} />
+          </View>
+        ) : null}
 
         <Searchbar
           placeholder="Nhập tên khu vực (VD: Quận 1)..."
@@ -212,5 +288,48 @@ const getStyles = (activeColors: any) =>
       textAlign: 'center',
       color: activeColors.textSecondary,
       paddingVertical: 24,
+    },
+    savedSection: {
+      gap: 4,
+    },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: activeColors.textSecondary,
+      marginLeft: 4,
+      marginTop: 4,
+      marginBottom: 4,
+    },
+    savedIconCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: activeColors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    savedTextWrap: {
+      flex: 1,
+    },
+    savedLabel: {
+      fontWeight: '700',
+      color: activeColors.text,
+      fontSize: 15,
+    },
+    savedDetail: {
+      fontSize: 13,
+      color: activeColors.textSecondary,
+      marginTop: 2,
+    },
+    defaultBadge: {
+      backgroundColor: '#DCFCE7',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    defaultBadgeText: {
+      color: '#15803D',
+      fontSize: 10,
+      fontWeight: '800',
     },
   });

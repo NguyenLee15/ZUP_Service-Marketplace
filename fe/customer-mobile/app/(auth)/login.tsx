@@ -2,7 +2,7 @@
  * Login screen — Zup Customer (E-commerce Style)
  */
 import { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image, Switch, Pressable } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image, Pressable } from 'react-native';
 import { Text, TextInput, Button, useTheme, HelperText, IconButton } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -11,7 +11,6 @@ import * as Google from 'expo-auth-session/providers/google';
 import { authApi } from '../../features/auth/auth.api';
 import { useAuthStore } from '../../features/auth/auth.store';
 import type { CustomerUser } from '../../features/auth/auth.store';
-import { useBiometricLogin } from '../../hooks/useBiometricLogin';
 import { routes } from '../../lib/route-utils';
 import { isValidEmail, normalizeEmail } from '../../features/auth/auth.validation';
 import { CustomerDialog } from '../../components/customer/customer-ui';
@@ -64,7 +63,6 @@ export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ message?: string }>();
   const { setTokens, setUser, fetchProfile } = useAuthStore();
-  const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, disableBiometrics, authenticate } = useBiometricLogin();
   const googleConfigured = Boolean(
     Platform.select({
       android: GOOGLE_ANDROID_CLIENT_ID,
@@ -78,8 +76,6 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [biometricsAvailable, setBiometricsAvailable] = useState(false);
-  const [biometricsEnabledState, setBiometricsEnabledState] = useState(false);
 
   const [dialogConfig, setDialogConfig] = useState<{
     visible: boolean;
@@ -114,26 +110,9 @@ export default function LoginScreen() {
     });
   };
 
-  useEffect(() => {
-    const initBiometrics = async () => {
-      const { hasHardware, isEnrolled } = await checkBiometricsSupport();
-      const enabled = await isBiometricsEnabled();
-      setBiometricsEnabledState(enabled);
-      if (hasHardware && isEnrolled) {
-        setBiometricsAvailable(true);
-        if (enabled && autoTriggerRef.current) {
-          autoTriggerRef.current = false;
-          // Trigger biometric login automatically
-          setTimeout(() => {
-            handleBiometricLogin();
-          }, 300);
-        }
-      }
-    };
-    initBiometrics();
-  }, []);
 
-  const completeLogin = async (payload: AuthPayload, enableBiometricPrompt = false) => {
+
+  const completeLogin = async (payload: AuthPayload) => {
     const user = payload?.user;
 
     if (!payload?.accessToken || !payload?.refreshToken || !user) {
@@ -152,80 +131,10 @@ export default function LoginScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     router.replace(routes.tabs.home);
 
-    if (enableBiometricPrompt) {
-      setTimeout(() => {
-        promptBiometricSetup().catch(() => {});
-      }, 500);
-    }
-
     return true;
   };
 
-  const handleBiometricLogin = async () => {
-    setError('');
-    const enabled = await isBiometricsEnabled();
-    if (!enabled) {
-      showDialog(
-        t('auth.biometric_not_enabled'),
-        t('auth.biometric_guide')
-      );
-      setBiometricsEnabledState(false);
-      return;
-    }
 
-    if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
-    setLoading(true);
-
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      const authenticated = await authenticate();
-      if (authenticated) {
-        const refreshToken = await storage.getRefreshToken();
-        if (!refreshToken) {
-          await disableBiometrics();
-          await storage.clearAll();
-          setError(t('auth.session_expired'));
-          setBiometricsEnabledState(false);
-          return;
-        }
-
-        const res = await authApi.refresh(refreshToken);
-        const completed = await completeLogin(res.data?.data || {}, false);
-        setBiometricsEnabledState(completed);
-      } else {
-        setBiometricsEnabledState(false);
-      }
-    } catch {
-      await disableBiometrics();
-      await storage.clearAll();
-      setError(t('auth.session_expired'));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-      setBiometricsEnabledState(false);
-    } finally {
-      setLoading(false);
-      isSubmittingRef.current = false;
-    }
-  };
-
-  const promptBiometricSetup = async () => {
-    const { hasHardware, isEnrolled } = await checkBiometricsSupport();
-    if (!hasHardware || !isEnrolled) return;
-
-    const enabled = await isBiometricsEnabled();
-    if (enabled) return;
-
-    showDialog(
-      t('auth.biometric_setup'),
-      t('auth.biometric_prompt'),
-      'Kích hoạt',
-      async () => {
-        await enableBiometrics();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        setBiometricsEnabledState(true);
-      }
-    );
-  };
 
   const handleLogin = async () => {
     if (isSubmittingRef.current) return;
@@ -253,7 +162,7 @@ export default function LoginScreen() {
         password
       });
       const payload = res.data?.data;
-      await completeLogin(payload || {}, true);
+      await completeLogin(payload || {});
     } catch (err: unknown) {
       if (!(err as LoginErrorLike).response) {
         setError(t('auth.network_error'));
@@ -276,7 +185,7 @@ export default function LoginScreen() {
 
     try {
       const res = await authApi.googleLogin({ credential });
-      const completed = await completeLogin(res.data?.data || {}, true);
+      const completed = await completeLogin(res.data?.data || {});
       if (!completed) setError(t('auth.google_error'));
     } catch (err: unknown) {
       if (!(err as LoginErrorLike).response) {
@@ -421,28 +330,7 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        {/* Bottom Biometrics Row */}
-        {biometricsAvailable && (
-          <View style={[styles.biometricFooter, { borderTopColor: theme.colors.outlineVariant }]}>
-            <View style={styles.biometricLabelRow}>
-              <IconButton icon="fingerprint" size={22} iconColor={theme.colors.onSurfaceVariant} style={styles.bioIcon} />
-              <Text variant="bodyMedium" style={[styles.biometricText, { color: theme.colors.onSurfaceVariant }]}>{t('auth.biometric_enable_label')}</Text>
-            </View>
-            <Switch
-              value={biometricsEnabledState}
-              onValueChange={async (value) => {
-                setBiometricsEnabledState(value);
-                if (value) {
-                  await handleBiometricLogin();
-                } else {
-                  showDialog(t('general.notification'), t('auth.biometric_off'));
-                }
-              }}
-              trackColor={{ false: '#CBD5E1', true: '#86EFAC' }}
-              thumbColor={biometricsEnabledState ? '#22C55E' : '#F1F5F9'}
-            />
-          </View>
-        )}
+
       </ScrollView>
 
       {/* Reusable Customer Dialog */}
@@ -644,27 +532,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
-  biometricFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 16,
-    borderTopWidth: 1,
-    marginTop: 'auto',
-  },
-  biometricLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  bioIcon: {
-    margin: 0,
-    padding: 0,
-  },
-  biometricText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+
   successMessageText: {
     color: '#22C55E',
     fontSize: 14,

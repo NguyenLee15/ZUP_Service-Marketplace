@@ -106,3 +106,23 @@ export function useUserLocation() {
     resetToGps,
   };
 }
+
+export function getCoordinatesForProvince(province: string | null | undefined): { lat: number; lng: number } {
+  if (!province) return { lat: DEFAULT_LOCATION.lat, lng: DEFAULT_LOCATION.lng };
+  
+  // Try to find exact or partial match in COMMON_LOCATIONS
+  // E.g. "Hà Nội" or "Thành phố Hồ Chí Minh" -> "Hồ Chí Minh"
+  const normalizedSearch = province.toLowerCase();
+  
+  const match = COMMON_LOCATIONS.find(loc => 
+    normalizedSearch.includes(loc.label.toLowerCase()) || 
+    loc.label.toLowerCase().includes(normalizedSearch) ||
+    (normalizedSearch.includes('hồ chí minh') && loc.label === 'Hồ Chí Minh')
+  );
+  
+  if (match) {
+    return { lat: match.lat, lng: match.lng };
+  }
+  
+  return { lat: DEFAULT_LOCATION.lat, lng: DEFAULT_LOCATION.lng };
+}

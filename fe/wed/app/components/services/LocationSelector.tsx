@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, MapPin, Search } from 'lucide-react';
+import { Check, MapPin, Search, Home, Briefcase } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ const COMMON_LOCATIONS = [
 interface LocationSelectorProps {
   currentSource: 'gps' | 'manual' | 'fallback';
   currentLabel: string;
+  savedAddresses?: any[];
   onSelectManual: (lat: number, lng: number, label: string) => void;
   onSelectGps: () => void;
 }
@@ -34,6 +35,7 @@ interface LocationSelectorProps {
 export function LocationSelector({
   currentSource,
   currentLabel,
+  savedAddresses = [],
   onSelectManual,
   onSelectGps,
 }: LocationSelectorProps) {
@@ -95,6 +97,60 @@ export function LocationSelector({
               </button>
               
               <div className="h-px bg-platinum-tint mx-2 my-1" />
+
+              {savedAddresses.length > 0 && (
+                <div className="mb-2">
+                  <div className="px-3 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Địa chỉ đã lưu
+                  </div>
+                  {savedAddresses.map((address) => {
+                    const label = address.label || address.addressDetail || 'Địa chỉ đã lưu';
+                    const isSelected = currentSource === 'manual' && currentLabel === label;
+                    const isHome = label.toLowerCase().includes('nhà');
+                    const isOffice = label.toLowerCase().includes('văn phòng') || label.toLowerCase().includes('cơ quan') || label.toLowerCase().includes('công ty');
+                    
+                    return (
+                      <button
+                        key={address.id}
+                        type="button"
+                        onClick={() => {
+                          const match = COMMON_LOCATIONS.find(loc => 
+                            address.province?.toLowerCase().includes(loc.label.toLowerCase()) || 
+                            loc.label.toLowerCase().includes(address.province?.toLowerCase() || '') ||
+                            (address.province?.toLowerCase().includes('hồ chí minh') && loc.label === 'Hồ Chí Minh')
+                          );
+                          const lat = match ? match.lat : COMMON_LOCATIONS[0].lat;
+                          const lng = match ? match.lng : COMMON_LOCATIONS[0].lng;
+                          onSelectManual(lat, lng, label);
+                          setOpen(false);
+                        }}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                          isSelected ? 'bg-action-blue/5 text-action-blue' : 'hover:bg-pale-gray text-slate-blue'
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-action-blue/10 flex items-center justify-center text-action-blue">
+                          {isHome ? <Home className="w-4 h-4" /> : isOffice ? <Briefcase className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold">{label}</p>
+                            {address.isDefault && (
+                              <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded-sm">
+                                MẶC ĐỊNH
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-1">
+                            {[address.addressDetail, address.ward, address.district, address.province].filter(Boolean).join(', ')}
+                          </p>
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-action-blue" />}
+                      </button>
+                    );
+                  })}
+                  <div className="h-px bg-platinum-tint mx-2 mt-2" />
+                </div>
+              )}
             </>
           )}
 

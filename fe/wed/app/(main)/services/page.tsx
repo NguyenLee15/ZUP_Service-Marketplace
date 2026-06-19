@@ -13,6 +13,8 @@ import {
   Mic
 } from 'lucide-react';
 import { servicesApi, categoriesApi } from '@/features/auth/services/api';
+import { userApi } from '@/features/user/services/user.api';
+import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +68,7 @@ function ServicesSearchContent() {
   
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [meta, setMeta] = useState<SearchMeta>({ total: 0, page: 1, totalPages: 0 });
@@ -81,6 +84,7 @@ function ServicesSearchContent() {
   const observerTarget = useRef(null);
 
   const { favorites, toggleFavoriteService, addRecentlyViewed } = useServiceStore();
+  const { user } = useAuthStore();
 
   // Filters State
   const [categoryIds, setCategoryIds] = useState<string[]>(searchParams.get('categoryIds')?.split(',') || []);
@@ -169,10 +173,18 @@ function ServicesSearchContent() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load categories
+  // Load categories and saved addresses
   useEffect(() => {
     categoriesApi.getFlat().then((res) => setCategories(res.data.data || [])).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      userApi.getAddresses().then((res) => setSavedAddresses(res.data.data || [])).catch(() => {});
+    } else {
+      setSavedAddresses([]);
+    }
+  }, [user]);
 
   const handleSearch = useCallback(async (page = 1, currentFilters?: ApiPayload, append = false) => {
     if (append) setIsFetchingMore(true);
@@ -358,6 +370,7 @@ function ServicesSearchContent() {
                 <LocationSelector 
                   currentSource={userLocation.source}
                   currentLabel={userLocation.label}
+                  savedAddresses={savedAddresses}
                   onSelectManual={(lat, lng, label) => setUserLocation({ lat, lng, source: 'manual', label })}
                   onSelectGps={() => {
                     setUserLocation(prev => ({ ...prev, source: 'fallback', label: 'Hà Nội' })); // temporary reset

@@ -22,10 +22,9 @@
       },
       "package": "com.homeservice.customer",
       "permissions": [
-        "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -43,12 +42,6 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#0B7CFF"
-        }
-      ],
-      [
-        "expo-local-authentication",
-        {
-          "faceIDPermission": "Ứng dụng cần truy cập FaceID để đăng nhập nhanh chóng và bảo mật hơn."
         }
       ],
       [
@@ -75,9 +68,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "50ab68b6-0e05-47c2-bcf3-d9f8846018b8"
+        "projectId": "0a178318-4e54-472e-a817-0c6545b46fde"
       }
     },
-    "owner": "lee0408"
+    "owner": "nguyenlee"
   }
 }

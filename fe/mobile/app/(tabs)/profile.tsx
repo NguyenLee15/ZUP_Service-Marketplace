@@ -5,7 +5,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { authApi } from '../../features/auth/auth.api';
-import { useBiometricLogin } from '../../hooks/useBiometricLogin';
 import { Colors } from '../../constants/colors';
 import { routes } from '../../lib/route-utils';
 import {
@@ -20,23 +19,8 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const { checkBiometricsSupport, isBiometricsEnabled, enableBiometrics, disableBiometrics } = useBiometricLogin();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
 
-  const [bioAvailable, setBioAvailable] = useState(false);
-  const [bioEnabled, setBioEnabled] = useState(false);
-
-  useEffect(() => {
-    const initBio = async () => {
-      const { hasHardware, isEnrolled } = await checkBiometricsSupport();
-      if (hasHardware && isEnrolled) {
-        setBioAvailable(true);
-        const enabled = await isBiometricsEnabled();
-        setBioEnabled(enabled);
-      }
-    };
-    initBio();
-  }, []);
 
   const handleLogout = async () => {
     try {
@@ -112,35 +96,7 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      {bioAvailable && (
-        <ProviderCard>
-          <View style={styles.menuItem}>
-            <View style={[styles.menuIcon, { backgroundColor: `${Colors.light.success}12` }]}>
-              <MaterialCommunityIcons name="fingerprint" size={22} color={Colors.light.success} />
-            </View>
-            <View style={styles.menuText}>
-              <Text variant="bodyLarge" style={[styles.menuLabel, { color: activeColors.text }]}>
-                Đăng nhập sinh trắc học
-              </Text>
-              <Text variant="bodySmall" style={[styles.menuDescription, { color: activeColors.textSecondary }]} numberOfLines={2}>
-                Sử dụng vân tay/khuôn mặt để đăng nhập
-              </Text>
-            </View>
-            <Switch
-              value={bioEnabled}
-              onValueChange={async (val) => {
-                setBioEnabled(val);
-                if (val) {
-                  await enableBiometrics();
-                } else {
-                  await disableBiometrics();
-                }
-              }}
-              color={theme.colors.primary}
-            />
-          </View>
-        </ProviderCard>
-      )}
+
 
       <Button
         mode="outlined"
