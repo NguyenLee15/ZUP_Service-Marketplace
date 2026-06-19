@@ -13,6 +13,7 @@ interface FeaturedServicesProps {
   href?: string;
   actionLabel?: string;
   isSponsored?: boolean;
+  hideHeader?: boolean;
 }
 
 function slugify(text: string) {
@@ -34,6 +35,7 @@ export function FeaturedServices({
   href = '/services',
   actionLabel = 'Xem tất cả dịch vụ nổi bật',
   isSponsored,
+  hideHeader,
 }: FeaturedServicesProps) {
   const { favorites, toggleFavoriteService } = useServiceStore();
 
@@ -41,7 +43,7 @@ export function FeaturedServices({
 
   return (
     <section>
-      {!isSponsored && (
+      {!isSponsored && !hideHeader && (
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-5">
           <div>
             <h2 id={slugify(title)} className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance">{title}</h2>

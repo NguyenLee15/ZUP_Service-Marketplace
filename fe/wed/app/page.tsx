@@ -373,6 +373,7 @@ export default async function Home() {
               <FeaturedServices 
                 services={sponsoredServices.length > 0 ? sponsoredServices : featuredServices} 
                 isSponsored={sponsoredServices.length > 0} 
+                hideHeader
               />
             </section>
           )}
