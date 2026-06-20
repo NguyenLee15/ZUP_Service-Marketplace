@@ -63,8 +63,9 @@ export default function BookingDetailPage() {
   const [comment, setComment] = useState("");
 
   // Cancel/Dispute state
-  const [showCancel, setShowCancel] = useState(false);
+  const [cancelAction, setCancelAction] = useState<'CANCEL' | 'REJECT' | 'DISPUTE' | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [disputeFiles, setDisputeFiles] = useState<File[]>([]);
 
   const fetchBooking = useCallback(() => {
     if (!id) return;
@@ -187,7 +188,7 @@ export default function BookingDetailPage() {
   ) || [];
 
   const cancelDialogCopy =
-    booking.status === BookingStatus.QUOTED
+    cancelAction === 'REJECT'
       ? {
           title: "Từ chối báo giá",
           description:
@@ -196,7 +197,7 @@ export default function BookingDetailPage() {
           placeholder: "Ví dụ: giá vượt ngân sách hoặc hạng mục chưa phù hợp…",
           confirm: "Từ chối báo giá",
         }
-      : booking.status === BookingStatus.DONE
+      : cancelAction === 'DISPUTE'
         ? {
             title: "Gửi khiếu nại",
             description:
@@ -677,7 +678,7 @@ export default function BookingDetailPage() {
               <CheckCircle className="w-4 h-4 mr-1" /> Đồng ý báo giá
             </Button>
             <Button
-              onClick={() => setShowCancel(true)}
+              onClick={() => setCancelAction('REJECT')}
               variant="outline"
               className="flex-1 border-red-200 text-red-600"
             >
@@ -736,7 +737,7 @@ export default function BookingDetailPage() {
               </Button>
 
               <Button
-                onClick={() => setShowCancel(true)}
+                onClick={() => setCancelAction('DISPUTE')}
                 variant="ghost"
                 className="w-full text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl"
               >
@@ -747,9 +748,9 @@ export default function BookingDetailPage() {
           )}
 
         {/* Customer: Cancel (PENDING / QUOTED only) */}
-        {isCustomer && [BookingStatus.PENDING].includes(booking.status) && (
+        {isCustomer && [BookingStatus.PENDING, BookingStatus.QUOTED].includes(booking.status) && (
           <Button
-            onClick={() => setShowCancel(true)}
+            onClick={() => setCancelAction('CANCEL')}
             variant="outline"
             className="w-full border-red-200 text-red-600"
           >
@@ -779,10 +780,13 @@ export default function BookingDetailPage() {
       </div>
 
       <Dialog
-        open={showCancel}
+        open={!!cancelAction}
         onOpenChange={(open) => {
-          setShowCancel(open);
-          if (!open) setCancelReason("");
+          if (!open) {
+            setCancelAction(null);
+            setCancelReason("");
+            setDisputeFiles([]);
+          }
         }}
       >
         <DialogContent className="glass-panel rounded-2xl border-red-500/20 border-l-4">
@@ -811,17 +815,41 @@ export default function BookingDetailPage() {
                 Vui lòng nhập lý do để tiếp tục.
               </p>
             )}
-            <DialogFooter>
+
+            {cancelAction === 'DISPUTE' && (
+              <div className="pt-2">
+                <label className="text-sm font-semibold text-foreground mb-2 block">
+                  Hình ảnh minh chứng (không bắt buộc)
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setDisputeFiles(Array.from(e.target.files));
+                    }
+                  }}
+                  className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-action-blue/10 file:text-action-blue hover:file:bg-action-blue/20 transition-colors"
+                />
+                {disputeFiles.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2 font-medium">Đã chọn {disputeFiles.length} tệp</p>
+                )}
+              </div>
+            )}
+
+            <DialogFooter className="mt-4 pt-4 border-t border-white/5">
               <Button
                 onClick={() => {
-                  if (booking.status === BookingStatus.QUOTED) {
+                  if (cancelAction === 'REJECT') {
                     handleAction(
                       () => bookingsApi.rejectQuote(booking.id, cancelReason.trim()),
                       "Đã từ chối báo giá",
                     );
-                  } else if (booking.status === BookingStatus.DONE) {
+                  } else if (cancelAction === 'DISPUTE') {
                     const fd = new FormData();
                     fd.append("reason", cancelReason.trim());
+                    disputeFiles.forEach((file) => fd.append("images", file));
                     handleAction(
                       () => bookingsApi.dispute(booking.id, fd),
                       "Đã gửi khiếu nại",
@@ -832,7 +860,8 @@ export default function BookingDetailPage() {
                       "Đã hủy đơn",
                     );
                   }
-                  setShowCancel(false);
+                  setCancelAction(null);
+                  setDisputeFiles([]);
                 }}
                 disabled={!cancelReason.trim() || actionLoading}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white"
@@ -841,7 +870,10 @@ export default function BookingDetailPage() {
                 {cancelDialogCopy.confirm}
               </Button>
               <Button
-                onClick={() => setShowCancel(false)}
+                onClick={() => {
+                  setCancelAction(null);
+                  setDisputeFiles([]);
+                }}
                 variant="outline"
                 size="sm"
               >
