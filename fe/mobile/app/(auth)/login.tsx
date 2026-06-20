@@ -20,8 +20,6 @@ import {
   IconButton,
 } from "react-native-paper";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { authApi } from "../../features/auth/auth.api";
 import { useAuthStore } from "../../features/auth/auth.store";
 import type { ProviderUser } from "../../features/auth/auth.store";
@@ -47,19 +45,7 @@ type LoginErrorLike = {
   };
 };
 
-const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
-const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '422532889022-1l2maodtv5p9kijh17499ip9g6sbbnlp.apps.googleusercontent.com';
 
-const googleProviderConfigured = Boolean(googleWebClientId);
-
-GoogleSignin.configure({
-  webClientId: googleWebClientId,
-  iosClientId: googleIosClientId,
-  scopes: ['email', 'profile'],
-});
-
-WebBrowser.maybeCompleteAuthSession();
 
 function getLoginErrorMessage(error: unknown, fallback: string) {
   const candidate = error as LoginErrorLike;
@@ -363,45 +349,6 @@ export default function LoginScreen() {
         }
       />
     </KeyboardAvoidingView>
-  );
-}
-
-function ProviderGoogleLoginButton({
-  disabled,
-  onCredential,
-  onError,
-}: {
-  disabled: boolean;
-  onCredential: (credential: string) => Promise<void>;
-  onError: (message?: string) => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <Button
-      mode="outlined"
-      icon="google"
-      onPress={async () => {
-        try {
-          await GoogleSignin.hasPlayServices();
-          const response = await GoogleSignin.signIn();
-          if (response?.data?.idToken) {
-            void onCredential(response.data.idToken);
-          } else {
-            onError(t("auth.google_failed"));
-          }
-        } catch (error: any) {
-          console.error('Google Signin Error:', error);
-          onError(t("auth.google_failed"));
-        }
-      }}
-      disabled={disabled}
-      style={[styles.googleBtn, { borderColor: theme.colors.outlineVariant }]}
-      contentStyle={styles.googleBtnContent}
-      labelStyle={[styles.googleBtnLabel, { color: theme.colors.onSurface }]}
-    >
-      {t("auth.google_login")}
-    </Button>
   );
 }
 
