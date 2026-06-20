@@ -438,6 +438,7 @@ export default function DashboardScreen() {
               size={22}
               color={activeColors.text}
             />
+          </TouchableRipple>
         }
       />
 
