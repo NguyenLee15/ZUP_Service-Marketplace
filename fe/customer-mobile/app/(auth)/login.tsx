@@ -7,7 +7,7 @@ import { Text, TextInput, Button, useTheme, HelperText, IconButton } from 'react
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { authApi } from '../../features/auth/auth.api';
 import { useAuthStore } from '../../features/auth/auth.store';
 import type { CustomerUser } from '../../features/auth/auth.store';
@@ -19,13 +19,17 @@ import { storage } from '../../lib/storage';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_ANDROID_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const GOOGLE_ANDROID_REDIRECT_SCHEME = GOOGLE_ANDROID_CLIENT_ID
-  ? `com.googleusercontent.apps.${GOOGLE_ANDROID_CLIENT_ID.replace('.apps.googleusercontent.com', '')}`
-  : undefined;
+const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '422532889022-1l2maodtv5p9kijh17499ip9g6sbbnlp.apps.googleusercontent.com';
+
+const googleProviderConfigured = Boolean(googleWebClientId);
+
+GoogleSignin.configure({
+  webClientId: googleWebClientId,
+  iosClientId: googleIosClientId,
+  scopes: ['email', 'profile'],
+});
 
 type AuthPayload = {
   accessToken?: string;
@@ -63,13 +67,6 @@ export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ message?: string }>();
   const { setTokens, setUser, fetchProfile } = useAuthStore();
-  const googleConfigured = Boolean(
-    Platform.select({
-      android: GOOGLE_ANDROID_CLIENT_ID,
-      ios: GOOGLE_IOS_CLIENT_ID,
-      default: GOOGLE_WEB_CLIENT_ID,
-    }),
-  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -90,7 +87,6 @@ export default function LoginScreen() {
   });
 
   const isSubmittingRef = useRef(false);
-  const autoTriggerRef = useRef(true);
 
   // Success message from search params (e.g. from password reset)
   const successMessage = params.message || '';
@@ -301,7 +297,7 @@ export default function LoginScreen() {
             {t('auth.login')}
           </Button>
 
-          {googleConfigured ? (
+          {googleProviderConfigured ? (
             <>
               {/* OR Divider */}
               <View style={styles.dividerRow}>
@@ -311,12 +307,9 @@ export default function LoginScreen() {
               </View>
 
               <GoogleLoginButton
-                loading={loading}
+                disabled={loading}
                 onCredential={handleGoogleCredential}
-                onError={() => setError(t('auth.google_error'))}
-                borderColor={theme.colors.outlineVariant}
-                backgroundColor={theme.colors.surface}
-                labelColor={theme.colors.onSurface}
+                onError={(err) => setError(err)}
               />
             </>
           ) : null}
@@ -347,88 +340,40 @@ export default function LoginScreen() {
 }
 
 function GoogleLoginButton({
-  loading,
+  disabled,
   onCredential,
   onError,
-  borderColor,
-  backgroundColor,
-  labelColor,
 }: {
-  loading: boolean;
+  disabled: boolean;
   onCredential: (credential: string) => Promise<void>;
-  onError: () => void;
-  borderColor: string;
-  backgroundColor: string;
-  labelColor: string;
+  onError: (msg: string) => void;
 }) {
-  const [pending, setPending] = useState(false);
-  const handledResponseRef = useRef<string | null>(null);
-  const [request, response, promptGoogleAsync] = Google.useIdTokenAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    selectAccount: true,
-  }, Platform.OS === 'android' && GOOGLE_ANDROID_REDIRECT_SCHEME
-    ? { native: `${GOOGLE_ANDROID_REDIRECT_SCHEME}:/oauthredirect` }
-    : {});
-
-  useEffect(() => {
-    if (!response) return;
-
-    if (response.type !== 'success') {
-      if (response.type === 'error') {
-        onError();
-      }
-      setPending(false);
-      return;
-    }
-
-    const credential = response.params?.id_token;
-    if (!credential) {
-      onError();
-      setPending(false);
-      return;
-    }
-
-    if (handledResponseRef.current === credential) return;
-    handledResponseRef.current = credential;
-
-    onCredential(credential).finally(() => {
-      setPending(false);
-    });
-  }, [onCredential, onError, response]);
-
-  const handlePress = () => {
-    if (!request || pending || loading) return;
-    setPending(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    promptGoogleAsync().then((result) => {
-      if (result.type === 'error') {
-        onError();
-      }
-      if (result.type !== 'success') {
-        setPending(false);
-      }
-    }).catch(() => {
-      onError();
-      setPending(false);
-    });
-  };
+  const theme = useTheme();
 
   return (
     <Button
       mode="outlined"
-      icon={({ size }) => (
-        <Image source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }} style={{ width: size, height: size }} />
-      )}
-      onPress={handlePress}
-      loading={pending}
-      disabled={loading || pending || !request}
-      style={[styles.socialBtn, { borderColor, backgroundColor }]}
+      icon="google"
+      onPress={async () => {
+        try {
+          await GoogleSignin.hasPlayServices();
+          const response = await GoogleSignin.signIn();
+          if (response?.data?.idToken) {
+            void onCredential(response.data.idToken);
+          } else {
+            onError(t("auth.google_failed"));
+          }
+        } catch (error: any) {
+          console.error('Google Signin Error:', error);
+          onError(t("auth.google_failed"));
+        }
+      }}
+      disabled={disabled}
+      style={[styles.socialBtn, { borderColor: theme.colors.outlineVariant }]}
       contentStyle={styles.socialBtnContent}
-      labelStyle={[styles.socialLabel, { color: labelColor }]}
+      labelStyle={[styles.socialLabel, { color: theme.colors.onSurface }]}
     >
-      {t('auth.google_login')}
+      {t("auth.google_login")}
     </Button>
   );
 }

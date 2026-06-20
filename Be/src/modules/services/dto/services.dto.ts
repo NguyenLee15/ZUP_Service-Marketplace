@@ -10,7 +10,7 @@ import {
   IsArray,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform, plainToInstance } from 'class-transformer';
 import { FeaturedListingStatus } from '@prisma/client';
 
 export class CreateServiceItemDto {
@@ -46,6 +46,20 @@ export class CreateServiceDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          return plainToInstance(CreateServiceItemDto, parsed);
+        }
+        return parsed;
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
   items?: CreateServiceItemDto[];
 }
 
@@ -72,6 +86,20 @@ export class UpdateServiceDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          return plainToInstance(CreateServiceItemDto, parsed);
+        }
+        return parsed;
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
   items?: CreateServiceItemDto[];
 }
 

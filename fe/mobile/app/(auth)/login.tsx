@@ -21,7 +21,7 @@ import {
 } from "react-native-paper";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { authApi } from "../../features/auth/auth.api";
 import { useAuthStore } from "../../features/auth/auth.store";
 import type { ProviderUser } from "../../features/auth/auth.store";
@@ -49,17 +49,15 @@ type LoginErrorLike = {
 
 const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const googleAndroidRedirectScheme = googleAndroidClientId
-  ? `com.googleusercontent.apps.${googleAndroidClientId.replace(".apps.googleusercontent.com", "")}`
-  : undefined;
-const googleProviderConfigured = Boolean(
-  Platform.select({
-    android: googleAndroidClientId,
-    ios: googleIosClientId,
-    default: googleWebClientId || googleAndroidClientId,
-  }),
-);
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '422532889022-1l2maodtv5p9kijh17499ip9g6sbbnlp.apps.googleusercontent.com';
+
+const googleProviderConfigured = Boolean(googleWebClientId);
+
+GoogleSignin.configure({
+  webClientId: googleWebClientId,
+  iosClientId: googleIosClientId,
+  scopes: ['email', 'profile'],
+});
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -386,43 +384,26 @@ function ProviderGoogleLoginButton({
   onError: (message?: string) => void;
 }) {
   const theme = useTheme();
-  const handledCredentialRef = useRef<string | null>(null);
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    androidClientId: googleAndroidClientId,
-    iosClientId: googleIosClientId,
-    webClientId: googleWebClientId,
-    selectAccount: true,
-  }, Platform.OS === "android" && googleAndroidRedirectScheme
-    ? { native: `${googleAndroidRedirectScheme}:/oauthredirect` }
-    : {});
-
-  useEffect(() => {
-    if (response?.type === "success") {
-      const credential = response.params?.id_token;
-      if (credential) {
-        if (handledCredentialRef.current === credential) return;
-        handledCredentialRef.current = credential;
-        void onCredential(credential);
-      } else {
-        onError();
-      }
-    } else if (response?.type === "error") {
-      onError();
-    }
-  }, [onCredential, onError, response]);
 
   return (
     <Button
       mode="outlined"
       icon="google"
-      onPress={() => {
-        promptAsync().then((result) => {
-          if (result.type === "error") {
+      onPress={async () => {
+        try {
+          await GoogleSignin.hasPlayServices();
+          const response = await GoogleSignin.signIn();
+          if (response?.data?.idToken) {
+            void onCredential(response.data.idToken);
+          } else {
             onError(t("auth.google_failed"));
           }
-        }).catch(() => onError(t("auth.google_failed")));
+        } catch (error: any) {
+          console.error('Google Signin Error:', error);
+          onError(t("auth.google_failed"));
+        }
       }}
-      disabled={disabled || !request}
+      disabled={disabled}
       style={[styles.googleBtn, { borderColor: theme.colors.outlineVariant }]}
       contentStyle={styles.googleBtnContent}
       labelStyle={[styles.googleBtnLabel, { color: theme.colors.onSurface }]}

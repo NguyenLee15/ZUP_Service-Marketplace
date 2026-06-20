@@ -162,11 +162,6 @@ export class ServicesController {
     @Body() dto: CreateServiceDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    if (dto.items && typeof dto.items === 'string') {
-      try {
-        dto.items = JSON.parse(dto.items as any);
-      } catch (e) {}
-    }
     return this.commandService.create(providerId, dto, files);
   }
 
@@ -200,11 +195,6 @@ export class ServicesController {
     @Body() dto: UpdateServiceDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    if (dto.items && typeof dto.items === 'string') {
-      try {
-        dto.items = JSON.parse(dto.items as any);
-      } catch (e) {}
-    }
     return this.commandService.update(providerId, id, dto, files);
   }
 
