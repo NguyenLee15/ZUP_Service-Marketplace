@@ -82,6 +82,16 @@ export default function AdminServicesPage() {
     }
   };
 
+  const handleShow = async (id: number) => {
+    try {
+      await adminApi.showService(id);
+      toast({ title: 'Đã mở ẩn dịch vụ' });
+      fetchServices();
+    } catch (err: ApiPayload) {
+      toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
+    }
+  };
+
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN').format(p) + '₫';
 
   return (
@@ -159,8 +169,13 @@ export default function AdminServicesPage() {
                               <Eye className="w-4 h-4 text-blue-600" />
                             </Button>
                             {service.status === 'ACTIVE' && (
-                              <Button variant="ghost" size="sm" onClick={() => handleHide(service.id)}>
+                              <Button variant="ghost" size="sm" onClick={() => handleHide(service.id)} title="Ẩn dịch vụ">
                                 <XCircle className="w-4 h-4 text-orange-500" />
+                              </Button>
+                            )}
+                            {service.status === 'HIDDEN' && (
+                              <Button variant="ghost" size="sm" onClick={() => handleShow(service.id)} title="Mở ẩn dịch vụ">
+                                <CheckCircle className="w-4 h-4 text-green-500" />
                               </Button>
                             )}
                           </div>

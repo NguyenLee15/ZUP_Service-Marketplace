@@ -322,7 +322,7 @@ export function UnifiedServiceCard({
         <div className="mt-2 flex min-w-0 items-end justify-between gap-2 pt-1">
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm sm:text-base font-extrabold leading-tight text-cyan-300 tabular-nums">
-              {displayPrice}.
+              Từ {displayPrice}.
             </div>
             <div className="mt-1 flex min-w-0 items-center gap-1 text-[10px] sm:text-[11px] leading-none text-foreground/80">
               <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />

@@ -203,6 +203,7 @@ export const adminApi = {
     api.patch(`/admin/services/${id}/reject`, { reason }),
   hideService: (id: number, reason: string = "") =>
     api.patch(`/admin/services/${id}/hide`, { reason }),
+  showService: (id: number) => api.patch(`/admin/services/${id}/show`),
   deleteService: (id: number) => api.delete(`/admin/services/${id}`),
 
   // Bookings

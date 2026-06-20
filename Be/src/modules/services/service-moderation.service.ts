@@ -133,6 +133,33 @@ export class ServiceModerationService {
     return { data: updated, message: 'Đã ẩn dịch vụ' };
   }
 
+  async show(adminId: number, serviceId: number) {
+    const service = await this.getServiceOrThrow(serviceId);
+    if (service.status !== ServiceStatus.HIDDEN) {
+      throw new BadRequestException({
+        code: ErrorCodes.INVALID_STATUS,
+        message: 'Chỉ có thể mở ẩn dịch vụ đang bị ẩn',
+      });
+    }
+
+    const updated = await this.prisma.service.update({
+      where: { id: serviceId },
+      data: { status: ServiceStatus.ACTIVE },
+    });
+
+    await this.prisma.notification.create({
+      data: {
+        userId: service.providerId,
+        type: 'SERVICE_APPROVED',
+        title: 'Dịch vụ đã được hiển thị lại',
+        content: `Dịch vụ "${service.name}" đã được Admin mở ẩn và hiển thị lại trên hệ thống`,
+        referenceId: serviceId,
+      },
+    });
+
+    return { data: updated, message: 'Đã mở ẩn dịch vụ' };
+  }
+
   async delete(adminId: number, serviceId: number) {
     const service = await this.getServiceOrThrow(serviceId);
 

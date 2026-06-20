@@ -315,6 +315,15 @@ export class AdminServicesController {
     return this.moderationService.hide(adminId, id, dto.reason);
   }
 
+  /** PATCH /admin/services/:id/show */
+  @Patch(':id/show')
+  async show(
+    @CurrentUser('id') adminId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.moderationService.show(adminId, id);
+  }
+
   /** DELETE /admin/services/:id — UC05.4 Admin xóa dịch vụ */
   @Delete(':id')
   async deleteByAdmin(
