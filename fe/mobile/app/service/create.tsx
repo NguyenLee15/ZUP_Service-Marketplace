@@ -51,7 +51,8 @@ export default function ServiceFormScreen() {
     const fetchCategories = async () => {
       try {
         const res = await serviceApi.getCategories();
-        setCategories(res.data?.data || []);
+        const data = res.data?.data || [];
+        setCategories(data.filter((c: any) => c.level === 1));
       } catch {
         setMessage({ tone: 'error', text: 'Không tải được danh mục dịch vụ.' });
       }
