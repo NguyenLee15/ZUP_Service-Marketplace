@@ -438,9 +438,32 @@ export default function DashboardScreen() {
               size={22}
               color={activeColors.text}
             />
-          </TouchableRipple>
         }
       />
+
+      {/* KYC Warning Banner */}
+      {user?.kycStatus !== 'APPROVED' && (
+        <TouchableRipple
+          onPress={() => router.push('/profile/kyc')}
+          style={styles.kycBanner}
+          borderless
+        >
+          <View style={styles.kycBannerContent}>
+            <MaterialCommunityIcons name="shield-alert-outline" size={24} color="#D97706" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#92400E', fontWeight: 'bold', fontSize: 14 }}>
+                {user?.kycStatus === 'PENDING' ? 'Hồ sơ đang chờ duyệt' : 'Tài khoản chưa xác thực'}
+              </Text>
+              <Text style={{ color: '#B45309', fontSize: 13, marginTop: 2 }}>
+                {user?.kycStatus === 'PENDING' 
+                  ? 'Chúng tôi đang kiểm tra CCCD của bạn. Vui lòng chờ.' 
+                  : 'Vui lòng xác minh CCCD để bắt đầu nhận việc.'}
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#D97706" />
+          </View>
+        </TouchableRipple>
+      )}
 
       {message && (
         <ProviderInlineMessage tone={message.tone} message={message.text} />
@@ -791,6 +814,21 @@ export default function DashboardScreen() {
 const getStyles = (theme: any, activeColors: any, insets: any) => StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 76 + insets.bottom, gap: 16 },
+  kycBanner: {
+    marginBottom: 0,
+    borderRadius: 12,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    overflow: 'hidden',
+  },
+  kycBannerContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   iconButton: {
     width: 42,
     height: 42,

@@ -24,6 +24,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { bookingApi } from "../../features/booking/booking.api";
+import { useAuthStore } from "../../features/auth/auth.store";
 import { useNotificationStore } from "../../features/notification/notification.store";
 import {
   BOOKING_STATUS_LABEL,
@@ -70,7 +71,24 @@ const getStatusColor = (status: string, activeColors: typeof Colors.light | type
 
 export default function BookingDetailScreen() {
   const theme = useTheme();
+  const { user } = useAuthStore();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
+
+  const requireKyc = (action: () => void) => {
+    if (user?.kycStatus !== 'APPROVED') {
+      Alert.alert(
+        "Yêu cầu xác thực",
+        "Vui lòng hoàn tất hồ sơ và xác minh CCCD để có thể nhận việc hoặc báo giá.",
+        [
+          { text: "Đóng", style: "cancel" },
+          { text: "Xác thực ngay", onPress: () => router.push('/profile/kyc') }
+        ]
+      );
+      return;
+    }
+    action();
+  };
+
   const insets = useSafeAreaInsets();
   const styles = getStyles(theme, activeColors, insets);
   const router = useRouter();
@@ -998,7 +1016,7 @@ export default function BookingDetailScreen() {
                 <>
                   <Button
                     mode="contained"
-                    onPress={handleAcceptBooking}
+                    onPress={() => requireKyc(handleAcceptBooking)}
                     loading={actionLoading}
                     disabled={actionLoading}
                     style={styles.actionButton}
@@ -1026,7 +1044,7 @@ export default function BookingDetailScreen() {
                 <>
                   <Button
                     mode="contained"
-                    onPress={() => setShowQuoteModal(true)}
+                    onPress={() => requireKyc(() => setShowQuoteModal(true))}
                     style={styles.actionButton}
                     icon="file-document-edit-outline"
                     contentStyle={styles.actionContent}

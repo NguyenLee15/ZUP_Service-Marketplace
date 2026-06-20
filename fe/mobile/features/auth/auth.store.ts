@@ -13,6 +13,7 @@ export interface ProviderUser {
   avatarUrl: string | null;
   role: string;
   status: string;
+  kycStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
 }
 
 interface AuthState {
