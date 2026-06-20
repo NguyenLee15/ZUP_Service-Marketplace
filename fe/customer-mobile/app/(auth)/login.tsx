@@ -222,12 +222,14 @@ export default function LoginScreen() {
 
       <ScrollView contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]} keyboardShouldPersistTaps="handled">
         {/* Styled Logo: Zoom in to crop out the baked-in outer border/shadow from the image file */}
-        <View style={[styles.logoWrap, { width: 64, height: 64, borderRadius: 14, overflow: "hidden", justifyContent: "center", alignItems: "center" }]}>
-          <Image
-            source={require('../../assets/icon.png')}
-            style={{ width: 84, height: 84 }} // Scale up to push the outer border outside
-            resizeMode="contain"
-          />
+        <View style={styles.logoWrap}>
+          <View style={{ width: 64, height: 64, borderRadius: 14, overflow: "hidden", justifyContent: "center", alignItems: "center" }}>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={{ width: 84, height: 84 }} // Scale up to push the outer border outside
+              resizeMode="contain"
+            />
+          </View>
         </View>
 
           <View style={styles.form}>
