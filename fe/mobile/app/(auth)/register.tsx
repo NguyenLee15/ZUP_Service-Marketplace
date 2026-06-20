@@ -158,8 +158,14 @@ export default function RegisterScreen() {
 
     const emailNormalized = form.email.trim();
     try {
-      // Gửi OTP trước
-      await authApi.resendOtp(emailNormalized);
+      // Gọi API đăng ký (đã bao gồm việc gửi OTP bên trong Backend)
+      await authApi.register({
+        fullName: form.fullName.trim(),
+        email: emailNormalized,
+        phone: form.phone.trim(),
+        password: form.password,
+        role: "PROVIDER"
+      });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       // Chuyển sang OTP screen kèm data
       router.push({

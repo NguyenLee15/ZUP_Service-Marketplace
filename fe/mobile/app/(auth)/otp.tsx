@@ -83,19 +83,11 @@ export default function OtpScreen() {
     setError('');
     try {
       if (params.mode === 'register') {
-        // Verify OTP → tạo tài khoản
-        const res = await authApi.register({
-          fullName: params.fullName!,
-          email: params.email,
-          phone: params.phone!,
-          password: params.password!,
-          role: 'PROVIDER',
-        });
-
-        // Verify OTP
+        // Tài khoản đã được tạo ở bước Register (với status PENDING).
+        // Ở đây chỉ cần Verify OTP để kích hoạt tài khoản (chuyển sang ACTIVE).
         await authApi.verifyOtp({ email: params.email, otp: code });
 
-        // Auto login sau register
+        // Auto login sau khi verify thành công
         const loginRes = await authApi.login({ email: params.email, password: params.password! });
         const { accessToken, refreshToken, user } = loginRes.data.data;
         await setTokens(accessToken, refreshToken);
