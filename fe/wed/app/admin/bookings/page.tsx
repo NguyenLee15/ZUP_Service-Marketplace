@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Search,
   AlertCircle,
+  Loader2,
+  ImageIcon,
+  FileText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,8 +36,24 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBooking, setSelectedBooking] = useState<ApiPayload | null>(null);
+    const [selectedBooking, setSelectedBooking] = useState<ApiPayload | null>(null);
+  const [bookingDetail, setBookingDetail] = useState<ApiPayload | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  useEffect(() => {
+    if (selectedBooking) {
+      setDetailLoading(true);
+      adminApi.getBookingDetail(selectedBooking.id)
+        .then((res) => {
+          setBookingDetail(res.data?.data || res.data);
+        })
+        .catch(() => setBookingDetail(null))
+        .finally(() => setDetailLoading(false));
+    } else {
+      setBookingDetail(null);
+    }
+  }, [selectedBooking]);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -86,6 +105,8 @@ export default function BookingsPage() {
       setActionLoading(false);
     }
   };
+
+    const displayBooking = bookingDetail || selectedBooking;
 
   return (
     <div className="space-y-6">
@@ -175,20 +196,21 @@ export default function BookingsPage() {
         </Card>
 
         {/* Column 2 & 3: Details View */}
-        {selectedBooking && (
+        {displayBooking && (
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  Đơn hàng #{selectedBooking.bookingCode}
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${statusConfig[selectedBooking.status]?.color}`}>
-                    {statusConfig[selectedBooking.status]?.label}
+                  {detailLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                  Đơn hàng #{displayBooking.bookingCode}
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${statusConfig[displayBooking.status]?.color}`}>
+                    {statusConfig[displayBooking.status]?.label}
                   </span>
                 </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">Ngày tạo: {new Date(selectedBooking.createdAt).toLocaleString('vi-VN')}</p>
+                <p className="text-sm text-muted-foreground mt-1">Ngày tạo: {new Date(displayBooking.createdAt).toLocaleString('vi-VN')}</p>
                 </div>
-                {canAdminCancel(selectedBooking) && (
+                {canAdminCancel(displayBooking) && (
                   <Button
                     type="button"
                     variant="destructive"
@@ -209,34 +231,50 @@ export default function BookingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Dịch Vụ</p>
-                    <p className="font-medium text-foreground">{selectedBooking.service?.name}</p>
+                    <p className="font-medium text-foreground">{displayBooking.service?.name}</p>
                   </div>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Tổng Tiền (Đã chốt)</p>
-                    <p className="font-bold text-foreground text-lg">{formatPrice(getBookingPrice(selectedBooking))}</p>
+                    <p className="font-bold text-foreground text-lg">{formatPrice(getBookingPrice(displayBooking))}</p>
+                    {displayBooking.quotations?.[0]?.commissionRateSnapshot && (
+                      <p className="text-xs text-emerald-600 mt-1 font-medium">
+                        Hoa hồng hệ thống ({displayBooking.quotations[0].commissionRateSnapshot}%): <br/>
+                        +{formatPrice(getBookingPrice(displayBooking) * (Number(displayBooking.quotations[0].commissionRateSnapshot) / 100))}
+                      </p>
+                    )}
                   </div>
                   <div className="bg-muted p-4 rounded-lg col-span-2">
                     <p className="text-xs text-muted-foreground mb-1">Thời gian & Địa điểm</p>
-                    <p className="font-medium text-foreground">Hẹn lúc: {selectedBooking.desiredTime ? new Date(selectedBooking.desiredTime).toLocaleString('vi-VN') : '---'}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Tại: {[selectedBooking.addressDetail, selectedBooking.ward, selectedBooking.district, selectedBooking.province].filter(Boolean).join(', ')}</p>
+                    <p className="font-medium text-foreground">Hẹn lúc: {displayBooking.desiredTime ? new Date(displayBooking.desiredTime).toLocaleString('vi-VN') : '---'}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Tại: {[displayBooking.addressDetail, displayBooking.ward, displayBooking.district, displayBooking.province].filter(Boolean).join(', ')}</p>
+                    
+                    {/* Lifecycle Timestamps */}
+                    <div className="mt-3 flex gap-4 text-xs text-muted-foreground border-t border-border pt-2">
+                      {displayBooking.providerAcceptedAt && (
+                        <p><strong>Bắt đầu:</strong> {new Date(displayBooking.providerAcceptedAt).toLocaleString('vi-VN')}</p>
+                      )}
+                      {displayBooking.completedAt && (
+                        <p><strong>Hoàn thành:</strong> {new Date(displayBooking.completedAt).toLocaleString('vi-VN')}</p>
+                      )}
+                    </div>
                   </div>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Khách Hàng</p>
-                    <p className="font-medium text-foreground">{selectedBooking.customer?.fullName}</p>
-                    <p className="text-sm text-muted-foreground">{selectedBooking.customer?.phone || selectedBooking.customer?.email}</p>
+                    <p className="font-medium text-foreground">{displayBooking.customer?.fullName}</p>
+                    <p className="text-sm text-muted-foreground">{displayBooking.customer?.phone || displayBooking.customer?.email}</p>
                   </div>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Nhà Cung Cấp</p>
-                    <p className="font-medium text-foreground">{selectedBooking.provider?.fullName}</p>
-                    <p className="text-sm text-muted-foreground">{selectedBooking.provider?.phone || selectedBooking.provider?.email}</p>
+                    <p className="font-medium text-foreground">{displayBooking.provider?.fullName}</p>
+                    <p className="text-sm text-muted-foreground">{displayBooking.provider?.phone || displayBooking.provider?.email}</p>
                   </div>
                 </div>
 
-                {selectedBooking.quotations?.[0]?.quotationItems?.length > 0 ? (
+                {displayBooking.quotations?.[0]?.quotationItems?.length > 0 ? (
                   <div className="border-t pt-4">
                     <h4 className="font-medium text-foreground mb-3">Hạng mục đã báo giá</h4>
                     <ul className="space-y-2">
-                      {selectedBooking.quotations[0].quotationItems.map((item: any) => (
+                      {displayBooking.quotations[0].quotationItems.map((item: any) => (
                         <li key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-100">
                           <span>{item.itemName} <span className="text-muted-foreground">(x{item.quantity})</span></span>
                           <span className="font-medium">{formatPrice(Number(item.unitPrice) * Number(item.quantity))}</span>
@@ -244,11 +282,11 @@ export default function BookingsPage() {
                       ))}
                     </ul>
                   </div>
-                ) : selectedBooking.bookingItems?.length > 0 ? (
+                ) : displayBooking.bookingItems?.length > 0 ? (
                   <div className="border-t pt-4">
                     <h4 className="font-medium text-foreground mb-3">Hạng mục dịch vụ yêu cầu</h4>
                     <ul className="space-y-2">
-                      {selectedBooking.bookingItems.map((item: any) => (
+                      {displayBooking.bookingItems.map((item: any) => (
                         <li key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-100">
                           <span>{item.serviceItem?.name || 'Hạng mục'} <span className="text-muted-foreground">(x{item.quantity})</span></span>
                           <span className="font-medium">{formatPrice(Number(item.price) * Number(item.quantity))}</span>
@@ -261,17 +299,50 @@ export default function BookingsPage() {
                 <div className="border-t pt-4">
                   <h4 className="font-medium text-foreground mb-3">Chi tiết công việc</h4>
                   <div className="bg-muted p-4 rounded-lg text-sm text-foreground/80 whitespace-pre-wrap">
-                    {getBookingDescription(selectedBooking)}
+                    {getBookingDescription(displayBooking)}
                   </div>
                 </div>
+                    {/* Images / Attachments */}
+                    {displayBooking.attachments && displayBooking.attachments.length > 0 && (
+                      <div className="border-t pt-4">
+                        <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4" /> Hình ảnh đính kèm
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                          {displayBooking.attachments.map((att: any) => (
+                            <div key={att.id} className="relative aspect-square rounded-lg overflow-hidden border border-border group bg-muted">
+                              <img src={att.fileUrl} alt={att.type} className="w-full h-full object-cover" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/60 p-1">
+                                <p className="text-[10px] text-white text-center font-medium">
+                                  {att.type === 'RESULT' ? 'Nghiệm thu' : 'Khảo sát'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Quote Note */}
+                    {displayBooking.quotations?.[0]?.note && (
+                      <div className="border-t pt-4">
+                        <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
+                          <FileText className="w-4 h-4" /> Ghi chú báo giá
+                        </h4>
+                        <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-900 border border-blue-100 whitespace-pre-wrap">
+                          {displayBooking.quotations[0].note}
+                        </div>
+                      </div>
+                    )}
+      
 
-                {selectedBooking.cancellationReason && (
+                {displayBooking.statusHistories && displayBooking.statusHistories.find((h: any) => h.toStatus === 'CANCELLED') && (
                   <div className="border-t pt-4">
                     <h4 className="font-medium text-red-900 mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" /> Lý do hủy
+                      <AlertCircle className="w-4 h-4" /> Lý do hủy đơn
                     </h4>
-                    <div className="bg-red-50 p-4 rounded-lg text-sm text-red-800 border border-red-100">
-                      {selectedBooking.cancellationReason}
+                    <div className="bg-red-50 p-4 rounded-lg text-sm text-red-800 border border-red-100 whitespace-pre-wrap">
+                      {displayBooking.statusHistories.find((h: any) => h.toStatus === 'CANCELLED')?.note || displayBooking.cancellationReason || "Không có lý do"}
                     </div>
                   </div>
                 )}
