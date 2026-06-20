@@ -215,17 +215,48 @@ export default function BookingsPage() {
                     <p className="text-xs text-muted-foreground mb-1">Tổng Tiền (Đã chốt)</p>
                     <p className="font-bold text-foreground text-lg">{formatPrice(getBookingPrice(selectedBooking))}</p>
                   </div>
+                  <div className="bg-muted p-4 rounded-lg col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">Thời gian & Địa điểm</p>
+                    <p className="font-medium text-foreground">Hẹn lúc: {selectedBooking.desiredTime ? new Date(selectedBooking.desiredTime).toLocaleString('vi-VN') : '---'}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Tại: {[selectedBooking.addressDetail, selectedBooking.ward, selectedBooking.district, selectedBooking.province].filter(Boolean).join(', ')}</p>
+                  </div>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Khách Hàng</p>
                     <p className="font-medium text-foreground">{selectedBooking.customer?.fullName}</p>
-                    <p className="text-sm text-muted-foreground">{selectedBooking.customer?.email}</p>
+                    <p className="text-sm text-muted-foreground">{selectedBooking.customer?.phone || selectedBooking.customer?.email}</p>
                   </div>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Nhà Cung Cấp</p>
                     <p className="font-medium text-foreground">{selectedBooking.provider?.fullName}</p>
-                    <p className="text-sm text-muted-foreground">{selectedBooking.provider?.email}</p>
+                    <p className="text-sm text-muted-foreground">{selectedBooking.provider?.phone || selectedBooking.provider?.email}</p>
                   </div>
                 </div>
+
+                {selectedBooking.quotations?.[0]?.quotationItems?.length > 0 ? (
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-foreground mb-3">Hạng mục đã báo giá</h4>
+                    <ul className="space-y-2">
+                      {selectedBooking.quotations[0].quotationItems.map((item: any) => (
+                        <li key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-100">
+                          <span>{item.itemName} <span className="text-muted-foreground">(x{item.quantity})</span></span>
+                          <span className="font-medium">{formatPrice(Number(item.unitPrice) * Number(item.quantity))}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : selectedBooking.bookingItems?.length > 0 ? (
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-foreground mb-3">Hạng mục dịch vụ yêu cầu</h4>
+                    <ul className="space-y-2">
+                      {selectedBooking.bookingItems.map((item: any) => (
+                        <li key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-100">
+                          <span>{item.serviceItem?.name || 'Hạng mục'} <span className="text-muted-foreground">(x{item.quantity})</span></span>
+                          <span className="font-medium">{formatPrice(Number(item.price) * Number(item.quantity))}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
 
                 <div className="border-t pt-4">
                   <h4 className="font-medium text-foreground mb-3">Chi tiết công việc</h4>

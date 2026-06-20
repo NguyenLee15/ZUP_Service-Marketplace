@@ -168,7 +168,8 @@ export class ServiceModerationService {
         include: {
           category: { select: { id: true, name: true } },
           provider: { select: { id: true, fullName: true, email: true } },
-          images: { orderBy: { displayOrder: 'asc' }, take: 1 },
+          images: { orderBy: { displayOrder: 'asc' } },
+          items: true,
         },
         orderBy: { id: 'desc' },
         skip: (page - 1) * limit,

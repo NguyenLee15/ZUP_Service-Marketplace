@@ -218,6 +218,31 @@ export default function AdminServicesPage() {
                 <p className="text-sm text-foreground/80 whitespace-pre-line">{selectedService.description}</p>
               </div>
 
+              {selectedService.images?.length > 0 && (
+                <div>
+                  <p className="text-muted-foreground text-sm mb-2">Hình Ảnh</p>
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {selectedService.images.map((img: any) => (
+                      <img key={img.id} src={img.imageUrl} alt="service image" className="w-24 h-24 object-cover rounded-md flex-shrink-0" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedService.items?.length > 0 && (
+                <div>
+                  <p className="text-muted-foreground text-sm mb-2">Các Hạng Mục Dịch Vụ</p>
+                  <div className="bg-muted p-3 rounded-lg space-y-2">
+                    {selectedService.items.map((item: any) => (
+                      <div key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-200">
+                        <span>{item.name}</span>
+                        <span className="font-medium">{formatPrice(Number(item.price))}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {selectedService.status === 'PENDING' && (
                 <div className="space-y-3 border-t pt-4">
                   <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}

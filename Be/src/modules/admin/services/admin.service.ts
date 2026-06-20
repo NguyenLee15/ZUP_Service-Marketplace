@@ -146,7 +146,11 @@ export class AdminService {
             category: { select: { name: true } },
           },
         },
-        quotations: { where: { status: 'ACCEPTED' } },
+        quotations: { 
+          where: { status: 'ACCEPTED' },
+          include: { quotationItems: true }
+        },
+        bookingItems: { include: { serviceItem: true } },
         attachments: true,
         statusHistories: { orderBy: { createdAt: 'asc' } },
         review: true,
