@@ -225,8 +225,8 @@ export default function LoginScreen() {
         <View style={styles.logoWrap}>
           <Image
             source={require('../../assets/icon.png')}
-            style={[styles.logoImage, { backgroundColor: theme.colors.surfaceVariant }]}
-            resizeMode="cover"
+            style={styles.logoImage}
+            resizeMode="contain"
           />
         </View>
 
@@ -407,7 +407,6 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 64,
     height: 64,
-    borderRadius: 14,
   },
   form: {
     gap: 12,
