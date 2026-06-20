@@ -326,14 +326,6 @@ export default function LoginScreen() {
           >
             {t("auth.login")}
           </Button>
-
-          {googleProviderConfigured && (
-            <ProviderGoogleLoginButton
-              disabled={loading}
-              onCredential={handleGoogleCredential}
-              onError={(message) => setError(message || t("auth.google_failed"))}
-            />
-          )}
         </View>
 
         {/* Footer Account Registration */}

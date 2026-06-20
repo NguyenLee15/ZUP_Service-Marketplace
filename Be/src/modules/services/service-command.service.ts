@@ -263,6 +263,7 @@ export class ServiceCommandService {
       include: {
         category: { select: { id: true, name: true } },
         images: { orderBy: { displayOrder: 'asc' } },
+        items: true,
       },
       orderBy: { id: 'desc' },
     });

@@ -72,6 +72,13 @@ export default function ServiceFormScreen() {
             price: String(it.price)
           })));
         }
+        if (data.images && Array.isArray(data.images)) {
+          setImages(data.images.map((img: any) => ({
+            uri: img.imageUrl,
+            isExisting: true,
+            id: img.id
+          })));
+        }
       } catch {
         setMessage({ tone: 'warning', text: 'Không đọc được dữ liệu dịch vụ hiện tại.' });
       }
@@ -142,8 +149,13 @@ export default function ServiceFormScreen() {
       formData.append('description', description.trim());
       formData.append('referencePrice', basePrice.replace(/[^0-9]/g, ''));
 
-      images.forEach((img, index) => {
-        formData.append('images', { uri: img.uri, name: `service_${index}.jpg`, type: 'image/jpeg' } as any);
+      // Only upload new images (local ones)
+      images.filter((img: any) => !img.isExisting).forEach((img: any, index) => {
+        formData.append('images', {
+          uri: img.uri,
+          name: `image-${index}.jpg`,
+          type: 'image/jpeg'
+        } as any);
       });
 
       if (serviceItems.length > 0) {
