@@ -335,7 +335,7 @@ async function main() {
     data: {
       providerId: provider1.id,
       categoryId: catTech.id,
-      name: 'Vệ sinh máy lạnh treo tường chuyên sâu',
+      name: 'Vệ sinh máy lạnh dân dụng & công nghiệp',
       description:
         'Dịch vụ vệ sinh dàn nóng và dàn lạnh máy lạnh treo tường từ 1HP - 3HP. Sử dụng vòi xịt áp lực cao sạch sâu bẩn thỉu bụi bặm, hỗ trợ thông ống thoát nước thải, bảo dưỡng bôi dầu block dàn nóng. Cam kết hiệu năng lạnh sâu rõ rệt.',
       referencePrice: 150000,
@@ -375,7 +375,7 @@ async function main() {
     data: {
       providerId: provider1.id,
       categoryId: catTech.id,
-      name: 'Bơm Gas máy lạnh bổ sung chuẩn R32 / R410A',
+      name: 'Bảo dưỡng & Bơm Gas Máy Lạnh các loại',
       description:
         'Khắc phục ngay tình trạng máy lạnh chạy thổi gió nóng, đóng tuyết đường ống đồng. Kiểm tra rò rỉ khớp nối rắc co, đo áp suất gas đầu hút đầu đẩy bằng đồng hồ đo chuẩn kỹ thuật và bơm bổ sung đạt định mức nhà sản xuất.',
       referencePrice: 100000,
@@ -415,7 +415,7 @@ async function main() {
     data: {
       providerId: provider2.id,
       categoryId: catTech.id,
-      name: 'Dò tìm rò rỉ điện nhảy aptomat chập nguồn âm tường',
+      name: 'Sửa chữa sự cố điện nổi, điện âm tường',
       description:
         'Thợ điện nước chuyên nghiệp xử lý triệt để tình trạng nhảy CB không rõ nguyên nhân, chập nổ ổ cắm, mất điện từng vùng tại gia đình. Đo kiểm tra thông mạch, rò rỉ pha điện âm tường bằng megomet chuyên dụng.',
       referencePrice: 250000,
@@ -460,7 +460,7 @@ async function main() {
     data: {
       providerId: provider2.id,
       categoryId: catTech.id,
-      name: 'Thông bồn cầu chậu rửa bát cống thoát nghẹt',
+      name: 'Thông tắc vệ sinh, bồn cầu & đường ống',
       description:
         'Thông tắc bồn cầu nghẹt giấy, nghẹt vật cứng, chậu rửa bát mỡ đóng bánh. Sử dụng công cụ máy nén khí áp lực cao hoặc máy lò xo chuyên nghiệp công nghệ mới không đục phá nền gạch, không mùi hôi.',
       referencePrice: 300000,
@@ -500,7 +500,7 @@ async function main() {
     data: {
       providerId: provider5.id,
       categoryId: catClean.id,
-      name: 'Dọn dẹp nhà cửa lau chùi sắp xếp theo giờ',
+      name: 'Dịch vụ Dọn dẹp nhà cửa theo yêu cầu',
       description:
         'Dịch vụ dọn nhà định kỳ, quét dọn, lau sàn, rửa chén bát, thay ga đệm chăn màn, lau kính căn hộ chung cư hoặc nhà phố. Nhân viên có hồ sơ tư pháp sạch sẽ, được đào tạo quy trình vệ sinh 5 sao, mang theo đầy đủ dụng cụ tẩy rửa.',
       referencePrice: 70000,
@@ -540,7 +540,7 @@ async function main() {
     data: {
       providerId: provider5.id,
       categoryId: catClean.id,
-      name: 'Giặt ghế Sofa Đệm bông ép Rèm cửa sấy khô tại chỗ',
+      name: 'Giặt sấy Sofa, Đệm, Rèm cửa tại nhà',
       description:
         'Giặt hấp loại bỏ 99% vi khuẩn, ẩm mốc, mùi mồ hôi bằng công nghệ hơi nước nóng phun hút sâu của Karcher (Đức). Sử dụng dung dịch tẩy rửa hữu cơ an toàn cho sức khỏe trẻ nhỏ và thú cưng.',
       referencePrice: 300000,
@@ -580,7 +580,7 @@ async function main() {
     data: {
       providerId: provider3.id,
       categoryId: catTech.id,
-      name: 'Sửa chữa bếp từ bếp hồng ngoại lỗi cắm nhảy aptomat',
+      name: 'Sửa chữa bếp từ, thiết bị nhà bếp',
       description:
         'Khắc phục triệt để các lỗi bếp từ báo E0, E1, E2... không nóng, hỏng bàn phím cảm ứng, chập cháy nổ cầu chì IGBT. Linh kiện thay thế chính hãng có dán tem bảo hành từ 6 đến 12 tháng.',
       referencePrice: 200000,
@@ -620,7 +620,7 @@ async function main() {
     data: {
       providerId: provider3.id,
       categoryId: catIT.id,
-      name: 'Vệ sinh Laptop bôi keo MX4 & Cài Win tận nhà',
+      name: 'Sửa chữa, cài đặt & vệ sinh Máy tính/Laptop',
       description:
         'Khắc phục máy tính chậm đơ, tự tắt nguồn do quá nóng. Kỹ thuật viên qua trực tiếp cài hệ điều hành Windows 10/11 sạch sẽ, bôi keo tản nhiệt ARCTIC MX-4 mát lạnh cho CPU/GPU và quét bụi quạt gió.',
       referencePrice: 150000,
@@ -660,7 +660,7 @@ async function main() {
     data: {
       providerId: provider4.id,
       categoryId: catWellness.id,
-      name: 'Massage bấm huyệt trị liệu đau mỏi vai gáy cột sống',
+      name: 'Dịch vụ Massage trị liệu & Bấm huyệt',
       description:
         'Xua tan tức thì cơn đau mỏi, tê bì tay chân do ngồi văn phòng sai tư thế. Liệu trình bấm huyệt khai thông kinh lạc cổ vai gáy sử dụng tinh dầu thảo dược thiên nhiên, kết hợp giác hơi đá nóng giãn cơ.',
       referencePrice: 250000,
@@ -700,7 +700,7 @@ async function main() {
     data: {
       providerId: provider4.id,
       categoryId: catWellness.id,
-      name: 'Cắt tóc tạo kiểu nam nữ chuẩn Salon tại nhà',
+      name: 'Dịch vụ Cắt tóc & Tạo mẫu tại nhà',
       description:
         'Dịch vụ tạo mẫu tóc tận nơi dành cho gia đình bận rộn, người lớn tuổi hoặc trẻ em sợ tiệm tóc. Stylist chuyên nghiệp mang theo đầy đủ kéo, gương di động, khăn choàng, đảm bảo gọn gàng sạch sẽ không để lại vụn tóc.',
       referencePrice: 80000,
@@ -739,7 +739,7 @@ async function main() {
     data: {
       providerId: provider5.id,
       categoryId: catClean.id,
-      name: 'Phun khử khuẩn diệt côn trùng căn hộ',
+      name: 'Diệt côn trùng & Phun khử khuẩn không gian',
       description:
         'Dịch vụ phun khử khuẩn, diệt kiến gián muỗi bằng dung dịch an toàn cho gia đình. Hồ sơ này để demo luồng admin duyệt dịch vụ.',
       referencePrice: 420000,
@@ -771,7 +771,7 @@ async function main() {
     data: {
       providerId: provider4.id,
       categoryId: catWellness.id,
-      name: 'Trang điểm dự tiệc tại nhà',
+      name: 'Trang điểm cá nhân & Sự kiện',
       description:
         'Gói trang điểm dự tiệc, chụp ảnh, đi sự kiện tại nhà. Dịch vụ đang ẩn để demo trạng thái quản lý dịch vụ của provider/admin.',
       referencePrice: 500000,
