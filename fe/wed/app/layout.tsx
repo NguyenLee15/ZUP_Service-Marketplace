@@ -30,9 +30,9 @@ export const metadata: Metadata = {
     canonical: absoluteUrl('/'),
   },
   icons: {
-    icon: '/logo.png',
-    shortcut: '/logo.png',
-    apple: '/logo.png',
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
   },
   openGraph: {
     title: 'Zup - Đặt Dịch Vụ Tại Nhà Rõ Ràng Hơn',
