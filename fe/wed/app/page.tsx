@@ -348,7 +348,7 @@ export default async function Home() {
             </ul>
           </nav>
 
-          <CategoryGrid />
+          <CategoryGrid categories={categories} />
 
           {(sponsoredServices.length > 0 || featuredServices.length > 0) && (
             <section className="space-y-7 animate-in fade-in slide-in-from-bottom-8 duration-700">

@@ -4,18 +4,31 @@ import {
   Smartphone, Utensils, BookOpen 
 } from 'lucide-react';
 
-const categories = [
-  { icon: Wrench, label: 'Sửa chữa', hint: 'Điện nước, thiết bị', categoryId: 3 },
-  { icon: HomeIcon, label: 'Vệ sinh', hint: 'Nhà cửa, máy lạnh', categoryId: 1 },
-  { icon: Heart, label: 'Làm đẹp', hint: 'Chăm sóc tại nhà', categoryId: 4 },
-  { icon: Briefcase, label: 'Tư vấn', hint: 'Trao đổi theo nhu cầu', categoryId: 8 },
-  { icon: Palette, label: 'Thiết kế', hint: 'Sáng tạo, nội dung', categoryId: 9 },
-  { icon: Smartphone, label: 'Công nghệ', hint: 'Thiết bị, phần mềm', categoryId: 10 },
-  { icon: Utensils, label: 'Nấu ăn', hint: 'Bữa ăn, sự kiện', categoryId: 11 },
-  { icon: BookOpen, label: 'Giáo dục', hint: 'Học tập, kỹ năng', categoryId: 12 },
-];
+import type { Category } from '@/types';
 
-export function CategoryGrid() {
+export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
+  const level1Categories = categories.filter((c) => c.level === 1);
+
+  const getCategoryIconAndHint = (name: string) => {
+    const lower = name.toLowerCase();
+    if (lower.includes('sửa chữa') || lower.includes('kỹ thuật')) return { icon: Wrench, hint: 'Điện nước, thiết bị' };
+    if (lower.includes('vệ sinh') || lower.includes('nhà cửa')) return { icon: HomeIcon, hint: 'Nhà cửa, máy lạnh' };
+    if (lower.includes('làm đẹp') || lower.includes('sức khỏe')) return { icon: Heart, hint: 'Chăm sóc tại nhà' };
+    if (lower.includes('tư vấn')) return { icon: Briefcase, hint: 'Trao đổi theo nhu cầu' };
+    if (lower.includes('thiết kế')) return { icon: Palette, hint: 'Sáng tạo, nội dung' };
+    if (lower.includes('công nghệ')) return { icon: Smartphone, hint: 'Thiết bị, phần mềm' };
+    if (lower.includes('nấu ăn')) return { icon: Utensils, hint: 'Bữa ăn, sự kiện' };
+    if (lower.includes('giáo dục')) return { icon: BookOpen, hint: 'Học tập, kỹ năng' };
+    return { icon: Wrench, hint: 'Dịch vụ tiện ích' };
+  };
+
+  const displayCategories = level1Categories.map((cat) => {
+    const { icon, hint } = getCategoryIconAndHint(cat.name);
+    return { icon, label: cat.name, hint, categoryId: cat.id };
+  });
+
+  if (displayCategories.length === 0) return null;
+
   return (
     <section className="relative">
       <div className="max-w-7xl mx-auto">
@@ -35,8 +48,8 @@ export function CategoryGrid() {
           </Link>
         </div>
  
-        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2.5 md:gap-3">
-          {categories.map((cat, idx) => {
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 md:gap-3">
+          {displayCategories.map((cat, idx) => {
             const IconComponent = cat.icon;
             
             // Generate distinctive color configurations for each category tile
