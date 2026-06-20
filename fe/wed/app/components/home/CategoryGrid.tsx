@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { 
   Wrench, Home as HomeIcon, Heart, Briefcase, Palette, 
-  Smartphone, Utensils, BookOpen 
+  Smartphone, Utensils, BookOpen, Baby, Dog, Truck 
 } from 'lucide-react';
 
 import type { Category } from '@/types';
@@ -17,8 +17,11 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
     if (lower.includes('tư vấn')) return { icon: Briefcase, hint: 'Trao đổi theo nhu cầu' };
     if (lower.includes('thiết kế')) return { icon: Palette, hint: 'Sáng tạo, nội dung' };
     if (lower.includes('công nghệ')) return { icon: Smartphone, hint: 'Thiết bị, phần mềm' };
-    if (lower.includes('nấu ăn')) return { icon: Utensils, hint: 'Bữa ăn, sự kiện' };
+    if (lower.includes('nấu ăn') || lower.includes('sự kiện')) return { icon: Utensils, hint: 'Bữa ăn, sự kiện' };
     if (lower.includes('giáo dục')) return { icon: BookOpen, hint: 'Học tập, kỹ năng' };
+    if (lower.includes('mẹ & bé') || lower.includes('mẹ và bé')) return { icon: Baby, hint: 'Chăm sóc trẻ em' };
+    if (lower.includes('thú cưng')) return { icon: Dog, hint: 'Chăm sóc, dắt chó' };
+    if (lower.includes('xe cộ') || lower.includes('vận chuyển')) return { icon: Truck, hint: 'Cứu hộ, chuyển đồ' };
     return { icon: Wrench, hint: 'Dịch vụ tiện ích' };
   };
 

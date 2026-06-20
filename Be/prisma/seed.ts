@@ -282,19 +282,49 @@ async function main() {
   // 2. Tạo 3 Mốc lớn Siêu ứng dụng & các danh mục con (Level 2)
   console.log('Khởi tạo danh mục siêu ứng dụng...');
 
-  // Mốc 1: Dịch vụ Kỹ thuật & Sửa chữa
+  // 1. Sửa chữa & Kỹ thuật
   const catTech = await prisma.serviceCategory.create({
-    data: { name: 'Dịch vụ Sửa chữa & Kỹ thuật', level: 1 },
+    data: { name: 'Sửa chữa & Kỹ thuật', level: 1 },
   });
 
-  // Mốc 2: Vệ sinh & Chăm sóc không gian sống
+  // 2. Vệ sinh & Không gian sống
   const catClean = await prisma.serviceCategory.create({
-    data: { name: 'Vệ sinh & Chăm sóc Nhà cửa', level: 1 },
+    data: { name: 'Vệ sinh & Không gian sống', level: 1 },
   });
 
-  // Mốc 3: Làm đẹp & Sức khỏe tại nhà
+  // 3. Sức khỏe & Làm đẹp
   const catWellness = await prisma.serviceCategory.create({
-    data: { name: 'Sức khỏe & Làm đẹp tại nhà', level: 1 },
+    data: { name: 'Sức khỏe & Làm đẹp', level: 1 },
+  });
+
+  // 4. Công nghệ & Thiết bị
+  const catIT = await prisma.serviceCategory.create({
+    data: { name: 'Công nghệ & Thiết bị', level: 1 },
+  });
+
+  // 5. Sự kiện & Nấu ăn
+  const catEvent = await prisma.serviceCategory.create({
+    data: { name: 'Sự kiện & Nấu ăn', level: 1 },
+  });
+
+  // 6. Mẹ & Bé
+  const catMomBaby = await prisma.serviceCategory.create({
+    data: { name: 'Mẹ & Bé', level: 1 },
+  });
+
+  // 7. Thú cưng
+  const catPet = await prisma.serviceCategory.create({
+    data: { name: 'Thú cưng', level: 1 },
+  });
+
+  // 8. Xe cộ & Vận chuyển
+  const catTransport = await prisma.serviceCategory.create({
+    data: { name: 'Xe cộ & Vận chuyển', level: 1 },
+  });
+
+  // 9. Tư vấn & Chuyên môn
+  const catConsult = await prisma.serviceCategory.create({
+    data: { name: 'Tư vấn & Chuyên môn', level: 1 },
   });
 
   // 3. Tạo các Dịch vụ mẫu chuẩn thực tế Việt Nam kèm Dịch vụ con (ServiceItems)
@@ -589,7 +619,7 @@ async function main() {
   const sIT = await prisma.service.create({
     data: {
       providerId: provider3.id,
-      categoryId: catTech.id,
+      categoryId: catIT.id,
       name: 'Vệ sinh Laptop bôi keo MX4 & Cài Win tận nhà',
       description:
         'Khắc phục máy tính chậm đơ, tự tắt nguồn do quá nóng. Kỹ thuật viên qua trực tiếp cài hệ điều hành Windows 10/11 sạch sẽ, bôi keo tản nhiệt ARCTIC MX-4 mát lạnh cho CPU/GPU và quét bụi quạt gió.',
