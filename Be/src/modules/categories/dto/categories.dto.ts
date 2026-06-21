@@ -13,9 +13,6 @@ export class CreateCategoryDto {
   @IsOptional()
   iconUrl?: string;
 
-  @IsInt()
-  @IsOptional()
-  parentId?: number;
 }
 
 export class UpdateCategoryDto {
@@ -32,7 +29,4 @@ export class UpdateCategoryDto {
   @IsOptional()
   iconUrl?: string;
 
-  @IsInt()
-  @IsOptional()
-  parentId?: number;
 }

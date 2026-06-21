@@ -15,7 +15,7 @@ export type SearchServicesResult = {
 export type ServiceSearchBase = Prisma.ServiceGetPayload<{
   include: {
     category: {
-      select: { id: true; name: true; parentId: true; level: true };
+      select: { id: true; name: true };
     };
     provider: { select: { id: true; fullName: true; avatarUrl: true } };
     images: true;

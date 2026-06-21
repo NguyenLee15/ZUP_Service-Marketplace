@@ -284,47 +284,47 @@ async function main() {
 
   // 1. Sửa chữa & Kỹ thuật
   const catTech = await prisma.serviceCategory.create({
-    data: { name: 'Sửa chữa & Kỹ thuật', level: 1 },
+    data: { name: 'Sửa chữa & Kỹ thuật'},
   });
 
   // 2. Vệ sinh & Không gian sống
   const catClean = await prisma.serviceCategory.create({
-    data: { name: 'Vệ sinh & Không gian sống', level: 1 },
+    data: { name: 'Vệ sinh & Không gian sống'},
   });
 
   // 3. Sức khỏe & Làm đẹp
   const catWellness = await prisma.serviceCategory.create({
-    data: { name: 'Sức khỏe & Làm đẹp', level: 1 },
+    data: { name: 'Sức khỏe & Làm đẹp'},
   });
 
   // 4. Công nghệ & Thiết bị
   const catIT = await prisma.serviceCategory.create({
-    data: { name: 'Công nghệ & Thiết bị', level: 1 },
+    data: { name: 'Công nghệ & Thiết bị'},
   });
 
   // 5. Sự kiện & Nấu ăn
   const catEvent = await prisma.serviceCategory.create({
-    data: { name: 'Sự kiện & Nấu ăn', level: 1 },
+    data: { name: 'Sự kiện & Nấu ăn'},
   });
 
   // 6. Mẹ & Bé
   const catMomBaby = await prisma.serviceCategory.create({
-    data: { name: 'Mẹ & Bé', level: 1 },
+    data: { name: 'Mẹ & Bé'},
   });
 
   // 7. Thú cưng
   const catPet = await prisma.serviceCategory.create({
-    data: { name: 'Thú cưng', level: 1 },
+    data: { name: 'Thú cưng'},
   });
 
   // 8. Xe cộ & Vận chuyển
   const catTransport = await prisma.serviceCategory.create({
-    data: { name: 'Xe cộ & Vận chuyển', level: 1 },
+    data: { name: 'Xe cộ & Vận chuyển'},
   });
 
   // 9. Tư vấn & Chuyên môn
   const catConsult = await prisma.serviceCategory.create({
-    data: { name: 'Tư vấn & Chuyên môn', level: 1 },
+    data: { name: 'Tư vấn & Chuyên môn'},
   });
 
   // 3. Tạo các Dịch vụ mẫu chuẩn thực tế Việt Nam kèm Dịch vụ con (ServiceItems)

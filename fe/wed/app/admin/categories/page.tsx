@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,9 +22,6 @@ interface Category {
   id: number;
   name: string;
   description: string | null;
-  parentId: number | null;
-  isExpanded?: boolean;
-  children?: Category[];
 }
 
 export default function CategoriesPage() {
@@ -34,7 +31,6 @@ export default function CategoriesPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const {
@@ -50,38 +46,15 @@ export default function CategoriesPage() {
 
   const fetchCategories = () => {
     setLoading(true);
-    categoriesApi.getTree()
+    categoriesApi.getTree() // Assuming backend still serves /categories/tree backward compatible
       .then((res) => {
-        // Mặc định expand level 1
-        const addExpand = (cats: ApiPayload[]): Category[] => {
-          return cats.map((c) => ({
-            ...c,
-            isExpanded: c.parentId === null,
-            children: c.children ? addExpand(c.children) : []
-          }));
-        };
-        setCategories(addExpand(res.data.data || []));
+        setCategories(res.data.data || []);
       })
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchCategories(); }, []);
-
-  const toggleExpand = (id: number) => {
-    const updateCategories = (cats: Category[]): Category[] => {
-      return cats.map((cat) => {
-        if (cat.id === id) {
-          return { ...cat, isExpanded: !cat.isExpanded };
-        }
-        if (cat.children) {
-          return { ...cat, children: updateCategories(cat.children) };
-        }
-        return cat;
-      });
-    };
-    setCategories(updateCategories(categories));
-  };
 
   const onSubmit = async (data: CategoryFormData) => {
     setActionLoading(true);
@@ -90,15 +63,14 @@ export default function CategoriesPage() {
         await adminApi.updateCategory(editingId, data);
         toast({ title: 'Đã cập nhật danh mục' });
       } else {
-        await adminApi.createCategory({ ...data, parentId: selectedParentId });
+        await adminApi.createCategory(data);
         toast({ title: 'Đã thêm danh mục mới' });
       }
       setIsModalOpen(false);
       reset();
       setEditingId(null);
-      setSelectedParentId(null);
       fetchCategories();
-    } catch (err: ApiPayload) {
+    } catch (err: any) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Có lỗi xảy ra', variant: 'destructive' });
     } finally {
       setActionLoading(false);
@@ -111,84 +83,39 @@ export default function CategoriesPage() {
       await adminApi.deleteCategory(id);
       toast({ title: 'Đã xóa danh mục' });
       fetchCategories();
-    } catch (err: ApiPayload) {
+    } catch (err: any) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Có lỗi xảy ra', variant: 'destructive' });
     }
   };
 
-  const renderCategory = (category: Category, depth: number = 0): React.ReactNode => {
-    const hasChildren = category.children && category.children.length > 0;
-    const level = depth + 1;
-
+  const renderCategory = (category: Category): React.ReactNode => {
     return (
-      <div key={category.id}>
-        <div className="flex items-center gap-2 p-3 hover:bg-muted rounded-lg group">
-          {hasChildren ? (
-            <button
-              onClick={() => toggleExpand(category.id)}
-              className="p-1 hover:bg-muted rounded transition-colors"
-            >
-              {category.isExpanded ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </button>
-          ) : (
-            <div className="w-6" />
-          )}
-
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className={`text-xs px-2 py-1 rounded font-medium ${level === 1 ? 'bg-blue-100 text-blue-800' : level === 2 ? 'bg-green-100 text-green-800' : 'bg-muted text-foreground'}`}>
-                Level {level}
-              </span>
-              <span className="font-medium text-foreground">{category.name}</span>
-            </div>
-            {category.description && <p className="text-sm text-muted-foreground mt-0.5">{category.description}</p>}
+      <div key={category.id} className="flex items-center gap-2 p-3 hover:bg-muted rounded-lg group border-b last:border-0">
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-foreground">{category.name}</span>
           </div>
-
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {level < 3 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                title="Thêm danh mục con"
-                onClick={() => {
-                  setEditingId(null);
-                  setSelectedParentId(category.id);
-                  reset({ name: '', description: '' });
-                  setIsModalOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4 text-green-600" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Chỉnh sửa"
-              onClick={() => {
-                setEditingId(category.id);
-                setSelectedParentId(category.parentId);
-                setValue('name', category.name);
-                setValue('description', category.description || '');
-                setIsModalOpen(true);
-              }}
-            >
-              <Edit2 className="w-4 h-4 text-blue-600" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" title="Xóa" onClick={() => handleDelete(category.id)}>
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+          {category.description && <p className="text-sm text-muted-foreground mt-0.5">{category.description}</p>}
         </div>
 
-        {hasChildren && category.isExpanded && (
-          <div className="ml-4 border-l-2 border-border pl-2">
-            {category.children!.map((child) => renderCategory(child, depth + 1))}
-          </div>
-        )}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="sm"
+            title="Chỉnh sửa"
+            onClick={() => {
+              setEditingId(category.id);
+              setValue('name', category.name);
+              setValue('description', category.description || '');
+              setIsModalOpen(true);
+            }}
+          >
+            <Edit2 className="w-4 h-4 text-blue-600" />
+          </Button>
+          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" title="Xóa" onClick={() => handleDelete(category.id)}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     );
   };
@@ -198,30 +125,29 @@ export default function CategoriesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold text-foreground">Quản Lý Danh Mục</h3>
-          <p className="text-muted-foreground mt-1">Cấu trúc 3 cấp độ: Chính → Phụ → Chi tiết</p>
+          <p className="text-muted-foreground mt-1">Quản lý danh sách danh mục dịch vụ</p>
         </div>
         <Button
           onClick={() => {
             setEditingId(null);
-            setSelectedParentId(null);
             reset({ name: '', description: '' });
             setIsModalOpen(true);
           }}
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="w-4 h-4" />
-          Thêm Danh Mục Gốc
+          Thêm Danh Mục
         </Button>
       </div>
 
       <Card>
         <CardContent className="pt-6">
           {loading ? (
-            <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />)}</div>
+            <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />)}</div>
           ) : categories.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">Chưa có danh mục nào</p>
           ) : (
-            <div className="space-y-2">{categories.map((cat) => renderCategory(cat))}</div>
+            <div className="flex flex-col">{categories.map((cat) => renderCategory(cat))}</div>
           )}
         </CardContent>
       </Card>
@@ -231,13 +157,12 @@ export default function CategoriesPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4">
-              <CardTitle>{editingId ? 'Chỉnh Sửa' : 'Thêm'} Danh Mục {selectedParentId ? 'Con' : 'Gốc'}</CardTitle>
+              <CardTitle>{editingId ? 'Chỉnh Sửa' : 'Thêm'} Danh Mục</CardTitle>
               <button
                 onClick={() => {
                   setIsModalOpen(false);
                   reset();
                   setEditingId(null);
-                  setSelectedParentId(null);
                 }}
                 className="p-1 hover:bg-muted rounded"
               >
@@ -280,7 +205,6 @@ export default function CategoriesPage() {
                       setIsModalOpen(false);
                       reset();
                       setEditingId(null);
-                      setSelectedParentId(null);
                     }}
                   >
                     Hủy

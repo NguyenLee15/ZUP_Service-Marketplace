@@ -115,7 +115,6 @@ async function main() {
       const sub = await prisma.serviceCategory.create({
         data: {
           name: sCat.name,
-          parentId: parent.id,
         }
       });
       categoryMap[sCat.name] = sub.id;

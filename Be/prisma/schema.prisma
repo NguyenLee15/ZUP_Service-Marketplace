@@ -249,11 +249,7 @@ model ServiceCategory {
   id          Int               @id @default(autoincrement())
   name        String            @unique @db.VarChar(100)
   description String?           @db.Text
-  parentId    Int?              @map("parent_id")
-  level       Int               @default(1)
   isDeleted   Boolean           @default(false) @map("is_deleted")
-  parent      ServiceCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children    ServiceCategory[] @relation("CategoryTree")
   services    Service[]
 
   @@map("service_categories")

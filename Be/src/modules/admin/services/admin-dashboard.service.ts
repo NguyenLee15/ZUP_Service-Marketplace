@@ -375,8 +375,8 @@ export class AdminDashboardService {
       }),
       this.prisma.serviceCategory.findMany({
         where: { isDeleted: false },
-        select: { id: true, name: true, level: true, parentId: true },
-        orderBy: [{ level: 'asc' }, { name: 'asc' }],
+        select: { id: true, name: true },
+        orderBy: [{ name: 'asc' }],
         take: 300,
       }),
       this.prisma.service.findMany({

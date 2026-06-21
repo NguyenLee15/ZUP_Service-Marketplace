@@ -93,7 +93,7 @@ export class ServiceSearchService {
       where,
       include: {
         category: {
-          select: { id: true, name: true, parentId: true, level: true },
+          select: { id: true, name: true },
         },
         provider: { select: { id: true, fullName: true, avatarUrl: true } },
         images: { orderBy: { displayOrder: 'asc' }, take: 1 },
@@ -269,25 +269,7 @@ export class ServiceSearchService {
   }
 
   private async getCategoryIdsWithDescendants(categoryIds: number[]) {
-    const ids = new Set(categoryIds);
-    let parentIds = [...ids];
-
-    while (parentIds.length > 0) {
-      const children = await this.prisma.serviceCategory.findMany({
-        where: {
-          parentId: { in: parentIds },
-          isDeleted: false,
-        },
-        select: { id: true },
-      });
-
-      parentIds = children
-        .map((category) => category.id)
-        .filter((categoryId) => !ids.has(categoryId));
-      parentIds.forEach((categoryId) => ids.add(categoryId));
-    }
-
-    return [...ids];
+    return Array.from(new Set(categoryIds));
   }
 
   private getCachedSearchResult<T>(cacheKey: string): T | null {
