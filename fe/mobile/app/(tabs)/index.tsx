@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Button,
+  Chip,
   SegmentedButtons,
   Text,
   TouchableRipple,
@@ -518,46 +519,54 @@ export default function DashboardScreen() {
         <Text variant="labelSmall" style={styles.filterLabel}>
           Thời gian
         </Text>
-        <SegmentedButtons
-          value={period}
-          onValueChange={(value) => setPeriod(value as PeriodKey)}
-          buttons={PERIOD_OPTIONS.map((item) => ({
-            value: item.key,
-            label: item.label,
-          }))}
-          style={styles.segmented}
-        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
+          {PERIOD_OPTIONS.map((item) => (
+            <Chip
+              key={item.key}
+              selected={period === item.key}
+              onPress={() => setPeriod(item.key)}
+              style={[styles.chip, period === item.key && styles.chipSelected]}
+              textStyle={[styles.chipText, period === item.key && styles.chipTextSelected]}
+              showSelectedOverlay={true}
+            >
+              {item.label}
+            </Chip>
+          ))}
+        </ScrollView>
         <Text variant="labelSmall" style={styles.filterLabel}>
           Nhóm số liệu
         </Text>
-        <SegmentedButtons
-          value={groupBy}
-          onValueChange={(value) =>
-            setGroupBy(value as "day" | "week" | "month")
-          }
-          buttons={GROUP_OPTIONS.map((item) => ({
-            value: item.key,
-            label: item.label,
-          }))}
-          style={styles.segmented}
-        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
+          {GROUP_OPTIONS.map((item) => (
+            <Chip
+              key={item.key}
+              selected={groupBy === item.key}
+              onPress={() => setGroupBy(item.key as "day" | "week" | "month")}
+              style={[styles.chip, groupBy === item.key && styles.chipSelected]}
+              textStyle={[styles.chipText, groupBy === item.key && styles.chipTextSelected]}
+              showSelectedOverlay={true}
+            >
+              {item.label}
+            </Chip>
+          ))}
+        </ScrollView>
         <Text variant="labelSmall" style={styles.filterLabel}>
           Loại báo cáo
         </Text>
-        <View style={styles.reportTypeGrid}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
           {REPORT_TYPE_OPTIONS.map((item) => (
-            <Button
+            <Chip
               key={item.key}
-              mode={reportType === item.key ? "contained" : "outlined"}
-              compact
+              selected={reportType === item.key}
               onPress={() => setReportType(item.key)}
-              style={styles.reportTypeButton}
-              contentStyle={styles.reportTypeContent}
+              style={[styles.chip, reportType === item.key && styles.chipSelected]}
+              textStyle={[styles.chipText, reportType === item.key && styles.chipTextSelected]}
+              showSelectedOverlay={true}
             >
               {item.label}
-            </Button>
+            </Chip>
           ))}
-        </View>
+        </ScrollView>
       </ProviderCard>
 
       {reportType === "overview" && (
@@ -876,7 +885,6 @@ const getStyles = (theme: any, activeColors: any, insets: any) => StyleSheet.cre
     fontWeight: "700",
     marginTop: 14,
   },
-  segmented: { marginTop: 10 },
   reportTypeGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -885,6 +893,11 @@ const getStyles = (theme: any, activeColors: any, insets: any) => StyleSheet.cre
   },
   reportTypeButton: { borderRadius: 10, minWidth: "47%" },
   reportTypeContent: { minHeight: 42 },
+  chipScrollContent: { gap: 8, paddingRight: 16 },
+  chip: { borderRadius: 12, backgroundColor: theme.colors.elevation.level1 },
+  chipSelected: { backgroundColor: activeColors.primarySoft, borderColor: activeColors.primary, borderWidth: 1 },
+  chipText: { fontSize: 13, fontWeight: "600", color: activeColors.textSecondary },
+  chipTextSelected: { color: activeColors.primary, fontWeight: "700" },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chartCard: { paddingHorizontal: 0, alignItems: "center" },
   chart: { borderRadius: 12 },

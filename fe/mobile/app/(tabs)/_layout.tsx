@@ -19,27 +19,18 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          position: 'absolute',
-          left: 10,
-          right: 10,
-          bottom: 4,
           backgroundColor: theme.dark
-            ? 'rgba(23, 32, 51, 0.97)'
-            : 'rgba(255, 255, 255, 0.96)',
+            ? '#0F172A' // Solid dark background to prevent content bleed
+            : '#FFFFFF',
           borderTopColor: theme.colors.outlineVariant,
           borderTopWidth: 1,
-          height: 48 + bottomInset,
-          paddingBottom: bottomInset,
-          paddingTop: 4,
-          borderRadius: 15,
-          elevation: 6,
-          shadowColor: '#000',
-          shadowOpacity: theme.dark ? 0.24 : 0.10,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 6 },
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom + 4,
+          paddingTop: 8,
+          elevation: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 10.5,
+          fontSize: 11,
           fontWeight: '700',
         },
         tabBarItemStyle: {

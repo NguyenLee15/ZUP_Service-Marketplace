@@ -17,4 +17,11 @@ export const profileApi = {
   /** POST /users/kyc */
   submitKyc: (formData: FormData) => 
     api.post('/users/kyc', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+
+  // ===== ADDRESSES =====
+  getAddresses: () => api.get('/users/addresses'),
+  createAddress: (data: any) => api.post('/users/addresses', data),
+  updateAddress: (id: number, data: any) => api.patch(`/users/addresses/${id}`, data),
+  deleteAddress: (id: number) => api.delete(`/users/addresses/${id}`),
+  setDefaultAddress: (id: number) => api.patch(`/users/addresses/${id}/default`),
 };

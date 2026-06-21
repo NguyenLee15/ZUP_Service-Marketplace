@@ -2,11 +2,12 @@
  * Service Form - create or edit provider service.
  */
 import { useEffect, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, IconButton, Modal, Portal, RadioButton, Text, TextInput, useTheme } from 'react-native-paper';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { serviceApi } from '../../features/service/service.api';
+import { profileApi } from '../../features/profile/profile.api';
 import { Colors } from '../../constants/colors';
 import {
   ProviderCard,
@@ -48,6 +49,18 @@ export default function ServiceFormScreen() {
   const [showAddItem, setShowAddItem] = useState(false);
 
   useEffect(() => {
+    if (!isEditing) {
+      profileApi.getAddresses().then(res => {
+        const data = res.data?.data || res.data || [];
+        if (!data || data.length === 0) {
+          Alert.alert('Chưa có địa chỉ', 'Bạn cần thêm địa chỉ hoạt động trước khi tạo dịch vụ để khách hàng biết bạn ở đâu.', [
+            { text: 'Thêm địa chỉ', onPress: () => router.push('/profile/addresses' as any) },
+            { text: 'Hủy', onPress: () => router.back(), style: 'cancel' }
+          ]);
+        }
+      }).catch(() => {});
+    }
+
     const fetchCategories = async () => {
       try {
         const res = await serviceApi.getCategories();

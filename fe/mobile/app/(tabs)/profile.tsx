@@ -31,6 +31,7 @@ export default function ProfileScreen() {
 
   const menuItems = [
     { icon: 'account-edit-outline', label: 'Chỉnh sửa hồ sơ', description: 'Tên, số điện thoại và thông tin liên hệ', route: routes.profile.edit },
+    { icon: 'map-marker-radius-outline', label: 'Địa chỉ hoạt động', description: 'Cửa hàng, công ty hoặc nhà riêng để khách liên hệ', route: '/profile/addresses' as any },
     { icon: 'card-account-details-outline', label: 'Xác thực tài khoản', description: 'CCCD và chân dung để mở đầy đủ tính năng', route: routes.profile.kyc },
     { icon: 'chart-areaspline', label: 'Hiệu suất & doanh thu', description: 'Theo dõi thu nhập ròng, đánh giá và tỉ lệ chốt đơn', route: routes.profile.analytics },
     { icon: 'briefcase-outline', label: 'Dịch vụ của tôi', description: 'Quản lý giá, trạng thái và đánh giá', route: routes.services },
