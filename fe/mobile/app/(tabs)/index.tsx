@@ -534,41 +534,7 @@ export default function DashboardScreen() {
             color={activeColors.primary}
           />
         </View>
-        <Text variant="labelSmall" style={styles.filterLabel}>
-          Thời gian
-        </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
-          {PERIOD_OPTIONS.map((item) => (
-            <Chip
-              key={item.key}
-              selected={period === item.key}
-              onPress={() => setPeriod(item.key)}
-              style={[styles.chip, period === item.key && styles.chipSelected]}
-              textStyle={[styles.chipText, period === item.key && styles.chipTextSelected]}
-              showSelectedOverlay={true}
-            >
-              {item.label}
-            </Chip>
-          ))}
-        </ScrollView>
-        <Text variant="labelSmall" style={styles.filterLabel}>
-          Nhóm số liệu
-        </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
-          {GROUP_OPTIONS.map((item) => (
-            <Chip
-              key={item.key}
-              selected={groupBy === item.key}
-              onPress={() => setGroupBy(item.key as "day" | "week" | "month")}
-              style={[styles.chip, groupBy === item.key && styles.chipSelected]}
-              textStyle={[styles.chipText, groupBy === item.key && styles.chipTextSelected]}
-              showSelectedOverlay={true}
-            >
-              {item.label}
-            </Chip>
-          ))}
-        </ScrollView>
-        <Text variant="labelSmall" style={styles.filterLabel}>
+        <Text variant="labelSmall" style={[styles.filterLabel, { marginTop: 0 }]}>
           Loại báo cáo
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
@@ -585,6 +551,48 @@ export default function DashboardScreen() {
             </Chip>
           ))}
         </ScrollView>
+        {reportType !== 'overview' && (
+          <>
+            <Text variant="labelSmall" style={styles.filterLabel}>
+              Thời gian
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
+              {PERIOD_OPTIONS.map((item) => (
+                <Chip
+                  key={item.key}
+                  selected={period === item.key}
+                  onPress={() => setPeriod(item.key)}
+                  style={[styles.chip, period === item.key && styles.chipSelected]}
+                  textStyle={[styles.chipText, period === item.key && styles.chipTextSelected]}
+                  showSelectedOverlay={true}
+                >
+                  {item.label}
+                </Chip>
+              ))}
+            </ScrollView>
+          </>
+        )}
+        {reportType === 'revenue' && (
+          <>
+            <Text variant="labelSmall" style={styles.filterLabel}>
+              Nhóm số liệu
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
+              {GROUP_OPTIONS.map((item) => (
+                <Chip
+                  key={item.key}
+                  selected={groupBy === item.key}
+                  onPress={() => setGroupBy(item.key as "day" | "week" | "month")}
+                  style={[styles.chip, groupBy === item.key && styles.chipSelected]}
+                  textStyle={[styles.chipText, groupBy === item.key && styles.chipTextSelected]}
+                  showSelectedOverlay={true}
+                >
+                  {item.label}
+                </Chip>
+              ))}
+            </ScrollView>
+          </>
+        )}
       </ProviderCard>
 
       {reportType === "overview" && (
