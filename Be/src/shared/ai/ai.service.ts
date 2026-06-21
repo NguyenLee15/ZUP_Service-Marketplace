@@ -250,6 +250,31 @@ Bình luận: "${comment}"`;
     return result?.isToxic === true;
   }
 
+  async generateServiceDescription(
+    name: string,
+    keywords?: string,
+  ): Promise<string | null> {
+    if (!this.apiKey || this.provider !== 'gemini') return null;
+
+    let prompt = `Đóng vai một chuyên gia marketing cho thợ sửa chữa gia đình, hãy viết một đoạn mô tả dịch vụ cho dịch vụ có tên: "${name}".`;
+    if (keywords) {
+      prompt += `\nHãy đảm bảo nhắc đến các từ khoá sau: "${keywords}".`;
+    }
+    prompt += `\nYêu cầu:
+- Viết bằng tiếng Việt, giọng văn chuyên nghiệp, thuyết phục.
+- Dài khoảng 3-4 đoạn, có dùng biểu tượng cảm xúc (emoji) cho sinh động.
+- Dùng gạch đầu dòng cho các ưu điểm hoặc cam kết.
+- Tuyệt đối KHÔNG được thêm các câu rào trước đón sau như "Đây là mô tả của bạn:", "Chắc chắn rồi", v.v. Trả về trực tiếp nội dung mô tả để copy/paste luôn.`;
+
+    const text = await this.generateText(
+      [{ role: 'user', parts: [{ text: prompt }] }],
+      undefined,
+      undefined,
+      this.timeoutMs * 2,
+    );
+    return text;
+  }
+
   async analyzeResultImage(
     serviceName: string,
     base64Image: string,

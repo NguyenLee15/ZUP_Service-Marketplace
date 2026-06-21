@@ -34,6 +34,7 @@ export default function ServiceFormScreen() {
   const [categories, setCategories] = useState<any[]>([]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [message, setMessage] = useState<MessageState>(null);
+  const [generatingAi, setGeneratingAi] = useState(false);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -145,6 +146,26 @@ export default function ServiceFormScreen() {
     return '';
   };
 
+  const handleGenerateAi = async () => {
+    if (!name.trim()) {
+      setMessage({ tone: 'warning', text: 'Vui lòng nhập tên dịch vụ trước khi dùng AI.' });
+      return;
+    }
+    setGeneratingAi(true);
+    setMessage(null);
+    try {
+      const res = await serviceApi.generateDescription({ name: name.trim() });
+      if (res.data?.data) {
+        setDescription(res.data.data);
+        setMessage({ tone: 'success', text: 'Đã tạo mô tả bằng AI thành công!' });
+      }
+    } catch (err: any) {
+      setMessage({ tone: 'warning', text: 'Hệ thống AI đang bận, bạn vui lòng tự nhập mô tả nhé' });
+    } finally {
+      setGeneratingAi(false);
+    }
+  };
+
   const handleSubmit = async () => {
     const validationMessage = validate();
     if (validationMessage) {
@@ -221,7 +242,19 @@ export default function ServiceFormScreen() {
         </ProviderCard>
 
         <ProviderCard contentStyle={styles.section}>
-          <ProviderSectionHeader title="Thông tin dịch vụ" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <ProviderSectionHeader title="Thông tin dịch vụ" />
+            <Button
+              mode="text"
+              icon="creation"
+              loading={generatingAi}
+              disabled={generatingAi || !name.trim()}
+              onPress={handleGenerateAi}
+              labelStyle={{ fontSize: 13 }}
+            >
+              Viết bằng AI
+            </Button>
+          </View>
           <TextInput
             label="Tên dịch vụ"
             value={name}

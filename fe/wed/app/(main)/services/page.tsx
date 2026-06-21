@@ -194,27 +194,41 @@ function ServicesSearchContent() {
     }
     
     try {
-      const params: Record<string, ApiPayload> = {
-        page, 
-        limit: 12, 
-        sortBy,
-        keyword: searchParams.get('keyword') || '',
-        lat: userLocation.lat,
-        lng: userLocation.lng,
-        radiusKm: DEFAULT_RADIUS_KM,
-        categoryIds: (currentFilters?.categoryIds || categoryIds).join(',') || undefined,
-        minPrice: currentFilters?.minPrice || minPrice || undefined,
-        maxPrice: currentFilters?.maxPrice || maxPrice || undefined,
-        minRating: currentFilters?.minRating || minRating || undefined,
-      };
+      const keyword = searchParams.get('keyword') || '';
+      const isAiMode = searchParams.get('ai') === 'true';
 
-      const res = await servicesApi.search(params);
-      const data = (res.data.data || []).map((s: Service) => ({
-        ...s,
-        distance: s.distanceKm ?? s.distance,
-      }));
+      let data;
+      let metaData;
 
-      const metaData = res.data.meta || { total: 0, page: 1, totalPages: 0 };
+      if (isAiMode && keyword.trim()) {
+        const res = await servicesApi.aiSearch(keyword.trim());
+        data = (res.data.data || []).map((s: any) => ({
+          ...s,
+          distance: s.distanceKm ?? s.distance,
+        }));
+        metaData = { total: data.length, page: 1, totalPages: 1 };
+      } else {
+        const params: Record<string, ApiPayload> = {
+          page, 
+          limit: 12, 
+          sortBy,
+          keyword,
+          lat: userLocation.lat,
+          lng: userLocation.lng,
+          radiusKm: DEFAULT_RADIUS_KM,
+          categoryIds: (currentFilters?.categoryIds || categoryIds).join(',') || undefined,
+          minPrice: currentFilters?.minPrice || minPrice || undefined,
+          maxPrice: currentFilters?.maxPrice || maxPrice || undefined,
+          minRating: currentFilters?.minRating || minRating || undefined,
+        };
+
+        const res = await servicesApi.search(params);
+        data = (res.data.data || []).map((s: Service) => ({
+          ...s,
+          distance: s.distanceKm ?? s.distance,
+        }));
+        metaData = res.data.meta || { total: 0, page: 1, totalPages: 0 };
+      }
       
       if (append) {
         setServices(prev => [...prev, ...data]);
@@ -343,7 +357,7 @@ function ServicesSearchContent() {
                   aria-label="Tìm kiếm dịch vụ"
                   autoComplete="off"
                   placeholder="Tìm kiếm dịch vụ…" 
-                  className="pl-12 pr-12 h-14 bg-cloud-mist border border-platinum-tint focus:border-action-blue focus:ring-action-blue/20 rounded-2xl text-base shadow-sm transition-[background-color,border-color,box-shadow] hover:bg-pale-gray/60 group-focus-within:bg-white group-focus-within:shadow-md"
+                  className="pl-12 pr-24 h-14 bg-cloud-mist border border-platinum-tint focus:border-action-blue focus:ring-action-blue/20 rounded-2xl text-base shadow-sm transition-[background-color,border-color,box-shadow] hover:bg-pale-gray/60 group-focus-within:bg-white group-focus-within:shadow-md"
                   defaultValue={searchParams.get('keyword') || ''}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -353,6 +367,25 @@ function ServicesSearchContent() {
                     }
                   }}
                 />
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const newParams = new URLSearchParams(searchParams.toString());
+                    if (newParams.get('ai') === 'true') {
+                      newParams.delete('ai');
+                    } else {
+                      newParams.set('ai', 'true');
+                    }
+                    router.push(`/services?${newParams.toString()}`);
+                  }}
+                  aria-label={searchParams.get('ai') === 'true' ? 'Tắt tìm kiếm AI' : 'Bật tìm kiếm AI'}
+                  title="Tìm bằng AI"
+                  className={`absolute right-12 top-1/2 -translate-y-1/2 p-2 rounded-full transition-[background-color,color,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
+                    searchParams.get('ai') === 'true' ? 'bg-amber-pop/20 text-amber-500' : 'text-muted-foreground hover:text-amber-500 hover:bg-amber-pop/10'
+                  }`}
+                >
+                  <Sparkles className="w-5 h-5" />
+                </button>
                 <button 
                   type="button"
                   onClick={startVoiceSearch}
@@ -427,7 +460,7 @@ function ServicesSearchContent() {
               <div className="min-w-0 space-y-1">
                 <h2 className="text-2xl sm:text-3xl font-bold brand-heading leading-tight flex items-center gap-3 break-words text-balance">
                   {searchParams.get('keyword') ? (
-                    <>Kết quả cho &quot;{searchParams.get('keyword')}&quot;</>
+                    <>Kết quả {searchParams.get('ai') === 'true' ? 'AI ' : ''}cho &quot;{searchParams.get('keyword')}&quot;</>
                   ) : activeCategories.length === 1 ? (
                     <>{activeCategories[0].name}</>
                   ) : activeCategories.length > 1 ? (

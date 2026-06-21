@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Provider Services API
  */
 import api from '../../lib/axios';
@@ -33,4 +33,6 @@ export const serviceApi = {
 
   /** GET /categories/flat */
   getCategories: () => api.get('/categories/flat'),
+  generateDescription: (data: { name: string; keywords?: string }) => api.post('/services/ai-generate-description', data),
 };
+

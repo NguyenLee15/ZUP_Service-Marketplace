@@ -1,4 +1,4 @@
-import {
+﻿import {
   IsIn,
   IsString,
   IsOptional,
@@ -45,7 +45,7 @@ export class CreateServiceDto {
   referencePrice?: number;
 
   @IsArray()
-  @ArrayMinSize(1, { message: 'Phải có ít nhất 1 dịch vụ con (hạng mục)' })
+  @ArrayMinSize(1, { message: 'Pháº£i cÃ³ Ã­t nháº¥t 1 dá»‹ch vá»¥ con (háº¡ng má»¥c)' })
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
   @Transform(({ value }) => {
@@ -284,4 +284,15 @@ export class PublicProviderServicesQueryDto {
   @IsString()
   @IsOptional()
   sortBy?: 'rating' | 'priceAsc' | 'priceDesc' | 'newest';
+}
+
+export class AiGenerateDescriptionDto {
+  @IsString()
+  @MaxLength(100)
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  keywords?: string;
 }

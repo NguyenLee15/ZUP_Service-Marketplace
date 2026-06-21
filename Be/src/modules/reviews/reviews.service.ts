@@ -8,6 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { Prisma } from '@prisma/client';
+import { AiService } from '../../shared/ai/ai.service';
 
 @Injectable()
 export class ReviewsService {
@@ -16,6 +17,7 @@ export class ReviewsService {
   constructor(
     private prisma: PrismaService,
     private jobsService: JobsService,
+    private aiService: AiService,
   ) {}
 
   async createReview(
@@ -24,7 +26,7 @@ export class ReviewsService {
     rating: number,
     comment?: string,
   ) {
-    // Kiểm tra booking thuộc customer + đã DONE + autoCompletedAt ghi rồi
+    // Kiá»ƒm tra booking thuá»™c customer + Ä‘Ã£ DONE + autoCompletedAt ghi rá»“i
     const booking = await this.prisma.booking.findFirst({
       where: { id: bookingId, customerId },
     });
@@ -32,26 +34,39 @@ export class ReviewsService {
     if (!booking) {
       throw new NotFoundException({
         code: ErrorCodes.NOT_FOUND,
-        message: 'Đơn hàng không tồn tại',
+        message: 'ÄÆ¡n hÃ ng khÃ´ng tá»“n táº¡i',
       });
     }
 
     if (!booking.autoCompletedAt) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Chưa đủ điều kiện đánh giá',
+        message: 'ChÆ°a Ä‘á»§ Ä‘iá»u kiá»‡n Ä‘Ã¡nh giÃ¡',
       });
     }
 
-    // Kiểm tra chưa đánh giá
+    // Kiá»ƒm tra chÆ°a Ä‘Ã¡nh giÃ¡
     const existing = await this.prisma.review.findUnique({
       where: { bookingId },
     });
     if (existing) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Bạn đã đánh giá đơn này rồi',
+        message: 'Báº¡n Ä‘Ã£ Ä‘Ã¡nh giÃ¡ Ä‘Æ¡n nÃ y rá»“i',
       });
+    }
+
+    let isFlagged = false;
+    if (comment && comment.trim().length > 0) {
+      try {
+        isFlagged = await this.aiService.moderateReview(comment);
+        if (isFlagged) {
+          this.logger.warn(`AI Moderation flagged review for booking ${bookingId}`);
+        }
+      } catch (error) {
+        this.logger.error('AI Moderation failed, skipping...', error);
+        // Fallback: don't block review if AI fails
+      }
     }
 
     const review = await this.prisma.review.create({
@@ -61,10 +76,11 @@ export class ReviewsService {
         serviceId: booking.serviceId,
         rating,
         comment,
+        isFlagged,
       },
     });
 
-    // Cập nhật avgRating + totalReviews trên Service
+    // Cáº­p nháº­t avgRating + totalReviews trÃªn Service
     const stats = await this.prisma.review.aggregate({
       where: { serviceId: booking.serviceId },
       _avg: { rating: true },
@@ -79,7 +95,7 @@ export class ReviewsService {
       },
     });
 
-    // Bắn event kiểm duyệt AI nếu có comment
+    // Báº¯n event kiá»ƒm duyá»‡t AI náº¿u cÃ³ comment
     if (comment) {
       await this.jobsService.enqueue(JobName.ModerateReview, {
         reviewId: review.id,
@@ -87,7 +103,7 @@ export class ReviewsService {
       });
     }
 
-    return { data: review, message: 'Đánh giá thành công' };
+    return { data: review, message: 'ÄÃ¡nh giÃ¡ thÃ nh cÃ´ng' };
   }
 
   async getServiceReviews(
@@ -128,3 +144,4 @@ export class ReviewsService {
     return { data, meta: { total, page, limit, distribution } };
   }
 }
+

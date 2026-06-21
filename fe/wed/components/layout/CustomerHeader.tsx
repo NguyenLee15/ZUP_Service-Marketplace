@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart } from 'lucide-react';
+import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
@@ -28,6 +28,7 @@ export function CustomerHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [keyword, setKeyword] = useState('');
+  const [aiMode, setAiMode] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -145,7 +146,7 @@ export function CustomerHeader() {
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (keyword.trim()) {
-      router.push(`/services?keyword=${encodeURIComponent(keyword.trim())}`);
+      router.push(`/services?keyword=${encodeURIComponent(keyword.trim())}${aiMode ? '&ai=true' : ''}`);
       return;
     }
     router.push('/services');
@@ -205,6 +206,18 @@ export function CustomerHeader() {
                   className="w-full bg-white/10 border border-white/10 hover:border-cyan-300/35 focus:bg-white/12 focus:border-cyan-300 focus:ring-4 focus:ring-cyan-300/10 rounded-full py-1.5 sm:py-2.5 pl-4 sm:pl-5 pr-10 sm:pr-14 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 transition-colors duration-300 text-xs sm:text-sm md:text-base text-white placeholder:text-slate-400"
                 />
                 <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setAiMode(!aiMode)}
+                    title={aiMode ? "Đang bật AI Search" : "Bật AI Search"}
+                    className={`p-1.5 sm:p-2 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                      aiMode 
+                        ? 'bg-amber-pop/20 text-amber-300 hover:bg-amber-pop/30' 
+                        : 'text-white/60 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
                   <button
                     type="submit"
                     aria-label="Tìm kiếm"

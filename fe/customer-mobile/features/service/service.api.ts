@@ -1,4 +1,4 @@
-import api from '../../lib/axios';
+﻿import api from '../../lib/axios';
 
 export const serviceApi = {
   search: (params?: Record<string, unknown>) => api.get('/services/search', { params }),
@@ -13,4 +13,6 @@ export const serviceApi = {
   getProviderStats: (serviceId: number) => api.get(`/services/${serviceId}/provider-stats`),
   getCategories: () => api.get('/categories/tree'),
   getFlatCategories: () => api.get('/categories/flat'),
+  generateDescription: (data: { name: string; keywords?: string }) => api.post('/services/ai-generate-description', data),
 };
+
