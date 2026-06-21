@@ -9,6 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { profileApi } from '../../features/profile/profile.api';
+import { useAuthStore } from '../../features/auth/auth.store';
 import { Colors } from '../../constants/colors';
 import {
   ProviderCard,
