@@ -43,7 +43,7 @@ export class ServiceCommandService {
           name: dto.name,
           description: dto.description,
           referencePrice: dto.items?.length ? Math.min(...dto.items.map((i) => Number(i.price))) : 0,
-          status: ServiceStatus.DRAFT,
+          status: ServiceStatus.PENDING,
         },
       });
 
@@ -78,6 +78,13 @@ export class ServiceCommandService {
       await this.prisma.serviceImage.createMany({ data: images });
     }
 
+    await this.shared.notifyAdmins(
+      'SERVICE_CREATED',
+      'Dịch vụ mới cần duyệt',
+      `Nhà cung cấp #${providerId} đã tạo dịch vụ mới`,
+      service.id,
+    );
+
     const serviceWithItems = await this.prisma.service.findUnique({
       where: { id: service.id },
       include: {
@@ -88,7 +95,7 @@ export class ServiceCommandService {
 
     return {
       data: serviceWithItems,
-      message: 'Tạo dịch vụ nháp thành công',
+      message: 'Tạo dịch vụ thành công, đang chờ duyệt',
     };
   }
 
@@ -115,7 +122,8 @@ export class ServiceCommandService {
 
     if (
       service.status === ServiceStatus.ACTIVE ||
-      service.status === ServiceStatus.REJECTED
+      service.status === ServiceStatus.REJECTED ||
+      service.status === ServiceStatus.DRAFT
     ) {
       updateData.status = ServiceStatus.PENDING;
     }
