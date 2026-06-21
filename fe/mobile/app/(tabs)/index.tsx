@@ -249,24 +249,15 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
   const [message, setMessage] = useState<Message>(null);
-  const [period, setPeriod] = useState<PeriodKey>("this_month");
-  const [groupBy, setGroupBy] = useState<"day" | "week" | "month">("week");
-  const [reportType, setReportType] = useState<ReportTypeKey>("overview");
   const reportParams: {
     from?: string;
     to?: string;
     groupBy: "day" | "week" | "month";
-    reportType: ReportTypeKey;
-  } = { ...periodParams(period, groupBy), reportType };
-  const selectedReportLabel =
-    REPORT_TYPE_OPTIONS.find((item) => item.key === reportType)?.label ||
-    "Tổng quan";
-  const selectedGroupLabel =
-    GROUP_OPTIONS.find((item) => item.key === groupBy)?.label || "Tuần";
-  const reportSummary =
-    period === "all"
-      ? `${selectedReportLabel} · Tất cả thời gian · Theo ${selectedGroupLabel.toLowerCase()}`
-      : `${selectedReportLabel} · ${displayDate(reportParams.from)} - ${displayDate(reportParams.to)} · Theo ${selectedGroupLabel.toLowerCase()}`;
+    reportType: "overview";
+  } = { ...periodParams("this_month", "week"), reportType: "overview" };
+  const selectedReportLabel = "Tổng quan";
+  const selectedGroupLabel = "Tuần";
+  const reportSummary = "Tháng này · Theo tuần";
 
   const fetchData = useCallback(async () => {
     setMessage(null);
@@ -322,7 +313,7 @@ export default function DashboardScreen() {
       ).toString();
       const extension = type === "pdf" ? "pdf" : "xlsx";
       const range = `${reportParams.from || "tat-ca"}-${reportParams.to || new Date().toISOString().slice(0, 10)}`;
-      const fileUri = `${FileSystem.documentDirectory}provider-${reportType}-${range}-${Date.now()}.${extension}`;
+      const fileUri = `${FileSystem.documentDirectory}provider-${reportParams.reportType}-${range}-${Date.now()}.${extension}`;
       const downloadUrl = `${API_BASE_URL}/provider/dashboard/export-${type === "pdf" ? "pdf" : "excel"}?${query}`;
       const result = await FileSystem.downloadAsync(downloadUrl, fileUri, {
         headers: { Authorization: `Bearer ${token}` },
@@ -518,125 +509,56 @@ export default function DashboardScreen() {
         />
       </ProviderCard>
 
-      <ProviderCard>
-        <View style={styles.filterHeader}>
-          <View>
-            <Text variant="titleSmall" style={styles.cardTitle}>
-              Kỳ báo cáo
-            </Text>
-            <Text variant="bodySmall" style={styles.cardDescription}>
-              {reportSummary}
-            </Text>
-          </View>
-          <MaterialCommunityIcons
-            name="tune-variant"
-            size={22}
-            color={activeColors.primary}
-          />
+      <View style={styles.sectionHeaderRow}>
+        <View>
+          <Text variant="titleMedium" style={styles.cardTitle}>Hiệu suất tháng này</Text>
+          <Text variant="bodySmall" style={styles.cardDescription}>Tổng quan các chỉ số quan trọng.</Text>
         </View>
-        <Text variant="labelSmall" style={[styles.filterLabel, { marginTop: 0 }]}>
-          Loại báo cáo
-        </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
-          {REPORT_TYPE_OPTIONS.map((item) => (
-            <Chip
-              key={item.key}
-              selected={reportType === item.key}
-              onPress={() => setReportType(item.key)}
-              style={[styles.chip, reportType === item.key && styles.chipSelected]}
-              textStyle={[styles.chipText, reportType === item.key && styles.chipTextSelected]}
-              showSelectedOverlay={true}
-            >
-              {item.label}
-            </Chip>
-          ))}
-        </ScrollView>
-        {reportType !== 'overview' && (
-          <>
-            <Text variant="labelSmall" style={styles.filterLabel}>
-              Thời gian
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
-              {PERIOD_OPTIONS.map((item) => (
-                <Chip
-                  key={item.key}
-                  selected={period === item.key}
-                  onPress={() => setPeriod(item.key)}
-                  style={[styles.chip, period === item.key && styles.chipSelected]}
-                  textStyle={[styles.chipText, period === item.key && styles.chipTextSelected]}
-                  showSelectedOverlay={true}
-                >
-                  {item.label}
-                </Chip>
-              ))}
-            </ScrollView>
-          </>
-        )}
-        {reportType === 'revenue' && (
-          <>
-            <Text variant="labelSmall" style={styles.filterLabel}>
-              Nhóm số liệu
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
-              {GROUP_OPTIONS.map((item) => (
-                <Chip
-                  key={item.key}
-                  selected={groupBy === item.key}
-                  onPress={() => setGroupBy(item.key as "day" | "week" | "month")}
-                  style={[styles.chip, groupBy === item.key && styles.chipSelected]}
-                  textStyle={[styles.chipText, groupBy === item.key && styles.chipTextSelected]}
-                  showSelectedOverlay={true}
-                >
-                  {item.label}
-                </Chip>
-              ))}
-            </ScrollView>
-          </>
-        )}
-      </ProviderCard>
+        <Button mode="text" onPress={() => router.push(routes.profile.analytics)} compact textColor={activeColors.primary}>
+          Chi tiết
+        </Button>
+      </View>
 
-      {reportType === "overview" && (
-        <View style={styles.kpiRow}>
-          <ProviderMetricCard
-            icon="clipboard-check-outline"
-            label="Tổng đơn"
-            value={String(stats?.totalBookings ?? "—")}
-            tone="info"
-            loading={loading}
-          />
-          <ProviderMetricCard
-            icon="cash-multiple"
-            label="Doanh thu"
-            value={stats ? formatCurrency(stats.totalRevenue) : "—"}
-            tone="success"
-            loading={loading}
-          />
-          <ProviderMetricCard
-            icon="star-outline"
-            label="Đánh giá"
-            value={
-              stats?.avgRating
-                ? `${Number(stats.avgRating).toFixed(1)}/5`
-                : "—"
-            }
-            tone="warning"
-            loading={loading}
-          />
-          <ProviderMetricCard
-            icon="cancel"
-            label="Tỷ lệ hủy"
-            value={
-              stats?.cancelRate != null
-                ? `${Number(stats.cancelRate).toFixed(1)}%`
-                : "—"
-            }
-            tone="error"
-            loading={loading}
-          />
-        </View>
-      )}
+      <View style={styles.kpiRow}>
+        <ProviderMetricCard
+          icon="clipboard-check-outline"
+          label="Tổng đơn"
+          value={String(stats?.totalBookings ?? "—")}
+          tone="info"
+          loading={loading}
+        />
+        <ProviderMetricCard
+          icon="cash-multiple"
+          label="Doanh thu"
+          value={stats ? formatCurrency(stats.totalRevenue) : "—"}
+          tone="success"
+          loading={loading}
+        />
+        <ProviderMetricCard
+          icon="star-outline"
+          label="Đánh giá"
+          value={
+            stats?.avgRating
+              ? `${Number(stats.avgRating).toFixed(1)}/5`
+              : "—"
+          }
+          tone="warning"
+          loading={loading}
+        />
+        <ProviderMetricCard
+          icon="cancel"
+          label="Tỷ lệ hủy"
+          value={
+            stats?.cancelRate != null
+              ? `${Number(stats.cancelRate).toFixed(1)}%`
+              : "—"
+          }
+          tone="error"
+          loading={loading}
+        />
+      </View>
 
-      {["overview", "status"].includes(reportType) && (
+      {["overview", "status"].includes(reportParams.reportType) && (
         <>
           <View style={styles.chipRow}>
             <ProviderStatusChip
@@ -696,152 +618,99 @@ export default function DashboardScreen() {
           </ProviderCard>
         </>
       )}
+      <ProviderSectionHeader title="Xu hướng doanh thu" />
+      <ProviderCard contentStyle={styles.chartCard}>
+        <LineChart
+          data={{
+            labels: revenueLabels.slice(-6),
+            datasets: [
+              {
+                data: revenueSeries
+                  .slice(-6)
+                  .map((value) => Math.max(value, 0)),
+              },
+            ],
+          }}
+          width={chartWidth}
+          height={220}
+          chartConfig={{
+            backgroundColor: activeColors.surface,
+            backgroundGradientFrom: activeColors.surface,
+            backgroundGradientTo: activeColors.surface,
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+            labelColor: () => activeColors.textSecondary,
+            propsForDots: { r: "3" },
+          }}
+          bezier
+          style={styles.chart}
+        />
+      </ProviderCard>
 
-      {["overview", "revenue"].includes(reportType) && (
-        <>
-          <ProviderSectionHeader title="Xu hướng doanh thu" />
-          <ProviderCard contentStyle={styles.chartCard}>
-            <LineChart
-              data={{
-                labels: revenueLabels.slice(-6),
-                datasets: [
-                  {
-                    data: revenueSeries
-                      .slice(-6)
-                      .map((value) => Math.max(value, 0)),
-                  },
-                ],
-              }}
-              width={chartWidth}
-              height={220}
-              chartConfig={{
-                backgroundColor: activeColors.surface,
-                backgroundGradientFrom: activeColors.surface,
-                backgroundGradientTo: activeColors.surface,
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
-                labelColor: () => activeColors.textSecondary,
-                propsForDots: { r: "3" },
-              }}
-              bezier
-              style={styles.chart}
-            />
-          </ProviderCard>
-        </>
-      )}
-
-      <ProviderSectionHeader title={`Xuất ${selectedReportLabel.toLowerCase()}`} />
-      <View style={styles.exportRow}>
-        <ProviderCard
-          style={styles.exportCard}
-          onPress={() => handleExport("pdf")}
-          accessibilityLabel="Xuất báo cáo PDF"
-        >
-          <View style={styles.exportContent}>
-            <MaterialCommunityIcons
-              name="file-pdf-box"
-              size={32}
-              color={activeColors.error}
-            />
-            <Text variant="labelMedium" style={styles.exportLabel}>
-              {exporting === "pdf" ? "Đang tạo…" : "PDF"}
-            </Text>
-          </View>
-        </ProviderCard>
-        <ProviderCard
-          style={styles.exportCard}
-          onPress={() => handleExport("excel")}
-          accessibilityLabel="Xuất báo cáo Excel"
-        >
-          <View style={styles.exportContent}>
-            <MaterialCommunityIcons
-              name="file-excel-box"
-              size={32}
-              color={activeColors.success}
-            />
-            <Text variant="labelMedium" style={styles.exportLabel}>
-              {exporting === "excel" ? "Đang tạo…" : "Excel"}
-            </Text>
-          </View>
-        </ProviderCard>
-      </View>
-      {exporting && (
-        <ProviderInlineMessage tone="info" message="Đang xử lý báo cáo…" />
-      )}
-
-      {["overview", "bookings"].includes(reportType) && (
-        <>
-          <ProviderSectionHeader
-            title="Đơn mới cần xử lý"
-            actionLabel="Xem tất cả"
+      <ProviderSectionHeader title="Đơn mới cần xử lý" />
+      {recentBookings.length === 0 ? (
+        <ProviderCard>
+          <ProviderEmptyState
+            icon="clipboard-check-outline"
+            title="Chưa có đơn hàng mới"
+            description="Khi có yêu cầu mới, bạn sẽ thấy chúng ở đây."
+            actionLabel="Xem đơn hàng"
             onAction={() => router.push(routes.tabs.bookings)}
           />
-
-          {recentBookings.length === 0 ? (
-            <ProviderCard>
-              <ProviderEmptyState
-                icon="clipboard-check-outline"
-                title="Chưa có đơn hàng mới"
-                description="Khi có yêu cầu mới, bạn sẽ thấy chúng ở đây."
-                actionLabel="Xem đơn hàng"
-                onAction={() => router.push(routes.tabs.bookings)}
+        </ProviderCard>
+      ) : (
+        recentBookings.map((booking) => (
+          <ProviderCard
+            key={booking.id}
+            onPress={() => router.push(routes.booking.detail(String(booking.id)))}
+            accessibilityLabel={`Mở đơn hàng ${booking.bookingCode}`}
+          >
+            <View style={styles.bookingRow}>
+              <View style={{ flex: 1 }}>
+                <Text
+                  variant="labelSmall"
+                  style={styles.bookingCode}
+                  selectable
+                >
+                  #{booking.bookingCode}
+                </Text>
+                <Text
+                  variant="bodyLarge"
+                  style={styles.bookingTitle}
+                  numberOfLines={1}
+                >
+                  {booking.service?.name || "Dịch vụ"}
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={styles.bookingMeta}
+                  numberOfLines={1}
+                >
+                  {booking.customer?.fullName} · {booking.district},{" "}
+                  {booking.province}
+                </Text>
+              </View>
+              <ProviderStatusChip
+                label={
+                  BOOKING_STATUS_LABEL[
+                    booking.status as keyof typeof BOOKING_STATUS_LABEL
+                  ] || booking.status
+                }
+                color={activeColors.statusPending}
               />
-            </ProviderCard>
-          ) : (
-            recentBookings.map((booking) => (
-              <ProviderCard
-                key={booking.id}
-                onPress={() => router.push(routes.booking.detail(String(booking.id)))}
-                accessibilityLabel={`Mở đơn hàng ${booking.bookingCode}`}
-              >
-                <View style={styles.bookingRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      variant="labelSmall"
-                      style={styles.bookingCode}
-                      selectable
-                    >
-                      #{booking.bookingCode}
-                    </Text>
-                    <Text
-                      variant="bodyLarge"
-                      style={styles.bookingTitle}
-                      numberOfLines={1}
-                    >
-                      {booking.service?.name || "Dịch vụ"}
-                    </Text>
-                    <Text
-                      variant="bodySmall"
-                      style={styles.bookingMeta}
-                      numberOfLines={1}
-                    >
-                      {booking.customer?.fullName} · {booking.district},{" "}
-                      {booking.province}
-                    </Text>
-                  </View>
-                  <ProviderStatusChip
-                    label={
-                      BOOKING_STATUS_LABEL[
-                        booking.status as keyof typeof BOOKING_STATUS_LABEL
-                      ] || booking.status
-                    }
-                    color={activeColors.statusPending}
-                  />
-                </View>
-                <View style={styles.bookingFooter}>
-                  <MaterialCommunityIcons
-                    name="calendar-outline"
-                    size={14}
-                    color={activeColors.textSecondary}
-                  />
-                  <Text variant="labelSmall" style={styles.bookingDate}>
-                    {new Date(booking.desiredTime).toLocaleDateString("vi-VN")}
-                  </Text>
-                </View>
-              </ProviderCard>
-            ))
-          )}
-        </>
+            </View>
+            <View style={styles.bookingFooter}>
+              <MaterialCommunityIcons
+                name="calendar-outline"
+                size={14}
+                color={activeColors.textSecondary}
+              />
+              <Text variant="labelSmall" style={styles.bookingDate}>
+                {new Date(booking.desiredTime).toLocaleDateString("vi-VN")}
+              </Text>
+            </View>
+          </ProviderCard>
+        ))
       )}
     </ScrollView>
   );
@@ -901,24 +770,9 @@ const getStyles = (theme: any, activeColors: any, insets: any) => StyleSheet.cre
     marginTop: 2,
     lineHeight: 18,
   },
-  filterHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  filterLabel: {
-    fontWeight: "700",
-    marginTop: 14,
-  },
-  reportTypeGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 10,
-  },
   reportTypeButton: { borderRadius: 10, minWidth: "47%" },
   reportTypeContent: { minHeight: 42 },
+  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   chipScrollContent: { gap: 8, paddingRight: 16 },
   chip: { borderRadius: 12, backgroundColor: theme.colors.elevation.level1 },
   chipSelected: { backgroundColor: activeColors.primarySoft, borderColor: activeColors.primary, borderWidth: 1 },

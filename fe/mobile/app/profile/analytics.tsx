@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { Button, IconButton, Text, useTheme } from 'react-native-paper';
+import { Button, IconButton, Text, useTheme, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
@@ -21,11 +21,22 @@ type Stats = {
   revenueData?: Array<{ period: string; revenue: number }>;
 };
 
-const ranges = [
-  { key: '7d', label: '7 ngày' },
-  { key: '30d', label: '30 ngày' },
-  { key: 'month', label: 'Tháng này' },
-] as const;
+type PeriodKey = "this_week" | "this_month" | "last_month" | "this_year" | "last_year" | "all";
+
+const PERIOD_OPTIONS: Array<{ key: PeriodKey; label: string }> = [
+  { key: "this_week", label: "Tuần này" },
+  { key: "this_month", label: "Tháng này" },
+  { key: "last_month", label: "Tháng trước" },
+  { key: "this_year", label: "Năm nay" },
+  { key: "last_year", label: "Năm trước" },
+  { key: "all", label: "Tất cả" },
+];
+
+const GROUP_OPTIONS: Array<{ key: "day" | "week" | "month"; label: string }> = [
+  { key: "day", label: "Ngày" },
+  { key: "week", label: "Tuần" },
+  { key: "month", label: "Tháng" },
+];
 
 export default function ProviderAnalyticsScreen() {
   const theme = useTheme();
@@ -33,20 +44,20 @@ export default function ProviderAnalyticsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const [range, setRange] = useState<(typeof ranges)[number]['key']>('30d');
+  const [period, setPeriod] = useState<PeriodKey>('this_month');
+  const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('week');
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
-  const params = getRangeParams(range);
+  const params = periodParams(period, groupBy);
 
   const load = useCallback(async () => {
     setError('');
     try {
       const response = await dashboardApi.getStats({
         ...params,
-        groupBy: 'day',
         reportType: 'revenue',
       });
       setStats(response.data?.data ?? null);
@@ -55,7 +66,7 @@ export default function ProviderAnalyticsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [params.from, params.to, range]);
+  }, [params.from, params.to, params.groupBy]);
 
   useEffect(() => {
     load();
@@ -112,19 +123,41 @@ export default function ProviderAnalyticsScreen() {
           </View>
           <MaterialCommunityIcons name="chart-timeline-variant" size={24} color={activeColors.primaryLight} />
         </View>
-        <View style={styles.rangeRow}>
-          {ranges.map((item) => (
-            <Button
+        <Text variant="labelSmall" style={styles.filterLabel}>
+          Thời gian
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
+          {PERIOD_OPTIONS.map((item) => (
+            <Chip
               key={item.key}
-              mode={range === item.key ? 'contained' : 'outlined'}
-              onPress={() => setRange(item.key)}
-              style={styles.rangeButton}
-              compact
+              selected={period === item.key}
+              onPress={() => setPeriod(item.key)}
+              style={[styles.chip, period === item.key && styles.chipSelected]}
+              textStyle={[styles.chipText, period === item.key && styles.chipTextSelected]}
+              showSelectedOverlay={true}
             >
               {item.label}
-            </Button>
+            </Chip>
           ))}
-        </View>
+        </ScrollView>
+
+        <Text variant="labelSmall" style={styles.filterLabel}>
+          Nhóm số liệu
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScrollContent}>
+          {GROUP_OPTIONS.map((item) => (
+            <Chip
+              key={item.key}
+              selected={groupBy === item.key}
+              onPress={() => setGroupBy(item.key)}
+              style={[styles.chip, groupBy === item.key && styles.chipSelected]}
+              textStyle={[styles.chipText, groupBy === item.key && styles.chipTextSelected]}
+              showSelectedOverlay={true}
+            >
+              {item.label}
+            </Chip>
+          ))}
+        </ScrollView>
       </ProviderCard>
 
       <View style={styles.kpiRow}>
@@ -177,16 +210,36 @@ export default function ProviderAnalyticsScreen() {
   );
 }
 
-function getRangeParams(range: '7d' | '30d' | 'month') {
+function periodParams(
+  period: PeriodKey,
+  groupBy: "day" | "week" | "month",
+): { from?: string; to?: string; groupBy: "day" | "week" | "month" } {
   const now = new Date();
-  const from = new Date(now);
-  if (range === 'month') from.setDate(1);
-  if (range === '7d') from.setDate(now.getDate() - 7);
-  if (range === '30d') from.setDate(now.getDate() - 30);
+  if (period === "all") return { groupBy };
+  
+  let from = new Date(now);
+  let to = new Date(now);
+
+  if (period === "this_week") {
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    from.setDate(diff);
+  } else if (period === "this_month") {
+    from.setDate(1);
+  } else if (period === "last_month") {
+    from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    to = new Date(now.getFullYear(), now.getMonth(), 0);
+  } else if (period === "this_year") {
+    from = new Date(now.getFullYear(), 0, 1);
+  } else if (period === "last_year") {
+    from = new Date(now.getFullYear() - 1, 0, 1);
+    to = new Date(now.getFullYear() - 1, 11, 31);
+  }
 
   return {
     from: from.toISOString().slice(0, 10),
-    to: now.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+    groupBy,
   };
 }
 
@@ -204,9 +257,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 18,
   },
-  rangeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
-  rangeButton: { borderRadius: 12, minHeight: 44 },
-  kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  filterLabel: {
+    fontWeight: "700",
+    marginTop: 14,
+    marginBottom: 8,
+  },
+  chipScrollContent: { gap: 8, paddingRight: 16 },
+  chip: { borderRadius: 12 },
+  chipSelected: { borderWidth: 1 },
+  chipText: { fontSize: 13, fontWeight: "600" },
+  chipTextSelected: { fontWeight: "700" },
+  kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 14 },
   chartCard: { paddingHorizontal: 0, gap: 12 },
   sectionTitleRow: {
     paddingHorizontal: 16,
