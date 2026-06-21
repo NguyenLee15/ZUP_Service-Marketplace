@@ -4,6 +4,8 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NOTIFICATION_EVENTS } from '../../common/events/notification-events';
 import { KycStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
@@ -16,6 +18,7 @@ export class KycService {
   constructor(
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -209,14 +212,12 @@ export class KycService {
         ? 'Chúc mừng! Danh tính của bạn đã được xác minh. Bạn có thể bắt đầu đăng dịch vụ.'
         : `Yêu cầu KYC bị từ chối. Lý do: ${reason}`;
 
-    await this.prisma.notification.create({
-      data: {
-        userId: kyc.providerId,
-        type: 'KYC_RESULT',
-        title: notifTitle,
-        content: notifContent,
-        referenceId: kyc.id,
-      },
+    this.eventEmitter.emit(NOTIFICATION_EVENTS.SEND, {
+      userId: kyc.providerId,
+      type: 'KYC_RESULT',
+      title: notifTitle,
+      content: notifContent,
+      referenceId: kyc.id,
     });
 
     this.logger.log(`KYC #${kycId} ${action} by reviewer ${reviewerId}`);

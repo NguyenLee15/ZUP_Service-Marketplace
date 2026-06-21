@@ -78,6 +78,9 @@ export const useSocket = () => {
             if (notification?.type === 'NEW_BOOKING') {
               showIncomingBookingAlert(notification);
             }
+            if (notification?.type === 'KYC_RESULT') {
+              useAuthStore.getState().fetchProfile();
+            }
           },
         );
       } catch {}
