@@ -3,8 +3,8 @@
  * Socket.io + message history + typing indicator
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Text, TextInput, IconButton, useTheme, ActivityIndicator, TouchableRipple } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput as RNTextInput } from 'react-native';
+import { Text, IconButton, useTheme, ActivityIndicator, TouchableRipple } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
@@ -166,7 +166,7 @@ export default function ChatRoomScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <View style={styles.header}>
@@ -250,14 +250,24 @@ export default function ChatRoomScreen() {
 
       {/* Input */}
       <View style={[styles.inputBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
-        <TextInput
+        <RNTextInput
           value={inputText}
           onChangeText={(text) => { setInputText(text); handleTyping(); }}
           placeholder="Nhập tin nhắn…"
-          mode="outlined"
-          style={styles.textInput}
-          outlineStyle={{ borderRadius: 24 }}
-          dense
+          placeholderTextColor={theme.colors.onSurfaceVariant}
+          style={[
+            styles.textInput, 
+            { 
+              color: theme.colors.onSurface,
+              backgroundColor: theme.colors.surfaceVariant,
+              borderRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: Platform.OS === 'ios' ? 10 : 8,
+              paddingBottom: Platform.OS === 'ios' ? 10 : 8,
+              minHeight: 40,
+              maxHeight: 120
+            }
+          ]}
           multiline
           maxLength={2000}
         />

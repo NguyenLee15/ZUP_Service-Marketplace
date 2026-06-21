@@ -10,7 +10,15 @@ export class ProviderPublicService {
 
   async getPublicDetail(serviceId: number) {
     const service = await this.prisma.service.findFirst({
-      where: { id: serviceId, status: ServiceStatus.ACTIVE, isDeleted: false },
+      where: { 
+        id: serviceId, 
+        status: ServiceStatus.ACTIVE, 
+        isDeleted: false,
+        provider: {
+          status: 'ACTIVE',
+          providerWallet: { isRestricted: false },
+        }
+      },
       include: {
         category: true,
         provider: {
@@ -106,6 +114,7 @@ export class ProviderPublicService {
         id: providerId,
         role: 'PROVIDER',
         status: 'ACTIVE',
+        providerWallet: { isRestricted: false },
       },
       select: {
         id: true,
@@ -191,6 +200,10 @@ export class ProviderPublicService {
       providerId,
       status: ServiceStatus.ACTIVE,
       isDeleted: false,
+      provider: {
+        status: 'ACTIVE',
+        providerWallet: { isRestricted: false },
+      },
     };
 
     if (search) {

@@ -40,6 +40,12 @@ export class ServiceSearchService {
     const where: Prisma.ServiceWhereInput = {
       status: ServiceStatus.ACTIVE,
       isDeleted: false,
+      provider: {
+        status: 'ACTIVE',
+        providerWallet: {
+          isRestricted: false,
+        },
+      },
     };
 
     if (dto.keyword) {
