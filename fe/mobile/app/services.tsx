@@ -161,7 +161,7 @@ export default function ServicesScreen() {
         <View style={styles.metaRow}>
           <View>
             <Text variant="labelSmall" style={styles.metaLabel}>
-              Giá tham khảo
+              Giá từ
             </Text>
             <Text variant="titleMedium" style={styles.priceText} selectable>
               {formatCurrency(item.basePrice || item.referencePrice)}

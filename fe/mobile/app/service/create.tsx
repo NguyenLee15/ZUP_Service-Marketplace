@@ -37,7 +37,6 @@ export default function ServiceFormScreen() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [basePrice, setBasePrice] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
@@ -77,7 +76,6 @@ export default function ServiceFormScreen() {
         const data = JSON.parse(serviceData);
         setName(data.name || '');
         setDescription(data.description || '');
-        setBasePrice(String(data.basePrice || data.referencePrice || ''));
         if (data.category) setSelectedCategory(data.category);
         if (data.items && Array.isArray(data.items)) {
           setServiceItems(data.items.map((it: any) => ({
@@ -142,7 +140,7 @@ export default function ServiceFormScreen() {
   const validate = () => {
     if (!selectedCategory) return 'Vui lòng chọn danh mục dịch vụ.';
     if (!name.trim()) return 'Vui lòng nhập tên dịch vụ.';
-    if (!basePrice.replace(/[^0-9]/g, '')) return 'Vui lòng nhập giá tham khảo.';
+    if (serviceItems.length === 0) return 'Vui lòng thêm ít nhất 1 hạng mục dịch vụ con (combo/bảng giá).';
     if (!description.trim()) return 'Vui lòng nhập mô tả dịch vụ.';
     return '';
   };
@@ -161,7 +159,6 @@ export default function ServiceFormScreen() {
       formData.append('categoryId', String(selectedCategory.id));
       formData.append('name', name.trim());
       formData.append('description', description.trim());
-      formData.append('referencePrice', basePrice.replace(/[^0-9]/g, ''));
 
       // Only upload new images (local ones)
       images.filter((img: any) => !img.isExisting).forEach((img: any, index) => {
@@ -249,26 +246,6 @@ export default function ServiceFormScreen() {
             style={styles.input}
             accessibilityLabel="Mô tả dịch vụ"
           />
-        </ProviderCard>
-
-        <ProviderCard contentStyle={styles.section}>
-          <ProviderSectionHeader title="Giá" />
-          <TextInput
-            label="Giá tham khảo (VNĐ)"
-            value={basePrice}
-            onChangeText={value => {
-              setBasePrice(value);
-              setMessage(null);
-            }}
-            mode="outlined"
-            keyboardType="numeric"
-            left={<TextInput.Icon icon="cash" accessibilityLabel="Giá tham khảo" />}
-            style={styles.input}
-            accessibilityLabel="Giá tham khảo"
-          />
-          <Text variant="bodySmall" style={styles.helperText}>
-            Giá này giúp khách ước tính chi phí. Bạn vẫn có thể báo giá cụ thể trong từng đơn.
-          </Text>
         </ProviderCard>
 
         <ProviderCard contentStyle={styles.section}>

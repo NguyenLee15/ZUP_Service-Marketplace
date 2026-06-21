@@ -9,6 +9,7 @@ import {
   Min,
   IsArray,
   ValidateNested,
+  ArrayMinSize,
 } from 'class-validator';
 import { Type, Transform, plainToInstance } from 'class-transformer';
 import { FeaturedListingStatus } from '@prisma/client';
@@ -39,11 +40,12 @@ export class CreateServiceDto {
   description: string;
 
   @IsNumber()
+  @IsOptional()
   @Type(() => Number)
-  referencePrice: number;
+  referencePrice?: number;
 
   @IsArray()
-  @IsOptional()
+  @ArrayMinSize(1, { message: 'Phải có ít nhất 1 dịch vụ con (hạng mục)' })
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
   @Transform(({ value }) => {

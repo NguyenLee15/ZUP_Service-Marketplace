@@ -126,7 +126,7 @@ export default function AdminServicesPage() {
                   <tr>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Tên Dịch Vụ</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Nhà Cung Cấp</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Giá</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Giá từ</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Trạng Thái</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Rating</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">Hành Động</th>
@@ -215,7 +215,7 @@ export default function AdminServicesPage() {
                   <p className="font-medium">{selectedService.provider?.fullName}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Giá</p>
+                  <p className="text-muted-foreground">Giá từ</p>
                   <p className="font-medium">{formatPrice(Number(selectedService.referencePrice))}</p>
                 </div>
                 <div>

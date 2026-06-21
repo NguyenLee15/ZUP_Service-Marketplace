@@ -186,7 +186,7 @@ export function ServiceDetailClient({ service }: { service: ApiPayload }) {
           </div>
           <div className="text-right shrink-0">
             <p className="text-sm text-muted-foreground flex items-center justify-end gap-1">
-              Giá tham khảo
+              Giá từ
               <Scale className="w-3 h-3 text-emerald-500" />
             </p>
             <div className="flex flex-col items-end mt-1">
@@ -523,7 +523,7 @@ export function ServiceDetailClient({ service }: { service: ApiPayload }) {
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#101827]/92 px-4 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
           <div className="flex-1">
             <p className="mb-1 text-[10px] font-medium leading-none text-slate-400 sm:text-xs">
-              Giá tham khảo
+              Giá từ
             </p>
             <p className="text-base font-extrabold leading-none text-cyan-300 sm:text-lg">
               {formatPrice(referencePrice)}

@@ -109,7 +109,7 @@ export function ServiceMap({ services, userLocation }: ServiceMapProps) {
                       <h4 className="font-bold text-sm text-midnight-indigo line-clamp-1">{service.name}</h4>
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-action-blue">
-                          {new Intl.NumberFormat('vi-VN', {
+                          Từ {new Intl.NumberFormat('vi-VN', {
                             style: 'currency',
                             currency: 'VND',
                           }).format(Number(service.referencePrice))}
@@ -156,7 +156,7 @@ export function ServiceMap({ services, userLocation }: ServiceMapProps) {
                         <h4 className="font-bold text-xs text-midnight-indigo line-clamp-1">{service.name}</h4>
                         <div className="flex items-center justify-between mt-1">
                           <p className="text-[11px] font-bold text-action-blue">
-                            {new Intl.NumberFormat('vi-VN', {
+                            Từ {new Intl.NumberFormat('vi-VN', {
                               style: 'currency',
                               currency: 'VND',
                             }).format(Number(service.referencePrice))}

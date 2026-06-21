@@ -42,7 +42,7 @@ export class ServiceCommandService {
           categoryId: dto.categoryId,
           name: dto.name,
           description: dto.description,
-          referencePrice: dto.referencePrice,
+          referencePrice: dto.items?.length ? Math.min(...dto.items.map((i) => Number(i.price))) : 0,
           status: ServiceStatus.DRAFT,
         },
       });
@@ -106,7 +106,12 @@ export class ServiceCommandService {
     if (dto.description) updateData.description = dto.description;
     if (dto.categoryId)
       updateData.category = { connect: { id: dto.categoryId } };
-    if (dto.referencePrice) updateData.referencePrice = dto.referencePrice;
+    
+    if (dto.items && dto.items.length > 0) {
+      updateData.referencePrice = Math.min(...dto.items.map((i) => Number(i.price)));
+    } else if (dto.referencePrice) {
+      updateData.referencePrice = dto.referencePrice;
+    }
 
     if (
       service.status === ServiceStatus.ACTIVE ||
