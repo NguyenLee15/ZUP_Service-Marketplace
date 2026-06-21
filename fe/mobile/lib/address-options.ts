@@ -39,9 +39,10 @@ function normalizeProvinceName(value: string) {
 
 function normalizeWards(raw: unknown) {
   if (!Array.isArray(raw)) return [];
-  return raw
+  const mapped = raw
     .map((ward) => (typeof ward === 'string' ? ward.trim() : text((ward as { name?: unknown }).name)))
     .filter(Boolean);
+  return Array.from(new Set(mapped));
 }
 
 export function normalizeAddressOptions(payload: unknown): ProvinceOption[] {
