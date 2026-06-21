@@ -37,26 +37,26 @@ function normalizeProvinceName(value: string) {
   return PROVINCE_ALIASES[value] || value;
 }
 
-function normalizeWards(raw: unknown) {
+function normalizeWards(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
   const mapped = raw
     .map((ward) => (typeof ward === 'string' ? ward.trim() : text((ward as { name?: unknown }).name)))
-    .filter(Boolean);
+    .filter(Boolean) as string[];
   return Array.from(new Set(mapped));
 }
 
 export function normalizeAddressOptions(payload: unknown): ProvinceOption[] {
   if (!Array.isArray(payload)) return FALLBACK_ADDRESS_OPTIONS;
   const options = payload
-    .map((province: any) => {
+    .map((province: any): ProvinceOption | null => {
       const wards = normalizeWards(province?.wards);
-      const legacyWards = wards.length ? [] : Array.from(new Set((province?.districts || []).flatMap((district: any) => normalizeWards(district?.wards))));
+      const legacyWards = wards.length ? [] : Array.from(new Set((province?.districts || []).flatMap((district: any) => normalizeWards(district?.wards)))) as string[];
       return {
         name: normalizeProvinceName(text(province?.name)),
-        wards: wards.length ? wards : legacyWards,
+        wards: wards.length > 0 ? wards : legacyWards,
       };
     })
-    .filter((province) => province.name && province.wards.length > 0);
+    .filter((province): province is ProvinceOption => Boolean(province && province.name && province.wards.length > 0));
   return options.length ? options : FALLBACK_ADDRESS_OPTIONS;
 }
 
