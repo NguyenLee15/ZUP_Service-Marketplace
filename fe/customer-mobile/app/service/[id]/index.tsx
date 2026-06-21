@@ -4,9 +4,9 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-n
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { useQuery } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Avatar, Button, Chip, Text } from 'react-native-paper';
+import { Avatar, Button, Chip, Text, IconButton } from 'react-native-paper';
 import {
   BottomActionBar,
   CustomerCard,
@@ -17,6 +17,7 @@ import {
 import { Colors } from '../../../constants/colors';
 import { chatApi } from '../../../features/chat/chat.api';
 import { serviceApi } from '../../../features/service/service.api';
+import { useServiceStore } from '../../../features/service/service.store';
 import { formatCurrency, formatDateTime } from '../../../lib/format';
 import { normalizeList, normalizePaginated, unwrapData } from '../../../lib/api-response';
 import { toRouteId, routes } from '../../../lib/route-utils';
@@ -141,6 +142,10 @@ export default function ServiceDetailScreen() {
   const [imageIndex, setImageIndex] = useState(0);
   const [chatError, setChatError] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+
+  const favoriteServices = useServiceStore((state) => state.favoriteServices);
+  const toggleFavorite = useServiceStore((state) => state.toggleFavorite);
+  const isFavorite = favoriteServices.some((s) => s.id === serviceId);
 
   const detailQuery = useQuery({
     queryKey: ['service', serviceId, 'detail'],
@@ -268,6 +273,32 @@ export default function ServiceDetailScreen() {
 
   return (
     <View style={styles.screen}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <IconButton
+              icon={isFavorite ? 'cards-heart' : 'cards-heart-outline'}
+              iconColor={isFavorite ? activeColors.error : activeColors.textSecondary}
+              size={24}
+              onPress={() => {
+                if (service) {
+                  Haptics.selectionAsync().catch(() => {});
+                  toggleFavorite({
+                    id: Number(service.id),
+                    name: service.name || '',
+                    referencePrice: service.referencePrice as number,
+                    avgRating: service.avgRating as number,
+                    totalReviews: service.totalReviews as number,
+                    images: service.images as any[],
+                    provider: service.provider as any,
+                    category: service.category as any,
+                  });
+                }
+              }}
+            />
+          ),
+        }}
+      />
       <ScrollView
         contentContainerStyle={styles.contentWithBottomBar}
         contentInsetAdjustmentBehavior="automatic"

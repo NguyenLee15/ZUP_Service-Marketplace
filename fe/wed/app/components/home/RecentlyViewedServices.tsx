@@ -2,14 +2,77 @@
 
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 import { UnifiedServiceCard } from '@/app/components/services/UnifiedServiceCard';
 import { useServiceStore } from '@/store/service.store';
+import { serviceApi } from '@/features/service/services/service.api';
+import { Service } from '@/types';
 
 export function RecentlyViewedServices() {
-  const { recentlyViewed, favorites, toggleFavoriteService } = useServiceStore();
+  const { recentlyViewed, favorites, toggleFavoriteService, removeRecentlyViewed } = useServiceStore();
+  const [validServices, setValidServices] = useState<Service[]>([]);
+  const [isChecking, setIsChecking] = useState(true);
 
-  if (recentlyViewed.length === 0) return null;
+  useEffect(() => {
+    let isMounted = true;
+
+    // Chỉ kiểm tra 4 dịch vụ đầu tiên
+    const topServices = recentlyViewed.slice(0, 4);
+    
+    if (topServices.length === 0) {
+      setIsChecking(false);
+      if (isMounted) setValidServices([]);
+      return;
+    }
+
+    const checkServices = async () => {
+      setIsChecking(true);
+      const valid: Service[] = [];
+      const invalidIds: number[] = [];
+
+      await Promise.allSettled(
+        topServices.map(async (service) => {
+          try {
+            const response = await serviceApi.getById(service.id);
+            // Kiểm tra dịch vụ còn tồn tại và đang active
+            if (response.data && response.data.status === 'ACTIVE' && !response.data.isDeleted) {
+              valid.push(response.data);
+            } else {
+              invalidIds.push(service.id);
+            }
+          } catch (error) {
+            invalidIds.push(service.id);
+          }
+        })
+      );
+
+      // Xoá các dịch vụ lỗi/đã xoá khỏi store
+      invalidIds.forEach((id) => {
+        removeRecentlyViewed(id);
+      });
+
+      if (isMounted) {
+        // Giữ nguyên thứ tự ban đầu
+        const sortedValid = topServices
+          .map(ts => valid.find(vs => vs.id === ts.id))
+          .filter((s): s is Service => !!s);
+          
+        setValidServices(sortedValid);
+        setIsChecking(false);
+      }
+    };
+
+    checkServices();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (isChecking) return null;
+  if (validServices.length === 0) return null;
 
   return (
     <section className="space-y-7 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -35,7 +98,7 @@ export function RecentlyViewedServices() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-        {recentlyViewed.slice(0, 4).map((service) => (
+        {validServices.map((service) => (
           <UnifiedServiceCard
             key={service.id}
             service={service}

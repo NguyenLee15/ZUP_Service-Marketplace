@@ -309,6 +309,14 @@ export default function ProfileScreen() {
               isLast={false}
             />
             <ProfileAction
+              icon="heart-outline"
+              color="#F43F5E"
+              title="Dịch vụ yêu thích"
+              description="Danh sách các dịch vụ bạn đã lưu lại"
+              onPress={() => router.push('/profile/favorites' as any)}
+              isLast={false}
+            />
+            <ProfileAction
               icon="lock-outline"
               color="#7C3AED"
               title="Đổi mật khẩu"

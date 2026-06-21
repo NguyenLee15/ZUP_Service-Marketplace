@@ -8,6 +8,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="edit" options={{ title: 'Cập nhật hồ sơ' }} />
       <Stack.Screen name="addresses" options={{ title: 'Địa chỉ' }} />
       <Stack.Screen name="change-password" options={{ title: 'Đổi mật khẩu' }} />
+      <Stack.Screen name="favorites" options={{ title: 'Dịch vụ yêu thích' }} />
     </Stack>
   );
 }
