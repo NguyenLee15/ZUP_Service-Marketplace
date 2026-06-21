@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Role } from '@/types';
+import { useServiceStore } from './service.store';
 
 interface AuthState {
   user: User | null;
@@ -32,12 +33,14 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user) => set({ user }),
 
-      logout: () =>
+      logout: () => {
+        useServiceStore.getState().clearStore();
         set({
           user: null,
           accessToken: null,
           refreshToken: null,
-        }),
+        });
+      },
 
       isAuthenticated: () => !!get().user,
       isProvider: () => get().user?.role === Role.PROVIDER,

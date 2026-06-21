@@ -14,6 +14,7 @@ interface ServiceState {
   removeFromComparison: (id: number) => void;
   clearComparison: () => void;
   addRecentlyViewed: (service: Service) => void;
+  clearStore: () => void;
 }
 
 export const useServiceStore = create<ServiceState>()(
@@ -65,6 +66,12 @@ export const useServiceStore = create<ServiceState>()(
       addRecentlyViewed: (service) => set((state) => {
         const filtered = state.recentlyViewed.filter(s => s.id !== service.id);
         return { recentlyViewed: [service, ...filtered].slice(0, 10) };
+      }),
+      clearStore: () => set({
+        favorites: [],
+        favoriteServices: [],
+        comparisonList: [],
+        recentlyViewed: [],
       }),
     }),
     {
