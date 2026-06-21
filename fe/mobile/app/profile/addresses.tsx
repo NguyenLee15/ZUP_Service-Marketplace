@@ -32,6 +32,8 @@ type AddressItem = {
   ward?: string | null;
   addressDetail?: string | null;
   isDefault?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type AddressForm = {
@@ -41,6 +43,8 @@ type AddressForm = {
   district: string;
   ward: string;
   addressDetail: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 const emptyForm: AddressForm = {
@@ -49,6 +53,8 @@ const emptyForm: AddressForm = {
   district: NEW_ADMIN_DISTRICT_VALUE,
   ward: '',
   addressDetail: '',
+  latitude: undefined,
+  longitude: undefined,
 };
 
 function formatFullAddress(address: AddressItem | AddressForm) {
@@ -108,7 +114,20 @@ export default function AddressesScreen() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (payload: AddressForm) => profileApi.createAddress(toPayload(payload)),
+    mutationFn: async (payload: AddressForm) => {
+      let lat = payload.latitude;
+      let lng = payload.longitude;
+      if (!lat || !lng) {
+        try {
+          const results = await Location.geocodeAsync(`${payload.addressDetail}, ${payload.ward}, ${payload.province}, Việt Nam`);
+          if (results && results.length > 0) {
+            lat = results[0].latitude;
+            lng = results[0].longitude;
+          }
+        } catch {}
+      }
+      return profileApi.createAddress({ ...toPayload(payload), latitude: lat || 21.028511, longitude: lng || 105.804817 });
+    },
     onSuccess: async () => {
       await invalidateAddresses();
       resetForm();
@@ -120,7 +139,20 @@ export default function AddressesScreen() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (payload: AddressForm) => profileApi.updateAddress(payload.id!, toPayload(payload)),
+    mutationFn: async (payload: AddressForm) => {
+      let lat = payload.latitude;
+      let lng = payload.longitude;
+      if (!lat || !lng) {
+        try {
+          const results = await Location.geocodeAsync(`${payload.addressDetail}, ${payload.ward}, ${payload.province}, Việt Nam`);
+          if (results && results.length > 0) {
+            lat = results[0].latitude;
+            lng = results[0].longitude;
+          }
+        } catch {}
+      }
+      return profileApi.updateAddress(payload.id!, { ...toPayload(payload), latitude: lat || 21.028511, longitude: lng || 105.804817 });
+    },
     onSuccess: async () => {
       await invalidateAddresses();
       resetForm();
@@ -208,6 +240,8 @@ export default function AddressesScreen() {
           addressDetail: detailParts || address.name || '',
           province: matchedProvince?.name || form.province,
           ward: matchedWard || form.ward,
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
         });
         
         setMessageTone('success');
@@ -229,6 +263,8 @@ export default function AddressesScreen() {
       district: address.district || NEW_ADMIN_DISTRICT_VALUE,
       ward: address.ward || '',
       addressDetail: address.addressDetail || '',
+      latitude: address.latitude || undefined,
+      longitude: address.longitude || undefined,
     });
     Haptics.selectionAsync().catch(() => {});
   }
