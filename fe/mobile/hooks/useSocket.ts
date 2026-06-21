@@ -78,7 +78,7 @@ export const useSocket = () => {
             if (notification?.type === 'NEW_BOOKING') {
               showIncomingBookingAlert(notification);
             }
-            if (notification?.type === 'KYC_RESULT') {
+            if (notification?.type === 'KYC_RESULT' || notification?.type === 'SERVICE_APPROVED') {
               useAuthStore.getState().fetchProfile();
             }
           },

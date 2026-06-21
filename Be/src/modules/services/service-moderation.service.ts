@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NOTIFICATION_EVENTS } from '../../common/events/notification-events';
 import { KycStatus, Prisma, ServiceStatus } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -22,6 +24,7 @@ export class ServiceModerationService {
     private readonly prisma: PrismaService,
     private readonly jobsService: JobsService,
     private readonly shared: ServiceSharedService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async approve(adminId: number, serviceId: number) {
@@ -60,20 +63,23 @@ export class ServiceModerationService {
       data: { status: ServiceStatus.ACTIVE },
     });
 
+    await this.prisma.user.update({
+      where: { id: service.providerId },
+      data: { isOnline: true },
+    });
+
     await this.jobsService.enqueue(JobName.ServiceGenerateEmbedding, {
       serviceId,
       name: service.name,
       description: service.description,
     });
 
-    await this.prisma.notification.create({
-      data: {
-        userId: service.providerId,
-        type: 'SERVICE_APPROVED',
-        title: 'Dịch vụ đã được duyệt',
-        content: `Dịch vụ "${service.name}" đã được phê duyệt và hiển thị công khai`,
-        referenceId: serviceId,
-      },
+    this.eventEmitter.emit(NOTIFICATION_EVENTS.SEND, {
+      userId: service.providerId,
+      type: 'SERVICE_APPROVED',
+      title: 'Dịch vụ đã được duyệt',
+      content: `Dịch vụ "${service.name}" đã được phê duyệt và hiển thị công khai. Hệ thống đã tự động bật tính năng nhận đơn cho bạn.`,
+      referenceId: serviceId,
     });
 
     return { data: updated, message: 'Đã phê duyệt dịch vụ' };

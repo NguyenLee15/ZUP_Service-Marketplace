@@ -507,34 +507,7 @@ export default function DashboardScreen() {
         <ProviderInlineMessage tone={message.tone} message={message.text} />
       )}
 
-      <ProviderCard
-        style={styles.onlineCard}
-        contentStyle={styles.onlineContent}
-        onPress={() => router.push(routes.services)}
-        accessibilityLabel="Kiểm tra trạng thái nhận đơn"
-      >
-        <View style={styles.onlineText}>
-          <View style={[styles.onlineIcon, { backgroundColor: `${activeColors.success}18` }]}>
-            <MaterialCommunityIcons
-              name="briefcase-check-outline"
-              size={24}
-              color={activeColors.success}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              {user?.status === "ACTIVE" ? "Sẵn sàng nhận đơn" : "Tài khoản cần kiểm tra"}
-            </Text>
-            <Text variant="bodySmall" style={styles.cardDescription}>
-              Hệ thống nhận đơn dựa trên tài khoản, KYC, ví và các dịch vụ đang hoạt động.
-            </Text>
-          </View>
-        </View>
-        <ProviderStatusChip
-          label={user?.status === "ACTIVE" ? "Hoạt động" : "Kiểm tra"}
-          color={user?.status === "ACTIVE" ? activeColors.success : activeColors.warning}
-        />
-      </ProviderCard>
+
 
       <View style={styles.sectionHeaderRow}>
         <View>

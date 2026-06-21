@@ -108,6 +108,7 @@ export default function KycScreen() {
       formData.append('portrait', { uri: portrait.uri, name: 'portrait.jpg', type: 'image/jpeg' } as any);
 
       await profileApi.submitKyc(formData);
+      useAuthStore.getState().fetchProfile();
       setKycStatus('PENDING');
       setMessage({ tone: 'success', text: 'Đã nộp hồ sơ KYC. Vui lòng chờ duyệt trong 1-2 ngày làm việc.' });
     } catch (err: any) {
