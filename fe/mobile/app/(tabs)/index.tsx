@@ -243,32 +243,32 @@ export default function DashboardScreen() {
   const activeColors = theme.dark ? Colors.dark : Colors.light;
   const styles = getStyles(theme, activeColors, insets);
 
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [todayStats, setTodayStats] = useState<Stats | null>(null);
+  const [yesterdayStats, setYesterdayStats] = useState<Stats | null>(null);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
   const [message, setMessage] = useState<Message>(null);
-  const reportParams: {
-    from?: string;
-    to?: string;
-    groupBy: "day" | "week" | "month";
-    reportType: "overview";
-  } = { ...periodParams("this_month", "week"), reportType: "overview" };
-  const selectedReportLabel = "Tổng quan";
-  const selectedGroupLabel = "Tuần";
-  const reportSummary = "Tháng này · Theo tuần";
 
   const fetchData = useCallback(async () => {
     setMessage(null);
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
     try {
-      const [statsRes, bookingsRes] = await Promise.all([
-        dashboardApi.getStats(reportParams).catch(() => null),
+      const [todayRes, yesterdayRes, bookingsRes] = await Promise.all([
+        dashboardApi.getStats({ from: todayStr, to: todayStr, groupBy: 'day', reportType: 'overview' }).catch(() => null),
+        dashboardApi.getStats({ from: yesterdayStr, to: yesterdayStr, groupBy: 'day', reportType: 'overview' }).catch(() => null),
         bookingApi
           .getMyBookings({ status: "PENDING", page: 1, limit: 5 })
           .catch(() => null),
       ]);
-      if (statsRes?.data?.data) setStats(statsRes.data.data);
+      if (todayRes?.data?.data) setTodayStats(todayRes.data.data);
+      if (yesterdayRes?.data?.data) setYesterdayStats(yesterdayRes.data.data);
       if (bookingsRes?.data?.data) setRecentBookings(bookingsRes.data.data);
     } catch {
       setMessage({
@@ -278,12 +278,7 @@ export default function DashboardScreen() {
     } finally {
       setLoading(false);
     }
-  }, [
-    reportParams.from,
-    reportParams.to,
-    reportParams.groupBy,
-    reportParams.reportType,
-  ]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -302,18 +297,15 @@ export default function DashboardScreen() {
       const token = await getFreshAccessToken();
       if (!token) throw new Error("Phiên đăng nhập đã hết hạn.");
 
-      const query = new URLSearchParams(
-        Object.entries(reportParams).reduce(
-          (acc, [key, value]) => {
-            if (value) acc[key] = value;
-            return acc;
-          },
-          {} as Record<string, string>,
-        ),
-      ).toString();
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const query = new URLSearchParams({
+        from: todayStr,
+        to: todayStr,
+        groupBy: "day",
+        reportType: "overview",
+      }).toString();
       const extension = type === "pdf" ? "pdf" : "xlsx";
-      const range = `${reportParams.from || "tat-ca"}-${reportParams.to || new Date().toISOString().slice(0, 10)}`;
-      const fileUri = `${FileSystem.documentDirectory}provider-${reportParams.reportType}-${range}-${Date.now()}.${extension}`;
+      const fileUri = `${FileSystem.documentDirectory}provider-overview-${todayStr}-${Date.now()}.${extension}`;
       const downloadUrl = `${API_BASE_URL}/provider/dashboard/export-${type === "pdf" ? "pdf" : "excel"}?${query}`;
       const result = await FileSystem.downloadAsync(downloadUrl, fileUri, {
         headers: { Authorization: `Bearer ${token}` },
@@ -330,20 +322,20 @@ export default function DashboardScreen() {
             type === "pdf"
               ? "application/pdf"
               : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          dialogTitle: `Báo cáo ${selectedReportLabel}`,
+          dialogTitle: "Báo cáo tổng quan",
         });
       }
       setMessage({
         tone: "success",
-        text: `Đã tạo báo cáo ${selectedReportLabel} (${type.toUpperCase()}).`,
+        text: `Đã tạo báo cáo tổng quan (${type.toUpperCase()}).`,
       });
     } catch (error: unknown) {
       if (type === "pdf") {
         try {
           const html = createProviderReportPdfFallback({
-            stats,
-            reportLabel: selectedReportLabel,
-            reportSummary,
+            stats: todayStats,
+            reportLabel: "Tổng quan",
+            reportSummary: "Báo cáo hôm nay",
             formatCurrency,
           });
           const result = await Print.printToFileAsync({
@@ -354,7 +346,7 @@ export default function DashboardScreen() {
           if (isAvailable) {
             await Sharing.shareAsync(result.uri, {
               mimeType: "application/pdf",
-              dialogTitle: `Báo cáo ${selectedReportLabel}`,
+              dialogTitle: "Báo cáo tổng quan",
             });
           }
           setMessage({
@@ -386,34 +378,34 @@ export default function DashboardScreen() {
       currency: "VND",
     }).format(amount || 0);
 
-  const chartWidth = Math.max(width - 64, 280);
-  const revenueSeries = stats?.revenueData?.length
-    ? stats.revenueData.map((item) => item.revenue)
+  const chartWidth = Math.max(width - 32, 280);
+  const revenueSeries = todayStats?.revenueData?.length
+    ? todayStats.revenueData.map((item) => Math.max(0, item.revenue))
     : [
-        (stats?.totalRevenue || 0) * 0.1,
-        (stats?.totalRevenue || 0) * 0.3,
-        (stats?.totalRevenue || 0) * 0.2,
-        (stats?.totalRevenue || 0) * 0.4,
+        (todayStats?.totalRevenue || 0) * 0.1,
+        (todayStats?.totalRevenue || 0) * 0.3,
+        (todayStats?.totalRevenue || 0) * 0.2,
+        (todayStats?.totalRevenue || 0) * 0.4,
       ];
-  const revenueLabels = stats?.revenueData?.length
-    ? stats.revenueData.map((item) => item.period)
-    : ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4"];
+  const revenueLabels = todayStats?.revenueData?.length
+    ? todayStats.revenueData.map((item) => item.period)
+    : ["T1", "T2", "T3", "T4"];
   const statusChartData = [
     {
       name: "Chờ xác nhận",
-      population: stats?.pendingCount || 0,
+      population: todayStats?.pendingCount || 0,
       color: activeColors.statusPending,
       legendFontColor: activeColors.textSecondary,
     },
     {
       name: "Đang làm",
-      population: stats?.inProgressCount || 0,
+      population: todayStats?.inProgressCount || 0,
       color: activeColors.statusInProgress,
       legendFontColor: activeColors.textSecondary,
     },
     {
       name: "Hoàn thành",
-      population: stats?.doneCount || 0,
+      population: todayStats?.doneCount || 0,
       color: activeColors.statusDone,
       legendFontColor: activeColors.textSecondary,
     },
@@ -511,8 +503,8 @@ export default function DashboardScreen() {
 
       <View style={styles.sectionHeaderRow}>
         <View>
-          <Text variant="titleMedium" style={styles.cardTitle}>Hiệu suất tháng này</Text>
-          <Text variant="bodySmall" style={styles.cardDescription}>Tổng quan các chỉ số quan trọng.</Text>
+          <Text variant="titleMedium" style={styles.cardTitle}>Hiệu suất hôm nay</Text>
+          <Text variant="bodySmall" style={styles.cardDescription}>So sánh với ngày hôm qua.</Text>
         </View>
         <Button mode="text" onPress={() => router.push(routes.profile.analytics)} compact textColor={activeColors.primary}>
           Chi tiết
@@ -523,14 +515,16 @@ export default function DashboardScreen() {
         <ProviderMetricCard
           icon="clipboard-check-outline"
           label="Tổng đơn"
-          value={String(stats?.totalBookings ?? "—")}
+          value={String(todayStats?.totalBookings ?? "—")}
+          trend={todayStats && yesterdayStats ? todayStats.totalBookings - yesterdayStats.totalBookings : undefined}
           tone="info"
           loading={loading}
         />
         <ProviderMetricCard
           icon="cash-multiple"
           label="Doanh thu"
-          value={stats ? formatCurrency(stats.totalRevenue) : "—"}
+          value={todayStats ? formatCurrency(todayStats.totalRevenue) : "—"}
+          trend={todayStats && yesterdayStats ? todayStats.totalRevenue - yesterdayStats.totalRevenue : undefined}
           tone="success"
           loading={loading}
         />
@@ -538,8 +532,8 @@ export default function DashboardScreen() {
           icon="star-outline"
           label="Đánh giá"
           value={
-            stats?.avgRating
-              ? `${Number(stats.avgRating).toFixed(1)}/5`
+            todayStats?.avgRating
+              ? `${Number(todayStats.avgRating).toFixed(1)}/5`
               : "—"
           }
           tone="warning"
@@ -549,75 +543,34 @@ export default function DashboardScreen() {
           icon="cancel"
           label="Tỷ lệ hủy"
           value={
-            stats?.cancelRate != null
-              ? `${Number(stats.cancelRate).toFixed(1)}%`
+            todayStats?.cancelRate != null
+              ? `${Number(todayStats.cancelRate).toFixed(1)}%`
               : "—"
           }
+          trend={todayStats && yesterdayStats ? Number(todayStats.cancelRate) - Number(yesterdayStats.cancelRate) : undefined}
+          trendSuffix="%"
           tone="error"
           loading={loading}
         />
       </View>
 
-      {["overview", "status"].includes(reportParams.reportType) && (
-        <>
-          <View style={styles.chipRow}>
-            <ProviderStatusChip
-              label={`Chờ xác nhận: ${stats?.pendingCount ?? 0}`}
-              color={activeColors.statusPending}
-              onPress={() =>
-                router.push({
-                  pathname: routes.tabs.bookings,
-                  params: { status: "PENDING" },
-                })
-              }
-            />
-            <ProviderStatusChip
-              label={`Đang thực hiện: ${stats?.inProgressCount ?? 0}`}
-              color={activeColors.statusInProgress}
-              onPress={() =>
-                router.push({
-                  pathname: routes.tabs.bookings,
-                  params: { status: "IN_PROGRESS" },
-                })
-              }
-            />
-            <ProviderStatusChip
-              label={`Hoàn thành: ${stats?.doneCount ?? 0}`}
-              color={activeColors.statusDone}
-              onPress={() =>
-                router.push({
-                  pathname: routes.tabs.bookings,
-                  params: { status: "DONE" },
-                })
-              }
-            />
+      <ProviderSectionHeader title="Tổng quan trạng thái" />
+      <ProviderCard>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
+          <View style={{ flex: 1, minWidth: "45%" }}>
+            <Text variant="labelSmall" style={{ color: activeColors.textSecondary }}>Chờ xác nhận</Text>
+            <Text variant="titleLarge" style={{ color: activeColors.statusPending, fontWeight: "700" }}>{todayStats?.pendingCount || 0}</Text>
           </View>
-
-          <ProviderSectionHeader title="Tỉ trọng trạng thái đơn" />
-          <ProviderCard contentStyle={styles.chartCard}>
-            {hasStatusData ? (
-              <PieChart
-                data={statusChartData}
-                width={chartWidth}
-                height={200}
-                chartConfig={{
-                  color: (opacity = 1) => `rgba(249, 250, 251, ${opacity})`,
-                }}
-                accessor="population"
-                backgroundColor="transparent"
-                paddingLeft="12"
-                absolute
-              />
-            ) : (
-              <ProviderEmptyState
-                icon="chart-pie"
-                title="Chưa có dữ liệu trạng thái"
-                description="Các đơn hàng mới sẽ xuất hiện trong biểu đồ này."
-              />
-            )}
-          </ProviderCard>
-        </>
-      )}
+          <View style={{ flex: 1, minWidth: "45%" }}>
+            <Text variant="labelSmall" style={{ color: activeColors.textSecondary }}>Đang thực hiện</Text>
+            <Text variant="titleLarge" style={{ color: activeColors.statusInProgress, fontWeight: "700" }}>{todayStats?.inProgressCount || 0}</Text>
+          </View>
+          <View style={{ flex: 1, minWidth: "45%" }}>
+            <Text variant="labelSmall" style={{ color: activeColors.textSecondary }}>Đã hoàn thành</Text>
+            <Text variant="titleLarge" style={{ color: activeColors.statusDone, fontWeight: "700" }}>{todayStats?.doneCount || 0}</Text>
+          </View>
+        </View>
+      </ProviderCard>
       <ProviderSectionHeader title="Xu hướng doanh thu" />
       <ProviderCard contentStyle={styles.chartCard}>
         <LineChart
@@ -625,9 +578,7 @@ export default function DashboardScreen() {
             labels: revenueLabels.slice(-6),
             datasets: [
               {
-                data: revenueSeries
-                  .slice(-6)
-                  .map((value) => Math.max(value, 0)),
+                data: revenueSeries.length ? revenueSeries.slice(-6).map((value: number) => Math.max(value, 0)) : [0],
               },
             ],
           }}

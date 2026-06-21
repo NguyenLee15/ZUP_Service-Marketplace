@@ -116,12 +116,16 @@ export function ProviderMetricCard({
   value,
   tone = 'info',
   loading,
+  trend,
+  trendSuffix = '',
 }: {
   icon: IconName;
   label: string;
   value: string;
   tone?: Tone;
   loading?: boolean;
+  trend?: number;
+  trendSuffix?: string;
 }) {
   const theme = useTheme();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
@@ -142,9 +146,23 @@ export function ProviderMetricCard({
       {loading ? (
         <View style={[styles.metricSkeleton, { backgroundColor: theme.colors.surfaceVariant }]} />
       ) : (
-        <Text variant="titleMedium" style={[styles.metricValue, { color: theme.colors.onSurface }]} numberOfLines={1} selectable>
-          {value}
-        </Text>
+        <View style={styles.metricValueRow}>
+          <Text variant="titleMedium" style={[styles.metricValue, { color: theme.colors.onSurface }]} numberOfLines={1} selectable>
+            {value}
+          </Text>
+          {trend !== undefined && (
+            <View style={[styles.trendBadge, { backgroundColor: trend > 0 ? `${activeColors.success}16` : trend < 0 ? `${activeColors.error}16` : `${activeColors.textSecondary}16` }]}>
+              <MaterialCommunityIcons 
+                name={trend > 0 ? 'trending-up' : trend < 0 ? 'trending-down' : 'minus'} 
+                size={12} 
+                color={trend > 0 ? activeColors.success : trend < 0 ? activeColors.error : activeColors.textSecondary} 
+              />
+              <Text style={[styles.trendText, { color: trend > 0 ? activeColors.success : trend < 0 ? activeColors.error : activeColors.textSecondary }]}>
+                {Math.abs(trend)}{trendSuffix}
+              </Text>
+            </View>
+          )}
+        </View>
       )}
       <Text variant="labelSmall" style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
         {label}
@@ -348,6 +366,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
+  metricValueRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  trendBadge: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
+  trendText: { fontSize: 10, fontWeight: '700' },
   metricLabel: {},
   metricSkeleton: {
     width: 82,
