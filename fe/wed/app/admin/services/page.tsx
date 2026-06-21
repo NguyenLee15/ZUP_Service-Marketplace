@@ -224,7 +224,7 @@ export default function AdminServicesPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Ngày Tạo</p>
-                  <p className="font-medium">{new Date(selectedService.createdAt).toLocaleDateString('vi-VN')}</p>
+                  <p className="font-medium">{selectedService.createdAt ? new Date(selectedService.createdAt).toLocaleDateString('vi-VN') : '—'}</p>
                 </div>
               </div>
 

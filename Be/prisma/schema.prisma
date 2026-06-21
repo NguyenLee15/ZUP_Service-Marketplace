@@ -282,6 +282,9 @@ model Service {
   conversations    Conversation[]
   items            ServiceItem[]
 
+  createdAt        DateTime                    @default(now()) @map("created_at")
+  updatedAt        DateTime                    @default(now()) @updatedAt @map("updated_at")
+
   @@index([categoryId, status])
   @@index([providerId])
   @@index([status, isDeleted, avgRating])
