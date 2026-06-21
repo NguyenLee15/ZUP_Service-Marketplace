@@ -58,13 +58,15 @@ type Message = {
   tone: "info" | "success" | "warning" | "error";
   text: string;
 } | null;
-type PeriodKey = "month" | "7d" | "30d" | "all";
+type PeriodKey = "this_week" | "this_month" | "last_month" | "this_year" | "last_year" | "all";
 type ReportTypeKey = "overview" | "revenue" | "status" | "bookings";
 
 const PERIOD_OPTIONS: Array<{ key: PeriodKey; label: string }> = [
-  { key: "month", label: "Tháng này" },
-  { key: "7d", label: "7 ngày" },
-  { key: "30d", label: "30 ngày" },
+  { key: "this_week", label: "Tuần này" },
+  { key: "this_month", label: "Tháng này" },
+  { key: "last_month", label: "Tháng trước" },
+  { key: "this_year", label: "Năm nay" },
+  { key: "last_year", label: "Năm trước" },
   { key: "all", label: "Tất cả" },
 ];
 
@@ -90,13 +92,29 @@ function periodParams(
 ): { from?: string; to?: string; groupBy: "day" | "week" | "month" } {
   const now = new Date();
   if (period === "all") return { groupBy };
-  const from = new Date(now);
-  if (period === "month") from.setDate(1);
-  if (period === "7d") from.setDate(now.getDate() - 7);
-  if (period === "30d") from.setDate(now.getDate() - 30);
+  
+  let from = new Date(now);
+  let to = new Date(now);
+
+  if (period === "this_week") {
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    from.setDate(diff);
+  } else if (period === "this_month") {
+    from.setDate(1);
+  } else if (period === "last_month") {
+    from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    to = new Date(now.getFullYear(), now.getMonth(), 0);
+  } else if (period === "this_year") {
+    from = new Date(now.getFullYear(), 0, 1);
+  } else if (period === "last_year") {
+    from = new Date(now.getFullYear() - 1, 0, 1);
+    to = new Date(now.getFullYear() - 1, 11, 31);
+  }
+
   return {
     from: from.toISOString().slice(0, 10),
-    to: now.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
     groupBy,
   };
 }
@@ -231,7 +249,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
   const [message, setMessage] = useState<Message>(null);
-  const [period, setPeriod] = useState<PeriodKey>("month");
+  const [period, setPeriod] = useState<PeriodKey>("this_month");
   const [groupBy, setGroupBy] = useState<"day" | "week" | "month">("week");
   const [reportType, setReportType] = useState<ReportTypeKey>("overview");
   const reportParams: {

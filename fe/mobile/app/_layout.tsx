@@ -3,7 +3,7 @@
  */
 import { useEffect, useRef } from 'react';
 import { StyleSheet, View, Animated, useColorScheme, ActivityIndicator } from 'react-native';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PaperProvider, MD3DarkTheme, MD3LightTheme, Text, useTheme } from 'react-native-paper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -98,7 +98,7 @@ export default function RootLayout() {
         <PaperProvider theme={theme}>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <View style={[styles.appShell, { backgroundColor: theme.colors.background }]}>
-            {shouldHoldRoute ? <AppBootScreen /> : <Slot />}
+            {shouldHoldRoute ? <AppBootScreen /> : <Stack screenOptions={{ headerShown: false }} />}
             <OfflineBanner visible={isOnline === false} />
           </View>
         </PaperProvider>
