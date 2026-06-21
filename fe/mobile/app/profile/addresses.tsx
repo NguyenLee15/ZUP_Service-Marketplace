@@ -44,7 +44,7 @@ type AddressForm = {
 };
 
 const emptyForm: AddressForm = {
-  label: '',
+  label: 'Địa chỉ nhận đơn',
   province: '',
   district: NEW_ADMIN_DISTRICT_VALUE,
   ward: '',
@@ -224,7 +224,7 @@ export default function AddressesScreen() {
   function startEdit(address: AddressItem) {
     setForm({
       id: address.id,
-      label: address.label || '',
+      label: address.label || 'Địa chỉ nhận đơn',
       province: address.province || '',
       district: address.district || NEW_ADMIN_DISTRICT_VALUE,
       ward: address.ward || '',
@@ -262,7 +262,6 @@ export default function AddressesScreen() {
 
   const saving = createMutation.isPending || updateMutation.isPending;
   const addresses = addressesQuery.data || [];
-  const isCustomLabel = form.label !== 'Nhà riêng' && form.label !== 'Văn phòng';
 
   return (
     <ProviderScreen>
@@ -319,99 +318,6 @@ export default function AddressesScreen() {
               <Button mode="text" onPress={resetForm} textColor={activeColors.error}>
                 Hủy sửa
               </Button>
-            ) : null}
-          </View>
-
-          <View style={styles.labelSelectionGroup}>
-            <Text variant="labelMedium" style={styles.labelSelectionTitle}>
-              Nhãn địa chỉ
-            </Text>
-            <View style={styles.segmentedButtonsContainer}>
-              <Pressable
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                  updateForm({ label: 'Nhà riêng' });
-                }}
-                style={[
-                  styles.segmentedButton,
-                  form.label === 'Nhà riêng' && styles.segmentedButtonActive,
-                ]}
-              >
-                <MaterialCommunityIcons
-                  name="home-outline"
-                  size={16}
-                  color={form.label === 'Nhà riêng' ? '#FFFFFF' : activeColors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.segmentedButtonText,
-                    form.label === 'Nhà riêng' && styles.segmentedButtonTextActive,
-                  ]}
-                >
-                  Nhà riêng
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                  updateForm({ label: 'Văn phòng' });
-                }}
-                style={[
-                  styles.segmentedButton,
-                  form.label === 'Văn phòng' && styles.segmentedButtonActive,
-                ]}
-              >
-                <MaterialCommunityIcons
-                  name="briefcase-outline"
-                  size={16}
-                  color={form.label === 'Văn phòng' ? '#FFFFFF' : activeColors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.segmentedButtonText,
-                    form.label === 'Văn phòng' && styles.segmentedButtonTextActive,
-                  ]}
-                >
-                  Văn phòng / Công ty
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                  if (form.label === 'Nhà riêng' || form.label === 'Văn phòng') {
-                    updateForm({ label: '' });
-                  }
-                }}
-                style={[styles.segmentedButton, isCustomLabel && styles.segmentedButtonActive]}
-              >
-                <MaterialCommunityIcons
-                  name="map-marker-outline"
-                  size={16}
-                  color={isCustomLabel ? '#FFFFFF' : activeColors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.segmentedButtonText,
-                    isCustomLabel && styles.segmentedButtonTextActive,
-                  ]}
-                >
-                  Khác
-                </Text>
-              </Pressable>
-            </View>
-
-            {isCustomLabel ? (
-              <TextInput
-                label="Tên nhãn tùy chỉnh"
-                mode="outlined"
-                value={form.label}
-                onChangeText={(label) => updateForm({ label })}
-                placeholder="Ví dụ: Cửa hàng 1, Chi nhánh..."
-                outlineStyle={styles.outlineStyle}
-                style={styles.textInput}
-              />
             ) : null}
           </View>
 
