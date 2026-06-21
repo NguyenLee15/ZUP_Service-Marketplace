@@ -1,10 +1,10 @@
 /**
  * Services List - Provider's services.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, FAB, IconButton, Switch, Text, useTheme } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import { routes } from '../lib/route-utils';
 import { serviceApi } from '../features/service/service.api';
@@ -52,9 +52,11 @@ export default function ServicesScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchServices();
-  }, [fetchServices]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchServices();
+    }, [fetchServices])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
