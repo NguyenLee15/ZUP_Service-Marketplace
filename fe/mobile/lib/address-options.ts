@@ -50,7 +50,7 @@ export function normalizeAddressOptions(payload: unknown): ProvinceOption[] {
   const options = payload
     .map((province: any) => {
       const wards = normalizeWards(province?.wards);
-      const legacyWards = wards.length ? [] : (province?.districts || []).flatMap((district: any) => normalizeWards(district?.wards));
+      const legacyWards = wards.length ? [] : Array.from(new Set((province?.districts || []).flatMap((district: any) => normalizeWards(district?.wards))));
       return {
         name: normalizeProvinceName(text(province?.name)),
         wards: wards.length ? wards : legacyWards,
