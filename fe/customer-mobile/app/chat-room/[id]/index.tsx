@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  TextInput as RNTextInput,
 } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -14,7 +15,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { io } from 'socket.io-client';
-import { Button, Text, TextInput } from 'react-native-paper';
+import { Button, Text, TextInput as PaperTextInput, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   CustomerCard,
@@ -318,7 +319,7 @@ export default function ChatRoomScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 84 : 0}
     >
       <FlashList
@@ -354,6 +355,7 @@ export default function ChatRoomScreen() {
         renderItem={({ item: message }: { item: ChatMessage }) => (
           <MessageBubble
             message={message}
+            providerName={String(providerName)}
             recalling={String(recallingId || '') === String(message.id || '')}
             onRecall={() => recallMessage(message)}
           />
@@ -411,18 +413,31 @@ export default function ChatRoomScreen() {
           >
             <MaterialCommunityIcons name="image-outline" size={22} color={activeColors.primary} />
           </Pressable>
-          <TextInput
-            mode="outlined"
-            label="Nhập tin nhắn"
+          <RNTextInput
+            placeholder="Nhập tin nhắn..."
+            placeholderTextColor={activeColors.textSecondary}
             value={text}
             onChangeText={(value) => {
               setText(value);
               emitTyping();
             }}
             multiline
-            numberOfLines={1}
             maxLength={1200}
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                color: activeColors.text,
+                backgroundColor: activeColors.surfaceVariant,
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingTop: Platform.OS === 'ios' ? 10 : 8,
+                paddingBottom: Platform.OS === 'ios' ? 10 : 8,
+                minHeight: 40,
+                maxHeight: 120,
+                borderWidth: 1,
+                borderColor: activeColors.border,
+              }
+            ]}
           />
           <Pressable
             accessibilityRole="button"
@@ -444,10 +459,12 @@ export default function ChatRoomScreen() {
 
 function MessageBubble({
   message,
+  providerName,
   recalling,
   onRecall,
 }: {
   message: ChatMessage;
+  providerName: string;
   recalling: boolean;
   onRecall: () => void;
 }) {
@@ -458,8 +475,16 @@ function MessageBubble({
   const recalled = Boolean(message.recalledAt);
 
   return (
-    <View style={[styles.messageWrap, { alignItems: mine ? 'flex-end' : 'flex-start' }]}>
-      <CustomerCard
+    <View style={[styles.messageWrap, { alignItems: mine ? 'flex-end' : 'flex-start', flexDirection: mine ? 'row-reverse' : 'row' }]}>
+      {!mine && (
+        <Avatar.Text
+          size={28}
+          label={message.sender?.fullName ? message.sender.fullName.charAt(0).toUpperCase() : providerName ? providerName.charAt(0).toUpperCase() : 'T'}
+          style={{ marginRight: 8, marginBottom: 2, alignSelf: 'flex-end' }}
+        />
+      )}
+      <View style={{ flexShrink: 1 }}>
+        <CustomerCard
         style={[
           styles.bubble,
           mine ? styles.mineBubble : null,
@@ -511,6 +536,7 @@ function MessageBubble({
           </Button>
         ) : null}
       </CustomerCard>
+      </View>
     </View>
   );
 }
