@@ -123,6 +123,19 @@ export class UsersService {
     return { message: 'Cập nhật Push Token thành công' };
   }
 
+  async updateOnlineStatus(userId: number, isOnline: boolean) {
+    const user = await this.checkActiveUser(userId);
+    if (user.role !== 'PROVIDER') {
+      throw new BadRequestException('Chỉ nhà cung cấp mới có thể cập nhật trạng thái này');
+    }
+    
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { isOnline },
+    });
+    return { message: isOnline ? 'Đã bật trạng thái nhận đơn' : 'Đã tắt trạng thái nhận đơn', isOnline };
+  }
+
   // ===== ADDRESSES =====
 
   async getAddresses(userId: number) {

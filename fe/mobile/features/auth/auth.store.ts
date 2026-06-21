@@ -13,6 +13,7 @@ export interface ProviderUser {
   avatarUrl: string | null;
   role: string;
   status: string;
+  isOnline?: boolean;
   kycStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
 }
 
@@ -22,6 +23,7 @@ interface AuthState {
   isAuthenticated: boolean;
 
   setUser: (user: ProviderUser) => void;
+  setOnlineStatus: (isOnline: boolean) => void;
   setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   loadFromStorage: () => Promise<void>;
   fetchProfile: () => Promise<void>;
@@ -36,6 +38,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => {
     set({ user, isAuthenticated: true });
     storage.setUser(user);
+  },
+
+  setOnlineStatus: (isOnline) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updatedUser = { ...state.user, isOnline };
+      storage.setUser(updatedUser);
+      return { user: updatedUser };
+    });
   },
 
   setTokens: async (accessToken, refreshToken) => {

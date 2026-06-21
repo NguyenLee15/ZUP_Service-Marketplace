@@ -91,3 +91,8 @@ export class UpdatePushTokenDto {
   @MaxLength(255)
   token?: string;
 }
+
+export class UpdateOnlineStatusDto {
+  @IsBoolean()
+  isOnline: boolean;
+}

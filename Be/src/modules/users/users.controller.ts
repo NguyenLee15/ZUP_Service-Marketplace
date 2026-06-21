@@ -28,6 +28,7 @@ import {
   CreateAddressDto,
   UpdateAddressDto,
   UpdatePushTokenDto,
+  UpdateOnlineStatusDto,
 } from './dto/users.dto';
 
 @Controller('users')
@@ -65,6 +66,15 @@ export class UsersController {
     @Body() dto: UpdatePushTokenDto,
   ) {
     return this.usersService.updatePushToken(userId, dto.token);
+  }
+
+  /** PATCH /users/profile/online-status - Provider update online status */
+  @Patch('profile/online-status')
+  async updateOnlineStatus(
+    @CurrentUser('id') userId: number,
+    @Body() dto: UpdateOnlineStatusDto,
+  ) {
+    return this.usersService.updateOnlineStatus(userId, dto.isOnline);
   }
 
   // ===== ADDRESSES =====

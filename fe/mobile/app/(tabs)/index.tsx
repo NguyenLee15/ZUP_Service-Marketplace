@@ -17,6 +17,7 @@ import {
   Text,
   TouchableRipple,
   useTheme,
+  Switch,
 } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ import * as Sharing from "expo-sharing";
 import { useAuthStore } from "../../features/auth/auth.store";
 import { routes } from "../../lib/route-utils";
 import { dashboardApi, bookingApi } from "../../features/booking/booking.api";
+import { profileApi } from "../../features/profile/profile.api";
 import { BOOKING_STATUS_LABEL } from "../../constants/booking-status";
 import { Colors } from "../../constants/colors";
 import { API_BASE_URL } from "../../constants/api";
@@ -239,7 +241,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { user } = useAuthStore();
+  const { user, setOnlineStatus } = useAuthStore();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
   const styles = getStyles(theme, activeColors, insets);
 
@@ -248,6 +250,7 @@ export default function DashboardScreen() {
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
   const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
   const [message, setMessage] = useState<Message>(null);
 
@@ -278,7 +281,26 @@ export default function DashboardScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
+
+  const handleToggleOnline = async (newValue: boolean) => {
+    setToggling(true);
+    try {
+      await profileApi.updateOnlineStatus(newValue);
+      setOnlineStatus(newValue);
+      setMessage({
+        tone: "success",
+        text: newValue ? "Đã bật trạng thái nhận đơn" : "Đã tắt trạng thái nhận đơn",
+      });
+    } catch (err) {
+      setMessage({
+        tone: "error",
+        text: "Không thể cập nhật trạng thái hoạt động",
+      });
+    } finally {
+      setToggling(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -429,18 +451,31 @@ export default function DashboardScreen() {
         title="Tổng quan"
         subtitle={`Xin chào, ${user?.fullName || "nhà cung cấp"}`}
         action={
-          <TouchableRipple
-            onPress={() => router.push(routes.notifications)}
-            borderless
-            style={styles.iconButton}
-            accessibilityLabel="Mở thông báo"
-          >
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={22}
-              color={activeColors.text}
-            />
-          </TouchableRipple>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Text variant="labelSmall" style={{ color: activeColors.textSecondary }}>
+                {user?.isOnline ? "Nhận đơn" : "Nghỉ"}
+              </Text>
+              <Switch
+                value={user?.isOnline ?? true}
+                onValueChange={handleToggleOnline}
+                disabled={toggling}
+                color={activeColors.success}
+              />
+            </View>
+            <TouchableRipple
+              onPress={() => router.push(routes.notifications)}
+              borderless
+              style={styles.iconButton}
+              accessibilityLabel="Mở thông báo"
+            >
+              <MaterialCommunityIcons
+                name="bell-outline"
+                size={22}
+                color={activeColors.text}
+              />
+            </TouchableRipple>
+          </View>
         }
       />
 

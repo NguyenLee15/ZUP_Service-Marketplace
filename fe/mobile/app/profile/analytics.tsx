@@ -9,6 +9,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProviderCard, ProviderInlineMessage, ProviderMetricCard, ProviderPageHeader } from '../../components/provider/provider-ui';
 import { dashboardApi } from '../../features/booking/booking.api';
 import { Colors } from '../../constants/colors';
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
+import { API_BASE_URL } from "../../constants/api";
+import { storage } from "../../lib/storage";
 
 type Stats = {
   totalBookings: number;
@@ -50,11 +54,80 @@ export default function ProviderAnalyticsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
+  const [message, setMessage] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   const params = periodParams(period, groupBy);
 
+  const handleExport = async (type: "pdf" | "excel") => {
+    setExporting(type);
+    setMessage(null);
+    try {
+      const token = await storage.getAccessToken();
+      if (!token) throw new Error("Phiên đăng nhập đã hết hạn.");
+
+      const query = new URLSearchParams(
+        Object.entries(params).reduce(
+          (acc, [key, value]) => {
+            if (value) acc[key] = value;
+            return acc;
+          },
+          {} as Record<string, string>,
+        ),
+      ).toString();
+      const extension = type === "pdf" ? "pdf" : "xlsx";
+      const range = `${params.from || "tat-ca"}-${params.to || new Date().toISOString().slice(0, 10)}`;
+      const fileUri = `${FileSystem.documentDirectory}provider-analytics-${range}-${Date.now()}.${extension}`;
+      const downloadUrl = `${API_BASE_URL}/provider/dashboard/export-${type === "pdf" ? "pdf" : "excel"}?${query}`;
+      const result = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (result.status && result.status >= 400) {
+        throw new Error(`Xuất báo cáo thất bại (${result.status}).`);
+      }
+
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(result.uri, {
+          mimeType:
+            type === "pdf"
+              ? "application/pdf"
+              : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          dialogTitle: "Báo cáo hiệu suất",
+        });
+      } else {
+        setMessage({
+          tone: "info",
+          text: `Đã lưu file tại: ${result.uri}`,
+        });
+        return;
+      }
+      
+      setMessage({
+        tone: "success",
+        text: `Đã tạo báo cáo hiệu suất (${type.toUpperCase()}).`,
+      });
+    } catch (error: unknown) {
+      const friendlyMessage =
+        error instanceof Error
+          ? error.message.includes("Network")
+            ? "Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng."
+            : error.message
+          : "Đã xảy ra lỗi không xác định.";
+
+      setMessage({
+        tone: "error",
+        text: friendlyMessage,
+      });
+    } finally {
+      setExporting(null);
+    }
+  };
+
   const load = useCallback(async () => {
     setError('');
+    setMessage(null);
     try {
       const response = await dashboardApi.getStats({
         ...params,
@@ -112,6 +185,7 @@ export default function ProviderAnalyticsScreen() {
       />
 
       {error ? <ProviderInlineMessage tone="error" message={error} /> : null}
+      {message ? <ProviderInlineMessage tone={message.tone} message={message.text} /> : null}
 
       <ProviderCard>
         <View style={styles.filterHeader}>
@@ -193,19 +267,36 @@ export default function ProviderAnalyticsScreen() {
         />
       </ProviderCard>
 
-      <ProviderCard>
-        <View style={styles.aiHeader}>
-          <View style={[styles.aiIcon, { backgroundColor: `${activeColors.success}16`, borderColor: `${activeColors.success}44` }]}>
-            <MaterialCommunityIcons name="auto-fix" size={24} color={activeColors.success} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Gợi ý tối ưu thu nhập</Text>
-            <Text variant="bodySmall" style={[styles.cardDescription, { color: theme.colors.onSurfaceVariant }]}>
-              Online vào khung 18:00-21:00 và ưu tiên các quận có đơn đang chờ để tăng khả năng chốt đơn.
-            </Text>
-          </View>
-        </View>
-      </ProviderCard>
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <ProviderCard style={{ flex: 1 }} contentStyle={{ alignItems: "center", gap: 8 }}>
+          <IconButton
+            icon="file-pdf-box"
+            iconColor={activeColors.error}
+            size={32}
+            mode="contained-tonal"
+            containerColor={`${activeColors.error}16`}
+            onPress={() => handleExport("pdf")}
+            disabled={exporting !== null || loading || !stats}
+          />
+          <Text variant="labelMedium" style={{ fontWeight: "700" }}>
+            Xuất PDF
+          </Text>
+        </ProviderCard>
+        <ProviderCard style={{ flex: 1 }} contentStyle={{ alignItems: "center", gap: 8 }}>
+          <IconButton
+            icon="file-excel"
+            iconColor={activeColors.success}
+            size={32}
+            mode="contained-tonal"
+            containerColor={`${activeColors.success}16`}
+            onPress={() => handleExport("excel")}
+            disabled={exporting !== null || loading || !stats}
+          />
+          <Text variant="labelMedium" style={{ fontWeight: "700" }}>
+            Xuất Excel
+          </Text>
+        </ProviderCard>
+      </View>
     </ScrollView>
   );
 }

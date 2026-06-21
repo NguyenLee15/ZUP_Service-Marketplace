@@ -24,4 +24,6 @@ export const profileApi = {
   updateAddress: (id: number, data: any) => api.patch(`/users/addresses/${id}`, data),
   deleteAddress: (id: number) => api.delete(`/users/addresses/${id}`),
   setDefaultAddress: (id: number) => api.patch(`/users/addresses/${id}/default`),
+
+  updateOnlineStatus: (isOnline: boolean) => api.patch('/users/profile/online-status', { isOnline }),
 };
