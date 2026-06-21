@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
 import { Button, Searchbar, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -92,6 +93,7 @@ export default function AddressesScreen() {
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'error' | 'info' | 'warning'>('info');
   const [picker, setPicker] = useState<null | 'province' | 'ward'>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   const addressesQuery = useQuery({
     queryKey: ['addresses'],
@@ -165,6 +167,59 @@ export default function AddressesScreen() {
     setForm((current) => ({ ...current, ...patch }));
     setMessage('');
   }
+
+  const handleGetLocation = async () => {
+    try {
+      setGettingLocation(true);
+      setMessage('');
+      
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        showError(null, 'Cần quyền truy cập vị trí để tự động điền.');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const [address] = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (address) {
+        const detailParts = [address.streetNumber, address.street].filter(Boolean).join(' ');
+        
+        // Attempt to loosely match province and ward
+        const regionStr = (address.region || address.city || address.subregion || '').toLowerCase().replace('tỉnh', '').replace('thành phố', '').trim();
+        const districtStr = (address.subregion || address.district || address.city || '').toLowerCase().replace('quận', '').replace('huyện', '').replace('thị xã', '').replace('phường', '').replace('xã', '').trim();
+
+        let matchedProvince = addressOptions.find(p => p.name.toLowerCase().includes(regionStr));
+        // Fallback to district string for province if region is null
+        if (!matchedProvince && districtStr) {
+           matchedProvince = addressOptions.find(p => p.name.toLowerCase().includes(districtStr));
+        }
+        
+        let matchedWard = '';
+        if (matchedProvince) {
+          const wardStr = (address.district || address.street || '').toLowerCase().replace('phường', '').replace('xã', '').trim();
+          matchedWard = matchedProvince.wards.find(w => w.toLowerCase().includes(wardStr)) || '';
+        }
+
+        updateForm({
+          addressDetail: detailParts || address.name || '',
+          province: matchedProvince?.name || form.province,
+          ward: matchedWard || form.ward,
+        });
+        
+        setMessageTone('success');
+        setMessage('Đã điền tự động từ vị trí hiện tại. Vui lòng kiểm tra lại.');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+    } catch (err) {
+      showError(err, 'Không thể lấy vị trí hiện tại. Vui lòng kiểm tra GPS.');
+    } finally {
+      setGettingLocation(false);
+    }
+  };
 
   function startEdit(address: AddressItem) {
     setForm({
@@ -376,6 +431,17 @@ export default function AddressesScreen() {
             style={styles.textInput}
             multiline
           />
+          <Button 
+            mode="outlined" 
+            icon="crosshairs-gps" 
+            loading={gettingLocation} 
+            disabled={gettingLocation} 
+            onPress={handleGetLocation} 
+            style={[styles.button, { borderColor: activeColors.primary }]}
+            textColor={activeColors.primary}
+          >
+            Lấy vị trí hiện tại
+          </Button>
           <Button mode="contained" loading={saving} disabled={saving} onPress={submit} style={styles.button}>
             {form.id ? 'Lưu địa chỉ' : 'Thêm địa chỉ'}
           </Button>

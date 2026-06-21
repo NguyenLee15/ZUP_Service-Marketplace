@@ -281,7 +281,7 @@ export default function DashboardScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   const handleToggleOnline = async (newValue: boolean) => {
     setToggling(true);

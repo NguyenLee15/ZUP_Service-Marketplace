@@ -10,8 +10,13 @@ export function useAddressOptions() {
   const query = useQuery({
     queryKey: ['address-options'],
     queryFn: async () => {
-      const response = await api.get('/address-options');
-      return normalizeAddressOptions(unwrapData(response));
+      try {
+        const response = await fetch('https://provinces.open-api.vn/api/?depth=3');
+        const data = await response.json();
+        return normalizeAddressOptions(data);
+      } catch (e) {
+        return FALLBACK_ADDRESS_OPTIONS;
+      }
     },
     staleTime: 1000 * 60 * 60 * 24,
     retry: 1,
