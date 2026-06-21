@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput as RNTextInput } from 'react-native';
-import { Text, IconButton, useTheme, ActivityIndicator, TouchableRipple } from 'react-native-paper';
+import { Text, IconButton, useTheme, ActivityIndicator, TouchableRipple, Avatar } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
@@ -137,27 +137,36 @@ export default function ChatRoomScreen() {
 
     return (
       <View style={[styles.msgContainer, isMe ? styles.msgRight : styles.msgLeft]}>
-        {isAi && (
-          <View style={styles.aiLabel}>
-            <MaterialCommunityIcons name="robot-outline" size={12} color={theme.colors.secondary} />
-            <Text variant="labelSmall" style={{ color: theme.colors.secondary, marginLeft: 2 }}>AI</Text>
-          </View>
+        {!isMe && (
+          <Avatar.Text
+            size={28}
+            label={customerName ? customerName.charAt(0).toUpperCase() : 'K'}
+            style={{ marginRight: 8, marginBottom: 2 }}
+          />
         )}
-        <View style={[
-          styles.bubble,
-          isMe
-            ? { backgroundColor: theme.colors.primary }
-            : isAi
-              ? { backgroundColor: `${theme.colors.secondary}15`, borderColor: `${theme.colors.secondary}30`, borderWidth: 1 }
-              : { backgroundColor: theme.colors.surfaceVariant },
-        ]}>
-          <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onSurface }}>
-            {item.content}
-          </Text>
-          <Text variant="labelSmall" style={[styles.time, { color: isMe ? 'rgba(255,255,255,0.6)' : theme.colors.onSurfaceVariant }]}>
-            {formatTime(item.createdAt)}
-            {isMe && item.isRead && ' ✓✓'}
-          </Text>
+        <View style={{ flexShrink: 1 }}>
+          {isAi && (
+            <View style={styles.aiLabel}>
+              <MaterialCommunityIcons name="robot-outline" size={12} color={theme.colors.secondary} />
+              <Text variant="labelSmall" style={{ color: theme.colors.secondary, marginLeft: 2 }}>AI</Text>
+            </View>
+          )}
+          <View style={[
+            styles.bubble,
+            isMe
+              ? { backgroundColor: theme.colors.primary }
+              : isAi
+                ? { backgroundColor: `${theme.colors.secondary}15`, borderColor: `${theme.colors.secondary}30`, borderWidth: 1 }
+                : { backgroundColor: theme.colors.surfaceVariant },
+          ]}>
+            <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onSurface }}>
+              {item.content}
+            </Text>
+            <Text variant="labelSmall" style={[styles.time, { color: isMe ? 'rgba(255,255,255,0.6)' : theme.colors.onSurfaceVariant }]}>
+              {formatTime(item.createdAt)}
+              {isMe && item.isRead && ' ✓✓'}
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -309,9 +318,9 @@ const getStyles = (theme: any, insets: any) => StyleSheet.create({
     marginTop: 2,
   },
   messageList: { padding: 16, paddingBottom: 8 },
-  msgContainer: { marginBottom: 8, maxWidth: '80%' },
+  msgContainer: { marginBottom: 8, maxWidth: '85%', flexDirection: 'row', alignItems: 'flex-end' },
   msgLeft: { alignSelf: 'flex-start' },
-  msgRight: { alignSelf: 'flex-end' },
+  msgRight: { alignSelf: 'flex-end', flexDirection: 'row-reverse' },
   aiLabel: { flexDirection: 'row', alignItems: 'center', marginBottom: 2, marginLeft: 4 },
   bubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18 },
   time: { fontSize: 10, marginTop: 4, textAlign: 'right' },
