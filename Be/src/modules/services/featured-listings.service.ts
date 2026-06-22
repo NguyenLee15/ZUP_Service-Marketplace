@@ -209,6 +209,16 @@ export class FeaturedListingsService {
       where: {
         status: FeaturedListingStatus.ACTIVE,
         endDate: { gt: new Date() },
+        service: {
+          status: ServiceStatus.ACTIVE,
+          isDeleted: false,
+          provider: {
+            status: 'ACTIVE',
+            providerWallet: {
+              isRestricted: false,
+            },
+          },
+        },
       },
       include: {
         service: {
@@ -223,12 +233,8 @@ export class FeaturedListingsService {
       take: limit,
     });
 
-    // Chỉ trả về service ACTIVE + chưa bị xóa
+    // Dịch vụ đã được lọc qua query Prisma, chỉ cần map
     const activeServices = featured
-      .filter(
-        (f) =>
-          f.service.status === ServiceStatus.ACTIVE && !f.service.isDeleted,
-      )
       .map((f) => ({
         ...f.service,
         isFeatured: true,
