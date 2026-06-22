@@ -61,6 +61,7 @@ type CreateBookingForm = {
   ward: string;
   addressDetail: string;
   desiredTime: Date | null;
+  timeMode: 'now' | 'scheduled';
 };
 
 const COMMON_ISSUES: Record<string, Array<{ q: string; options: string[] }>> = {
@@ -100,8 +101,10 @@ function validateBookingForm(form: CreateBookingForm, serviceId: number) {
   if (!form.province || !form.ward || !form.addressDetail.trim()) {
     return 'Vui lòng nhập đầy đủ tỉnh/thành, phường/xã và địa chỉ chi tiết.';
   }
-  if (!form.desiredTime) return 'Vui lòng chọn thời gian mong muốn.';
-  if (form.desiredTime.getTime() <= Date.now()) return 'Thời gian phải ở tương lai.';
+  if (form.timeMode === 'scheduled') {
+    if (!form.desiredTime) return 'Vui lòng chọn thời gian mong muốn.';
+    if (form.desiredTime.getTime() <= Date.now()) return 'Thời gian phải ở tương lai.';
+  }
   return '';
 }
 
@@ -141,6 +144,7 @@ export default function CreateBookingScreen() {
     ward: '',
     addressDetail: '',
     desiredTime: null,
+    timeMode: 'now',
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -221,6 +225,7 @@ export default function CreateBookingScreen() {
           old.desiredTime && new Date(old.desiredTime).getTime() > Date.now()
             ? new Date(old.desiredTime)
             : null,
+        timeMode: old.desiredTime ? 'scheduled' : 'now',
       }));
       return;
     }
@@ -257,7 +262,7 @@ export default function CreateBookingScreen() {
       district: form.district || NEW_ADMIN_DISTRICT_VALUE,
       ward: form.ward,
       addressDetail: form.addressDetail.trim(),
-      desiredTime: form.desiredTime?.toISOString(),
+      desiredTime: form.timeMode === 'now' ? new Date().toISOString() : form.desiredTime?.toISOString(),
     });
   };
 
@@ -473,24 +478,53 @@ export default function CreateBookingScreen() {
         </View>
       </SectionWithIcon>
 
-      <SectionWithIcon title="Thời gian mong muốn" icon="calendar-clock">
+      <SectionWithIcon title="Thời gian thực hiện" icon="calendar-clock">
         <CustomerCard>
           <View style={styles.formBlock}>
             <View style={styles.row}>
-              <Button mode="outlined" onPress={() => setShowDatePicker(true)} style={styles.flexButton} icon="calendar">
-                {form.desiredTime
-                  ? new Date(form.desiredTime).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                  : 'Chọn ngày'}
+              <Button
+                mode={form.timeMode === 'now' ? 'contained-tonal' : 'outlined'}
+                onPress={() => updateForm({ timeMode: 'now' })}
+                style={[styles.flexButton, form.timeMode === 'now' && { borderColor: activeColors.primary, borderWidth: 1 }]}
+                icon="lightning-bolt"
+              >
+                Làm ngay
               </Button>
-              <Button mode="outlined" onPress={() => setShowTimePicker(true)} style={styles.flexButton} icon="clock-outline">
-                {form.desiredTime
-                  ? new Date(form.desiredTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-                  : 'Chọn giờ'}
+              <Button
+                mode={form.timeMode === 'scheduled' ? 'contained-tonal' : 'outlined'}
+                onPress={() => updateForm({ timeMode: 'scheduled' })}
+                style={[styles.flexButton, form.timeMode === 'scheduled' && { borderColor: activeColors.primary, borderWidth: 1 }]}
+                icon="calendar-clock"
+              >
+                Hẹn giờ
               </Button>
             </View>
-            <HelperText type="info" visible>
-              {form.desiredTime ? `Đã chọn: ${formatDateTime(form.desiredTime)}` : 'Chọn ngày và giờ trong tương lai.'}
-            </HelperText>
+
+            {form.timeMode === 'scheduled' && (
+              <View style={styles.formBlock}>
+                <View style={styles.row}>
+                  <Button mode="outlined" onPress={() => setShowDatePicker(true)} style={styles.flexButton} icon="calendar">
+                    {form.desiredTime
+                      ? new Date(form.desiredTime).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                      : 'Chọn ngày'}
+                  </Button>
+                  <Button mode="outlined" onPress={() => setShowTimePicker(true)} style={styles.flexButton} icon="clock-outline">
+                    {form.desiredTime
+                      ? new Date(form.desiredTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                      : 'Chọn giờ'}
+                  </Button>
+                </View>
+                <HelperText type="info" visible>
+                  {form.desiredTime ? `Đã chọn: ${formatDateTime(form.desiredTime)}` : 'Chọn ngày và giờ trong tương lai.'}
+                </HelperText>
+              </View>
+            )}
+            
+            {form.timeMode === 'now' && (
+              <HelperText type="info" visible>
+                Thợ sẽ cố gắng đến hỗ trợ bạn trong thời gian sớm nhất có thể.
+              </HelperText>
+            )}
           </View>
         </CustomerCard>
       </SectionWithIcon>

@@ -60,7 +60,7 @@ export class ServiceModerationService {
 
     const updated = await this.prisma.service.update({
       where: { id: serviceId },
-      data: { status: ServiceStatus.ACTIVE },
+      data: { status: ServiceStatus.HIDDEN },
     });
 
     await this.prisma.user.update({
@@ -78,7 +78,7 @@ export class ServiceModerationService {
       userId: service.providerId,
       type: 'SERVICE_APPROVED',
       title: 'Dịch vụ đã được duyệt',
-      content: `Dịch vụ "${service.name}" đã được phê duyệt và hiển thị công khai. Hệ thống đã tự động bật tính năng nhận đơn cho bạn.`,
+      content: `Dịch vụ "${service.name}" đã được phê duyệt. Vui lòng nạp tối thiểu 50.000đ vào ví và bật hoạt động để khách hàng có thể đặt lịch.`,
       referenceId: serviceId,
     });
 

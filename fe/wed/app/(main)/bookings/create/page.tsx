@@ -89,6 +89,7 @@ function CreateBookingContent() {
   const [ward, setWard] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
   const [desiredTime, setDesiredTime] = useState('');
+  const [timeMode, setTimeMode] = useState<'now' | 'scheduled'>('now');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [selectedItems, setSelectedItems] = useState<Record<number, { serviceItemId: number; quantity: number; name: string; price: number; unit: string }>>({});
   
@@ -261,10 +262,12 @@ function CreateBookingContent() {
       if (!addressDetail.trim()) errors.addressDetail = 'Bắt buộc';
     }
 
-    const selectedDate = new Date(desiredTime);
-    if (!desiredTime) errors.desiredTime = 'Vui lòng chọn thời gian';
-    else if (isNaN(selectedDate.getTime())) errors.desiredTime = 'Thời gian không hợp lệ';
-    else if (selectedDate < new Date()) errors.desiredTime = 'Thời gian phải ở tương lai';
+    if (timeMode === 'scheduled') {
+      const selectedDate = new Date(desiredTime);
+      if (!desiredTime) errors.desiredTime = 'Vui lòng chọn thời gian';
+      else if (isNaN(selectedDate.getTime())) errors.desiredTime = 'Thời gian không hợp lệ';
+      else if (selectedDate < new Date()) errors.desiredTime = 'Thời gian phải ở tương lai';
+    }
 
     return errors;
   };
@@ -283,7 +286,10 @@ function CreateBookingContent() {
     else if (['province', 'ward', 'addressDetail'].includes(firstError)) {
       setAddressMode('custom');
       setStep(2);
-    } else if (firstError === 'desiredTime') setStep(3);
+    } else if (firstError === 'desiredTime') {
+      setTimeMode('scheduled');
+      setStep(3);
+    }
 
     window.setTimeout(() => {
       const targetId = focusTarget[firstError];
@@ -314,7 +320,7 @@ function CreateBookingContent() {
         district: district || NEW_ADMIN_DISTRICT_VALUE,
         ward,
         addressDetail,
-        desiredTime: new Date(desiredTime).toISOString(),
+        desiredTime: timeMode === 'now' ? new Date().toISOString() : new Date(desiredTime).toISOString(),
         items: itemsPayload.length > 0 ? itemsPayload : undefined,
       });
       toast({ title: 'Đặt dịch vụ thành công', description: 'Nhà cung cấp sẽ liên hệ bạn sớm.' });
@@ -786,72 +792,118 @@ function CreateBookingContent() {
         {step === 3 && (
           <div className="space-y-4 animate-in fade-in duration-300">
             <div className="glass-panel glow-hover space-y-4 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">
-              <Label htmlFor="booking-desired-time" className="font-semibold text-sm">Thời gian mong muốn thực hiện *</Label>
-              <Input id="booking-desired-time" name="desiredTime" autoComplete="off" type="datetime-local" value={desiredTime} onChange={(e) => {
-                setDesiredTime(e.target.value);
-                validate('desiredTime', e.target.value);
-              }}
-                min={formatLocalDateTimeInput(new Date())} className={fieldErrors.desiredTime ? 'border-red-500' : 'border-white/10 bg-white/5 h-11 rounded-xl'} />
-              {fieldErrors.desiredTime && <p className="text-red-500 text-[10px]">{fieldErrors.desiredTime}</p>}
-
-              {/* AI Scheduling Hints */}
-              <div className="mt-4 p-4 rounded-[20px] bg-white/5 border border-white/10 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-3 opacity-5 rotate-12 transition-transform group-hover:scale-110">
-                  <Sparkles className="w-12 h-12 text-sky-400" />
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4 text-sky-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-sky-400">Gợi ý lịch hẹn thông minh (AI)</span>
-                </div>
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      tomorrow.setHours(9, 0, 0, 0);
-                      const value = formatLocalDateTimeInput(tomorrow);
-                      setDesiredTime(value);
-                      validate('desiredTime', value);
-                    }}
-                    className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="p-2 bg-green-500/10 text-green-400 rounded-lg shrink-0">
-                        <TrendingUp className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-white truncate">Sáng mai, 09:00</p>
-                        <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Khung giờ vàng - Thợ trống lịch gần đây</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-green-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">-10% phí dịch vụ</Badge>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const now = new Date();
-                      now.setHours(now.getHours() + 2);
-                      const value = formatLocalDateTimeInput(now);
-                      setDesiredTime(value);
-                      validate('desiredTime', value);
-                    }}
-                    className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="p-2 bg-sky-500/10 text-sky-400 rounded-lg shrink-0">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-white truncate">Hôm nay, trong 2 giờ tới</p>
-                        <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Hỗ trợ nhận đơn khẩn cấp</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-sky-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">Nhận ngay</Badge>
-                  </button>
-                </div>
+              <Label className="font-semibold text-sm">Thời gian mong muốn thực hiện *</Label>
+              
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimeMode('now');
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.desiredTime;
+                      return next;
+                    });
+                  }}
+                  className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all ${
+                    timeMode === 'now'
+                      ? 'border-action-blue bg-action-blue/10 shadow-[0_0_15px_rgba(0,107,255,0.2)]'
+                      : 'border-white/10 bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <TrendingUp className={`w-5 h-5 sm:w-6 sm:h-6 ${timeMode === 'now' ? 'text-action-blue' : 'text-muted-foreground'}`} />
+                  <span className={`text-xs sm:text-sm font-bold ${timeMode === 'now' ? 'text-action-blue' : 'text-muted-foreground'}`}>
+                    Đặt ngay
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground text-center">Thợ đến càng sớm càng tốt</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setTimeMode('scheduled')}
+                  className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all ${
+                    timeMode === 'scheduled'
+                      ? 'border-action-blue bg-action-blue/10 shadow-[0_0_15px_rgba(0,107,255,0.2)]'
+                      : 'border-white/10 bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <Clock className={`w-5 h-5 sm:w-6 sm:h-6 ${timeMode === 'scheduled' ? 'text-action-blue' : 'text-muted-foreground'}`} />
+                  <span className={`text-xs sm:text-sm font-bold ${timeMode === 'scheduled' ? 'text-action-blue' : 'text-muted-foreground'}`}>
+                    Hẹn giờ
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground text-center">Chọn thời gian cụ thể</span>
+                </button>
               </div>
+
+              {timeMode === 'scheduled' && (
+                <div className="animate-in fade-in duration-300 slide-in-from-top-2">
+                  <Input id="booking-desired-time" name="desiredTime" autoComplete="off" type="datetime-local" value={desiredTime} onChange={(e) => {
+                    setDesiredTime(e.target.value);
+                    validate('desiredTime', e.target.value);
+                  }}
+                    min={formatLocalDateTimeInput(new Date())} className={fieldErrors.desiredTime ? 'border-red-500' : 'border-white/10 bg-white/5 h-11 rounded-xl'} />
+                  {fieldErrors.desiredTime && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.desiredTime}</p>}
+
+                  {/* AI Scheduling Hints */}
+                  <div className="mt-4 p-4 rounded-[20px] bg-white/5 border border-white/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-3 opacity-5 rotate-12 transition-transform group-hover:scale-110">
+                      <Sparkles className="w-12 h-12 text-sky-400" />
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-4 h-4 text-sky-400" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-sky-400">Gợi ý lịch hẹn thông minh (AI)</span>
+                    </div>
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          tomorrow.setHours(9, 0, 0, 0);
+                          const value = formatLocalDateTimeInput(tomorrow);
+                          setDesiredTime(value);
+                          validate('desiredTime', value);
+                        }}
+                        className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="p-2 bg-green-500/10 text-green-400 rounded-lg shrink-0">
+                            <TrendingUp className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-white truncate">Sáng mai, 09:00</p>
+                            <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Khung giờ vàng - Thợ trống lịch gần đây</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-green-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">-10% phí dịch vụ</Badge>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const now = new Date();
+                          now.setHours(now.getHours() + 2);
+                          const value = formatLocalDateTimeInput(now);
+                          setDesiredTime(value);
+                          validate('desiredTime', value);
+                        }}
+                        className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="p-2 bg-sky-500/10 text-sky-400 rounded-lg shrink-0">
+                            <Clock className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-white truncate">Hôm nay, trong 2 giờ tới</p>
+                            <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Hỗ trợ nhận đơn khẩn cấp</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-sky-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">Nhận ngay</Badge>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Billing / Order Summary Card before submitting */}
@@ -875,7 +927,7 @@ function CreateBookingContent() {
                 <div className="flex justify-between items-start">
                   <span>Thời gian mong muốn:</span>
                   <span className="font-semibold text-white text-right">
-                    {desiredTime ? new Date(desiredTime).toLocaleString('vi-VN') : 'Chưa chọn'}
+                    {timeMode === 'now' ? 'Làm ngay' : (desiredTime ? new Date(desiredTime).toLocaleString('vi-VN') : 'Chưa chọn')}
                   </span>
                 </div>
                 

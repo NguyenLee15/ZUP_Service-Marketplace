@@ -297,11 +297,11 @@ export function UnifiedServiceCard({
               <Link
                 href={`/providers/${service.provider.id}`}
                 onClick={(e) => e.stopPropagation()}
-                title={`Xem hồ sơ của thợ ${service.provider.fullName}`}
-                aria-label={`Xem hồ sơ của thợ ${service.provider.fullName} cung cấp dịch vụ ${service.name}`}
+                title={`Xem hồ sơ của ${service.provider.fullName}`}
+                aria-label={`Xem hồ sơ của ${service.provider.fullName} cung cấp dịch vụ ${service.name}`}
                 className="min-w-0 flex-1 truncate font-medium text-foreground/75 hover:text-action-blue hover:underline transition-colors"
               >
-                Thợ {service.provider.fullName} ({service.name.replace(/\.$/, '')}).
+                {service.provider.fullName} ({service.name.replace(/\.$/, '')}).
               </Link>
             ) : (
               <p
@@ -328,7 +328,9 @@ export function UnifiedServiceCard({
               <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
               <span className="shrink-0">{rating}.</span>
               <span className="shrink-0">({totalReviews}).</span>
-              <span className="truncate">Đã bán {formatCompactCount(salesCount)}.</span>
+              {salesCount > 0 && (
+                <span className="truncate">Lượt đặt {formatCompactCount(salesCount)}.</span>
+              )}
             </div>
           </div>
           {showPrimaryAction && (

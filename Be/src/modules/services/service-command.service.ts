@@ -252,10 +252,11 @@ export class ServiceCommandService {
     const wallet = await this.prisma.providerWallet.findUnique({
       where: { providerId },
     });
-    if (wallet?.isRestricted) {
+    const balanceNum = wallet ? Number(wallet.balance) : 0;
+    if (wallet?.isRestricted || balanceNum < 50000) {
       throw new ForbiddenException({
         code: ErrorCodes.FORBIDDEN,
-        message: 'Ví của bạn đang bị hạn chế. Vui lòng nạp tiền trước.',
+        message: 'Bạn cần có số dư ví tối thiểu 50.000đ để bật hoạt động dịch vụ. Vui lòng nạp thêm tiền.',
       });
     }
 
