@@ -13,7 +13,15 @@ export function parseCorsOrigins(
   const origins = value
     ?.split(',')
     .map((origin) => origin.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((origin) => {
+      if (!origin.startsWith('http://') && !origin.startsWith('https://')) {
+        return origin.includes('localhost') || origin.includes('127.0.0.1')
+          ? `http://${origin}`
+          : `https://${origin}`;
+      }
+      return origin;
+    });
 
   if (origins && origins.length > 0) return origins;
   return nodeEnv === 'production' ? [] : [DEFAULT_DEV_ORIGIN];
