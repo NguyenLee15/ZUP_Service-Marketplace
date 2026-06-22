@@ -10,6 +10,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { CreateServiceDto, UpdateServiceDto } from './dto/services.dto';
 import { ServiceSharedService } from './service-shared.service';
+import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
 
 @Injectable()
 export class ServiceCommandService {
@@ -17,6 +18,7 @@ export class ServiceCommandService {
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly shared: ServiceSharedService,
+    private readonly ledger: WalletLedgerService,
   ) {}
 
   async create(
@@ -193,6 +195,8 @@ export class ServiceCommandService {
       },
     });
 
+    await this.ledger.syncWalletRestriction(providerId, this.prisma);
+
     return { data: serviceWithItems, message: 'Cập nhật dịch vụ thành công' };
   }
 
@@ -236,6 +240,8 @@ export class ServiceCommandService {
       data: { status: ServiceStatus.HIDDEN },
     });
 
+    await this.ledger.syncWalletRestriction(providerId, this.prisma);
+
     return { data: updated, message: 'Đã ẩn dịch vụ' };
   }
 
@@ -249,14 +255,45 @@ export class ServiceCommandService {
       });
     }
 
+    const activeServices = await this.prisma.service.findMany({
+      where: { providerId, status: 'ACTIVE', isDeleted: false },
+      select: { referencePrice: true },
+    });
+    
     const wallet = await this.prisma.providerWallet.findUnique({
       where: { providerId },
     });
+    
+    // Add the current service's price since we are about to activate it
+    const sumReferencePrice = activeServices.reduce(
+      (sum, s) => sum + Number(s.referencePrice),
+      0
+    ) + Number(service.referencePrice);
+
+    // Get commission rate
+    let rate = 8.5;
+    const setting = await this.prisma.systemSetting.findUnique({
+      where: { key: 'commission_rate' },
+    });
+    if (setting?.value) {
+      try {
+        const parsed = JSON.parse(setting.value) as { rate?: unknown };
+        if (typeof parsed.rate === 'number') rate = parsed.rate;
+      } catch {}
+    } else {
+      const commissionConfig = await this.prisma.commissionConfig.findFirst({
+        orderBy: { effectiveFrom: 'desc' },
+      });
+      if (commissionConfig) rate = Number(commissionConfig.rate);
+    }
+
+    const requiredDeposit = (sumReferencePrice * rate) / 100;
     const balanceNum = wallet ? Number(wallet.balance) : 0;
-    if (wallet?.isRestricted || balanceNum < 50000) {
+    
+    if (balanceNum < requiredDeposit) {
       throw new ForbiddenException({
         code: ErrorCodes.FORBIDDEN,
-        message: 'Bạn cần có số dư ví tối thiểu 50.000đ để bật hoạt động dịch vụ. Vui lòng nạp thêm tiền.',
+        message: `Bạn cần có số dư ví tối thiểu ${requiredDeposit.toLocaleString('vi-VN')}đ để bật hoạt động dịch vụ này (do tổng giá trị dịch vụ đang hoạt động). Vui lòng nạp thêm tiền.`,
       });
     }
 
@@ -264,6 +301,8 @@ export class ServiceCommandService {
       where: { id: serviceId },
       data: { status: ServiceStatus.ACTIVE },
     });
+
+    await this.ledger.syncWalletRestriction(providerId, this.prisma);
 
     return { data: updated, message: 'Đã hiện dịch vụ' };
   }
@@ -303,6 +342,8 @@ export class ServiceCommandService {
       where: { id: serviceId },
       data: { isDeleted: true },
     });
+
+    await this.ledger.syncWalletRestriction(providerId, this.prisma);
 
     return { message: 'Đã xóa dịch vụ' };
   }

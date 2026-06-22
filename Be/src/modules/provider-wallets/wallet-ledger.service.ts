@@ -40,12 +40,7 @@ export class WalletLedgerService {
       },
     });
 
-    if (Number(wallet.balance) >= 0 && wallet.isRestricted) {
-      await tx.providerWallet.update({
-        where: { id: wallet.id },
-        data: { isRestricted: false },
-      });
-    }
+    await this.syncWalletRestriction(wallet.providerId, tx);
 
     await tx.auditLog.create({
       data: {
@@ -97,12 +92,7 @@ export class WalletLedgerService {
       },
     });
 
-    if (Number(wallet.balance) < 0 && !wallet.isRestricted) {
-      await tx.providerWallet.update({
-        where: { id: wallet.id },
-        data: { isRestricted: true },
-      });
-    }
+    await this.syncWalletRestriction(wallet.providerId, tx);
 
     await tx.auditLog.create({
       data: {
@@ -116,5 +106,52 @@ export class WalletLedgerService {
     });
 
     return transaction;
+  }
+
+  async syncWalletRestriction(providerId: number, tx: Prisma.TransactionClient) {
+    const wallet = await tx.providerWallet.findUnique({
+      where: { providerId },
+    });
+    if (!wallet) return;
+
+    // Lấy tổng giá tham khảo của các dịch vụ ACTIVE
+    const activeServices = await tx.service.findMany({
+      where: { providerId, status: 'ACTIVE', isDeleted: false },
+      select: { referencePrice: true },
+    });
+
+    const sumReferencePrice = activeServices.reduce(
+      (sum, s) => sum + Number(s.referencePrice),
+      0,
+    );
+
+    // Lấy tỉ lệ hoa hồng
+    let rate = 8.5;
+    const setting = await tx.systemSetting.findUnique({
+      where: { key: 'commission_rate' },
+    });
+    if (setting?.value) {
+      try {
+        const parsed = JSON.parse(setting.value) as { rate?: unknown };
+        if (typeof parsed.rate === 'number') rate = parsed.rate;
+      } catch {}
+    } else {
+      const commissionConfig = await tx.commissionConfig.findFirst({
+        orderBy: { effectiveFrom: 'desc' },
+      });
+      if (commissionConfig) rate = Number(commissionConfig.rate);
+    }
+
+    // Mức ký quỹ tối thiểu: (Tổng giá dịch vụ * tỉ lệ hoa hồng)
+    // Wallet balance có thể âm, nếu balance nhỏ hơn mức yêu cầu => restrict
+    const requiredDeposit = (sumReferencePrice * rate) / 100;
+    const isRestricted = Number(wallet.balance) < requiredDeposit;
+
+    if (wallet.isRestricted !== isRestricted) {
+      await tx.providerWallet.update({
+        where: { id: wallet.id },
+        data: { isRestricted },
+      });
+    }
   }
 }

@@ -10,6 +10,7 @@ import { ErrorCodes } from '../../common/errors/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { ServiceSharedService } from './service-shared.service';
+import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
 
 export interface AdminServiceFilters {
   status?: string;
@@ -25,6 +26,7 @@ export class ServiceModerationService {
     private readonly jobsService: JobsService,
     private readonly shared: ServiceSharedService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly ledger: WalletLedgerService,
   ) {}
 
   async approve(adminId: number, serviceId: number) {
@@ -63,6 +65,8 @@ export class ServiceModerationService {
       data: { status: ServiceStatus.HIDDEN },
     });
 
+    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
+
     await this.prisma.user.update({
       where: { id: service.providerId },
       data: { isOnline: true },
@@ -99,6 +103,8 @@ export class ServiceModerationService {
       data: { status: ServiceStatus.REJECTED },
     });
 
+    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
+
     await this.prisma.notification.create({
       data: {
         userId: service.providerId,
@@ -125,6 +131,8 @@ export class ServiceModerationService {
       where: { id: serviceId },
       data: { status: ServiceStatus.HIDDEN },
     });
+
+    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
 
     await this.prisma.notification.create({
       data: {
@@ -153,6 +161,8 @@ export class ServiceModerationService {
       data: { status: ServiceStatus.ACTIVE },
     });
 
+    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
+
     await this.prisma.notification.create({
       data: {
         userId: service.providerId,
@@ -173,6 +183,8 @@ export class ServiceModerationService {
       where: { id: serviceId },
       data: { isDeleted: true },
     });
+
+    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
 
     await this.prisma.notification.create({
       data: {

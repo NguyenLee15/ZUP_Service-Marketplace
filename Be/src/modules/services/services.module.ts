@@ -26,10 +26,13 @@ import {
   isWorkerEnabled,
 } from '../../config/runtime.config';
 
+import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.module';
+
 @Module({
   imports: [
     CloudinaryModule,
     AiModule,
+    ProviderWalletsModule,
     ...(isRedisQueueEnabled()
       ? [BullModule.registerQueue({ name: 'ai-queue' })]
       : []),
