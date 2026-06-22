@@ -343,7 +343,7 @@ export default function AdminDisputeDetailPage() {
                                 {ep.text}
                               </li>
                             )) : (
-                              <li className="text-xs text-slate-500 italic">Đang chờ phân tích...</li>
+                              <li className="text-xs text-slate-400 italic">Đang chờ phân tích...</li>
                             )}
                           </ul>
                         </div>
@@ -362,7 +362,7 @@ export default function AdminDisputeDetailPage() {
                                 {a.text}
                               </li>
                             )) : (
-                              <li className="text-xs text-slate-500 italic">Không phát hiện bất thường</li>
+                              <li className="text-xs text-slate-400 italic">Không phát hiện bất thường</li>
                             )}
                           </ul>
                         </div>

@@ -25,14 +25,9 @@ export class DisputeProcessor extends WorkerHost {
       const analysis = await this.aiService.analyzeDispute(reason);
 
       if (analysis) {
-        const aiSummaryText = `[AI Phân loại]
-- Nhóm: ${analysis.category}
-- Mức độ: ${analysis.severity}
-- Tóm tắt: ${analysis.summary}`;
-
         await this.prisma.dispute.update({
           where: { id: disputeId },
-          data: { aiSummary: aiSummaryText },
+          data: { aiSummary: JSON.stringify(analysis) },
         });
 
         this.logger.log(`Successfully analyzed dispute ID: ${disputeId}`);

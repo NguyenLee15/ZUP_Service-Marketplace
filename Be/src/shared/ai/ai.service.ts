@@ -163,48 +163,68 @@ export class AiService {
 
   async analyzeDispute(
     reason: string,
-  ): Promise<{ category: string; severity: string; summary: string } | null> {
+  ): Promise<{
+    category: string;
+    severity: string;
+    summary: string;
+    confidence: number;
+    recommendation: string;
+    evidencePoints: { type: string; text: string }[];
+    anomalies: { type: string; text: string }[];
+  } | null> {
     if (!this.apiKey || this.provider !== 'gemini') return null;
 
     const prompt = `Phân tích khiếu nại sau của khách hàng trên hệ thống Service Marketplace.
 Khiếu nại: "${reason}"
 
-Phân loại category vào 1 trong 4 nhóm: "Chất lượng dịch vụ", "Thái độ", "Giá cả", "Khác".
-Phân loại severity vào 1 trong 3 mức: "Cao", "Trung bình", "Thấp".
-Tóm tắt ngắn gọn dưới 30 chữ.`;
+Yêu cầu trả về JSON có cấu trúc sau:
+- category: "Chất lượng dịch vụ", "Thái độ", "Giá cả", hoặc "Khác"
+- severity: "Cao", "Trung bình", "Thấp"
+- summary: Tóm tắt ngắn gọn dưới 30 chữ
+- confidence: Độ tin cậy (0-100)
+- recommendation: Đề xuất hành động cho Admin
+- evidencePoints: Mảng các điểm bằng chứng (type: "positive" | "negative" | "neutral", text: string)
+- anomalies: Mảng các điểm bất thường (type: "warning" | "critical", text: string)
+`;
 
     const schema = {
       type: 'OBJECT',
       properties: {
-        category: {
-          type: 'STRING',
-          enum: ['Chất lượng dịch vụ', 'Thái độ', 'Giá cả', 'Khác'],
-        },
-        severity: { type: 'STRING', enum: ['Cao', 'Trung bình', 'Thấp'] },
+        category: { type: 'STRING' },
+        severity: { type: 'STRING' },
         summary: { type: 'STRING' },
+        confidence: { type: 'INTEGER' },
+        recommendation: { type: 'STRING' },
+        evidencePoints: {
+          type: 'ARRAY',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              type: { type: 'STRING' },
+              text: { type: 'STRING' }
+            }
+          }
+        },
+        anomalies: {
+          type: 'ARRAY',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              type: { type: 'STRING' },
+              text: { type: 'STRING' }
+            }
+          }
+        }
       },
-      required: ['category', 'severity', 'summary'],
+      required: ['category', 'severity', 'summary', 'confidence', 'recommendation', 'evidencePoints', 'anomalies'],
     };
 
     try {
-      const result = await this.generateJson<{
-        category: string;
-        severity: string;
-        summary: string;
-      }>(prompt, this.timeoutMs * 2, schema);
-      if (!result)
-        return {
-          category: 'Khác',
-          severity: 'Trung bình',
-          summary: 'Không thể phân tích tự động',
-        };
+      const result = await this.generateJson<any>(prompt, this.timeoutMs * 2, schema);
+      if (!result) return null;
       return result;
     } catch {
-      return {
-        category: 'Khác',
-        severity: 'Trung bình',
-        summary: 'Không thể phân tích tự động',
-      };
+      return null;
     }
   }
 
