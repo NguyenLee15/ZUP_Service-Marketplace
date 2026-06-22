@@ -15,6 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type AuditLogActor = {
   id?: number;
@@ -104,6 +111,7 @@ export default function AdminAuditLogsPage() {
   const [meta, setMeta] = useState<ApiPayload>({});
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const queryParams = useMemo(() => compactFilters(filters), [filters]);
 
@@ -217,28 +225,60 @@ export default function AdminAuditLogsPage() {
               className="pl-9"
             />
           </div>
-          <Input
-            value={filters.actorId}
-            onChange={(event) => updateFilter("actorId", event.target.value)}
-            placeholder="Actor ID"
-            type="number"
-          />
-          <Input
+          <Select
             value={filters.action}
-            onChange={(event) => updateFilter("action", event.target.value)}
-            placeholder="Action"
-          />
-          <Input
+            onValueChange={(value) => updateFilter("action", value === "ALL" ? "" : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Tất cả Action" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tất cả Action</SelectItem>
+              <SelectItem value="APPROVE_KYC">Duyệt KYC</SelectItem>
+              <SelectItem value="SUBMIT_KYC">Nộp KYC</SelectItem>
+              <SelectItem value="REJECT_KYC">Từ chối KYC</SelectItem>
+              <SelectItem value="LOCK_USER">Khóa User</SelectItem>
+              <SelectItem value="UNLOCK_USER">Mở khóa User</SelectItem>
+              <SelectItem value="DEPOSIT_APPROVED">Duyệt nạp tiền</SelectItem>
+              <SelectItem value="WITHDRAWAL_APPROVED">Duyệt rút tiền</SelectItem>
+              <SelectItem value="UPDATE_SYSTEM_SETTING">Sửa cấu hình hệ thống</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select
             value={filters.targetType}
-            onChange={(event) => updateFilter("targetType", event.target.value)}
-            placeholder="Target type"
-          />
-          <Input
-            value={filters.targetId}
-            onChange={(event) => updateFilter("targetId", event.target.value)}
-            placeholder="Target ID"
-            type="number"
-          />
+            onValueChange={(value) => updateFilter("targetType", value === "ALL" ? "" : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Tất cả Target Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tất cả Target</SelectItem>
+              <SelectItem value="USER">USER</SelectItem>
+              <SelectItem value="KYC_PROFILE">KYC_PROFILE</SelectItem>
+              <SelectItem value="WALLET">WALLET</SelectItem>
+              <SelectItem value="TRANSACTION">TRANSACTION</SelectItem>
+              <SelectItem value="SYSTEM_SETTING">SYSTEM_SETTING</SelectItem>
+              <SelectItem value="SERVICE">SERVICE</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {showAdvanced && (
+            <>
+              <Input
+                value={filters.actorId}
+                onChange={(event) => updateFilter("actorId", event.target.value)}
+                placeholder="Actor ID"
+                type="number"
+              />
+              <Input
+                value={filters.targetId}
+                onChange={(event) => updateFilter("targetId", event.target.value)}
+                placeholder="Target ID"
+                type="number"
+              />
+            </>
+          )}
           <Input
             value={filters.from}
             onChange={(event) => updateFilter("from", event.target.value)}
@@ -251,6 +291,13 @@ export default function AdminAuditLogsPage() {
             type="date"
             aria-label="Đến ngày"
           />
+          <Button
+            variant="ghost"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-slate-500 hover:text-slate-900 md:col-span-2 xl:col-span-8"
+          >
+            {showAdvanced ? "Ẩn bớt bộ lọc" : "Bộ lọc nâng cao (ID)"}
+          </Button>
         </CardContent>
       </Card>
 
