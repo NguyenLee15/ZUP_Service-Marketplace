@@ -36,7 +36,7 @@ function parseAiSummary(raw: string | null | undefined): AiParsedSummary | null 
     const parsed = JSON.parse(raw);
     return {
       confidence: parsed.confidence ?? parsed.confidenceScore ?? 75,
-      confidenceLabel: parsed.confidenceLabel ?? (parsed.confidence >= 80 ? 'Highly Reliable' : parsed.confidence >= 60 ? 'Moderate' : 'Low Confidence'),
+      confidenceLabel: parsed.confidenceLabel ?? (parsed.confidence >= 80 ? 'Độ tin cậy cao' : parsed.confidence >= 60 ? 'Trung bình' : 'Độ tin cậy thấp'),
       recommendation: parsed.recommendation ?? parsed.suggestedAction ?? 'Không có đề xuất',
       evidencePoints: (parsed.evidencePoints ?? parsed.evidence ?? []).map((e: ApiPayload) => ({
         type: e.type ?? 'neutral',
@@ -69,7 +69,7 @@ function parseAiSummary(raw: string | null | undefined): AiParsedSummary | null 
 
     return {
       confidence: 70,
-      confidenceLabel: 'Moderate',
+      confidenceLabel: 'Trung bình',
       recommendation: lines[0] || 'AI đang phân tích...',
       evidencePoints,
       anomalies,
@@ -230,7 +230,7 @@ export default function AdminDisputeDetailPage() {
               </Badge>
             </div>
             <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-              <span className="font-mono">Dispute #{dispute.id}</span>
+              <span className="font-mono">Tranh chấp #{dispute.id}</span>
               <span className="text-slate-300">•</span>
               <span className="font-mono">#{booking?.bookingCode || 'N/A'}</span>
               <span className="text-slate-300">•</span>
@@ -283,15 +283,15 @@ export default function AdminDisputeDetailPage() {
                     </div>
                     <div>
                       <CardTitle className="text-base font-bold text-white tracking-tight">
-                        AI Mediator Analysis
+                        Trợ Lý AI Phân Xử
                       </CardTitle>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-purple-300/70 mt-0.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-purple-200 mt-0.5">
                         Gemini 2.5 Flash • Tự động phân tích bằng chứng
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-400/30 text-[10px] font-bold">
-                    BETA
+                  <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 text-[10px] font-bold">
+                    THỬ NGHIỆM
                   </Badge>
                 </div>
               </CardHeader>
@@ -643,7 +643,7 @@ export default function AdminDisputeDetailPage() {
                         ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20'
                         : decision === 'COMPLETE'
                         ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
-                        : 'bg-slate-300 cursor-not-allowed'
+                        : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'
                     }`}
                   >
                     {submitting ? (
