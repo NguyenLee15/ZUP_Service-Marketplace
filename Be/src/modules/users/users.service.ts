@@ -94,18 +94,6 @@ export class UsersService {
       data: updateData,
     });
 
-    // Audit log
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: userId,
-        action: 'UPDATE_PROFILE',
-        targetType: 'USER',
-        targetId: userId,
-        description: 'Cập nhật thông tin cá nhân',
-        ipAddress: ip,
-      },
-    });
-
     const { password, ...sanitized } = user;
     void password;
     return {
@@ -183,18 +171,6 @@ export class UsersService {
       },
     });
 
-    // Audit log
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: userId,
-        action: 'CREATE_ADDRESS',
-        targetType: 'ADDRESS',
-        targetId: address.id,
-        description: `Thêm địa chỉ: ${address.addressDetail}`,
-        ipAddress: ip,
-      },
-    });
-
     return { data: address, message: 'Thêm địa chỉ thành công' };
   }
 
@@ -222,18 +198,6 @@ export class UsersService {
       data: dto,
     });
 
-    // Audit log
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: userId,
-        action: 'UPDATE_ADDRESS',
-        targetType: 'ADDRESS',
-        targetId: addressId,
-        description: 'Cập nhật địa chỉ',
-        ipAddress: ip,
-      },
-    });
-
     return { data: updated, message: 'Cập nhật địa chỉ thành công' };
   }
 
@@ -251,18 +215,6 @@ export class UsersService {
     }
 
     await this.prisma.userAddress.delete({ where: { id: addressId } });
-
-    // Audit log
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: userId,
-        action: 'DELETE_ADDRESS',
-        targetType: 'ADDRESS',
-        targetId: addressId,
-        description: 'Xóa địa chỉ',
-        ipAddress: ip,
-      },
-    });
 
     // Nếu vừa xóa default → set cái mới nhất làm default
     if (address.isDefault) {
@@ -304,18 +256,6 @@ export class UsersService {
         data: { isDefault: true },
       }),
     ]);
-
-    // Audit log
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: userId,
-        action: 'SET_DEFAULT_ADDRESS',
-        targetType: 'ADDRESS',
-        targetId: addressId,
-        description: 'Đặt địa chỉ mặc định',
-        ipAddress: ip,
-      },
-    });
 
     return { message: 'Đã đặt làm địa chỉ mặc định' };
   }

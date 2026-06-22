@@ -17,6 +17,7 @@ async function bootstrap() {
 
   const expressApp = app.getHttpAdapter().getInstance() as Express;
   expressApp.disable('x-powered-by');
+  expressApp.set('trust proxy', 1);
   app.use(
     helmet({
       contentSecurityPolicy: {
