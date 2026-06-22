@@ -29,12 +29,14 @@ import { CustomerBookingExportService } from './customer-booking-export.service'
 import { BookingCommissionService } from './booking-commission.service';
 import { BookingSharedService } from './booking-shared.service';
 import { BookingTimeoutService } from './booking-timeout.service';
+import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.module';
 
 @Module({
   imports: [
     CloudinaryModule,
     RedisModule,
     AiModule,
+    ProviderWalletsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

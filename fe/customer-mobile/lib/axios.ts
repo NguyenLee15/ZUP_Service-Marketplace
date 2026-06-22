@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
 import { storage } from './storage';
+import { useAuthStore } from '../features/auth/auth.store';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -92,7 +93,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      await storage.clearAll();
+      await useAuthStore.getState().logout();
       return Promise.reject(createSessionExpiredError());
     } finally {
       isRefreshing = false;

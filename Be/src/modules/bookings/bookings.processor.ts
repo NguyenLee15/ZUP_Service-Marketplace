@@ -7,6 +7,7 @@ import { NOTIFICATION_EVENTS } from '../../common/events/notification-events';
 
 import { RedisService } from '../../shared/redis/redis.service';
 import { BookingIdPayload, JobName } from '../../shared/jobs/jobs.service';
+import { BookingCommissionService } from './booking-commission.service';
 
 @Processor('booking-queue')
 export class BookingsProcessor extends WorkerHost {
@@ -16,6 +17,7 @@ export class BookingsProcessor extends WorkerHost {
     private prisma: PrismaService,
     private redisService: RedisService,
     private eventEmitter: EventEmitter2,
+    private commissionService: BookingCommissionService,
   ) {
     super();
   }
@@ -67,35 +69,7 @@ export class BookingsProcessor extends WorkerHost {
       });
 
       // 3. Trừ hoa hồng
-      const acceptedQuotations = booking.quotations || [];
-      const commissionFee = acceptedQuotations.reduce(
-        (sum, q) => sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
-        0
-      );
-
-      if (commissionFee > 0) {
-        const wallet = await tx.providerWallet.update({
-          where: { providerId: booking.providerId },
-          data: { balance: { decrement: commissionFee } },
-        });
-
-        await tx.walletTransaction.create({
-          data: {
-            walletId: wallet.id,
-            amount: -commissionFee,
-              type: 'COMMISSION',
-              status: 'SUCCESS',
-              bookingId: booking.id,
-            },
-          });
-
-          if (Number(wallet.balance) < 0 && !wallet.isRestricted) {
-            await tx.providerWallet.update({
-              where: { id: wallet.id },
-              data: { isRestricted: true },
-            });
-        }
-      }
+      await this.commissionService.deductCommission(booking.id, tx);
     });
   }
 

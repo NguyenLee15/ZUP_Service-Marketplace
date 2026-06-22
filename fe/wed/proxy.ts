@@ -16,6 +16,24 @@ function toCspOrigin(value?: string) {
   }
 }
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 function uniqueCspValues(values: Array<string | null>) {
   return Array.from(new Set(values.filter(Boolean) as string[])).join(' ');
 }
@@ -55,7 +73,28 @@ function createCsp(nonce: string) {
 }
 
 export function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname !== '/_next/image') {
+  const pathname = request.nextUrl.pathname;
+
+  // --- AUTH CHECK & ROLE REDIRECT ---
+  if (pathname.startsWith('/admin') || pathname.startsWith('/provider')) {
+    const token = request.cookies.get('hs_access_token')?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    const payload = parseJwt(token);
+    if (!payload || !payload.role) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    
+    if (pathname.startsWith('/admin') && payload.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (pathname.startsWith('/provider') && payload.role !== 'PROVIDER') {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  if (pathname !== '/_next/image') {
     const nonce = btoa(crypto.randomUUID());
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-nonce', nonce);

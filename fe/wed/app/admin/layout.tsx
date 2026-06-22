@@ -98,7 +98,19 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { logout: clearStore, user } = useAuthStore();
+  const { logout: clearStore, user, _hasHydrated } = useAuthStore();
+
+  React.useEffect(() => {
+    if (_hasHydrated) {
+      if (!user || user.role !== "ADMIN") {
+        router.replace("/login");
+      }
+    }
+  }, [user, _hasHydrated, router]);
+
+  if (!_hasHydrated || !user || user.role !== "ADMIN") {
+    return null; // or a loading spinner
+  }
 
   return (
     <>

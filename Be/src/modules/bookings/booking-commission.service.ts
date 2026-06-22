@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
 
 @Injectable()
 export class BookingCommissionService {
   private readonly logger = new Logger(BookingCommissionService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ledger: WalletLedgerService,
+  ) {}
 
   async getCurrentCommissionRate() {
     const setting = await this.prisma.systemSetting.findUnique({
@@ -53,27 +57,20 @@ export class BookingCommissionService {
     );
 
     const executeDeduction = async (dbTx: Prisma.TransactionClient) => {
-      const wallet = await dbTx.providerWallet.update({
+      const wallet = await dbTx.providerWallet.findUnique({
         where: { providerId: booking.providerId },
-        data: { balance: { decrement: fee } },
       });
+      if (!wallet) return;
 
-      await dbTx.walletTransaction.create({
-        data: {
-          walletId: wallet.id,
-          type: 'COMMISSION',
-          amount: -fee,
-          bookingId,
-          status: 'SUCCESS',
-        },
+      await this.ledger.debitWallet(dbTx, {
+        walletId: wallet.id,
+        amount: fee,
+        type: 'COMMISSION',
+        bookingId,
+        actorId: 0, // System
+        actionName: 'COMMISSION_DEDUCTION',
+        description: `Trừ ${fee.toLocaleString('vi-VN')}₫ hoa hồng cho đơn hàng #${booking.bookingCode}`,
       });
-
-      if (Number(wallet.balance) < 0 && !wallet.isRestricted) {
-        await dbTx.providerWallet.update({
-          where: { id: wallet.id },
-          data: { isRestricted: true },
-        });
-      }
     };
 
     if (txClient) {

@@ -561,28 +561,38 @@ export class BookingLifecycleService {
 
     const now = new Date();
 
+    const uploadedFiles = await Promise.all(
+      files.map((file) =>
+        this.cloudinaryService.uploadFile(file.buffer, 'bookings'),
+      ),
+    );
+
     this.bookingStatePolicy.assertTransition(
       booking.status,
       BookingStatus.DONE,
     );
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: BookingStatus.DONE,
-        completedAt: now,
-        autoCompletedAt: null,
-      },
-    });
 
-    for (const file of files) {
-      const uploaded = await this.cloudinaryService.uploadFile(
-        file.buffer,
-        'bookings',
-      );
-      await this.prisma.bookingAttachment.create({
-        data: { bookingId, type: 'RESULT', fileUrl: uploaded.url },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const b = await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: BookingStatus.DONE,
+          completedAt: now,
+          autoCompletedAt: null,
+        },
       });
-    }
+
+      if (uploadedFiles.length > 0) {
+        await tx.bookingAttachment.createMany({
+          data: uploadedFiles.map((uploaded) => ({
+            bookingId,
+            type: 'RESULT',
+            fileUrl: uploaded.url,
+          })),
+        });
+      }
+      return b;
+    });
 
     await this.shared.addStatusHistory(
       bookingId,

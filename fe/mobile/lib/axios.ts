@@ -6,6 +6,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "../constants/api";
 import { storage } from "./storage";
+import { useAuthStore } from "../features/auth/auth.store";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -103,7 +104,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        await storage.clearAll();
+        await useAuthStore.getState().logout();
         // Navigation sẽ redirect về login qua auth check trong root layout
         return Promise.reject(createSessionExpiredError());
       } finally {

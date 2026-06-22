@@ -40,6 +40,8 @@ export default function BookingsPage() {
   const [bookingDetail, setBookingDetail] = useState<ApiPayload | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (selectedBooking) {
@@ -60,22 +62,26 @@ export default function BookingsPage() {
 
   const fetchBookings = () => {
     setLoading(true);
-    const params: Record<string, ApiPayload> = {};
+    const params: Record<string, any> = { page, limit: 10 };
     if (filterStatus !== 'all') params.status = filterStatus;
     
     adminApi.getBookings(params)
       .then((res) => {
         const data = res.data.data || [];
         setBookings(data);
+        setTotalPages(res.data.meta?.totalPages || 1);
         if (data.length > 0 && !selectedBooking) {
           setSelectedBooking(data[0]);
         }
       })
-      .catch(() => setBookings([]))
+      .catch(() => {
+        setBookings([]);
+        setTotalPages(1);
+      })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchBookings(); }, [filterStatus]);
+  useEffect(() => { fetchBookings(); }, [filterStatus, page]);
 
   const filteredBookings = bookings.filter((b) =>
     (b.bookingCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -137,6 +143,7 @@ export default function BookingsPage() {
               onClick={() => {
                 setFilterStatus(status);
                 setSelectedBooking(null);
+                setPage(1);
               }}
               size="sm"
             >
@@ -190,6 +197,22 @@ export default function BookingsPage() {
                     </button>
                   );
                 })}
+              </div>
+            )}
+            
+            {!loading && filteredBookings.length > 0 && (
+              <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                <p className="text-xs text-muted-foreground">
+                  Trang {page} / {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                    Trước
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                    Tiếp
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

@@ -207,6 +207,9 @@ export class DepositService {
           type: 'DEPOSIT',
           amount,
           idempotencyKey: `manual-deposit:${id}`,
+          actorId: adminId,
+          actionName: 'MANUAL_DEPOSIT_APPROVED',
+          description: `Xác nhận nạp thủ công ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
         },
       );
 
@@ -232,16 +235,7 @@ export class DepositService {
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          actorId: adminId,
-          action: 'MANUAL_DEPOSIT_APPROVED',
-          targetType: 'WALLET',
-          targetId: walletTransaction.id,
-          description: `Xác nhận nạp thủ công ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
-          ipAddress: 'System',
-        },
-      });
+
 
       return updatedRequest;
     });

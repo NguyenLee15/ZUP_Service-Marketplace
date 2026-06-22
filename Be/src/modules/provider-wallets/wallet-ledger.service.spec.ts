@@ -43,9 +43,11 @@ describe('WalletLedgerService', () => {
     await expect(
       service.creditWallet(tx as unknown as Prisma.TransactionClient, {
         walletId: 1,
-        amount: 5000,
+        amount: 100000,
         type: WalletTransactionType.DEPOSIT,
-        idempotencyKey: 'deposit:1',
+        idempotencyKey: 'idempotent-key',
+        actorId: 0,
+        actionName: 'DEPOSIT_SUCCESS',
       }),
     ).resolves.toEqual({ id: 10 });
 
@@ -56,9 +58,9 @@ describe('WalletLedgerService', () => {
     const createArg = createMock.mock.calls[0]?.[0];
     expect(createArg.data).toMatchObject({
       walletId: 1,
-      amount: 5000,
+      amount: 100000,
       status: 'SUCCESS',
-      idempotencyKey: 'deposit:1',
+      idempotencyKey: 'idempotent-key',
     });
     expect(tx.providerWallet.update).toHaveBeenNthCalledWith(2, {
       where: { id: 1 },
@@ -76,6 +78,8 @@ describe('WalletLedgerService', () => {
       amount: 1000,
       type: WalletTransactionType.WITHDRAWAL,
       idempotencyKey: 'withdrawal:1',
+      actorId: 0,
+      actionName: 'WITHDRAWAL',
     });
 
     const createMock = tx.walletTransaction.create as jest.Mock<

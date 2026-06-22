@@ -164,27 +164,29 @@ export default function TrackingPage({
     // Subscribe to this booking's tracking room
     socket.emit("subscribeTracking", { bookingId });
 
-    // Receive last known location on subscribe
-    socket.on(
-      "lastKnownLocation",
-      (data: { bookingId: number; location: ApiPayload }) => {
-        if (data.location) {
-          socketConnectedRef.current = true;
-          const loc = data.location;
-          setProviderLoc({
-            lat: loc.lat,
-            lng: loc.lng,
-            heading: loc.heading ?? 0,
-            speed: loc.speed ?? 0,
-            updatedAt: new Date(loc.updatedAt),
-          });
-          setTrail([[loc.lat, loc.lng]]);
-        }
-      },
-    );
+    // Fallback: If no real data arrives within 5s, start simulation
+    const fallbackTimer = setTimeout(() => {
+      if (!socketConnectedRef.current) {
+        startSimulation();
+      }
+    }, 5000);
 
-    // Receive realtime provider location updates
-    socket.on("providerLocation", (data: ApiPayload) => {
+    const handleLastKnown = (data: { bookingId: number; location: ApiPayload }) => {
+      if (data.location) {
+        socketConnectedRef.current = true;
+        const loc = data.location;
+        setProviderLoc({
+          lat: loc.lat,
+          lng: loc.lng,
+          heading: loc.heading ?? 0,
+          speed: loc.speed ?? 0,
+          updatedAt: new Date(loc.updatedAt),
+        });
+        setTrail([[loc.lat, loc.lng]]);
+      }
+    };
+
+    const handleProviderLocUpdate = (data: ApiPayload) => {
       socketConnectedRef.current = true;
       const newLoc: ProviderLocation = {
         lat: data.lat,
@@ -206,26 +208,27 @@ export default function TrackingPage({
       if (dist < 0.05) {
         setCurrentStepIdx(2);
       }
-    });
+    };
+
+    const handleTrackingEndedUpdate = () => {
+      setTrackingEnded(true);
+    };
+
+    // Receive last known location on subscribe
+    socket.on("lastKnownLocation", handleLastKnown);
+
+    // Receive realtime provider location updates
+    socket.on("providerLocation", handleProviderLocUpdate);
 
     // Tracking ended (booking status changed)
-    socket.on("trackingEnded", () => {
-      setTrackingEnded(true);
-    });
-
-    // Fallback: If no real data arrives within 5s, start simulation
-    const fallbackTimer = setTimeout(() => {
-      if (!socketConnectedRef.current) {
-        startSimulation();
-      }
-    }, 5000);
+    socket.on("trackingEnded", handleTrackingEndedUpdate);
 
     return () => {
       clearTimeout(fallbackTimer);
       socket.emit("unsubscribeTracking", { bookingId });
-      socket.off("lastKnownLocation");
-      socket.off("providerLocation");
-      socket.off("trackingEnded");
+      socket.off("lastKnownLocation", handleLastKnown);
+      socket.off("providerLocation", handleProviderLocUpdate);
+      socket.off("trackingEnded", handleTrackingEndedUpdate);
       socket.disconnect();
       if (simulationRef.current) clearInterval(simulationRef.current);
     };

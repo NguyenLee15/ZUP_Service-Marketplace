@@ -64,24 +64,29 @@ export default function ChatRoomScreen() {
 
       socket.emit('joinConversation', { conversationId: Number(id) });
 
-      socket.on('newMessage', (msg: any) => {
+      const handleNewMessage = (msg: any) => {
         if (mounted) {
           setMessages((prev) => [...prev, msg]);
           setTyping(false);
-          // Nếu tin nhắn từ người khác, update Smart Replies
           if (msg.senderId !== user?.id) {
             fetchSmartReplies();
           }
         }
-      });
+      };
 
-      socket.on('typing', (data: any) => {
+      const handleTypingEvent = (data: any) => {
         if (data.userId !== user?.id && mounted) {
           setTyping(true);
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
           typingTimeoutRef.current = setTimeout(() => setTyping(false), 3000);
         }
-      });
+      };
+
+      socket.on('newMessage', handleNewMessage);
+      socket.on('typing', handleTypingEvent);
+
+      // Save handlers for cleanup
+      (socket as any)._chatRoomHandlers = { handleNewMessage, handleTypingEvent };
     };
 
     init();
@@ -89,9 +94,11 @@ export default function ChatRoomScreen() {
     return () => {
       mounted = false;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      if (activeSocket) {
-        activeSocket.off('newMessage');
-        activeSocket.off('typing');
+      if (activeSocket && (activeSocket as any)._chatRoomHandlers) {
+        const { handleNewMessage, handleTypingEvent } = (activeSocket as any)._chatRoomHandlers;
+        activeSocket.off('newMessage', handleNewMessage);
+        activeSocket.off('typing', handleTypingEvent);
+        delete (activeSocket as any)._chatRoomHandlers;
       }
     };
   }, [id]);

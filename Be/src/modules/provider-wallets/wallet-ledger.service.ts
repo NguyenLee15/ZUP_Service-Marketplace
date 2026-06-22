@@ -13,6 +13,10 @@ export class WalletLedgerService {
       disputeId?: number | null;
       vnpayTxnRef?: string | null;
       idempotencyKey?: string | null;
+      actorId: number;
+      actionName: string;
+      description?: string;
+      ipAddress?: string;
     },
   ) {
     const transaction = await tx.walletTransaction.create({
@@ -43,6 +47,17 @@ export class WalletLedgerService {
       });
     }
 
+    await tx.auditLog.create({
+      data: {
+        actorId: input.actorId,
+        action: input.actionName,
+        targetType: 'WALLET',
+        targetId: transaction.id,
+        description: input.description || `Cộng ví ${input.amount.toLocaleString('vi-VN')}₫ (Mã ví: ${input.walletId})`,
+        ipAddress: input.ipAddress || 'System',
+      },
+    });
+
     return transaction;
   }
 
@@ -55,6 +70,10 @@ export class WalletLedgerService {
       bookingId?: number | null;
       disputeId?: number | null;
       idempotencyKey?: string | null;
+      actorId: number;
+      actionName: string;
+      description?: string;
+      ipAddress?: string;
     },
   ) {
     const amount = Math.abs(input.amount);
@@ -84,6 +103,17 @@ export class WalletLedgerService {
         data: { isRestricted: true },
       });
     }
+
+    await tx.auditLog.create({
+      data: {
+        actorId: input.actorId,
+        action: input.actionName,
+        targetType: 'WALLET',
+        targetId: transaction.id,
+        description: input.description || `Trừ ví ${amount.toLocaleString('vi-VN')}₫ (Mã ví: ${input.walletId})`,
+        ipAddress: input.ipAddress || 'System',
+      },
+    });
 
     return transaction;
   }

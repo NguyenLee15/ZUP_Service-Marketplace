@@ -56,6 +56,8 @@ export default function UsersPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING' | 'LOCKED'>('ALL');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const statusCounts = useMemo(() => ({
     total: users.length,
@@ -84,11 +86,19 @@ export default function UsersPage() {
   const fetchUsers = () => {
     setLoading(true);
     adminApi.getUsers({
+      page,
+      limit: 10,
       role: roleFilter,
       ...(searchTerm ? { keyword: searchTerm } : {}),
     })
-      .then((res) => setUsers(res.data.data || []))
-      .catch(() => setUsers([]))
+      .then((res) => {
+        setUsers(res.data.data || []);
+        setTotalPages(res.data.meta?.totalPages || 1);
+      })
+      .catch(() => {
+        setUsers([]);
+        setTotalPages(1);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -97,7 +107,7 @@ export default function UsersPage() {
       fetchUsers();
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, roleFilter]);
+  }, [searchTerm, roleFilter, page]);
 
   const handleLockUser = async (data: LockFormData) => {
     if (!selectedUser) return;
@@ -165,6 +175,7 @@ export default function UsersPage() {
                       setRoleFilter(option.value as 'CUSTOMER' | 'PROVIDER');
                       setStatusFilter('ALL');
                       setSelectedUser(null);
+                      setPage(1);
                     }}
                   className={`flex items-center gap-2 border-b-2 px-1 pb-3 text-sm font-semibold transition-colors ${
                     active
@@ -208,7 +219,10 @@ export default function UsersPage() {
                 placeholder="Tìm kiếm theo tên hoặc email…"
               className="h-10 rounded-md border-[var(--admin-border)] bg-white pl-9 text-sm"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
               />
             </div>
           </div>
@@ -302,6 +316,34 @@ export default function UsersPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+          
+          {!loading && filteredUsers.length > 0 && (
+            <div className="flex items-center justify-between border-t border-[var(--admin-border)] px-4 py-3 sm:px-6">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                  Trước
+                </Button>
+                <Button variant="outline" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                  Tiếp
+                </Button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-slate-700">
+                    Trang <span className="font-medium">{page}</span> / <span className="font-medium">{totalPages}</span>
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                    Trước
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                    Tiếp
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>

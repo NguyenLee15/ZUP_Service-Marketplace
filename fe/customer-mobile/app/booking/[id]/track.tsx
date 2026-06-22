@@ -1,6 +1,6 @@
 import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, AppState, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { io } from 'socket.io-client';
 import { useQuery } from '@tanstack/react-query';
@@ -22,6 +22,7 @@ import { bookingApi } from '../../../features/booking/booking.api';
 import { getApiErrorMessage, unwrapData } from '../../../lib/api-response';
 import { formatDateTime } from '../../../lib/format';
 import { storage } from '../../../lib/storage';
+import { getTrackingSocket } from '../../../lib/socket';
 import { useNetworkStatus } from '../../../hooks/useNetworkStatus';
 import { routes } from '../../../lib/route-utils';
 
@@ -227,7 +228,9 @@ export default function TrackingScreen() {
 
         socket = io(`${WS_URL}/tracking`, {
           transports: ['websocket'],
-          auth: { token },
+          auth: (cb) => {
+            storage.getAccessToken().then(t => cb({ token: t }));
+          },
         });
 
         socket.on('connect', () => {
@@ -272,8 +275,17 @@ export default function TrackingScreen() {
         setSocketError(error?.message || 'Không thể đọc phiên đăng nhập.');
       });
 
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && socket) {
+        if (!socket.connected) {
+          socket.connect();
+        }
+      }
+    });
+
     return () => {
       active = false;
+      subscription.remove();
       socket?.emit('unsubscribeTracking', { bookingId });
       socket?.disconnect();
     };

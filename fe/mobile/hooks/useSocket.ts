@@ -2,7 +2,7 @@
  * useSocket hook — quản lý kết nối chat + notification sockets
  */
 import { useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
+import { Alert, AppState } from 'react-native';
 import { router } from 'expo-router';
 import { Socket } from 'socket.io-client';
 import { getChatSocket, getNotifSocket, disconnectAll } from '../lib/socket';
@@ -88,8 +88,17 @@ export const useSocket = () => {
 
     connect();
 
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && notifSocketRef.current) {
+        if (!notifSocketRef.current.connected) {
+          notifSocketRef.current.connect();
+        }
+      }
+    });
+
     return () => {
       mounted = false;
+      subscription.remove();
       disconnectAll();
     };
   }, [isAuthenticated]);

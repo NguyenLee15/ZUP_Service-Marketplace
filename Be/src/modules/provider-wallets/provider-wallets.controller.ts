@@ -18,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { WalletRequestStatus, WalletTransactionType } from '@prisma/client';
 import type { Request } from 'express';
-import { SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -85,6 +85,7 @@ export class ProviderWalletsController {
   @Post('deposit')
   @ApiOperation({ summary: 'Create VNPay wallet deposit request' })
   @ApiBearerAuth()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // Max 5 requests per minute
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async deposit(
@@ -107,6 +108,7 @@ export class ProviderWalletsController {
   @Post('manual-deposits')
   @ApiOperation({ summary: 'Create manual wallet deposit request' })
   @ApiBearerAuth()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // Max 5 requests per minute
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   async createManualDeposit(

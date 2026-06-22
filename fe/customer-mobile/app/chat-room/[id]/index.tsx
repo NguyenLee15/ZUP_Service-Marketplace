@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  AppState,
   TextInput as RNTextInput,
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -28,6 +29,7 @@ import { Colors } from '../../../constants/colors';
 import { WS_URL } from '../../../constants/api';
 import { chatApi } from '../../../features/chat/chat.api';
 import { storage } from '../../../lib/storage';
+import { getChatSocket } from '../../../lib/socket';
 import { getApiErrorMessage, normalizeList, unwrapData } from '../../../lib/api-response';
 import { stableKey, routes } from '../../../lib/route-utils';
 
@@ -178,7 +180,9 @@ export default function ChatRoomScreen() {
 
         const socket = io(`${WS_URL}/chat`, {
           transports: ['websocket'],
-          auth: { token },
+          auth: (cb) => {
+            storage.getAccessToken().then(t => cb({ token: t }));
+          },
         });
         socketRef.current = socket;
 
@@ -229,8 +233,17 @@ export default function ChatRoomScreen() {
         setError(err?.message || 'Không thể đọc phiên đăng nhập.');
       });
 
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && socketRef.current) {
+        if (!socketRef.current.connected) {
+          socketRef.current.connect();
+        }
+      }
+    });
+
     return () => {
       active = false;
+      subscription.remove();
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       const socket = socketRef.current;
       if (socket) {

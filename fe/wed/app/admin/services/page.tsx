@@ -33,18 +33,26 @@ export default function AdminServicesPage() {
   const [showModal, setShowModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchServices = () => {
     setLoading(true);
-    const params: Record<string, ApiPayload> = {};
+    const params: Record<string, any> = { page, limit: 10 };
     if (filterStatus !== 'all') params.status = filterStatus;
     adminApi.getServices(params)
-      .then((res) => setServices(res.data.data || []))
-      .catch(() => setServices([]))
+      .then((res) => {
+        setServices(res.data.data || []);
+        setTotalPages(res.data.meta?.totalPages || 1);
+      })
+      .catch(() => {
+        setServices([]);
+        setTotalPages(1);
+      })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchServices(); }, [filterStatus]);
+  useEffect(() => { fetchServices(); }, [filterStatus, page]);
 
   const handleApprove = async (id: number) => {
     setActionLoading(true);
@@ -105,7 +113,7 @@ export default function AdminServicesPage() {
       <div className="flex gap-2 flex-wrap">
         {['all', 'PENDING', 'ACTIVE', 'REJECTED', 'HIDDEN'].map((status) => (
           <Button key={status} variant={filterStatus === status ? 'default' : 'outline'}
-            onClick={() => setFilterStatus(status)} size="sm" className="gap-1">
+            onClick={() => { setFilterStatus(status); setPage(1); }} size="sm" className="gap-1">
             <Filter className="w-3 h-3" />
             {status === 'all' ? 'Tất Cả' : statusConfig[status]?.label || status}
           </Button>
@@ -185,6 +193,22 @@ export default function AdminServicesPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+          
+          {!loading && services.length > 0 && (
+            <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+              <p className="text-xs text-muted-foreground">
+                Trang {page} / {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                  Trước
+                </Button>
+                <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                  Tiếp
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

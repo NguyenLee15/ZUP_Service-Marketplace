@@ -188,6 +188,9 @@ export class WithdrawalService {
         type: 'WITHDRAWAL',
         amount,
         idempotencyKey: `withdrawal:${id}`,
+        actorId: adminId,
+        actionName: 'WITHDRAWAL_APPROVED',
+        description: `Xác nhận rút ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
       });
 
       const updatedRequest = await tx.withdrawalRequest.findUniqueOrThrow({
@@ -212,16 +215,7 @@ export class WithdrawalService {
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          actorId: adminId,
-          action: 'WITHDRAWAL_APPROVED',
-          targetType: 'WALLET',
-          targetId: walletTransaction.id,
-          description: `Xác nhận rút ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
-          ipAddress: 'System',
-        },
-      });
+
 
       return updatedRequest;
     });

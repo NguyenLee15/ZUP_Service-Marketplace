@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/store/auth.store';
+import { connectSockets, disconnectSockets } from './socket';
 
 const instance = axios.create({
   baseURL: '/api',
@@ -73,6 +74,7 @@ instance.interceptors.response.use(
         }
 
         useAuthStore.getState().setTokens(newAccessToken);
+        connectSockets();
 
         processQueue(null, newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -80,10 +82,10 @@ instance.interceptors.response.use(
       } catch (err) {
         processQueue(err as AxiosError, null);
         useAuthStore.getState().logout();
+        disconnectSockets();
         if (typeof window !== 'undefined') {
-          // Instead of hard reloading the page, we just clear the state.
-          // The application should react to isAuthenticated() becoming false.
           console.warn('Unauthorized, user logged out.');
+          window.location.href = '/login';
         }
         return Promise.reject(err);
       } finally {

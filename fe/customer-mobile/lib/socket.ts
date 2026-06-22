@@ -1,5 +1,6 @@
 /**
- * Socket.io singleton — kết nối /chat, /notifications, /tracking namespaces
+ * Socket.io singleton để kết nối /chat, /notifications, /tracking namespaces
+ * Tránh tạo nhiều kết nối thừa khi chuyển đổi qua lại giữa các màn hình
  */
 import { io, Socket } from 'socket.io-client';
 import { WS_URL } from '../constants/api';
@@ -49,4 +50,3 @@ export const disconnectAll = () => {
   notifSocket = null;
   trackingSocket = null;
 };
-

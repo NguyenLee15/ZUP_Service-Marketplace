@@ -1,6 +1,6 @@
 import { useActiveColors } from '../hooks/useActiveColors';
 import { useEffect, useMemo, useState, useRef } from "react";
-import { View, StyleSheet, Animated } from "react-native";
+import { View, StyleSheet, Animated, AppState } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Chip, IconButton, Text, TextInput } from "react-native-paper";
@@ -20,6 +20,7 @@ import { notificationApi } from "../features/notification/notification.api";
 import { normalizeList, unwrapData } from "../lib/api-response";
 import { stableKey, toRouteId, routes } from "../lib/route-utils";
 import { storage } from "../lib/storage";
+import { getNotifSocket } from "../lib/socket";
 
 type ConnectionState = "connecting" | "connected" | "disconnected" | "error";
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
@@ -324,7 +325,9 @@ export default function NotificationsScreen() {
 
         socket = io(`${WS_URL}/notifications`, {
           transports: ["websocket"],
-          auth: { token },
+          auth: (cb) => {
+            storage.getAccessToken().then(t => cb({ token: t }));
+          },
         });
 
         socket.on("connect", () => {
@@ -369,8 +372,17 @@ export default function NotificationsScreen() {
         setConnectionState("error");
       });
 
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && socket) {
+        if (!socket.connected) {
+          socket.connect();
+        }
+      }
+    });
+
     return () => {
       active = false;
+      subscription.remove();
       if (socket) {
         socket.off("connect");
         socket.off("disconnect");
