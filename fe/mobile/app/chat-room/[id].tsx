@@ -3,7 +3,7 @@
  * Socket.io + message history + typing indicator
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput as RNTextInput } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput as RNTextInput, Image, Modal, Pressable, TouchableOpacity } from 'react-native';
 import { Text, IconButton, useTheme, ActivityIndicator, TouchableRipple, Avatar } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -38,6 +38,7 @@ export default function ChatRoomScreen() {
   const [smartReplies, setSmartReplies] = useState<string[]>([]);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [attachedImage, setAttachedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
   const flashListRef = useRef<any>(null);
@@ -212,7 +213,13 @@ export default function ChatRoomScreen() {
                 : { backgroundColor: theme.colors.surfaceVariant },
           ]}>
             {item.imageUrl && (
-              <Avatar.Image size={150} source={{ uri: item.imageUrl }} style={{ borderRadius: 8, marginBottom: 4 }} />
+              <Pressable onPress={() => setViewingImage(item.imageUrl)}>
+                <Image 
+                  source={{ uri: item.imageUrl }} 
+                  style={{ width: 220, height: 160, borderRadius: 12, marginBottom: item.content ? 8 : 4, backgroundColor: theme.colors.surfaceVariant }} 
+                  resizeMode="cover" 
+                />
+              </Pressable>
             )}
             {item.content && (
               <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onSurface }}>
@@ -363,6 +370,24 @@ export default function ChatRoomScreen() {
           />
         </View>
       </View>
+
+      <Modal visible={!!viewingImage} transparent={true} animationType="fade">
+        <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.modalCloseBtn} 
+            onPress={() => setViewingImage(null)}
+          >
+            <MaterialCommunityIcons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          {viewingImage && (
+            <Image 
+              source={{ uri: viewingImage }} 
+              style={styles.fullImage} 
+              resizeMode="contain" 
+            />
+          )}
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -477,4 +502,21 @@ const getStyles = (theme: any, insets: any) => StyleSheet.create({
     borderRadius: 12,
   },
   inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  fullImage: {
+    width: '100%',
+    height: '80%',
+  },
 });
