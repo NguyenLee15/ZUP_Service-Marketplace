@@ -61,6 +61,23 @@ export class BookingLifecycleService {
       });
     }
 
+    // Guard: chống đặt trùng cùng dịch vụ trong thời gian ngắn
+    const duplicateWindow = new Date(Date.now() - 5 * 60 * 1000); // 5 phút
+    const existingBooking = await this.prisma.booking.findFirst({
+      where: {
+        customerId,
+        serviceId: dto.serviceId,
+        status: { in: [BookingStatus.PENDING, BookingStatus.QUOTED] },
+        createdAt: { gte: duplicateWindow },
+      },
+    });
+    if (existingBooking) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: `Bạn đã đặt dịch vụ này lúc ${existingBooking.createdAt.toLocaleString('vi-VN')}. Vui lòng chờ thợ phản hồi hoặc hủy đơn cũ trước khi đặt lại.`,
+      });
+    }
+
     let bookingItemsData: Array<{
       serviceItemId: number;
       name: string;

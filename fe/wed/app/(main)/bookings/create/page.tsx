@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import type { FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { servicesApi, bookingsApi } from '@/features/auth/services/api';
@@ -96,6 +96,7 @@ function CreateBookingContent() {
   // Wizard steps: 1 = Hạng mục & Mô tả, 2 = Địa chỉ thực hiện, 3 = Thời gian & Xác nhận
   const [step, setStep] = useState(1);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const submittedRef = useRef(false);
 
   const defaultAddress = addresses.find((address) => address.isDefault);
   const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), province);
@@ -299,6 +300,8 @@ function CreateBookingContent() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (step !== 3) return;
+    if (submittedRef.current || loading) return;
     const errors = validateBookingBeforeSubmit();
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -306,6 +309,7 @@ function CreateBookingContent() {
       return;
     }
 
+    submittedRef.current = true;
     setLoading(true);
     try {
       const itemsPayload = Object.values(selectedItems).map((it) => ({
@@ -329,6 +333,7 @@ function CreateBookingContent() {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Đã xảy ra lỗi', variant: 'destructive' });
     } finally {
       setLoading(false);
+      submittedRef.current = false;
     }
   };
 
@@ -419,7 +424,11 @@ function CreateBookingContent() {
         </Card>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+      <form onSubmit={handleSubmit} onKeyDown={(e) => {
+        if (e.key === 'Enter' && step !== 3) {
+          e.preventDefault();
+        }
+      }} className="space-y-4 sm:space-y-5">
         
         {/* ================= STEP 1: CHI TIẾT & HẠNG MỤC ================= */}
         {step === 1 && (
