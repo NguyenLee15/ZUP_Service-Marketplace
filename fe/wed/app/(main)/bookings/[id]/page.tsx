@@ -373,8 +373,10 @@ export default function BookingDetailPage() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-4 h-4 text-action-blue" />
             <span>
-              {booking.addressDetail}, {booking.ward}, {booking.district},{" "}
-              {booking.province}
+              {[booking.addressDetail, booking.ward, booking.district, booking.province]
+                .filter(Boolean)
+                .filter(p => p !== 'Không áp dụng')
+                .join(', ')}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
