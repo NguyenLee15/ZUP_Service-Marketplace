@@ -325,6 +325,8 @@ export function UnifiedServiceCard({
               Từ {displayPrice}.
             </div>
             <div className="mt-1 flex min-w-0 items-center gap-1 text-[10px] sm:text-[11px] leading-none text-foreground/80">
+              <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
+              <span className="shrink-0">{rating}.</span>
               {salesCount > 0 && (
                 <span className="truncate">Lượt đặt {formatCompactCount(salesCount)}.</span>
               )}
