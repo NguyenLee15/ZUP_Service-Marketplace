@@ -22,11 +22,11 @@ export class PayosService implements OnModuleInit {
 
   onModuleInit() {
     if (this.isEnabled) {
-      this.payos = new PayOS(
-        process.env.PAYOS_CLIENT_ID!,
-        process.env.PAYOS_API_KEY!,
-        process.env.PAYOS_CHECKSUM_KEY!
-      );
+      this.payos = new PayOS({
+        clientId: process.env.PAYOS_CLIENT_ID!,
+        apiKey: process.env.PAYOS_API_KEY!,
+        checksumKey: process.env.PAYOS_CHECKSUM_KEY!
+      });
       this.logger.log('PayOS Client initialized');
     } else {
       this.logger.warn('PayOS config is missing. PayOS payments will be disabled.');
