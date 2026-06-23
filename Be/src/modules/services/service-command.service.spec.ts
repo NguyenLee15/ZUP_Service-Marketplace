@@ -49,6 +49,7 @@ describe('ServiceCommandService ownership', () => {
       prisma as unknown as PrismaService,
       {} as CloudinaryService,
       shared as unknown as ServiceSharedService,
+      {} as any,
     );
   });
 

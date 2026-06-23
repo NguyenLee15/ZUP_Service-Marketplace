@@ -8,4 +8,11 @@ export const chatApi = {
     api.get(`/chats/${conversationId}/messages`, { params: cursor ? { cursor } : {} }),
   getSmartReplies: (conversationId: number) => api.get(`/chats/${conversationId}/smart-reply`),
   recallMessage: (messageId: number) => api.patch(`/chats/messages/${messageId}/recall`),
+  uploadChatImage: (file: any) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/chats/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

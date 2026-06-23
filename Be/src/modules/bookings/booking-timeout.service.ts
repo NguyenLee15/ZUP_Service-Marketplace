@@ -4,7 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { BookingSharedService } from './booking-shared.service';
 import { BookingStatePolicy } from './booking-state.policy';
 
-export const PROVIDER_ACCEPTANCE_TIMEOUT_MS = 60 * 1000;
+export const PROVIDER_ACCEPTANCE_TIMEOUT_MS = 3 * 60 * 1000;
 
 @Injectable()
 export class BookingTimeoutService {
@@ -79,7 +79,7 @@ export class BookingTimeoutService {
 
     if (result.count === 0) return false;
 
-    const note = 'Quá 1 phút nhà cung cấp chưa nhận đơn';
+    const note = 'Quá 3 phút nhà cung cấp chưa nhận đơn';
     await this.shared.addStatusHistory(
       bookingId,
       'PENDING',
@@ -92,7 +92,7 @@ export class BookingTimeoutService {
       booking.customerId,
       'PROVIDER_ACCEPTANCE_TIMEOUT',
       'Thợ chưa nhận đơn',
-      `Đơn #${booking.bookingCode}: Quá 1 phút chưa được nhận. Bạn có thể tìm thợ khác.`,
+      `Đơn #${booking.bookingCode}: Quá 3 phút chưa được nhận. Bạn có thể tìm thợ khác.`,
       bookingId,
     );
 
@@ -100,7 +100,7 @@ export class BookingTimeoutService {
       booking.providerId,
       'BOOKING_ACCEPTANCE_EXPIRED',
       'Đơn đã quá hạn nhận',
-      `Đơn #${booking.bookingCode} đã tự hủy vì quá 1 phút chưa nhận.`,
+      `Đơn #${booking.bookingCode} đã tự hủy vì quá 3 phút chưa nhận.`,
       bookingId,
     );
 

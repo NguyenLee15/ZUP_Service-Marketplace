@@ -78,6 +78,21 @@ export class BookingLifecycleService {
       });
     }
 
+    // Guard: Rate Limit - chống Spam tạo hàng loạt đơn ảo (Tối đa 3 đơn PENDING cùng lúc)
+    const pendingCount = await this.prisma.booking.count({
+      where: {
+        customerId,
+        status: BookingStatus.PENDING,
+      },
+    });
+
+    if (pendingCount >= 3) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Bạn đang có quá nhiều đơn chờ xác nhận (tối đa 3 đơn). Vui lòng chờ thợ phản hồi hoặc hủy bớt đơn cũ trước khi đặt thêm.',
+      });
+    }
+
     let bookingItemsData: Array<{
       serviceItemId: number;
       name: string;

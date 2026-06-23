@@ -41,6 +41,7 @@ type ChatMessage = {
   conversationId?: number | string;
   content?: string | null;
   imageUrl?: string | null;
+  messageType?: string | null;
   senderType?: string | null;
   sender?: { role?: string | null; fullName?: string | null } | null;
   createdAt?: string | null;
@@ -259,7 +260,7 @@ export default function ChatRoomScreen() {
     };
   }, [appendMessageToCache, conversationId, queryClient, validConversationId]);
 
-  const send = () => {
+  const send = async () => {
     const content = text.trim();
     if (!content && !attachedImage) return;
     if (connectionState !== 'connected') return;
@@ -269,23 +270,48 @@ export default function ChatRoomScreen() {
       id: clientId,
       clientId,
       conversationId,
-      content: content || null,
+      content: content || (attachedImage ? '[Hình ảnh]' : ''),
       imageUrl: attachedImage ? attachedImage.uri : null,
+      messageType: attachedImage ? 'IMAGE' : 'TEXT',
       senderType: 'CUSTOMER',
       pending: true,
       createdAt: new Date().toISOString(),
     };
 
-    socketRef.current?.emit('sendMessage', {
-      conversationId,
-      content: content || (attachedImage ? '[Hình ảnh]' : ''),
-      clientId,
-    });
-
     setLocalMessages((current) => [...current, optimisticMessage]);
     setText('');
+    const currentAttachedImage = attachedImage;
     setAttachedImage(null);
     Haptics.selectionAsync().catch(() => {});
+
+    try {
+      let finalImageUrl = undefined;
+      let finalMessageType = 'TEXT';
+
+      if (currentAttachedImage) {
+        const file = {
+          uri: currentAttachedImage.uri,
+          name: currentAttachedImage.fileName || `image-${Date.now()}.jpg`,
+          type: currentAttachedImage.mimeType || 'image/jpeg',
+        };
+        const res = await chatApi.uploadChatImage(file);
+        if (res.data?.success && res.data?.data?.imageUrl) {
+          finalImageUrl = res.data.data.imageUrl;
+          finalMessageType = 'IMAGE';
+        }
+      }
+
+      socketRef.current?.emit('sendMessage', {
+        conversationId,
+        content: content || (currentAttachedImage ? '[Hình ảnh]' : ''),
+        messageType: finalMessageType,
+        imageUrl: finalImageUrl,
+        clientId,
+      });
+    } catch (err) {
+      console.error('Lỗi khi gửi tin nhắn:', err);
+      // Optional: Handle error by showing a toast and removing optimistic message
+    }
   };
 
   const emitTyping = () => {

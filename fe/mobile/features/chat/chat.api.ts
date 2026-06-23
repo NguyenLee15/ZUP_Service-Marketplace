@@ -14,4 +14,12 @@ export const chatApi = {
   /** GET /chats/:id/smart-reply — Lấy gợi ý câu trả lời từ AI */
   getSmartReplies: (conversationId: number) =>
     api.get(`/chats/${conversationId}/smart-reply`),
+
+  uploadChatImage: (file: any) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/chats/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

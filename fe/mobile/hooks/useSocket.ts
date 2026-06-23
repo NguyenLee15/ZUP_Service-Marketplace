@@ -2,8 +2,9 @@
  * useSocket hook — quản lý kết nối chat + notification sockets
  */
 import { useEffect, useRef } from 'react';
-import { Alert, AppState } from 'react-native';
+import { Alert, AppState, Vibration } from 'react-native';
 import { router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { Socket } from 'socket.io-client';
 import { getChatSocket, getNotifSocket, disconnectAll } from '../lib/socket';
 import { useAuthStore } from '../features/auth/auth.store';
@@ -25,6 +26,18 @@ const getBookingId = (notification: IncomingNotification) =>
 
 function showIncomingBookingAlert(notification: IncomingNotification) {
   const bookingId = getBookingId(notification);
+  Vibration.vibrate([0, 250, 250, 250]);
+  
+  Notifications.scheduleNotificationAsync({
+    content: {
+      title: notification.title || 'Đơn hàng mới',
+      body: notification.content || notification.message || 'Bạn vừa nhận được một đơn hàng mới.',
+      sound: true,
+      data: { bookingId },
+    },
+    trigger: null,
+  });
+
   Alert.alert(
     notification.title || 'Đơn hàng mới',
     notification.content ||

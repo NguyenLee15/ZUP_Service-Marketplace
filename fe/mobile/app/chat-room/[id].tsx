@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Socket } from 'socket.io-client';
+import * as ImagePicker from 'expo-image-picker';
 import { chatApi } from '../../features/chat/chat.api';
 import { getChatSocket } from '../../lib/socket';
 import { useAuthStore } from '../../features/auth/auth.store';
@@ -36,6 +37,7 @@ export default function ChatRoomScreen() {
   const [typing, setTyping] = useState(false);
   const [smartReplies, setSmartReplies] = useState<string[]>([]);
   const [loadingReplies, setLoadingReplies] = useState(false);
+  const [attachedImage, setAttachedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
   const flashListRef = useRef<any>(null);
@@ -117,17 +119,60 @@ export default function ChatRoomScreen() {
     }
   };
 
-  // Gửi tin nhắn
-  const handleSend = useCallback(() => {
-    if (!inputText.trim() || !socketRef.current) return;
-    setSending(true);
-    socketRef.current.emit('sendMessage', {
-      conversationId: Number(id),
-      content: inputText.trim(),
+  // Chọn ảnh
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
     });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setAttachedImage(result.assets[0]);
+    }
+  };
+
+  // Gửi tin nhắn
+  const handleSend = useCallback(async () => {
+    if ((!inputText.trim() && !attachedImage) || !socketRef.current) return;
+    setSending(true);
+
+    let finalImageUrl = undefined;
+    let finalMessageType = 'TEXT';
+    const currentAttachedImage = attachedImage;
+    const currentText = inputText.trim();
+
+    setAttachedImage(null);
     setInputText('');
-    setSending(false);
-  }, [inputText, id]);
+
+    try {
+      if (currentAttachedImage) {
+        const file = {
+          uri: currentAttachedImage.uri,
+          name: currentAttachedImage.fileName || `image-${Date.now()}.jpg`,
+          type: currentAttachedImage.mimeType || 'image/jpeg',
+        };
+        const res = await chatApi.uploadChatImage(file);
+        if (res.data?.success && res.data?.data?.imageUrl) {
+          finalImageUrl = res.data.data.imageUrl;
+          finalMessageType = 'IMAGE';
+        }
+      }
+
+      socketRef.current.emit('sendMessage', {
+        conversationId: Number(id),
+        content: currentText || (currentAttachedImage ? '[Hình ảnh]' : ''),
+        messageType: finalMessageType,
+        imageUrl: finalImageUrl,
+      });
+    } catch (err) {
+      console.error('Lỗi khi gửi tin nhắn:', err);
+    } finally {
+      setSending(false);
+    }
+  }, [inputText, id, attachedImage]);
 
   // Gửi typing event (debounce)
   const handleTyping = useCallback(() => {
@@ -166,9 +211,14 @@ export default function ChatRoomScreen() {
                 ? { backgroundColor: `${theme.colors.secondary}15`, borderColor: `${theme.colors.secondary}30`, borderWidth: 1 }
                 : { backgroundColor: theme.colors.surfaceVariant },
           ]}>
-            <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onSurface }}>
-              {item.content}
-            </Text>
+            {item.imageUrl && (
+              <Avatar.Image size={150} source={{ uri: item.imageUrl }} style={{ borderRadius: 8, marginBottom: 4 }} />
+            )}
+            {item.content && (
+              <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onSurface }}>
+                {item.content}
+              </Text>
+            )}
             <Text variant="labelSmall" style={[styles.time, { color: isMe ? 'rgba(255,255,255,0.6)' : theme.colors.onSurfaceVariant }]}>
               {formatTime(item.createdAt)}
               {isMe && item.isRead && ' ✓✓'}
@@ -266,37 +316,52 @@ export default function ChatRoomScreen() {
 
       {/* Input */}
       <View style={[styles.inputBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
-        <RNTextInput
-          value={inputText}
-          onChangeText={(text) => { setInputText(text); handleTyping(); }}
-          placeholder="Nhập tin nhắn…"
-          placeholderTextColor={theme.colors.onSurfaceVariant}
-          style={[
-            styles.textInput, 
-            { 
-              color: theme.colors.onSurface,
-              backgroundColor: theme.colors.surfaceVariant,
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              paddingTop: Platform.OS === 'ios' ? 10 : 8,
-              paddingBottom: Platform.OS === 'ios' ? 10 : 8,
-              minHeight: 40,
-              maxHeight: 120
-            }
-          ]}
-          multiline
-          maxLength={2000}
-        />
-        <IconButton
-          icon="send"
-          iconColor="#fff"
-          containerColor={theme.colors.primary}
-          size={20}
-          onPress={handleSend}
-          disabled={!inputText.trim() || sending}
-          style={styles.sendBtn}
-          accessibilityLabel="Gửi tin nhắn"
-        />
+        {attachedImage && (
+          <View style={styles.attachedImagePreview}>
+            <Avatar.Image size={60} source={{ uri: attachedImage.uri }} style={{ borderRadius: 8 }} />
+            <IconButton
+              icon="close-circle"
+              size={20}
+              iconColor={theme.colors.error}
+              style={styles.removeImageBtn}
+              onPress={() => setAttachedImage(null)}
+            />
+          </View>
+        )}
+        <View style={styles.inputRow}>
+          <IconButton icon="image-outline" iconColor={theme.colors.primary} size={24} onPress={pickImage} />
+          <RNTextInput
+            value={inputText}
+            onChangeText={(text) => { setInputText(text); handleTyping(); }}
+            placeholder="Nhập tin nhắn…"
+            placeholderTextColor={theme.colors.onSurfaceVariant}
+            style={[
+              styles.textInput, 
+              { 
+                color: theme.colors.onSurface,
+                backgroundColor: theme.colors.surfaceVariant,
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingTop: Platform.OS === 'ios' ? 10 : 8,
+                paddingBottom: Platform.OS === 'ios' ? 10 : 8,
+                minHeight: 40,
+                maxHeight: 120
+              }
+            ]}
+            multiline
+            maxLength={2000}
+          />
+          <IconButton
+            icon="send"
+            iconColor="#fff"
+            containerColor={theme.colors.primary}
+            size={20}
+            onPress={handleSend}
+            disabled={(!inputText.trim() && !attachedImage) || sending}
+            style={styles.sendBtn}
+            accessibilityLabel="Gửi tin nhắn"
+          />
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -397,4 +462,18 @@ const getStyles = (theme: any, insets: any) => StyleSheet.create({
   },
   textInput: { flex: 1, maxHeight: 100 },
   sendBtn: { marginBottom: 4 },
+  attachedImagePreview: {
+    padding: 16,
+    paddingBottom: 0,
+    flexDirection: 'row',
+  },
+  removeImageBtn: {
+    position: 'absolute',
+    top: 6,
+    left: 60,
+    margin: 0,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', padding: 8, paddingHorizontal: 12 },
 });

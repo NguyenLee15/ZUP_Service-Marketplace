@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bot, RotateCcw, Send, Search, Wrench } from "lucide-react";
+import { ArrowLeft, Bot, RotateCcw, Send, Search, Wrench, Image as ImageIcon, X } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { getChatSocket } from "@/lib/socket";
@@ -16,6 +16,7 @@ interface Message {
   createdAt: string;
   recalledAt?: string | null;
   isAiGenerated?: boolean;
+  imageUrl?: string | null;
 }
 
 interface Conversation {
@@ -75,6 +76,9 @@ function ChatPageContent() {
   >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFilePreview, setSelectedFilePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [conversationError, setConversationError] = useState("");
@@ -238,17 +242,57 @@ function ChatPageContent() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || !selectedConversation) return;
+    if ((!inputValue.trim() && !selectedFile) || !selectedConversation) return;
 
-    const socket = getChatSocket();
-    if (socket) {
-      if (!socket.connected) socket.connect();
-      socket.emit("sendMessage", {
-        conversationId: selectedConversation,
-        content: inputValue.trim(),
-      });
-    }
+    let finalImageUrl = undefined;
+    let finalMessageType = "TEXT";
+    const currentText = inputValue.trim();
+    const currentFile = selectedFile;
+
+    // Reset input immediately for better UX
     setInputValue("");
+    setSelectedFile(null);
+    if (selectedFilePreview) {
+      URL.revokeObjectURL(selectedFilePreview);
+      setSelectedFilePreview(null);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    try {
+      if (currentFile) {
+        const res = await chatApi.uploadChatImage(currentFile);
+        if (res.data?.success && res.data?.data?.imageUrl) {
+          finalImageUrl = res.data.data.imageUrl;
+          finalMessageType = "IMAGE";
+        }
+      }
+
+      const socket = getChatSocket();
+      if (socket) {
+        if (!socket.connected) socket.connect();
+        socket.emit("sendMessage", {
+          conversationId: selectedConversation,
+          content: currentText || (currentFile ? "[Hình ảnh]" : ""),
+          messageType: finalMessageType,
+          imageUrl: finalImageUrl,
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi gửi tin nhắn", err);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ảnh không được vượt quá 5MB");
+        return;
+      }
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setSelectedFilePreview(url);
+    }
   };
 
   const handleTypingEvent = () => {
@@ -503,28 +547,48 @@ function ChatPageContent() {
                         />
                       )}
 
-                      <div
-                        className={`max-w-xs md:max-w-md px-4 py-3 rounded-2xl ${
-                          isRecalled
-                            ? "border border-dashed border-platinum-tint bg-card/70 text-muted-foreground italic"
-                            : isMe
-                            ? "bg-gradient-to-r from-action-blue to-glacier-blue text-white rounded-br-sm shadow-[0_4px_15px_rgba(0,107,255,0.2)]"
-                            : isAi
-                              ? "bg-gradient-to-r from-midnight-indigo to-glacier-blue text-white rounded-bl-sm shadow-[0_4px_15px_rgba(0,107,255,0.15)]"
-                              : "glass-panel text-foreground rounded-bl-sm"
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap break-words">
-                          {message.content}
-                        </p>
-                        <p
-                          className={`text-[10px] mt-1 text-right ${!isRecalled && (isMe || isAi) ? "text-white/70" : "text-muted-foreground"}`}
+                      <div className="flex flex-col">
+                        {isAi && !isRecalled && (
+                          <div className="flex items-center gap-1.5 opacity-80 mb-1.5 ml-1">
+                            <Bot className="w-3.5 h-3.5" />
+                            <span className="text-xs font-semibold tracking-wide">
+                              AI
+                            </span>
+                          </div>
+                        )}
+                        <div
+                          className={`relative group inline-block max-w-full px-4 py-2.5 shadow-sm ${
+                            isRecalled
+                              ? "border border-dashed border-platinum-tint bg-card/70 text-muted-foreground italic rounded-2xl"
+                              : isMe
+                                ? "bg-gradient-to-r from-action-blue to-glacier-blue text-white rounded-2xl rounded-tr-sm"
+                                : isAi
+                                  ? "bg-[#ECFDF5] border border-[#BBF7D0] text-emerald-950 rounded-2xl rounded-tl-sm"
+                                  : "bg-surface border border-outline-variant text-foreground rounded-2xl rounded-tl-sm"
+                          }`}
                         >
-                          {new Date(message.createdAt).toLocaleTimeString(
-                            "vi-VN",
-                            { hour: "2-digit", minute: "2-digit" },
+                          {message.imageUrl && !isRecalled && (
+                            <div className="mb-2">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img 
+                                src={message.imageUrl} 
+                                alt="Chat image" 
+                                className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
+                              />
+                            </div>
                           )}
-                        </p>
+                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                            {message.content}
+                          </p>
+                          <p
+                            className={`text-[10px] mt-1 text-right ${!isRecalled && (isMe || isAi) ? "text-white/70" : "text-muted-foreground"}`}
+                          >
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              "vi-VN",
+                              { hour: "2-digit", minute: "2-digit" },
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   );
@@ -533,12 +597,45 @@ function ChatPageContent() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="bg-card border-t border-action-blue/10 px-4 md:px-6 py-4">
+            <div className="bg-card border-t border-action-blue/10 px-4 md:px-6 py-4 flex flex-col">
+              {selectedFilePreview && (
+                <div className="mb-3 relative inline-block w-fit">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={selectedFilePreview} alt="preview" className="h-20 w-auto rounded-lg object-cover border border-outline-variant shadow-sm" />
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      URL.revokeObjectURL(selectedFilePreview);
+                      setSelectedFilePreview(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 shadow-sm border border-outline-variant hover:bg-gray-100 p-0.5"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               <form
                 id="chat-form"
                 onSubmit={handleSendMessage}
-                className="flex gap-3"
+                className="flex gap-3 items-end"
               >
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-full w-10 h-10 p-0 flex items-center justify-center flex-shrink-0 text-muted-foreground hover:text-action-blue hover:bg-action-blue/10"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </Button>
                 <input
                   type="text"
                   value={inputValue}
@@ -550,13 +647,13 @@ function ChatPageContent() {
                   aria-label="Nhập tin nhắn"
                   name="message"
                   autoComplete="off"
-                  className="flex-1 px-4 py-2.5 glass-panel text-foreground rounded-full focus:outline-none focus:ring-2 focus:ring-action-blue focus:border-action-blue/30"
+                  className="flex-1 px-4 py-2.5 glass-panel text-foreground rounded-full focus:outline-none focus:ring-2 focus:ring-action-blue focus:border-action-blue/30 min-h-[44px]"
                 />
                 <Button
                   type="submit"
                   aria-label="Gửi tin nhắn"
-                  disabled={!inputValue.trim()}
-                  className="bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white rounded-full w-10 h-10 p-0 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(0,107,255,0.3)] transition-all"
+                  disabled={!inputValue.trim() && !selectedFile}
+                  className="bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white rounded-full w-11 h-11 p-0 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(0,107,255,0.3)] transition-all mb-0"
                 >
                   <Send className="w-4 h-4 ml-[-2px]" />
                 </Button>

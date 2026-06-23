@@ -46,6 +46,16 @@ import {
 import { BackButton } from "@/components/navigation/BackButton";
 import { useNotificationsSocket } from "@/features/notification/hooks/useNotificationsSocket";
 
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Chờ xác nhận",
+  QUOTED: "Đã báo giá",
+  CONFIRMED: "Đã xác nhận",
+  IN_PROGRESS: "Đang thực hiện",
+  DONE: "Hoàn thành",
+  CANCELLED: "Đã hủy",
+  DISPUTED: "Tranh chấp",
+};
+
 export default function BookingDetailPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -337,7 +347,7 @@ export default function BookingDetailPage() {
                     <div className="space-y-0.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-tight text-foreground">
-                          {h.toStatus}
+                          {STATUS_LABELS[h.toStatus] || h.toStatus}
                         </span>
                         <span className="text-[10px] text-muted-foreground font-medium">
                           {formatDate(h.createdAt)}

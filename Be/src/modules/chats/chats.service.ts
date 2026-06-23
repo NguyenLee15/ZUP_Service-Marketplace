@@ -277,9 +277,11 @@ export class ChatsService {
     senderId: number | null,
     senderType: SenderType,
     content: string,
+    messageType: string = 'TEXT',
+    imageUrl?: string,
   ) {
     const message = await this.prisma.message.create({
-      data: { conversationId, senderId, senderType, content },
+      data: { conversationId, senderId, senderType, content, messageType, imageUrl },
       include: {
         sender: { select: { id: true, fullName: true, avatarUrl: true } },
       },

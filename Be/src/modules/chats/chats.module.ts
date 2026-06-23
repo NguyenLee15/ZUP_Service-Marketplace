@@ -8,10 +8,12 @@ import { ChatsController } from './chats.controller';
 import { BullModule } from '@nestjs/bullmq';
 import { AiModule } from '../../shared/ai/ai.module';
 import { isRedisQueueEnabled } from '../../config/runtime.config';
+import { CloudinaryModule } from '../../shared/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
     AiModule,
+    CloudinaryModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): JwtModuleOptions => ({

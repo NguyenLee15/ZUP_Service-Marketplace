@@ -1,6 +1,6 @@
 import { useActiveColors } from '../hooks/useActiveColors';
 import { useEffect, useMemo, useState, useRef } from "react";
-import { View, StyleSheet, Animated, AppState } from "react-native";
+import { View, StyleSheet, Animated, AppState, Vibration } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Chip, IconButton, Text, TextInput } from "react-native-paper";
@@ -8,6 +8,7 @@ import { useRouter } from "expo-router";
 import { io } from "socket.io-client";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Notifications from "expo-notifications";
 import {
   CustomerCard,
   CustomerHeader,
@@ -365,6 +366,15 @@ export default function NotificationsScreen() {
           Haptics.notificationAsync(
             Haptics.NotificationFeedbackType.Success,
           ).catch(() => {});
+          Vibration.vibrate([0, 250, 250, 250]);
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: notification.title || 'Thông báo mới',
+              body: notification.content || notification.message || 'Bạn vừa nhận được một thông báo mới.',
+              sound: true,
+            },
+            trigger: null,
+          });
         });
       })
       .catch(() => {

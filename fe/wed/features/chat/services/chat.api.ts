@@ -12,4 +12,12 @@ export const chatApi = {
 
   recallMessage: (messageId: number) =>
     api.patch(`/chats/messages/${messageId}/recall`),
+
+  uploadChatImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/chats/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

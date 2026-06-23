@@ -519,7 +519,9 @@ model Message {
   conversationId Int          @map("conversation_id")
   senderId       Int?         @map("sender_id")
   senderType     SenderType
+  messageType    String       @default("TEXT") @map("message_type") @db.VarChar(20)
   content        String       @db.Text
+  imageUrl       String?      @map("image_url") @db.VarChar(255)
   isRead         Boolean      @default(false) @map("is_read")
   recalledAt     DateTime?    @map("recalled_at")
   createdAt      DateTime     @default(now()) @map("created_at")
