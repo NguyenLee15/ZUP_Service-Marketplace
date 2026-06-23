@@ -10,7 +10,8 @@ import {
   Heart,
   ShoppingBag,
   Sparkles,
-  Star,
+  CheckCircle,
+  TrendingUp,
   Wrench,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -324,11 +325,17 @@ export function UnifiedServiceCard({
             <div className="truncate text-sm sm:text-base font-extrabold leading-tight text-cyan-300 tabular-nums">
               Từ {displayPrice}.
             </div>
-            <div className="mt-1 flex min-w-0 items-center gap-1 text-[10px] sm:text-[11px] leading-none text-foreground/80">
-              <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
-              <span className="shrink-0">{rating}.</span>
-              {salesCount > 0 && (
-                <span className="truncate">Lượt đặt {formatCompactCount(salesCount)}.</span>
+            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10px] sm:text-[11px] font-medium leading-none text-slate-500 dark:text-slate-400">
+              {salesCount > 0 ? (
+                <>
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                  <span className="truncate">Đã có {formatCompactCount(salesCount)} lượt đặt.</span>
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="h-3.5 w-3.5 shrink-0 text-sky-500" />
+                  <span className="truncate">Dịch vụ mới.</span>
+                </>
               )}
             </div>
           </div>
