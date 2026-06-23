@@ -75,9 +75,6 @@ export default function WalletScreen() {
   const [hasMore, setHasMore] = useState(true);
 
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const [depositMode, setDepositMode] = useState<'vnpay' | 'manual' | 'payos'>(
-    'payos',
-  );
   const [depositAmount, setDepositAmount] = useState('');
   const [transferCode, setTransferCode] = useState('');
   const [depositError, setDepositError] = useState('');
@@ -180,27 +177,10 @@ export default function WalletScreen() {
     setDepositError('');
     setDepositLoading(true);
     try {
-      if (depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED) {
-        const code = transferCode || generateManualDepositCode();
-        await walletApi.createManualDeposit({ amount, transferCode: code });
-        setShowDepositModal(false);
-        resetDepositForm();
-        setMessage({
-          tone: 'success',
-          text: 'Đã gửi yêu cầu nạp thủ công. Admin sẽ kiểm tra chuyển khoản và cộng ví.',
-        });
-        await fetchRequests();
-        return;
-      }
-
       let paymentUrl = '';
-      if (depositMode === 'payos') {
-        const res = await walletApi.createPayosDeposit(amount);
-        paymentUrl = res.data?.data?.checkoutUrl;
-      } else {
-        const res = await walletApi.deposit(amount);
-        paymentUrl = res.data?.data?.paymentUrl || res.data?.data?.url;
-      }
+      const res = await walletApi.createPayosDeposit(amount);
+      paymentUrl = res.data?.data?.checkoutUrl;
+
       if (!paymentUrl) throw new Error('Không lấy được link thanh toán');
 
       setShowDepositModal(false);
@@ -492,49 +472,9 @@ export default function WalletScreen() {
             <Text variant="titleMedium" style={styles.modalTitle}>
               Nạp tiền vào ví
             </Text>
-          {MANUAL_DEPOSIT_ENABLED ? (
-            <SegmentedButtons
-              value={depositMode}
-              onValueChange={value => {
-                setDepositMode(value as 'vnpay' | 'manual' | 'payos');
-                setDepositError('');
-                if (value === 'manual' && !transferCode) setTransferCode(generateManualDepositCode());
-              }}
-              buttons={[
-                { value: 'payos', label: 'VietQR (Nhanh)' },
-                { value: 'manual', label: 'Thủ công' },
-                { value: 'vnpay', label: 'VNPAY' },
-              ]}
-            />
-          ) : null}
           <Text variant="bodySmall" style={styles.modalDescription}>
-            {depositMode === 'payos'
-              ? 'Tự động sinh mã VietQR. Tiền cộng vào ví ngay trong 2-3 giây.'
-              : depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED
-              ? 'Chuyển khoản thật vào tài khoản nền tảng, sau đó gửi yêu cầu để admin xác nhận.'
-              : 'Thanh toán thử nghiệm qua VNPAY sandbox. Giao dịch này chưa thu tiền thật.'}
+            Hệ thống tự động sinh mã VietQR. Tiền cộng vào ví ngay trong 2-3 giây sau khi chuyển khoản.
           </Text>
-
-          {depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED && (
-            <View style={styles.bankInfo}>
-              <Text variant="labelLarge" style={styles.bankInfoTitle}>
-                Thông tin nhận chuyển khoản
-              </Text>
-              <Text style={styles.bankLine}>Ngân hàng: {MANUAL_BANK_INFO.bankName}</Text>
-              <Text style={styles.bankLine}>Số tài khoản: {MANUAL_BANK_INFO.accountNumber}</Text>
-              <Text style={styles.bankLine}>Chủ tài khoản: {MANUAL_BANK_INFO.holder}</Text>
-              <Text style={styles.bankHint}>Nội dung chuyển khoản: {transferCode || 'Đang tạo mã...'}</Text>
-              <Button
-                mode="outlined"
-                compact
-                icon="content-copy"
-                onPress={copyTransferCode}
-                style={styles.copyButton}
-              >
-                Sao chép mã
-              </Button>
-            </View>
-          )}
 
           {depositError ? <ProviderInlineMessage tone="error" message={depositError} /> : null}
 
@@ -550,17 +490,6 @@ export default function WalletScreen() {
             left={<TextInput.Icon icon="cash" accessibilityLabel="Số tiền" />}
             style={styles.amountInput}
           />
-
-          {depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED && (
-            <TextInput
-              label="Mã giao dịch tự tạo"
-              value={transferCode}
-              editable={false}
-              mode="outlined"
-              left={<TextInput.Icon icon="identifier" accessibilityLabel="Mã giao dịch" />}
-              style={styles.amountInput}
-            />
-          )}
 
           <View style={styles.quickAmounts}>
             {[50000, 100000, 200000, 500000].map(amount => (
@@ -578,7 +507,7 @@ export default function WalletScreen() {
             style={styles.primaryButton}
             contentStyle={styles.buttonContent}
           >
-            {depositLoading ? 'Đang xử lý...' : depositMode === 'manual' ? 'Gửi yêu cầu nạp' : 'Thanh toán thử nghiệm qua VNPAY'}
+            {depositLoading ? 'Đang xử lý...' : 'Tiếp tục'}
           </Button>
             <Button mode="text" onPress={() => setShowDepositModal(false)} style={styles.cancelButton}>
               Hủy
