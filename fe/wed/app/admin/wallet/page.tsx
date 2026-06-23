@@ -83,6 +83,7 @@ export default function AdminWalletPage() {
 
   const requests = withdrawals;
   const activeLabel = 'yêu cầu rút';
+  const activeTab = 'withdrawals';
 
   const summary = useMemo(() => {
     const list = requests;
@@ -243,20 +244,11 @@ export default function AdminWalletPage() {
                       </td>
                       <td className="px-4 py-3 font-semibold">{formatCurrency(request.amount)}</td>
                       <td className="px-4 py-3">
-                        {activeTab === 'deposits' ? (
-                          <div className="space-y-1">
-                            <p>Mã GD: {request.transferCode || 'Chưa nhập'}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Tạo lúc {new Date(request.createdAt).toLocaleString('vi-VN')}
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            <p>{request.bankName}</p>
-                            <p className="font-medium">{request.bankAccountNumber}</p>
-                            <p className="text-xs text-muted-foreground">{request.bankAccountHolder}</p>
-                          </div>
-                        )}
+                        <div className="space-y-1">
+                          <p>{request.bankName}</p>
+                          <p className="font-medium">{request.bankAccountNumber}</p>
+                          <p className="text-xs text-muted-foreground">{request.bankAccountHolder}</p>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="space-y-2">
@@ -353,7 +345,7 @@ export default function AdminWalletPage() {
                   onClick={() => handleAction(selected, 'approve')}
                 >
                   <CheckCircle className="mr-1 h-4 w-4" />
-                  {activeTab === 'deposits' ? 'Xác nhận nạp' : 'Đã chuyển khoản'}
+                  Đã chuyển khoản
                 </Button>
               </div>
             </CardContent>

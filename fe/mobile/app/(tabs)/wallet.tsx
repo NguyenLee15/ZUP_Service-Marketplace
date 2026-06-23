@@ -161,9 +161,6 @@ export default function WalletScreen() {
     if (MANUAL_DEPOSIT_ENABLED && !transferCode) {
       setTransferCode(generateManualDepositCode());
     }
-    if (!MANUAL_DEPOSIT_ENABLED) {
-      setDepositMode('vnpay');
-    }
     setShowDepositModal(true);
   };
 
