@@ -10,6 +10,7 @@ import {
   Heart,
   ShoppingBag,
   Sparkles,
+  Star,
   CheckCircle,
   TrendingUp,
   Wrench,
