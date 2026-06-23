@@ -7,8 +7,6 @@ import {
 import type { Category } from '@/types';
 
 export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
-  const level1Categories = categories.filter((c) => c.level === 1);
-
   const getCategoryIconAndHint = (name: string) => {
     const lower = name.toLowerCase();
     if (lower.includes('sửa chữa') || lower.includes('kỹ thuật')) return { icon: Wrench, hint: 'Điện nước, thiết bị' };
@@ -25,7 +23,8 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
     return { icon: Wrench, hint: 'Dịch vụ tiện ích' };
   };
 
-  const displayCategories = level1Categories.map((cat) => {
+  // The backend no longer provides level or parentId, so all categories are top-level
+  const displayCategories = categories.map((cat) => {
     const { icon, hint } = getCategoryIconAndHint(cat.name);
     return { icon, label: cat.name, hint, categoryId: cat.id };
   });
