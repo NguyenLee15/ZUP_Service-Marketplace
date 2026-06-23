@@ -14,6 +14,7 @@ import {
   UpdateAddressDto,
 } from './dto/users.dto';
 import { Prisma } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const MAX_ADDRESSES = 5;
 
@@ -24,6 +25,7 @@ export class UsersService {
   constructor(
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   // ===== HELPERS =====
@@ -130,6 +132,7 @@ export class UsersService {
       where: { id: userId },
       data: { isOnline },
     });
+    this.eventEmitter.emit('cache.clear.services');
     return { message: isOnline ? 'Đã bật trạng thái nhận đơn' : 'Đã tắt trạng thái nhận đơn', isOnline };
   }
 

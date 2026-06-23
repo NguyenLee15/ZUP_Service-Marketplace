@@ -131,7 +131,7 @@ export default function HomeScreen() {
   const homeQuery = useQuery({
     queryKey: ['customer-home'],
     queryFn: readHomeData,
-    staleTime: 1000 * 60 * 3,
+    staleTime: 1000 * 30, // 30 seconds caching
   });
 
   const unreadQuery = useQuery({

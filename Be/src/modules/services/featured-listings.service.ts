@@ -11,6 +11,7 @@ import { RedisService } from '../../shared/redis/redis.service';
 import { FeaturedListingStatus, Prisma, ServiceStatus } from '@prisma/client';
 import { paginationMeta } from '../../common/dto/pagination.dto';
 import { AdminFeaturedListingsQueryDto } from './dto/services.dto';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class FeaturedListingsService {
@@ -27,6 +28,7 @@ export class FeaturedListingsService {
   /**
    * Xóa cache của danh sách dịch vụ nổi bật khi có thay đổi.
    */
+  @OnEvent('cache.clear.services')
   private async clearFeaturedCache() {
     try {
       await this.redisService.del('services:featured:8');

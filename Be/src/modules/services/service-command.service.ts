@@ -11,6 +11,7 @@ import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { CreateServiceDto, UpdateServiceDto } from './dto/services.dto';
 import { ServiceSharedService } from './service-shared.service';
 import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ServiceCommandService {
@@ -19,6 +20,7 @@ export class ServiceCommandService {
     private readonly cloudinaryService: CloudinaryService,
     private readonly shared: ServiceSharedService,
     private readonly ledger: WalletLedgerService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(
@@ -241,6 +243,7 @@ export class ServiceCommandService {
     });
 
     await this.ledger.syncWalletRestriction(providerId, this.prisma);
+    this.eventEmitter.emit('cache.clear.services');
 
     return { data: updated, message: 'Đã ẩn dịch vụ' };
   }
@@ -303,6 +306,7 @@ export class ServiceCommandService {
     });
 
     await this.ledger.syncWalletRestriction(providerId, this.prisma);
+    this.eventEmitter.emit('cache.clear.services');
 
     return { data: updated, message: 'Đã hiện dịch vụ' };
   }
@@ -344,6 +348,7 @@ export class ServiceCommandService {
     });
 
     await this.ledger.syncWalletRestriction(providerId, this.prisma);
+    this.eventEmitter.emit('cache.clear.services');
 
     return { message: 'Đã xóa dịch vụ' };
   }
