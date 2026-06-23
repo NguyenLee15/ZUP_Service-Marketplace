@@ -8,19 +8,19 @@ export class VnpayReconciliationCron {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
     this.logger.log('Bắt đầu chạy Cronjob đối soát VNPay...');
 
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
 
-    // Tìm các giao dịch bị kẹt PENDING quá 24h
+    // Tìm các giao dịch bị kẹt PENDING quá 15 phút
     const stuckTxns = await this.prisma.walletTransaction.findMany({
       where: {
         type: 'DEPOSIT',
         status: 'PENDING',
         createdAt: {
-          lte: twentyFourHoursAgo,
+          lte: fifteenMinutesAgo,
         },
       },
     });
