@@ -39,6 +39,7 @@ describe('UsersService ownership', () => {
     service = new UsersService(
       prisma as unknown as PrismaService,
       {} as CloudinaryService,
+      {} as any,
     );
   });
 

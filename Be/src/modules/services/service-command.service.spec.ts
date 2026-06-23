@@ -50,6 +50,7 @@ describe('ServiceCommandService ownership', () => {
       {} as CloudinaryService,
       shared as unknown as ServiceSharedService,
       {} as any,
+      {} as any,
     );
   });
 

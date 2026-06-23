@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException, OnModuleInit } from '@nestjs/common';
-import PayOS from '@payos/node';
+import { PayOS } from '@payos/node';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WalletSharedService } from './wallet-shared.service';
 
@@ -42,7 +42,7 @@ export class PayosService implements OnModuleInit {
       throw new BadRequestException('PAYOS_MIN_AMOUNT_2000');
     }
 
-    const wallet = await this.walletShared.getOrCreateWallet(providerId);
+    const wallet = await this.walletShared.getOrCreateWallet(this.prisma, providerId);
     
     // PayOS requires a numeric orderCode (max 53 bit integer)
     // We generate a relatively unique number using timestamp and random digits
