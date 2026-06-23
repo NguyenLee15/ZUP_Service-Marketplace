@@ -332,7 +332,7 @@ export function UnifiedServiceCard({
               {salesCount > 0 ? (
                 <>
                   <span className="mx-1 text-slate-400/50 dark:text-slate-600">•</span>
-                  <span className="truncate text-slate-500 dark:text-slate-400">Lượt đặt {formatCompactCount(salesCount)}</span>
+                  <span className="truncate">Lượt đặt {formatCompactCount(salesCount)}</span>
                 </>
               ) : (
                 <>
