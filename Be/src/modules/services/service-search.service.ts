@@ -42,9 +42,6 @@ export class ServiceSearchService {
       isDeleted: false,
       provider: {
         status: 'ACTIVE',
-        providerWallet: {
-          isRestricted: false,
-        },
       },
     };
 

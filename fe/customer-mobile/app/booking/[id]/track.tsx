@@ -42,6 +42,8 @@ type TrackingBooking = {
   bookingCode?: string | null;
   status?: string | null;
   desiredTime?: string | Date | null;
+  providerArrivedAt?: string | Date | null;
+  providerAcceptedAt?: string | Date | null;
   addressDetail?: string | null;
   ward?: string | null;
   district?: string | null;
@@ -57,7 +59,6 @@ type TrackingBooking = {
   } | null;
 };
 
-const TRACKABLE_STATUSES = ['CONFIRMED', 'IN_PROGRESS'];
 
 const BASE_TRACK_STEPS = [
   { key: 'CONFIRMED', label: 'Đã xác nhận lịch', description: 'Lịch hẹn đã được chốt.' },
@@ -75,8 +76,12 @@ function isValidBookingId(value: number) {
   return Number.isFinite(value) && value > 0;
 }
 
-function isTrackableStatus(status?: string | null) {
-  return TRACKABLE_STATUSES.includes(String(status || ''));
+const TRACKABLE_STATUSES = ['QUOTED', 'CONFIRMED', 'IN_PROGRESS'];
+
+function isTrackableStatus(booking?: TrackingBooking | null) {
+  if (!booking) return false;
+  if (booking.status === 'PENDING' && booking.providerAcceptedAt) return true;
+  return TRACKABLE_STATUSES.includes(String(booking.status || ''));
 }
 
 function toFiniteNumber(value: unknown) {
@@ -146,14 +151,20 @@ function getConnectionMessage(
   return null;
 }
 
-function getTrackingSteps(status?: string | null) {
+function getTrackingSteps(status?: string | null, providerArrivedAt?: string | Date | null) {
+  const steps = [...BASE_TRACK_STEPS];
+  if (providerArrivedAt) {
+    steps.splice(1, 0, { key: 'ARRIVED', label: 'Thợ đã đến', description: 'Thợ đã đến địa điểm của bạn.' });
+  }
+
   if (status && TERMINAL_TRACK_STEPS[status]) {
     return [
-      BASE_TRACK_STEPS[0],
+      steps[0],
+      ...(providerArrivedAt ? [steps[1]] : []),
       { key: status, ...TERMINAL_TRACK_STEPS[status] },
     ];
   }
-  return BASE_TRACK_STEPS;
+  return steps;
 }
 
 function formatLocationMeta(location: TrackingLocation | null) {
@@ -172,6 +183,7 @@ function formatLocationMeta(location: TrackingLocation | null) {
 function fullAddress(booking?: TrackingBooking | null) {
   return [booking?.addressDetail, booking?.ward, booking?.district, booking?.province]
     .filter(Boolean)
+    .filter((p) => p !== 'Không áp dụng')
     .join(', ');
 }
 
@@ -196,8 +208,7 @@ export default function TrackingScreen() {
   });
 
   const booking = bookingQuery.data;
-  const status = booking?.status || '';
-  const trackable = isTrackableStatus(status);
+  const trackable = isTrackableStatus(booking);
 
   useEffect(() => {
     setTrackingEnded(null);
@@ -359,7 +370,7 @@ export default function TrackingScreen() {
   }
 
   const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
-  const timelineSteps = getTrackingSteps(status);
+  const timelineSteps = getTrackingSteps(status, booking?.providerArrivedAt);
 
   return (
     <ScrollView

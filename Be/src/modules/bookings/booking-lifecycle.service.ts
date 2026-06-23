@@ -541,6 +541,42 @@ export class BookingLifecycleService {
     return { data: updated, message: 'Đã từ chối báo giá' };
   }
 
+  async arriveAtLocation(providerId: number, bookingId: number) {
+    const booking = await this.shared.checkBooking(bookingId, {
+      providerId,
+      status: BookingStatus.CONFIRMED,
+    });
+
+    if (booking.providerArrivedAt) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Bạn đã xác nhận đến nơi trước đó',
+      });
+    }
+
+    const updated = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { providerArrivedAt: new Date() },
+    });
+
+    await this.shared.addStatusHistory(
+      bookingId,
+      'CONFIRMED',
+      'CONFIRMED',
+      providerId,
+      'Đã đến nơi',
+    );
+    await this.shared.notify(
+      booking.customerId,
+      'PROVIDER_ARRIVED',
+      'Thợ đã đến',
+      `Đơn #${booking.bookingCode}: Thợ đã đến địa điểm của bạn`,
+      bookingId,
+    );
+
+    return { data: updated, message: 'Đã báo đến nơi thành công' };
+  }
+
   async startWork(providerId: number, bookingId: number) {
     const booking = await this.shared.checkBooking(bookingId, {
       providerId,

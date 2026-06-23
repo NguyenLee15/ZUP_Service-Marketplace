@@ -269,7 +269,7 @@ export default function BookingsPage() {
                   <div className="bg-muted p-4 rounded-lg col-span-2">
                     <p className="text-xs text-muted-foreground mb-1">Thời gian & Địa điểm</p>
                     <p className="font-medium text-foreground">Hẹn lúc: {displayBooking.desiredTime ? new Date(displayBooking.desiredTime).toLocaleString('vi-VN') : '---'}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Tại: {[displayBooking.addressDetail, displayBooking.ward, displayBooking.district, displayBooking.province].filter(Boolean).join(', ')}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Tại: {[displayBooking.addressDetail, displayBooking.ward, displayBooking.district, displayBooking.province].filter(Boolean).filter(p => p !== 'Không áp dụng').join(', ')}</p>
                     
                     {/* Lifecycle Timestamps */}
                     <div className="mt-3 flex gap-4 text-xs text-muted-foreground border-t border-border pt-2">

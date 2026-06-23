@@ -22,6 +22,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { bookingApi } from "../../features/booking/booking.api";
 import { useAuthStore } from "../../features/auth/auth.store";
@@ -41,6 +42,7 @@ import {
   ProviderSectionHeader,
   ProviderStatusChip,
 } from "../../components/provider/provider-ui";
+import { getTrackingSocket } from "../../lib/socket";
 
 type ImageSetter = Dispatch<SetStateAction<ImagePicker.ImagePickerAsset[]>>;
 type MessageState = {
@@ -69,7 +71,23 @@ const getStatusColor = (status: string, activeColors: typeof Colors.light | type
   return map[status] || activeColors.textSecondary;
 };
 
-export default function BookingDetailScreen() {
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+}
+
+function deg2rad(deg: number) {
+  return deg * (Math.PI / 180);
+}
+
+export default function ProviderBookingDetailScreen() {
   const theme = useTheme();
   const { user } = useAuthStore();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
@@ -162,6 +180,58 @@ export default function BookingDetailScreen() {
       void fetchBooking();
     }
   }, [bookingSignal, fetchBooking, id]);
+
+  // Foreground Location Tracking (PENDING, QUOTED, CONFIRMED, IN_PROGRESS)
+  useEffect(() => {
+    if (!booking?.id || !booking?.status) return;
+    
+    // Only track when provider is likely moving to/working at customer location
+    const trackableStatuses = ["PENDING", "QUOTED", "CONFIRMED", "IN_PROGRESS"];
+    if (!trackableStatuses.includes(booking.status)) return;
+
+    let isMounted = true;
+    let locationSubscription: Location.LocationSubscription | null = null;
+
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.warn("Foreground location permission denied");
+          return;
+        }
+
+        const socket = await getTrackingSocket();
+
+        locationSubscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 5000,
+            distanceInterval: 10,
+          },
+          (location) => {
+            if (isMounted) {
+              socket.emit("updateLocation", {
+                bookingId: booking.id,
+                lat: location.coords.latitude,
+                lng: location.coords.longitude,
+                heading: location.coords.heading,
+                speed: location.coords.speed,
+              });
+            }
+          }
+        );
+      } catch (err) {
+        console.error("Error setting up location tracking:", err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+    };
+  }, [booking?.id, booking?.status]);
 
   useEffect(() => {
     if (showQuoteModal && booking) {
@@ -515,6 +585,76 @@ export default function BookingDetailScreen() {
     ]);
   };
 
+  const handleArrive = async () => {
+    try {
+      setActionLoading(true);
+      setMessage(null);
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert("Lỗi", "Cần cấp quyền vị trí để xác nhận.");
+        setActionLoading(false);
+        return;
+      }
+
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      
+      const fullAddress = [booking.addressDetail, booking.ward, booking.district, booking.province]
+        .filter(Boolean)
+        .filter(p => p !== 'Không áp dụng')
+        .join(', ');
+        
+      const geocoded = await Location.geocodeAsync(fullAddress);
+      
+      let shouldWarn = false;
+      if (geocoded && geocoded.length > 0) {
+        const target = geocoded[0];
+        const dist = getDistanceFromLatLonInKm(
+          currentLocation.coords.latitude, 
+          currentLocation.coords.longitude, 
+          target.latitude, 
+          target.longitude
+        );
+        if (dist > 0.5) { // 500m
+          shouldWarn = true;
+        }
+      } else {
+        shouldWarn = true;
+      }
+
+      const proceedArrive = async () => {
+        try {
+          setActionLoading(true);
+          await bookingApi.arriveAtLocation(Number(id));
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          await fetchBooking();
+          setMessage({ tone: 'success', text: 'Đã báo đến nơi' });
+        } catch(err: any) {
+          setMessage({ tone: 'error', text: err?.response?.data?.error?.message || 'Báo đến nơi thất bại' });
+        } finally {
+          setActionLoading(false);
+        }
+      };
+
+      if (shouldWarn) {
+        Alert.alert(
+          "Cảnh báo",
+          "Vị trí của bạn dường như cách xa nhà khách hơn 500m. Bạn có chắc chắn đã đến nơi?",
+          [
+            { text: "Hủy", style: "cancel", onPress: () => setActionLoading(false) },
+            { text: "Vẫn xác nhận", onPress: proceedArrive },
+          ]
+        );
+      } else {
+        await proceedArrive();
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Lỗi", "Không thể lấy vị trí hiện tại.");
+      setActionLoading(false);
+    }
+  };
+
   const handleComplete = async () => {
     if (resultImages.length === 0) {
       setMessage({
@@ -607,6 +747,7 @@ export default function BookingDetailScreen() {
     booking.status === "PENDING" && !booking.providerAcceptedAt;
   const canHandlePendingWorkflow =
     booking.status === "PENDING" && Boolean(booking.providerAcceptedAt);
+  const isAnyModalVisible = showQuoteModal || showCancelModal || showSuppQuoteModal;
   const responseDeadline = booking.providerResponseDeadline
     ? new Date(booking.providerResponseDeadline).toLocaleTimeString("vi-VN", {
         hour: "2-digit",
@@ -697,9 +838,11 @@ export default function BookingDetailScreen() {
           <Text variant="titleMedium" style={styles.cardTitle} selectable>
             {booking.service?.name || "Dịch vụ"}
           </Text>
-          <Text variant="bodySmall" style={styles.mutedText}>
-            {booking.service?.category?.name || "Chưa có danh mục"}
-          </Text>
+          {booking.service?.category?.name && (
+            <Text variant="bodySmall" style={styles.mutedText}>
+              {booking.service.category.name}
+            </Text>
+          )}
           {booking.bookingItems && booking.bookingItems.length > 0 && (
             <View style={styles.itemsContainer}>
               <Text variant="labelMedium" style={styles.itemsHeader}>
@@ -752,6 +895,7 @@ export default function BookingDetailScreen() {
                 booking.province,
               ]
                 .filter(Boolean)
+                .filter((p) => p !== "Không áp dụng")
                 .join(", ") || "Chưa có địa chỉ"
             }
             selectable
@@ -909,44 +1053,61 @@ export default function BookingDetailScreen() {
           </ProviderCard>
         )}
 
-        {canHandlePendingWorkflow && (
+        {(canHandlePendingWorkflow || booking.surveyorName) && (
           <ProviderCard contentStyle={styles.formSection}>
             <ProviderSectionHeader title="Thợ khảo sát" />
-            <TextInput
-              label="Tên thợ khảo sát"
-              value={surveyorName}
-              onChangeText={setSurveyorName}
-              mode="outlined"
-              left={
-                <TextInput.Icon
+            {booking.surveyorName ? (
+              <View>
+                <InfoRow
                   icon="account-hard-hat"
-                  accessibilityLabel="Tên thợ khảo sát"
+                  text={booking.surveyorName}
+                  selectable
                 />
-              }
-            />
-            <TextInput
-              label="SĐT thợ khảo sát"
-              value={surveyorPhone}
-              onChangeText={setSurveyorPhone}
-              mode="outlined"
-              keyboardType="phone-pad"
-              left={
-                <TextInput.Icon
-                  icon="phone"
-                  accessibilityLabel="Số điện thoại thợ khảo sát"
+                <InfoRow
+                  icon="phone-outline"
+                  text={booking.surveyorPhone || "Chưa có"}
+                  selectable
                 />
-              }
-            />
-            <Button
-              mode="contained"
-              onPress={handleConfirmSurveyor}
-              loading={actionLoading}
-              disabled={actionLoading}
-              style={styles.primaryButton}
-              icon="check"
-            >
-              {actionLoading ? "Đang xử lý…" : "Xác nhận thợ khảo sát"}
-            </Button>
+              </View>
+            ) : (
+              <View>
+                <TextInput
+                  label="Tên thợ khảo sát"
+                  value={surveyorName}
+                  onChangeText={setSurveyorName}
+                  mode="outlined"
+                  left={
+                    <TextInput.Icon
+                      icon="account-hard-hat"
+                      accessibilityLabel="Tên thợ khảo sát"
+                    />
+                  }
+                />
+                <TextInput
+                  label="SĐT thợ khảo sát"
+                  value={surveyorPhone}
+                  onChangeText={setSurveyorPhone}
+                  mode="outlined"
+                  keyboardType="phone-pad"
+                  left={
+                    <TextInput.Icon
+                      icon="phone"
+                      accessibilityLabel="Số điện thoại thợ khảo sát"
+                    />
+                  }
+                />
+                <Button
+                  mode="contained"
+                  onPress={handleConfirmSurveyor}
+                  loading={actionLoading}
+                  disabled={actionLoading}
+                  style={styles.primaryButton}
+                  icon="check"
+                >
+                  {actionLoading ? "Đang xử lý…" : "Xác nhận thợ khảo sát"}
+                </Button>
+              </View>
+            )}
           </ProviderCard>
         )}
 
@@ -1000,7 +1161,7 @@ export default function BookingDetailScreen() {
         )}
       </ScrollView>
 
-      {hasBottomActions && (
+      {!isAnyModalVisible && hasBottomActions && (
         <View
           style={[
             styles.actionBar,
@@ -1085,17 +1246,33 @@ export default function BookingDetailScreen() {
             </Button>
           )}
           {booking.status === "CONFIRMED" && (
-            <Button
-              mode="contained"
-              onPress={handleStart}
-              loading={actionLoading}
-              disabled={actionLoading}
-              style={[styles.actionButton, styles.singleAction]}
-              icon="play-circle-outline"
-              contentStyle={styles.actionContent}
-            >
-              {actionLoading ? "Đang xử lý…" : "Bắt đầu thực hiện"}
-            </Button>
+            <>
+              {!booking.providerArrivedAt ? (
+                <Button
+                  mode="contained"
+                  onPress={handleArrive}
+                  loading={actionLoading}
+                  disabled={actionLoading}
+                  style={[styles.actionButton, styles.singleAction]}
+                  icon="map-marker-check-outline"
+                  contentStyle={styles.actionContent}
+                >
+                  {actionLoading ? "Đang xử lý…" : "Tôi đã đến nơi"}
+                </Button>
+              ) : (
+                <Button
+                  mode="contained"
+                  onPress={handleStart}
+                  loading={actionLoading}
+                  disabled={actionLoading}
+                  style={[styles.actionButton, styles.singleAction]}
+                  icon="play-circle-outline"
+                  contentStyle={styles.actionContent}
+                >
+                  {actionLoading ? "Đang xử lý…" : "Bắt đầu thực hiện"}
+                </Button>
+              )}
+            </>
           )}
           {booking.status === "IN_PROGRESS" && (
             <View style={{ gap: 8 }}>
@@ -1720,7 +1897,10 @@ function ProviderBookingTimeline({
         {rows.map((item, index) => {
           const status =
             item.toStatus || item.fromStatus || fallbackStatus || "PENDING";
-          const label = BOOKING_STATUS_LABEL[status as BookingStatus] || status;
+          let label = BOOKING_STATUS_LABEL[status as BookingStatus] || status;
+          if (item.note === 'Đã đến nơi') {
+            label = 'Tôi đã đến';
+          }
           const color = getStatusColor(status, activeColors);
           const createdAt = item.createdAt
             ? new Date(item.createdAt).toLocaleString("vi-VN")

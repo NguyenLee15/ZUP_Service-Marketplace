@@ -3,6 +3,7 @@ import { Alert, FlatList, Modal, Pressable, StyleSheet, View } from 'react-nativ
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
 import { Button, Searchbar, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
@@ -23,6 +24,7 @@ import {
 import { getApiErrorMessage, normalizeList } from '../../lib/api-response';
 import { profileApi } from '../../features/profile/profile.api';
 import { useRouter } from 'expo-router';
+import { AddressAutocompleteModal, RegionPickerModal, LocationConfirmationModal } from '../../components/provider/address-pickers';
 
 type AddressItem = {
   id: number;
@@ -98,8 +100,10 @@ export default function AddressesScreen() {
   const [form, setForm] = useState<AddressForm>(emptyForm);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'error' | 'info' | 'warning'>('info');
-  const [picker, setPicker] = useState<null | 'province' | 'ward'>(null);
-  const [gettingLocation, setGettingLocation] = useState(false);
+  const [regionPickerVisible, setRegionPickerVisible] = useState(false);
+  const [autocompleteVisible, setAutocompleteVisible] = useState(false);
+  const [mapConfirmVisible, setMapConfirmVisible] = useState(false);
+  const [tempLocation, setTempLocation] = useState<{lat: number, lng: number, addressName: string} | null>(null);
 
   const addressesQuery = useQuery({
     queryKey: ['addresses'],
@@ -200,60 +204,7 @@ export default function AddressesScreen() {
     setMessage('');
   }
 
-  const handleGetLocation = async () => {
-    try {
-      setGettingLocation(true);
-      setMessage('');
-      
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        showError(null, 'Cần quyền truy cập vị trí để tự động điền.');
-        return;
-      }
 
-      const location = await Location.getCurrentPositionAsync({});
-      const [address] = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (address) {
-        const detailParts = [address.streetNumber, address.street].filter(Boolean).join(' ');
-        
-        // Attempt to loosely match province and ward
-        const regionStr = (address.region || address.city || address.subregion || '').toLowerCase().replace('tỉnh', '').replace('thành phố', '').trim();
-        const districtStr = (address.subregion || address.district || address.city || '').toLowerCase().replace('quận', '').replace('huyện', '').replace('thị xã', '').replace('phường', '').replace('xã', '').trim();
-
-        let matchedProvince = addressOptions.find(p => p.name.toLowerCase().includes(regionStr));
-        // Fallback to district string for province if region is null
-        if (!matchedProvince && districtStr) {
-           matchedProvince = addressOptions.find(p => p.name.toLowerCase().includes(districtStr));
-        }
-        
-        let matchedWard = '';
-        if (matchedProvince) {
-          const wardStr = (address.district || address.street || '').toLowerCase().replace('phường', '').replace('xã', '').trim();
-          matchedWard = matchedProvince.wards.find(w => w.toLowerCase().includes(wardStr)) || '';
-        }
-
-        updateForm({
-          addressDetail: detailParts || address.name || '',
-          province: matchedProvince?.name || form.province,
-          ward: matchedWard || form.ward,
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
-        
-        setMessageTone('success');
-        setMessage('Đã điền tự động từ vị trí hiện tại. Vui lòng kiểm tra lại.');
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      }
-    } catch (err) {
-      showError(err, 'Không thể lấy vị trí hiện tại. Vui lòng kiểm tra GPS.');
-    } finally {
-      setGettingLocation(false);
-    }
-  };
 
   function startEdit(address: AddressItem) {
     setForm({
@@ -357,61 +308,101 @@ export default function AddressesScreen() {
             ) : null}
           </View>
 
-          <PickerField label="Tỉnh/Thành" value={form.province} onPress={() => setPicker('province')} />
+          <PickerField 
+            label="Tỉnh/Thành Phố và Phường/Xã" 
+            value={form.province && form.ward ? `${form.province} - ${form.ward}` : form.province || ''} 
+            onPress={() => setRegionPickerVisible(true)} 
+          />
           <PickerField
-            label="Phường/Xã"
-            value={form.ward}
-            disabled={!form.province}
-            onPress={() => setPicker('ward')}
-          />
-          <TextInput
-            label="Địa chỉ chi tiết"
-            mode="outlined"
+            label="Tên đường, Toà nhà, Số nhà."
             value={form.addressDetail}
-            onChangeText={(addressDetail) => updateForm({ addressDetail })}
-            outlineStyle={styles.outlineStyle}
-            style={styles.textInput}
-            multiline
+            onPress={() => setAutocompleteVisible(true)}
           />
-          <Button 
-            mode="outlined" 
-            icon="crosshairs-gps" 
-            loading={gettingLocation} 
-            disabled={gettingLocation} 
-            onPress={handleGetLocation} 
-            style={[styles.button, { borderColor: activeColors.primary }]}
-            textColor={activeColors.primary}
-          >
-            Lấy vị trí hiện tại
-          </Button>
+          {form.latitude && form.longitude ? (
+            <View style={styles.miniMapContainer}>
+              <MapView
+                style={StyleSheet.absoluteFillObject}
+                initialRegion={{
+                  latitude: form.latitude,
+                  longitude: form.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                onPress={() => {
+                  setTempLocation({
+                    lat: form.latitude!,
+                    lng: form.longitude!,
+                    addressName: form.addressDetail,
+                  });
+                  setMapConfirmVisible(true);
+                }}
+              >
+                <Marker coordinate={{ latitude: form.latitude, longitude: form.longitude }} />
+              </MapView>
+              <View style={styles.miniMapOverlay} pointerEvents="none">
+                <View style={styles.miniMapHint}>
+                  <Text style={styles.miniMapHintText}>Chạm để chọn lại trên bản đồ</Text>
+                  <MaterialCommunityIcons name="chevron-right" size={16} color={activeColors.primary} />
+                </View>
+              </View>
+            </View>
+          ) : null}
           <Button mode="contained" loading={saving} disabled={saving} onPress={submit} style={styles.button}>
             {form.id ? 'Lưu địa chỉ' : 'Thêm địa chỉ'}
           </Button>
         </View>
       </ProviderCard>
 
-      <OptionPicker
-        visible={picker === 'province'}
-        title="Chọn tỉnh/thành"
-        options={provinceOptions}
-        value={form.province}
-        onDismiss={() => setPicker(null)}
-        onSelect={(province) => {
-          updateForm({ province, ward: '', district: NEW_ADMIN_DISTRICT_VALUE });
-          setPicker(null);
-          Haptics.selectionAsync().catch(() => {});
+      <RegionPickerModal
+        visible={regionPickerVisible}
+        provinceOptions={provinceOptions}
+        getWardOptions={(prov) => getWardOptions(prov, addressOptions)}
+        onDismiss={() => setRegionPickerVisible(false)}
+        onSelectCurrentLocation={(data) => {
+          updateForm({
+            province: data.province,
+            ward: data.ward,
+            addressDetail: data.addressDetail,
+            latitude: data.lat,
+            longitude: data.lng,
+          });
+          setRegionPickerVisible(false);
+        }}
+        onSelectRegion={(province, ward) => {
+          updateForm({ province, ward, district: NEW_ADMIN_DISTRICT_VALUE });
+          setRegionPickerVisible(false);
         }}
       />
-      <OptionPicker
-        visible={picker === 'ward'}
-        title="Chọn phường/xã"
-        options={wardOptions}
-        value={form.ward}
-        onDismiss={() => setPicker(null)}
-        onSelect={(ward) => {
-          updateForm({ ward, district: NEW_ADMIN_DISTRICT_VALUE });
-          setPicker(null);
-          Haptics.selectionAsync().catch(() => {});
+      
+      <AddressAutocompleteModal
+        visible={autocompleteVisible}
+        onDismiss={() => setAutocompleteVisible(false)}
+        onSelect={(place) => {
+          setAutocompleteVisible(false);
+          setTempLocation({
+            lat: parseFloat(place.lat),
+            lng: parseFloat(place.lon),
+            addressName: [place.address?.house_number, place.address?.road].filter(Boolean).join(', ') || place.display_name.split(',')[0],
+          });
+          setMapConfirmVisible(true);
+        }}
+      />
+      
+      <LocationConfirmationModal
+        visible={mapConfirmVisible}
+        initialLocation={tempLocation}
+        onDismiss={() => setMapConfirmVisible(false)}
+        onConfirm={(lat, lng, addressName) => {
+          updateForm({
+            addressDetail: addressName,
+            latitude: lat,
+            longitude: lng,
+          });
+          setMapConfirmVisible(false);
         }}
       />
     </ProviderScreen>
@@ -425,6 +416,8 @@ function toPayload(form: AddressForm) {
     district: NEW_ADMIN_DISTRICT_VALUE,
     ward: form.ward,
     addressDetail: form.addressDetail.trim(),
+    latitude: form.latitude,
+    longitude: form.longitude,
   };
 }
 
@@ -656,6 +649,10 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     marginBottom: 4,
   },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  miniMapContainer: { height: 120, borderRadius: 12, overflow: 'hidden', marginTop: 4, position: 'relative', borderWidth: 1, borderColor: activeColors.borderLight },
+  miniMapOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end', padding: 8 },
+  miniMapHint: { backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  miniMapHintText: { fontSize: 12, color: activeColors.primary, fontWeight: '500', marginRight: 2 },
   search: { backgroundColor: activeColors.surfaceVariant, borderRadius: 14 },
   optionRow: {
     minHeight: 48,

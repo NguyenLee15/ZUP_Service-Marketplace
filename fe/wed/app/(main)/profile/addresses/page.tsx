@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { AlertCircle, Check, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { userApi } from '@/features/user/services/user.api'
 import {
   formatAdministrativeArea,
@@ -24,7 +25,14 @@ const addressSchema = z.object({
   district: z.string().min(1, 'Thông tin địa giới không hợp lệ'),
   ward: z.string().min(1, 'Vui lòng chọn phường/xã/đặc khu'),
   addressDetail: z.string().min(5, 'Địa chỉ phải có ít nhất 5 ký tự'),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   isDefault: z.boolean().default(false),
+})
+
+const MapPicker = dynamic(() => import('@/components/customer/address-map-picker'), {
+  ssr: false,
+  loading: () => <div className="h-[300px] bg-slate-100 animate-pulse rounded-lg flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground/50" /></div>
 })
 
 type AddressFormData = z.infer<typeof addressSchema>
@@ -56,6 +64,8 @@ const emptyAddressValues: AddressFormData = {
   district: NEW_ADMIN_DISTRICT_VALUE,
   ward: '',
   addressDetail: '',
+  latitude: 21.028511,
+  longitude: 105.804817,
   isDefault: false,
 }
 
@@ -139,8 +149,8 @@ export default function AddressesPage() {
         district: data.district || NEW_ADMIN_DISTRICT_VALUE,
         ward: data.ward,
         addressDetail: data.addressDetail,
-        latitude: 0,
-        longitude: 0,
+        latitude: data.latitude || 21.028511,
+        longitude: data.longitude || 105.804817,
         isDefault: data.isDefault,
       })
 
@@ -291,10 +301,15 @@ export default function AddressesPage() {
 
             <div className="max-h-[75vh] overflow-y-auto p-6">
               <div className="mb-6 space-y-3">
-                <p className="text-sm font-medium text-foreground">Địa chỉ thủ công</p>
-                <div className="rounded-xl border border-platinum-tint bg-cloud-mist px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-                  Bản release này chưa bật chọn vị trí trên bản đồ. Vui lòng nhập số nhà, tên đường và phường/xã chính xác để thợ đến đúng nơi.
-                </div>
+                <p className="text-sm font-medium text-foreground">Chọn vị trí trên bản đồ</p>
+                <MapPicker 
+                  latitude={form.watch('latitude') || 21.028511}
+                  longitude={form.watch('longitude') || 105.804817}
+                  onChange={(lat, lng) => {
+                    form.setValue('latitude', lat, { shouldDirty: true })
+                    form.setValue('longitude', lng, { shouldDirty: true })
+                  }}
+                />
               </div>
 
               <div className="mb-4 rounded-xl border border-platinum-tint bg-pale-gray/45 px-4 py-3 text-xs text-muted-foreground">

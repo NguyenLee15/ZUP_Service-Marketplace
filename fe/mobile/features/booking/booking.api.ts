@@ -42,6 +42,9 @@ export const bookingApi = {
     data: { note?: string; items: any[] },
   ) => api.post(`/provider/bookings/${id}/supplementary-quotes`, data),
 
+  /** PATCH /provider/bookings/:id/arrive — Báo đã đến nơi */
+  arriveAtLocation: (id: number) => api.patch(`/provider/bookings/${id}/arrive`),
+
   /** PATCH /provider/bookings/:id/start — Bắt đầu thực hiện */
   startWork: (id: number) => api.patch(`/provider/bookings/${id}/start`),
 

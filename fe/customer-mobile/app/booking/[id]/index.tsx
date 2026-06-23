@@ -47,6 +47,7 @@ type BookingDetail = {
   cancelReason?: string | null;
   rejectReason?: string | null;
   disputeReason?: string | null;
+  providerAcceptedAt?: string | Date | null;
   service?: {
     id?: number | string;
     name?: string | null;
@@ -136,9 +137,13 @@ function getTimelineStepsFromHistory(history?: BookingTimelineItem[]) {
   return history.map((item, index) => {
     const nextStatus = item.toStatus || item.fromStatus || "PENDING";
     const createdAt = item.createdAt ? formatDateTime(item.createdAt) : null;
+    let label = BOOKING_STATUS_LABEL[nextStatus] || nextStatus;
+    if (item.note === 'Đã đến nơi') {
+      label = 'Thợ đã đến';
+    }
     return {
       key: `${nextStatus}-${item.id || index}`,
-      label: BOOKING_STATUS_LABEL[nextStatus] || nextStatus,
+      label,
       description: [item.note, createdAt].filter(Boolean).join(" · "),
     };
   });
@@ -732,7 +737,7 @@ function ActionSection({
         >
           Nhắn tin nhà cung cấp
         </Button>
-        {["CONFIRMED", "IN_PROGRESS", "DONE"].includes(status) ? (
+        {["CONFIRMED", "IN_PROGRESS", "DONE", "QUOTED"].includes(status) || (status === "PENDING" && booking.providerAcceptedAt) ? (
           <Button
             mode="outlined"
             icon="map-marker-path"

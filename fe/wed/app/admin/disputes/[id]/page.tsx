@@ -484,7 +484,7 @@ export default function AdminDisputeDetailPage() {
                     <MapPin className="w-3 h-3" /> Địa chỉ
                   </span>
                   <p className="text-xs text-slate-700 mt-1 leading-relaxed">
-                    {[booking?.addressDetail, booking?.ward, booking?.district, booking?.province].filter(Boolean).join(', ') || '—'}
+                    {[booking?.addressDetail, booking?.ward, booking?.district, booking?.province].filter(Boolean).filter(p => p !== 'Không áp dụng').join(', ') || '—'}
                   </p>
                 </div>
               </CardContent>

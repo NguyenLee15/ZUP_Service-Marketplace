@@ -216,9 +216,6 @@ export class FeaturedListingsService {
           isDeleted: false,
           provider: {
             status: 'ACTIVE',
-            providerWallet: {
-              isRestricted: false,
-            },
           },
         },
       },

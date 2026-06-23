@@ -697,10 +697,12 @@ export default function BookingDetailPage() {
           </div>
         )}
 
-        {/* Customer: Track provider (CONFIRMED / IN_PROGRESS) */}
+        {/* Customer: Track provider */}
         {isCustomer &&
           (booking.status === BookingStatus.CONFIRMED ||
-            booking.status === BookingStatus.IN_PROGRESS) && (
+            booking.status === BookingStatus.IN_PROGRESS ||
+            (booking.status === BookingStatus.PENDING && booking.providerAcceptedAt) ||
+            booking.status === BookingStatus.QUOTED) && (
             <Button
               onClick={() => router.push(`/bookings/${booking.id}/track`)}
               className="w-full bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white rounded-xl shadow-[0_0_15px_rgba(0,107,255,0.3)] py-5 font-bold text-sm transition-all hover:-translate-y-0.5"

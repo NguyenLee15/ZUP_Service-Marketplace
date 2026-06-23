@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Alert, FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-import { Button, Searchbar, Text, TextInput } from 'react-native-paper';
+import { Button, Searchbar, Text, TextInput, Switch } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   CustomerCard,
@@ -14,6 +14,7 @@ import {
   LoadingState,
 } from '../../components/customer/customer-ui';
 import { Colors } from '../../constants/colors';
+
 import { useAddressOptions } from '../../hooks/useAddressOptions';
 import {
   NEW_ADMIN_DISTRICT_VALUE,
@@ -22,6 +23,8 @@ import {
 } from '../../lib/address-options';
 import { getApiErrorMessage, normalizeList } from '../../lib/api-response';
 import { userApi } from '../../features/user/user.api';
+import { AddressAutocompleteModal, RegionPickerModal, LocationConfirmationModal } from '../../components/customer/address-pickers';
+import MapView, { Marker } from 'react-native-maps';
 
 type AddressItem = {
   id: number;
@@ -30,6 +33,8 @@ type AddressItem = {
   district?: string | null;
   ward?: string | null;
   addressDetail?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   isDefault?: boolean | null;
 };
 
@@ -40,6 +45,9 @@ type AddressForm = {
   district: string;
   ward: string;
   addressDetail: string;
+  latitude?: number;
+  longitude?: number;
+  isDefault?: boolean;
 };
 
 const emptyForm: AddressForm = {
@@ -48,6 +56,9 @@ const emptyForm: AddressForm = {
   district: NEW_ADMIN_DISTRICT_VALUE,
   ward: '',
   addressDetail: '',
+  latitude: undefined,
+  longitude: undefined,
+  isDefault: false,
 };
 
 function formatFullAddress(address: AddressItem | AddressForm) {
@@ -89,7 +100,10 @@ export default function AddressesScreen() {
   const [form, setForm] = useState<AddressForm>(emptyForm);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'error' | 'info'>('info');
-  const [picker, setPicker] = useState<null | 'province' | 'ward'>(null);
+  const [regionPickerVisible, setRegionPickerVisible] = useState(false);
+  const [autocompleteVisible, setAutocompleteVisible] = useState(false);
+  const [mapConfirmVisible, setMapConfirmVisible] = useState(false);
+  const [tempLocation, setTempLocation] = useState<{lat: number, lng: number, addressName: string} | null>(null);
 
   const addressesQuery = useQuery({
     queryKey: ['addresses'],
@@ -172,6 +186,9 @@ export default function AddressesScreen() {
       district: address.district || NEW_ADMIN_DISTRICT_VALUE,
       ward: address.ward || '',
       addressDetail: address.addressDetail || '',
+      latitude: address.latitude || undefined,
+      longitude: address.longitude || undefined,
+      isDefault: address.isDefault || false,
     });
     Haptics.selectionAsync().catch(() => {});
   }
@@ -349,50 +366,123 @@ export default function AddressesScreen() {
             ) : null}
           </View>
 
-          <PickerField label="Tỉnh/Thành" value={form.province} onPress={() => setPicker('province')} />
+          <PickerField 
+            label="Tỉnh/Thành Phố và Phường/Xã" 
+            value={form.province && form.ward ? `${form.province} - ${form.ward}` : form.province || ''} 
+            onPress={() => setRegionPickerVisible(true)} 
+          />
           <PickerField
-            label="Phường/Xã"
-            value={form.ward}
-            disabled={!form.province}
-            onPress={() => setPicker('ward')}
-          />
-          <TextInput
-            label="Địa chỉ chi tiết"
-            mode="outlined"
+            label="Tên đường, Toà nhà, Số nhà."
             value={form.addressDetail}
-            onChangeText={(addressDetail) => updateForm({ addressDetail })}
-            outlineStyle={styles.outlineStyle}
-            style={styles.textInput}
-            multiline
+            onPress={() => setAutocompleteVisible(true)}
           />
-          <Button mode="contained" loading={saving} disabled={saving} onPress={submit} style={styles.button}>
-            {form.id ? 'Lưu địa chỉ' : 'Thêm địa chỉ'}
+
+          {form.latitude && form.longitude ? (
+            <View style={styles.miniMapContainer}>
+              <MapView
+                style={styles.miniMap}
+                initialRegion={{
+                  latitude: form.latitude,
+                  longitude: form.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                region={{
+                  latitude: form.latitude,
+                  longitude: form.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                onPress={() => {
+                  setTempLocation({
+                    lat: form.latitude!,
+                    lng: form.longitude!,
+                    addressName: form.addressDetail,
+                  });
+                  setMapConfirmVisible(true);
+                }}
+              >
+                <Marker coordinate={{ latitude: form.latitude, longitude: form.longitude }} />
+              </MapView>
+              <View style={styles.miniMapOverlay} pointerEvents="none">
+                <Text style={styles.miniMapText} numberOfLines={1}>{form.addressDetail}</Text>
+              </View>
+            </View>
+          ) : null}
+
+          {!form.id && (
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Đặt làm địa chỉ mặc định</Text>
+              <Switch
+                value={form.isDefault || false}
+                onValueChange={(val) => updateForm({ isDefault: val })}
+                color="#EA580C"
+              />
+            </View>
+          )}
+
+          <Button mode="contained" loading={saving} disabled={saving} onPress={submit} style={styles.submitButton} labelStyle={{ fontSize: 16, fontWeight: 'bold' }}>
+            {form.id ? 'Lưu địa chỉ' : 'Hoàn Thành'}
           </Button>
+
+          {form.id ? (
+            <Button mode="outlined" onPress={() => confirmDelete(form as any)} style={styles.deleteButton} textColor={activeColors.error}>
+              Xóa địa chỉ
+            </Button>
+          ) : null}
         </View>
       </CustomerCard>
 
-      <OptionPicker
-        visible={picker === 'province'}
-        title="Chọn tỉnh/thành"
-        options={provinceOptions}
-        value={form.province}
-        onDismiss={() => setPicker(null)}
-        onSelect={(province) => {
-          updateForm({ province, ward: '', district: NEW_ADMIN_DISTRICT_VALUE });
-          setPicker(null);
-          Haptics.selectionAsync().catch(() => {});
+      <RegionPickerModal
+        visible={regionPickerVisible}
+        provinceOptions={provinceOptions}
+        getWardOptions={(prov) => getWardOptions(prov, addressOptions)}
+        onDismiss={() => setRegionPickerVisible(false)}
+        onSelectCurrentLocation={(data) => {
+          updateForm({
+            province: data.province,
+            ward: data.ward,
+            addressDetail: data.addressDetail,
+            latitude: data.lat,
+            longitude: data.lng,
+          });
+          setRegionPickerVisible(false);
+        }}
+        onSelectRegion={(province, ward) => {
+          updateForm({ province, ward, district: NEW_ADMIN_DISTRICT_VALUE });
+          setRegionPickerVisible(false);
         }}
       />
-      <OptionPicker
-        visible={picker === 'ward'}
-        title="Chọn phường/xã"
-        options={wardOptions}
-        value={form.ward}
-        onDismiss={() => setPicker(null)}
-        onSelect={(ward) => {
-          updateForm({ ward, district: NEW_ADMIN_DISTRICT_VALUE });
-          setPicker(null);
-          Haptics.selectionAsync().catch(() => {});
+      
+      <AddressAutocompleteModal
+        visible={autocompleteVisible}
+        onDismiss={() => setAutocompleteVisible(false)}
+        onSelect={(place) => {
+          setAutocompleteVisible(false);
+          setTempLocation({
+            lat: parseFloat(place.lat),
+            lng: parseFloat(place.lon),
+            addressName: [place.address?.house_number, place.address?.road].filter(Boolean).join(', ') || place.display_name.split(',')[0],
+          });
+          setMapConfirmVisible(true);
+        }}
+      />
+
+      <LocationConfirmationModal
+        visible={mapConfirmVisible}
+        initialLocation={tempLocation}
+        onDismiss={() => setMapConfirmVisible(false)}
+        onConfirm={(lat, lng, addressName) => {
+          updateForm({
+            addressDetail: addressName,
+            latitude: lat,
+            longitude: lng,
+          });
+          setMapConfirmVisible(false);
         }}
       />
     </CustomerScreen>
@@ -406,13 +496,15 @@ function toPayload(form: AddressForm) {
     district: NEW_ADMIN_DISTRICT_VALUE,
     ward: form.ward,
     addressDetail: form.addressDetail.trim(),
+    latitude: form.latitude,
+    longitude: form.longitude,
+    isDefault: form.isDefault,
   };
 }
 
 function AddressCard({
   address,
   defaultLoading,
-  defaultLoading: _dfL,
   deleteLoading,
   onEdit,
   onSetDefault,
@@ -541,78 +633,11 @@ function PickerField({
   );
 }
 
-function OptionPicker({
-  visible,
-  title,
-  options,
-  value,
-  onDismiss,
-  onSelect,
-}: {
-  visible: boolean;
-  title: string;
-  options: string[];
-  value: string;
-  onDismiss: () => void;
-  onSelect: (value: string) => void;
-}) {
-  const activeColors = useActiveColors();
-  const styles = getStyles(activeColors);
-  const [query, setQuery] = useState('');
-  const filtered = useMemo(
-    () => options.filter((option) => option.toLowerCase().includes(query.trim().toLowerCase())),
-    [options, query],
-  );
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onDismiss}>
-      <Pressable style={styles.backdrop} onPress={onDismiss} />
-      <View style={styles.sheet}>
-        <View style={styles.dragIndicator} />
-        <View style={styles.sheetHeader}>
-          <Text variant="titleLarge" style={styles.title}>
-            {title}
-          </Text>
-          <Button mode="text" onPress={onDismiss} textColor={activeColors.textSecondary}>
-            Đóng
-          </Button>
-        </View>
-        <Searchbar placeholder="Tìm kiếm" value={query} onChangeText={setQuery} style={styles.search} />
-        {filtered.length === 0 ? (
-          <EmptyState title="Không có kết quả" description="Thử nhập từ khóa khác." />
-        ) : (
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <Pressable
-                style={[
-                  styles.optionRow,
-                  item === value && styles.optionRowActive,
-                ]}
-                onPress={() => onSelect(item)}
-                accessibilityRole="button"
-                accessibilityLabel={`Chọn ${item}`}
-                hitSlop={4}
-              >
-                <Text style={[styles.optionText, item === value && styles.optionSelected]}>{item}</Text>
-                {item === value ? <MaterialCommunityIcons name="check" size={20} color={activeColors.primary} /> : null}
-              </Pressable>
-            )}
-          />
-        )}
-      </View>
-    </Modal>
-  );
-}
-
 const getStyles = (activeColors: any) => StyleSheet.create({
   title: { color: activeColors.text, fontWeight: '900' },
   muted: { color: activeColors.textSecondary, lineHeight: 18 },
   form: { gap: 16 },
   formHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  button: { borderRadius: 16, height: 48, justifyContent: 'center' },
   backdrop: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)' },
   sheet: {
     position: 'absolute',
@@ -691,4 +716,53 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   segmentedButtonTextActive: { color: '#FFFFFF' },
   outlineStyle: { borderRadius: 14 },
   textInput: { backgroundColor: '#FFFFFF' },
+  miniMapContainer: {
+    height: 140,
+    borderRadius: 14,
+    overflow: 'hidden',
+    position: 'relative',
+    marginTop: -8,
+  },
+  miniMap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  miniMapOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  miniMapText: {
+    fontSize: 12,
+    color: activeColors.text,
+    fontWeight: '600',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  switchLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: activeColors.text,
+  },
+  submitButton: {
+    borderRadius: 12,
+    backgroundColor: '#EA580C',
+    height: 48,
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  deleteButton: {
+    borderRadius: 12,
+    borderColor: activeColors.error,
+    borderWidth: 1,
+    height: 48,
+    justifyContent: 'center',
+  },
 });

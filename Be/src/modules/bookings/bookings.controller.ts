@@ -408,6 +408,15 @@ export class ProviderBookingsController {
     );
   }
 
+  /** PATCH /provider/bookings/:id/arrive */
+  @Patch(':id/arrive')
+  async arriveAtLocation(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.bookingLifecycleService.arriveAtLocation(userId, id);
+  }
+
   /** PATCH /provider/bookings/:id/start */
   @Patch(':id/start')
   async startWork(

@@ -318,6 +318,7 @@ model Booking {
   surveyorName             String?       @map("surveyor_name") @db.VarChar(100)
   surveyorPhone            String?       @map("surveyor_phone") @db.VarChar(15)
   providerAcceptedAt       DateTime?     @map("provider_accepted_at")
+  providerArrivedAt        DateTime?     @map("provider_arrived_at")
   providerResponseDeadline DateTime?     @map("provider_response_deadline")
   completedAt              DateTime?     @map("completed_at")
   autoCompletedAt          DateTime?     @map("auto_completed_at")
