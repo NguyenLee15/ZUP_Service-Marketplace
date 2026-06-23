@@ -86,7 +86,7 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
                       {scheme.badge}
                     </span>
                   )}
-                  <h3 className="font-sans font-bold text-slate-900 dark:text-white text-sm mb-0.5 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors truncate">
+                  <h3 className="font-sans font-bold text-slate-900 dark:text-white text-sm mb-0.5 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors line-clamp-2">
                     {cat.label}
                   </h3>
                   <p className="text-[11px] font-semibold text-slate-blue dark:text-slate-400 leading-none">
