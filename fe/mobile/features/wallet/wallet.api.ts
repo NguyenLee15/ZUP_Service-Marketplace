@@ -14,6 +14,9 @@ export const walletApi = {
   /** POST /provider-wallets/deposit */
   deposit: (amount: number) => api.post('/provider-wallets/deposit', { amount }),
 
+  /** POST /provider-wallets/payos/deposit */
+  createPayosDeposit: (amount: number) => api.post('/provider-wallets/payos/deposit', { amount }),
+
   /** POST /provider-wallets/manual-deposits */
   createManualDeposit: (data: {
     amount: number;

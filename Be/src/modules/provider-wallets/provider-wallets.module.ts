@@ -13,6 +13,7 @@ import { WalletAccountService } from './wallet-account.service';
 import { DepositService } from './deposit.service';
 import { WithdrawalService } from './withdrawal.service';
 import { WalletSharedService } from './wallet-shared.service';
+import { PayosService } from './payos.service';
 
 @Module({
   controllers: [
@@ -26,6 +27,7 @@ import { WalletSharedService } from './wallet-shared.service';
     WithdrawalService,
     WalletSharedService,
     VnpayService,
+    PayosService,
     WalletLedgerService,
     PaymentCallbackService,
     ...(isCronEnabled() ? [VnpayReconciliationCron] : []),
@@ -36,6 +38,7 @@ import { WalletSharedService } from './wallet-shared.service';
     WithdrawalService,
     WalletLedgerService,
     PaymentCallbackService,
+    PayosService,
   ],
 })
 export class ProviderWalletsModule {}

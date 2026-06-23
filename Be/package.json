@@ -46,6 +46,7 @@
     "@nestjs/swagger": "^11.4.2",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.19",
+    "@payos/node": "^2.0.5",
     "@prisma/client": "^6.19.3",
     "@types/pdfmake": "^0.3.2",
     "bcrypt": "^6.0.0",

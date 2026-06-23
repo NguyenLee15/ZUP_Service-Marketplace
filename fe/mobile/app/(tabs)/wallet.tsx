@@ -75,8 +75,8 @@ export default function WalletScreen() {
   const [hasMore, setHasMore] = useState(true);
 
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const [depositMode, setDepositMode] = useState<'vnpay' | 'manual'>(
-    MANUAL_DEPOSIT_ENABLED ? 'manual' : 'vnpay',
+  const [depositMode, setDepositMode] = useState<'vnpay' | 'manual' | 'payos'>(
+    'payos',
   );
   const [depositAmount, setDepositAmount] = useState('');
   const [transferCode, setTransferCode] = useState('');
@@ -193,13 +193,19 @@ export default function WalletScreen() {
         return;
       }
 
-      const res = await walletApi.deposit(amount);
-      const paymentUrl = res.data?.data?.paymentUrl || res.data?.data?.url;
+      let paymentUrl = '';
+      if (depositMode === 'payos') {
+        const res = await walletApi.createPayosDeposit(amount);
+        paymentUrl = res.data?.data?.checkoutUrl;
+      } else {
+        const res = await walletApi.deposit(amount);
+        paymentUrl = res.data?.data?.paymentUrl || res.data?.data?.url;
+      }
       if (!paymentUrl) throw new Error('Không lấy được link thanh toán');
 
       setShowDepositModal(false);
       resetDepositForm();
-      setMessage({ tone: 'info', text: 'Đang mở VNPay sandbox. Sau khi thanh toán, ví sẽ tự tải lại.' });
+      setMessage({ tone: 'info', text: 'Đang mở cổng thanh toán. Sau khi thanh toán, ví sẽ tự tải lại.' });
 
       await WebBrowser.openBrowserAsync(paymentUrl);
       
@@ -490,18 +496,21 @@ export default function WalletScreen() {
             <SegmentedButtons
               value={depositMode}
               onValueChange={value => {
-                setDepositMode(value as 'vnpay' | 'manual');
+                setDepositMode(value as 'vnpay' | 'manual' | 'payos');
                 setDepositError('');
                 if (value === 'manual' && !transferCode) setTransferCode(generateManualDepositCode());
               }}
               buttons={[
-                { value: 'manual', label: 'Chuyển khoản' },
-                { value: 'vnpay', label: 'VNPAY sandbox' },
+                { value: 'payos', label: 'VietQR (Nhanh)' },
+                { value: 'manual', label: 'Thủ công' },
+                { value: 'vnpay', label: 'VNPAY' },
               ]}
             />
           ) : null}
           <Text variant="bodySmall" style={styles.modalDescription}>
-            {depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED
+            {depositMode === 'payos'
+              ? 'Tự động sinh mã VietQR. Tiền cộng vào ví ngay trong 2-3 giây.'
+              : depositMode === 'manual' && MANUAL_DEPOSIT_ENABLED
               ? 'Chuyển khoản thật vào tài khoản nền tảng, sau đó gửi yêu cầu để admin xác nhận.'
               : 'Thanh toán thử nghiệm qua VNPAY sandbox. Giao dịch này chưa thu tiền thật.'}
           </Text>

@@ -7,15 +7,20 @@ export default async function PaymentReturnPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const responseCode = params['vnp_ResponseCode'] as string;
+  const vnpResponseCode = params['vnp_ResponseCode'] as string;
+  const payosCode = params['code'] as string;
   const amountStr = params['vnp_Amount'] as string;
+  
+  // Lấy amount từ VNPay (chia 100) hoặc không hiện với PayOS
   const amount = amountStr ? parseInt(amountStr, 10) / 100 : 0;
   
-  const isSuccess = responseCode === '00';
+  const isVnpaySuccess = vnpResponseCode === '00';
+  const isPayosSuccess = payosCode === '00';
+  const isSuccess = isVnpaySuccess || isPayosSuccess;
 
   // Manual IPN fallback: If the VNPay server webhook hasn't reached our backend yet,
   // we trigger the IPN verification manually from the frontend.
-  if (isSuccess && process.env.BACKEND_URL) {
+  if (isVnpaySuccess && process.env.BACKEND_URL) {
     try {
       const queryString = new URLSearchParams(params as Record<string, string>).toString();
       await fetch(`${process.env.BACKEND_URL}/provider-wallets/vnpay/ipn?${queryString}`, {
@@ -41,7 +46,9 @@ export default async function PaymentReturnPage({
         
         <p className="mt-2 text-slate-500 dark:text-slate-400">
           {isSuccess 
-            ? `Bạn đã nạp thành công ${amount.toLocaleString('vi-VN')}đ vào ví.`
+            ? amount > 0 
+              ? `Bạn đã nạp thành công ${amount.toLocaleString('vi-VN')}đ vào ví.`
+              : 'Bạn đã nạp tiền thành công vào ví.'
             : 'Đã có lỗi xảy ra hoặc bạn đã hủy giao dịch.'}
         </p>
 

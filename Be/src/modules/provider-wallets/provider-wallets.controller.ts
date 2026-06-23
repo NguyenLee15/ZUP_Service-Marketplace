@@ -43,6 +43,7 @@ import { WalletAccountService } from './wallet-account.service';
 import { DepositService } from './deposit.service';
 import { WithdrawalService } from './withdrawal.service';
 import { PaymentCallbackService } from './payment-callback.service';
+import { PayosService } from './payos.service';
 
 @Controller('provider-wallets')
 @ApiTags('provider-wallets')
@@ -53,6 +54,7 @@ export class ProviderWalletsController {
     private readonly depositService: DepositService,
     private readonly withdrawalService: WithdrawalService,
     private readonly paymentCallbackService: PaymentCallbackService,
+    private readonly payosService: PayosService,
   ) {}
 
   @Get('balance')
@@ -181,6 +183,24 @@ export class ProviderWalletsController {
   @SkipThrottle()
   async vnpayIpnPost(@Query() query: Record<string, string>) {
     return this.paymentCallbackService.handleVnpayIpn(query);
+  }
+
+  /** PayOS Deposit Link Creation */
+  @Post('payos/deposit')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PROVIDER')
+  async createPayosDeposit(
+    @CurrentUser('id') userId: number,
+    @Body('amount', ParseIntPipe) amount: number,
+  ) {
+    return this.payosService.createDepositRequest(userId, amount);
+  }
+
+  /** PayOS Webhook */
+  @Post('payos/webhook')
+  @SkipThrottle()
+  async handlePayosWebhook(@Body() body: any) {
+    return this.payosService.verifyWebhook(body);
   }
 }
 
