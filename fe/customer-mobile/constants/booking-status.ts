@@ -1,5 +1,6 @@
 export const BOOKING_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Chờ xác nhận',
+  ACCEPTED: 'Đã nhận / Đang đến',
   QUOTED: 'Đã báo giá',
   CONFIRMED: 'Đã xác nhận',
   IN_PROGRESS: 'Đang thực hiện',
@@ -10,6 +11,7 @@ export const BOOKING_STATUS_LABEL: Record<string, string> = {
 
 export const BOOKING_STATUS_COLOR: Record<string, string> = {
   PENDING: '#F59E0B',
+  ACCEPTED: '#2563EB',
   QUOTED: '#7C3AED',
   CONFIRMED: '#2563EB',
   IN_PROGRESS: '#7C3AED',

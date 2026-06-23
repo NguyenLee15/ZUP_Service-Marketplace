@@ -13,6 +13,7 @@ import { Booking } from '@/types';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: ApiPayload }> = {
   PENDING: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
+  ACCEPTED: { label: 'Đã tiếp nhận', color: 'bg-blue-100 text-blue-700', icon: CheckCircle },
   QUOTED: { label: 'Đã báo giá', color: 'bg-pale-gray text-action-blue', icon: Package },
   CONFIRMED: { label: 'Đã xác nhận', color: 'bg-pale-gray text-glacier-blue', icon: CheckCircle },
   IN_PROGRESS: { label: 'Đang thực hiện', color: 'bg-pale-gray text-midnight-indigo', icon: Clock },
@@ -57,6 +58,7 @@ export default function BookingsPage() {
         <TabsList className="w-full justify-start overflow-x-auto mb-4 bg-muted p-1 rounded-lg">
           <TabsTrigger value="" className="text-xs">Tất cả</TabsTrigger>
           <TabsTrigger value="PENDING" className="text-xs">Chờ xử lý</TabsTrigger>
+          <TabsTrigger value="ACCEPTED" className="text-xs">Đã tiếp nhận</TabsTrigger>
           <TabsTrigger value="QUOTED" className="text-xs">Đã báo giá</TabsTrigger>
           <TabsTrigger value="IN_PROGRESS" className="text-xs">Đang thực hiện</TabsTrigger>
           <TabsTrigger value="DONE" className="text-xs">Hoàn thành</TabsTrigger>

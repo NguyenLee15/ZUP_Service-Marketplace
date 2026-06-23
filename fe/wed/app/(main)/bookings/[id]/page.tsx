@@ -48,6 +48,7 @@ import { useNotificationsSocket } from "@/features/notification/hooks/useNotific
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Chờ xác nhận",
+  ACCEPTED: "Đã tiếp nhận",
   QUOTED: "Đã báo giá",
   CONFIRMED: "Đã xác nhận",
   IN_PROGRESS: "Đang thực hiện",
@@ -761,8 +762,8 @@ export default function BookingDetailPage() {
             </div>
           )}
 
-        {/* Customer: Cancel (PENDING / QUOTED only) */}
-        {isCustomer && [BookingStatus.PENDING, BookingStatus.QUOTED].includes(booking.status) && (
+        {/* Customer: Cancel (PENDING / ACCEPTED / QUOTED only) */}
+        {isCustomer && [BookingStatus.PENDING, BookingStatus.ACCEPTED, BookingStatus.QUOTED].includes(booking.status) && (
           <Button
             onClick={() => setCancelAction('CANCEL')}
             variant="outline"

@@ -23,7 +23,8 @@ import {
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   PENDING: { label: 'Chờ Báo Giá', color: 'bg-yellow-100 text-yellow-800' },
-  QUOTED: { label: 'Đã Báo Giá', color: 'bg-blue-100 text-blue-800' },
+  ACCEPTED: { label: 'Đã Tiếp Nhận', color: 'bg-blue-100 text-blue-800' },
+  QUOTED: { label: 'Đã Báo Giá', color: 'bg-indigo-100 text-indigo-800' },
   CONFIRMED: { label: 'Đã Xác Nhận', color: 'bg-indigo-100 text-indigo-800' },
   IN_PROGRESS: { label: 'Đang Thực Hiện', color: 'bg-purple-100 text-purple-800' },
   DONE: { label: 'Hoàn Thành', color: 'bg-green-100 text-green-800' },
@@ -136,7 +137,7 @@ export default function BookingsPage() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {['all', 'PENDING', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'DONE', 'CANCELLED', 'DISPUTED'].map((status) => (
+          {['all', 'PENDING', 'ACCEPTED', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'DONE', 'CANCELLED', 'DISPUTED'].map((status) => (
             <Button
               key={status}
               variant={filterStatus === status ? 'default' : 'outline'}

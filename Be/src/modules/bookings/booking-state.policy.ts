@@ -5,8 +5,11 @@ import { ErrorCodes } from '../../common/errors/error-codes';
 type Transition = `${BookingStatus}->${BookingStatus}`;
 
 const ALLOWED_TRANSITIONS = new Set<Transition>([
+  `${BookingStatus.PENDING}->${BookingStatus.ACCEPTED}`,
   `${BookingStatus.PENDING}->${BookingStatus.QUOTED}`,
   `${BookingStatus.PENDING}->${BookingStatus.CANCELLED}`,
+  `${BookingStatus.ACCEPTED}->${BookingStatus.QUOTED}`,
+  `${BookingStatus.ACCEPTED}->${BookingStatus.CANCELLED}`,
   `${BookingStatus.QUOTED}->${BookingStatus.CONFIRMED}`,
   `${BookingStatus.QUOTED}->${BookingStatus.CANCELLED}`,
   `${BookingStatus.CONFIRMED}->${BookingStatus.IN_PROGRESS}`,

@@ -3,6 +3,7 @@
  */
 export const BOOKING_STATUS = {
   PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
   QUOTED: 'QUOTED',
   CONFIRMED: 'CONFIRMED',
   IN_PROGRESS: 'IN_PROGRESS',
@@ -15,6 +16,7 @@ export type BookingStatus = (typeof BOOKING_STATUS)[keyof typeof BOOKING_STATUS]
 
 export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
   PENDING: 'Chờ xác nhận',
+  ACCEPTED: 'Đã nhận / Đang đến',
   QUOTED: 'Đã báo giá',
   CONFIRMED: 'Đã xác nhận',
   IN_PROGRESS: 'Đang thực hiện',
@@ -25,6 +27,7 @@ export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
 
 export const BOOKING_STATUS_COLOR_KEY: Record<BookingStatus, string> = {
   PENDING: 'statusPending',
+  ACCEPTED: 'statusAccepted',
   QUOTED: 'statusQuoted',
   CONFIRMED: 'statusConfirmed',
   IN_PROGRESS: 'statusInProgress',
@@ -34,4 +37,4 @@ export const BOOKING_STATUS_COLOR_KEY: Record<BookingStatus, string> = {
 };
 
 /** Trạng thái NCC có thể hủy đơn */
-export const CANCELLABLE_STATUSES: BookingStatus[] = ['PENDING', 'QUOTED'];
+export const CANCELLABLE_STATUSES: BookingStatus[] = ['PENDING', 'ACCEPTED', 'QUOTED'];

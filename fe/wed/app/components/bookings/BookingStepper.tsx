@@ -11,6 +11,7 @@ interface BookingStepperProps {
 export function BookingStepper({ currentStatus }: BookingStepperProps) {
   const steps = [
     { status: BookingStatus.PENDING, label: 'Đã gửi yêu cầu', icon: Clock },
+    { status: BookingStatus.ACCEPTED, label: 'Đã tiếp nhận', icon: Check },
     { status: BookingStatus.QUOTED, label: 'Đã báo giá', icon: FileText },
     { status: BookingStatus.CONFIRMED, label: 'Đã xác nhận', icon: CalendarCheck },
     { status: BookingStatus.IN_PROGRESS, label: 'Đang thực hiện', icon: Tool },

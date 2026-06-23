@@ -46,6 +46,7 @@ enum ServiceStatus {
 
 enum BookingStatus {
   PENDING
+  ACCEPTED
   QUOTED
   CONFIRMED
   IN_PROGRESS

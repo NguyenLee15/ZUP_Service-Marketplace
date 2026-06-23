@@ -32,6 +32,7 @@ import {
 const TABS: { label: string; value: string }[] = [
   { label: 'Tất cả', value: '' },
   { label: 'Chờ xác nhận', value: 'PENDING' },
+  { label: 'Đã nhận / Đang đến', value: 'ACCEPTED' },
   { label: 'Đã báo giá', value: 'QUOTED' },
   { label: 'Đang thực hiện', value: 'IN_PROGRESS' },
   { label: 'Hoàn thành', value: 'DONE' },
@@ -41,6 +42,7 @@ const TABS: { label: string; value: string }[] = [
 const getStatusColor = (status: string, activeColors: typeof Colors.light | typeof Colors.dark): string => {
   const map: Record<string, string> = {
     PENDING: activeColors.statusPending,
+    ACCEPTED: activeColors.statusAccepted,
     QUOTED: activeColors.statusQuoted,
     CONFIRMED: activeColors.statusConfirmed,
     IN_PROGRESS: activeColors.statusInProgress,

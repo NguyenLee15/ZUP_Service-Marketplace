@@ -22,7 +22,7 @@ import { exportBookingHistoryPdf } from '../../lib/customer-pdf-export';
 const FILTERS = [
   'ALL',
   'PENDING',
-
+  'ACCEPTED',
   'QUOTED',
   'CONFIRMED',
   'IN_PROGRESS',

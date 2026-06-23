@@ -73,7 +73,11 @@ const BASE_TIMELINE_STEPS = [
     label: "Đã gửi yêu cầu",
     description: "Đang chờ nhà cung cấp xác nhận.",
   },
-
+  {
+    key: "ACCEPTED",
+    label: "Đã tiếp nhận",
+    description: "Nhà cung cấp đã nhận đơn, chờ báo giá hoặc thợ đang đến.",
+  },
   {
     key: "QUOTED",
     label: "Đã có báo giá",

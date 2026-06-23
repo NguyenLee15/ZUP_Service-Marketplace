@@ -220,12 +220,10 @@ export class BookingLifecycleService {
       });
     }
 
-    if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException({
-        code: ErrorCodes.BOOKING_INVALID_STATE,
-        message: `Đơn hàng không ở trạng thái phù hợp (hiện tại: ${booking.status})`,
-      });
-    }
+    this.bookingStatePolicy.assertTransition(
+      booking.status,
+      BookingStatus.ACCEPTED,
+    );
 
     if (booking.providerAcceptedAt) {
       return { data: booking, message: 'Đơn hàng đã được nhận trước đó' };
@@ -244,13 +242,16 @@ export class BookingLifecycleService {
 
     const updated = await this.prisma.booking.update({
       where: { id: bookingId },
-      data: { providerAcceptedAt: new Date() },
+      data: {
+        providerAcceptedAt: new Date(),
+        status: BookingStatus.ACCEPTED,
+      },
     });
 
     await this.shared.addStatusHistory(
       bookingId,
-      'PENDING',
-      'PENDING',
+      booking.status,
+      BookingStatus.ACCEPTED,
       providerId,
       'Nhà cung cấp nhận đơn',
     );
@@ -283,18 +284,12 @@ export class BookingLifecycleService {
       });
     }
 
-    if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException({
-        code: ErrorCodes.BOOKING_INVALID_STATE,
-        message: 'Chỉ có thể từ chối đơn đang chờ xác nhận',
-      });
-    }
-
-    const reason = dto?.reason || 'Nhà cung cấp từ chối nhận đơn';
     this.bookingStatePolicy.assertTransition(
       booking.status,
       BookingStatus.CANCELLED,
     );
+
+    const reason = dto?.reason || 'Nhà cung cấp từ chối nhận đơn';
     const updated = await this.prisma.booking.update({
       where: { id: bookingId },
       data: { status: BookingStatus.CANCELLED },
@@ -302,8 +297,8 @@ export class BookingLifecycleService {
 
     await this.shared.addStatusHistory(
       bookingId,
-      'PENDING',
-      'CANCELLED',
+      booking.status,
+      BookingStatus.CANCELLED,
       providerId,
       reason,
     );
@@ -326,7 +321,7 @@ export class BookingLifecycleService {
   ) {
     const booking = await this.shared.checkBooking(bookingId, {
       providerId,
-      status: BookingStatus.PENDING,
+      status: BookingStatus.ACCEPTED,
     });
 
     if (!booking.providerAcceptedAt) {
@@ -363,7 +358,7 @@ export class BookingLifecycleService {
   ) {
     const booking = await this.shared.checkBooking(bookingId, {
       providerId,
-      status: BookingStatus.PENDING,
+      status: { in: [BookingStatus.PENDING, BookingStatus.ACCEPTED] } as any,
     });
 
     if (!booking.providerAcceptedAt) {
@@ -912,12 +907,12 @@ export class BookingLifecycleService {
 
     if (
       !(
-        [BookingStatus.PENDING, BookingStatus.QUOTED] as BookingStatus[]
+        [BookingStatus.PENDING, BookingStatus.ACCEPTED, BookingStatus.QUOTED] as BookingStatus[]
       ).includes(booking.status)
     ) {
       throw new BadRequestException({
         code: ErrorCodes.BOOKING_INVALID_STATE,
-        message: 'Chỉ có thể hủy đơn ở trạng thái Chờ xử lý hoặc Đã báo giá',
+        message: 'Chỉ có thể hủy đơn ở trạng thái Chờ xử lý, Đang đến hoặc Đã báo giá',
       });
     }
 
@@ -966,7 +961,7 @@ export class BookingLifecycleService {
 
     if (
       !(
-        [BookingStatus.PENDING, BookingStatus.QUOTED] as BookingStatus[]
+        [BookingStatus.PENDING, BookingStatus.ACCEPTED, BookingStatus.QUOTED] as BookingStatus[]
       ).includes(booking.status)
     ) {
       const canCancelFree = await this.redisService.exists(
@@ -976,7 +971,7 @@ export class BookingLifecycleService {
       if (!(booking.status === BookingStatus.CONFIRMED && canCancelFree)) {
         throw new BadRequestException({
           code: ErrorCodes.BOOKING_INVALID_STATE,
-          message: 'Chỉ có thể hủy đơn ở trạng thái Chờ xử lý hoặc Đã báo giá',
+          message: 'Chỉ có thể hủy đơn ở trạng thái Chờ xử lý, Đang đến hoặc Đã báo giá',
         });
       }
     }
