@@ -170,21 +170,20 @@ function getCategorySectionActionLabel(categoryName: string) {
 async function fetchCategoryServiceSections(categories: Category[]) {
   const candidates = sortHomeCategories(categories).slice(0, 8);
 
-  const sections = await Promise.all(
-    candidates.map(async (category) => {
-      const services = await fetchHomeServices("/services/search", {
-        categoryIds: getCategoryTreeIds(category.id, categories).join(","),
-        limit: 4,
-        sortBy: "rating",
-      });
+  const sections = [];
+  for (const category of candidates) {
+    const services = await fetchHomeServices("/services/search", {
+      categoryIds: getCategoryTreeIds(category.id, categories).join(","),
+      limit: 4,
+      sortBy: "rating",
+    });
 
-      return {
-        category,
-        description: getCategorySectionDescription(category.name),
-        services,
-      };
-    }),
-  );
+    sections.push({
+      category,
+      description: getCategorySectionDescription(category.name),
+      services,
+    });
+  }
 
   return sections
     .filter(
