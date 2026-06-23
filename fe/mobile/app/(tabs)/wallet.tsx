@@ -202,8 +202,17 @@ export default function WalletScreen() {
       setMessage({ tone: 'info', text: 'Đang mở VNPay sandbox. Sau khi thanh toán, ví sẽ tự tải lại.' });
 
       await WebBrowser.openBrowserAsync(paymentUrl);
+      
+      // Đợi 2 giây để IPN từ VNPay kịp cập nhật vào Database Backend
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       await fetchWallet();
       await fetchTransactions(1, true);
+      
+      setMessage({ 
+        tone: 'success', 
+        text: 'Đã hoàn tất thanh toán. Nếu số dư chưa được cộng, vui lòng vuốt xuống để tải lại sau ít phút.' 
+      });
     } catch (err: any) {
       setDepositError(
         err?.response?.data?.message ||
