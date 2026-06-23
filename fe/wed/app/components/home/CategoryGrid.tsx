@@ -24,7 +24,8 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
   };
 
   // The backend no longer provides level or parentId, so all categories are top-level
-  const displayCategories = categories.map((cat) => {
+  // Display exactly 8 categories and arrange in a 4-column grid as requested
+  const displayCategories = categories.slice(0, 8).map((cat) => {
     const { icon, hint } = getCategoryIconAndHint(cat.name);
     return { icon, label: cat.name, hint, categoryId: cat.id };
   });
@@ -50,7 +51,7 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
           </Link>
         </div>
  
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 md:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-4 gap-2.5 md:gap-3">
           {displayCategories.map((cat, idx) => {
             const IconComponent = cat.icon;
             
