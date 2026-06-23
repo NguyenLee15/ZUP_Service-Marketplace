@@ -62,10 +62,7 @@ const statusConfig = {
   },
 };
 
-const tabs = [
-  { value: 'deposits', label: 'Yêu cầu nạp', icon: ArrowDownToLine },
-  { value: 'withdrawals', label: 'Yêu cầu rút', icon: ArrowUpFromLine },
-] as const;
+// Deposits are automated via PayOS, no admin approval needed
 
 const statusFilters = [
   { value: 'all', label: 'Tất cả' },
@@ -77,17 +74,15 @@ const statusFilters = [
 
 export default function AdminWalletPage() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'deposits' | 'withdrawals'>('deposits');
   const [status, setStatus] = useState('PENDING');
-  const [deposits, setDeposits] = useState<WalletRequest[]>([]);
   const [withdrawals, setWithdrawals] = useState<WalletRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [selected, setSelected] = useState<WalletRequest | null>(null);
   const [note, setNote] = useState('');
 
-  const requests = activeTab === 'deposits' ? deposits : withdrawals;
-  const activeLabel = activeTab === 'deposits' ? 'yêu cầu nạp' : 'yêu cầu rút';
+  const requests = withdrawals;
+  const activeLabel = 'yêu cầu rút';
 
   const summary = useMemo(() => {
     const list = requests;
@@ -107,13 +102,8 @@ export default function AdminWalletPage() {
     if (status !== 'all') params.status = status;
 
     try {
-      if (activeTab === 'deposits') {
-        const res = await adminApi.getWalletDeposits(params);
-        setDeposits(res.data?.data || []);
-      } else {
-        const res = await adminApi.getWalletWithdrawals(params);
-        setWithdrawals(res.data?.data || []);
-      }
+      const res = await adminApi.getWalletWithdrawals(params);
+      setWithdrawals(res.data?.data || []);
     } catch (err: ApiPayload) {
       toast({
         title: 'Không tải được dữ liệu ví',
@@ -127,18 +117,13 @@ export default function AdminWalletPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, [activeTab, status]);
+  }, [status]);
 
   const handleAction = async (request: WalletRequest, action: 'approve' | 'reject') => {
     setActionLoading(request.id);
     try {
-      if (activeTab === 'deposits') {
-        if (action === 'approve') await adminApi.approveWalletDeposit(request.id, note);
-        else await adminApi.rejectWalletDeposit(request.id, note);
-      } else {
-        if (action === 'approve') await adminApi.approveWalletWithdrawal(request.id, note);
-        else await adminApi.rejectWalletWithdrawal(request.id, note);
-      }
+      if (action === 'approve') await adminApi.approveWalletWithdrawal(request.id, note);
+      else await adminApi.rejectWalletWithdrawal(request.id, note);
 
       toast({
         title: action === 'approve' ? 'Đã xác nhận' : 'Đã từ chối',
@@ -177,7 +162,7 @@ export default function AdminWalletPage() {
       <div>
         <h3 className="text-2xl font-bold text-foreground">Quản Lý Ví</h3>
         <p className="mt-1 text-muted-foreground">
-          Xác nhận nạp tiền thủ công và xử lý yêu cầu rút tiền của nhà cung cấp.
+          Quản lý và xử lý yêu cầu rút tiền của nhà cung cấp.
         </p>
       </div>
 
@@ -202,22 +187,7 @@ export default function AdminWalletPage() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <Button
-              key={tab.value}
-              variant={activeTab === tab.value ? 'default' : 'outline'}
-              onClick={() => setActiveTab(tab.value)}
-              className="gap-2"
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </Button>
-          );
-        })}
-      </div>
+      {/* Tabs removed */}
 
       <div className="flex flex-wrap gap-2">
         {statusFilters.map(item => (
@@ -236,7 +206,7 @@ export default function AdminWalletPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{activeTab === 'deposits' ? 'Danh sách yêu cầu nạp' : 'Danh sách yêu cầu rút'}</CardTitle>
+          <CardTitle>Danh sách yêu cầu rút tiền</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
