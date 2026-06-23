@@ -17,7 +17,7 @@ import { CustomerFooter } from "@/components/layout/CustomerFooter";
 import { HomeHeader } from "@/components/layout/HomeHeader";
 import type { Category, Service } from "@/types";
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 type BackendResponse<T> = {
   data?: T;
@@ -56,8 +56,8 @@ async function fetchHomeServices(
   try {
     const response = await fetch(getBackendUrl(path, params), {
       headers: { Accept: "application/json" },
-      next: { revalidate: 0 },
-      signal: AbortSignal.timeout(4_000),
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(8_000),
     });
 
     if (!response.ok) return [];
@@ -80,8 +80,8 @@ async function fetchHomeCategories() {
   try {
     const response = await fetch(getBackendUrl("/categories/flat"), {
       headers: { Accept: "application/json" },
-      next: { revalidate: 0 },
-      signal: AbortSignal.timeout(4_000),
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(8_000),
     });
 
     if (!response.ok) return [];
