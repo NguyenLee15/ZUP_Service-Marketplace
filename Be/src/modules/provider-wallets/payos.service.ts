@@ -77,7 +77,7 @@ export class PayosService implements OnModuleInit {
     };
 
     try {
-      const paymentLinkRes = await this.payos.createPaymentLink(body);
+      const paymentLinkRes = await this.payos.paymentRequests.create(body);
       return {
         checkoutUrl: paymentLinkRes.checkoutUrl,
         qrCode: paymentLinkRes.qrCode,
@@ -96,11 +96,11 @@ export class PayosService implements OnModuleInit {
     }
 
     try {
-      const data = this.payos.verifyPaymentWebhookData(webhookBody);
+      const data = await this.payos.webhooks.verify(webhookBody);
       
-      if (data.code === '00' && data.data) {
-        const orderCode = data.data.orderCode;
-        const amount = data.data.amount;
+      if (webhookBody.code === '00') {
+        const orderCode = data.orderCode;
+        const amount = data.amount;
         
         await this.handleSuccessPayment(String(orderCode), amount);
       }
