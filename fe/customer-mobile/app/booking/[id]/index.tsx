@@ -73,16 +73,7 @@ const BASE_TIMELINE_STEPS = [
     label: "Đã gửi yêu cầu",
     description: "Đang chờ nhà cung cấp xác nhận.",
   },
-  {
-    key: "ACCEPTED",
-    label: "Nhà cung cấp đã nhận",
-    description: "Nhà cung cấp sẽ liên hệ hoặc khảo sát.",
-  },
-  {
-    key: "SURVEYING",
-    label: "Đang khảo sát",
-    description: "Nhà cung cấp đang kiểm tra nhu cầu thực tế.",
-  },
+
   {
     key: "QUOTED",
     label: "Đã có báo giá",
@@ -111,7 +102,6 @@ const TERMINAL_STEPS: Record<string, { label: string; description: string }> = {
     label: "Đang tranh chấp",
     description: "Đơn hàng đang được xử lý tranh chấp.",
   },
-  REJECTED: { label: "Đã từ chối", description: "Yêu cầu đã bị từ chối." },
 };
 
 function isValidBookingId(value: number) {
