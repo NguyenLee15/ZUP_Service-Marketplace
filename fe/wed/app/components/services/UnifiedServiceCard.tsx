@@ -325,17 +325,12 @@ export function UnifiedServiceCard({
             <div className="truncate text-sm sm:text-base font-extrabold leading-tight text-cyan-300 tabular-nums">
               Từ {displayPrice}.
             </div>
-            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10px] sm:text-[11px] font-medium leading-none text-slate-500 dark:text-slate-400">
+            <div className="mt-1 flex min-w-0 items-center gap-1 text-[10px] sm:text-[11px] leading-none text-foreground/80">
+              <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
               {salesCount > 0 ? (
-                <>
-                  <CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                  <span className="truncate">Đã có {formatCompactCount(salesCount)} lượt đặt.</span>
-                </>
+                <span className="truncate">Lượt đặt {formatCompactCount(salesCount)}.</span>
               ) : (
-                <>
-                  <TrendingUp className="h-3.5 w-3.5 shrink-0 text-sky-500" />
-                  <span className="truncate">Dịch vụ mới.</span>
-                </>
+                <span className="truncate">Chưa có lượt đặt.</span>
               )}
             </div>
           </div>
@@ -348,10 +343,10 @@ export function UnifiedServiceCard({
                 handleDetailClick();
                 router.push(detailHref);
               }}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-sky-400/20 bg-sky-600 text-white shadow-[0_0_18px_rgba(2,132,199,0.35)] transition-[background-color,transform,box-shadow] hover:bg-cyan-500 active:scale-95 sm:h-12 sm:w-12 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-500 transition-colors hover:bg-sky-500 hover:text-white sm:h-9 sm:w-9 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               aria-label={`Đặt ngay dịch vụ ${service.name}`}
             >
-              <ShoppingBag className="h-5 w-5" />
+              <ShoppingBag className="h-4 w-4" />
             </button>
           )}
         </div>
