@@ -13,6 +13,19 @@ export default async function PaymentReturnPage({
   
   const isSuccess = responseCode === '00';
 
+  // Manual IPN fallback: If the VNPay server webhook hasn't reached our backend yet,
+  // we trigger the IPN verification manually from the frontend.
+  if (isSuccess && process.env.BACKEND_URL) {
+    try {
+      const queryString = new URLSearchParams(params as Record<string, string>).toString();
+      await fetch(`${process.env.BACKEND_URL}/provider-wallets/vnpay/ipn?${queryString}`, {
+        cache: 'no-store',
+      });
+    } catch (e) {
+      console.error('Failed to trigger manual IPN fallback', e);
+    }
+  }
+
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-lg dark:bg-slate-900">
