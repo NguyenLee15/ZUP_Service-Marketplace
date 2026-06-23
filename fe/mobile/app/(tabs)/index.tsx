@@ -292,10 +292,11 @@ export default function DashboardScreen() {
         tone: "success",
         text: newValue ? "Đã bật trạng thái nhận đơn" : "Đã tắt trạng thái nhận đơn",
       });
-    } catch (err) {
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.error?.message || err?.response?.data?.message || "Không thể cập nhật trạng thái hoạt động";
       setMessage({
         tone: "error",
-        text: "Không thể cập nhật trạng thái hoạt động",
+        text: errMsg,
       });
     } finally {
       setToggling(false);

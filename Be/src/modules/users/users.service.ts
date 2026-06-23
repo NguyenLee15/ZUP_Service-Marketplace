@@ -117,6 +117,15 @@ export class UsersService {
       throw new BadRequestException('Chỉ nhà cung cấp mới có thể cập nhật trạng thái này');
     }
     
+    if (isOnline) {
+      const wallet = await this.prisma.providerWallet.findUnique({
+        where: { providerId: userId },
+      });
+      if (!wallet || wallet.balance.toNumber() <= 0 || wallet.isRestricted) {
+        throw new BadRequestException('Tài khoản của bạn đang có số dư 0đ hoặc bị giới hạn. Vui lòng nạp thêm tiền để nhận đơn.');
+      }
+    }
+
     await this.prisma.user.update({
       where: { id: userId },
       data: { isOnline },
