@@ -34,6 +34,7 @@ export default function KycScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [kycStatus, setKycStatus] = useState<string | null>(null);
+  const [nfcStatus, setNfcStatus] = useState<'IDLE' | 'SCANNING' | 'SUCCESS'>('IDLE');
   const [message, setMessage] = useState<MessageState>(null);
 
   const [cccdFront, setCccdFront] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -94,9 +95,24 @@ export default function KycScreen() {
     );
   };
 
-  const handleSubmit = async () => {
+  const handleScanNFC = () => {
     if (!cccdFront || !cccdBack || !portrait) {
-      setMessage({ tone: 'warning', text: 'Vui lòng tải đủ CCCD mặt trước, mặt sau và ảnh chân dung.' });
+      setMessage({ tone: 'warning', text: 'Vui lòng tải đủ 3 ảnh trước khi quét NFC.' });
+      return;
+    }
+    setNfcStatus('SCANNING');
+    setMessage({ tone: 'success', text: 'Đang chờ thẻ... Hãy áp thẻ CCCD vào mặt lưng điện thoại của bạn.' });
+    
+    // Simulate NFC reading delay (2.5 seconds)
+    setTimeout(() => {
+      setNfcStatus('SUCCESS');
+      setMessage({ tone: 'success', text: 'Quét NFC thành công! Đã trích xuất dữ liệu từ chip CCCD.' });
+    }, 2500);
+  };
+
+  const handleSubmit = async () => {
+    if (!cccdFront || !cccdBack || !portrait || nfcStatus !== 'SUCCESS') {
+      setMessage({ tone: 'warning', text: 'Vui lòng hoàn tất tải ảnh và quét NFC.' });
       return;
     }
 
@@ -257,11 +273,35 @@ export default function KycScreen() {
             onPress: () => pickImage(setPortrait),
           })}
 
+          <ProviderCard 
+            onPress={handleScanNFC} 
+            contentStyle={[styles.uploadContent, nfcStatus === 'SCANNING' && { opacity: 0.7 }]}
+            style={(!cccdFront || !cccdBack || !portrait) ? { opacity: 0.5 } : {}}
+          >
+            <View style={styles.uploadText}>
+              <View style={[styles.uploadIcon, { backgroundColor: nfcStatus === 'SUCCESS' ? `${activeColors.success}14` : nfcStatus === 'SCANNING' ? `${activeColors.warning}14` : theme.colors.surfaceVariant }]}>
+                <MaterialCommunityIcons 
+                  name={nfcStatus === 'SUCCESS' ? 'nfc-tap' : nfcStatus === 'SCANNING' ? 'nfc-search-variant' : 'nfc'} 
+                  size={24} 
+                  color={nfcStatus === 'SUCCESS' ? activeColors.success : nfcStatus === 'SCANNING' ? activeColors.warning : theme.colors.primary} 
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text variant="bodyLarge" style={[styles.uploadTitle, { color: theme.colors.onSurface }]}>
+                  Quét chip CCCD (NFC)
+                </Text>
+                <Text variant="bodySmall" style={[styles.uploadDescription, { color: theme.colors.onSurfaceVariant }]}>
+                  {nfcStatus === 'SUCCESS' ? 'Đã trích xuất dữ liệu thành công.' : nfcStatus === 'SCANNING' ? 'Đang đọc thẻ...' : 'Áp sát thẻ CCCD vào lưng máy.'}
+                </Text>
+              </View>
+            </View>
+          </ProviderCard>
+
           <Button
             mode="contained"
             onPress={handleSubmit}
             loading={submitting}
-            disabled={submitting || !cccdFront || !cccdBack || !portrait}
+            disabled={submitting || !cccdFront || !cccdBack || !portrait || nfcStatus !== 'SUCCESS'}
             style={styles.submitButton}
             contentStyle={styles.buttonContent}
           >
