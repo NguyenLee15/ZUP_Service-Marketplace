@@ -231,7 +231,7 @@ export default function KycScreen() {
               Ảnh cần chuẩn bị
             </Text>
             <Text variant="bodySmall" style={[styles.sectionDescription, { color: theme.colors.onSurfaceVariant }]}>
-              Ảnh nên đủ sáng, không bị che góc, chữ trên CCCD đọc được. Chỉ dùng ảnh của chính bạn.
+              Ảnh nên đủ sáng, không bị che góc. Chỉ dùng ảnh của chính bạn và ảnh chân dung cần có cầm CCCD.
             </Text>
           </ProviderCard>
 
@@ -251,7 +251,7 @@ export default function KycScreen() {
           })}
           {renderUploadCard({
             title: 'Ảnh chân dung',
-            description: 'Ảnh khuôn mặt rõ, không đeo kính tối.',
+            description: 'Ảnh chụp chân dung có cầm CCCD sát mặt.',
             asset: portrait,
             icon: 'face-recognition',
             onPress: () => pickImage(setPortrait),
