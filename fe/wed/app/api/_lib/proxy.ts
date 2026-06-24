@@ -41,13 +41,27 @@ function getPayloadData(payload: ApiPayload) {
     : payload;
 }
 
+function decodeJwtRole(token: string): string | null {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    if (!payloadBase64) return null;
+    const payloadString = Buffer.from(payloadBase64, 'base64').toString('utf8');
+    const payload = JSON.parse(payloadString);
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
 function getAuthTokens(payload: ApiPayload) {
   const data = getPayloadData(payload);
+  const accessToken = typeof data?.accessToken === "string" ? data.accessToken : null;
+  const refreshToken = typeof data?.refreshToken === "string" ? data.refreshToken : null;
+  
   return {
-    accessToken:
-      typeof data?.accessToken === "string" ? data.accessToken : null,
-    refreshToken:
-      typeof data?.refreshToken === "string" ? data.refreshToken : null,
+    accessToken,
+    refreshToken,
+    role: accessToken ? decodeJwtRole(accessToken) : null,
   };
 }
 
@@ -60,7 +74,7 @@ function stripRefreshToken(payload: ApiPayload) {
 
 function storeAuthCookies(
   response: NextResponse,
-  tokens: { accessToken: string | null; refreshToken: string | null },
+  tokens: { accessToken: string | null; refreshToken: string | null; role: string | null },
 ) {
   if (tokens.accessToken) {
     response.cookies.set(
@@ -71,10 +85,15 @@ function storeAuthCookies(
   }
 
   if (tokens.refreshToken) {
+    // Admin/Staff: 2 hours (2 * 60 * 60)
+    // Customer/Provider: 7 days (7 * 24 * 60 * 60)
+    const isAdminOrStaff = tokens.role === "ADMIN" || tokens.role === "STAFF";
+    const refreshMaxAge = isAdminOrStaff ? 2 * 60 * 60 : 7 * 24 * 60 * 60;
+    
     response.cookies.set(
       REFRESH_TOKEN_COOKIE,
       tokens.refreshToken,
-      authCookieOptions(7 * 24 * 60 * 60),
+      authCookieOptions(refreshMaxAge),
     );
   }
 }
