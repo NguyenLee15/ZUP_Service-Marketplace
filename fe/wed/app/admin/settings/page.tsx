@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Save, Loader2, Percent, BadgeDollarSign, Landmark } from 'lucide-react';
@@ -15,9 +15,9 @@ export default function SettingsPage() {
   const [isEditing, setIsEditing] = useState(false);
 
   const [currentCommission, setCurrentCommission] = useState({
-    rate: 8.5,
-    minAmount: 50000,
-    maxAmount: 5000000,
+    rate: 10,
+    minAmount: 10000,
+    maxAmount: 500000,
   });
 
   // Edit fields

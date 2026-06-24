@@ -401,9 +401,9 @@ export class AdminService {
         data: {
           key: 'commission_rate',
           value: JSON.stringify({
-            rate: 8.5,
-            minAmount: 50000,
-            maxAmount: 5000000,
+            rate: 10,
+            minAmount: 10000,
+            maxAmount: 500000,
           }),
         },
       });
