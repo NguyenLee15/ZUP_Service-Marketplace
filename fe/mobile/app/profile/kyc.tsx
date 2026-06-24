@@ -8,6 +8,7 @@ import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { profileApi } from '../../features/profile/profile.api';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { Colors } from '../../constants/colors';
@@ -40,6 +41,14 @@ export default function KycScreen() {
   const [cccdFront, setCccdFront] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [cccdBack, setCccdBack] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [portrait, setPortrait] = useState<ImagePicker.ImagePickerAsset | null>(null);
+
+  useEffect(() => {
+    // Initialize NFC
+    NfcManager.start().catch((err) => console.warn('NFC start error', err));
+    return () => {
+      NfcManager.cancelTechnologyRequest().catch(() => {});
+    };
+  }, []);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -95,19 +104,40 @@ export default function KycScreen() {
     );
   };
 
-  const handleScanNFC = () => {
+  const handleScanNFC = async () => {
     if (!cccdFront || !cccdBack || !portrait) {
       setMessage({ tone: 'warning', text: 'Vui lòng tải đủ 3 ảnh trước khi quét NFC.' });
       return;
     }
+    
+    // Check if NFC is supported
+    const isSupported = await NfcManager.isSupported();
+    if (!isSupported) {
+      setMessage({ tone: 'error', text: 'Thiết bị của bạn không hỗ trợ NFC.' });
+      return;
+    }
+
     setNfcStatus('SCANNING');
     setMessage({ tone: 'success', text: 'Đang chờ thẻ... Hãy áp thẻ CCCD vào mặt lưng điện thoại của bạn.' });
     
-    // Simulate NFC reading delay (2.5 seconds)
-    setTimeout(() => {
-      setNfcStatus('SUCCESS');
-      setMessage({ tone: 'success', text: 'Quét NFC thành công! Đã trích xuất dữ liệu từ chip CCCD.' });
-    }, 2500);
+    try {
+      await NfcManager.requestTechnology(NfcTech.IsoDep);
+      const tag = await NfcManager.getTag();
+      
+      if (tag) {
+        setNfcStatus('SUCCESS');
+        setMessage({ tone: 'success', text: `Quét NFC thành công! UID: ${tag.id || 'N/A'}` });
+      }
+    } catch (ex: any) {
+      setNfcStatus('IDLE');
+      if (ex !== 'cancelled') {
+        setMessage({ tone: 'error', text: 'Lỗi đọc thẻ NFC. Vui lòng thử lại.' });
+      } else {
+        setMessage(null);
+      }
+    } finally {
+      NfcManager.cancelTechnologyRequest();
+    }
   };
 
   const handleSubmit = async () => {

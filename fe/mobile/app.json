@@ -27,12 +27,20 @@
       },
       "package": "com.homeservice.provider",
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.NFC",
+        "android.permission.BIND_NFC_SERVICE"
       ]
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "Ứng dụng cần quyền NFC để đọc thông tin thẻ CCCD gắn chip."
+        }
+      ],
       [
         "expo-image-picker",
         {
