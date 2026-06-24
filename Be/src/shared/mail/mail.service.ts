@@ -29,15 +29,20 @@ export class MailService {
   async sendOtp(email: string, otp: string): Promise<void> {
     await this.sendMail({
       to: email,
-      subject: 'Mã xác thực OTP - Service Marketplace',
+      subject: 'Mã xác thực OTP - Zup',
       html: `
-          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #333;">Xác thực tài khoản</h2>
-            <p>Mã OTP của bạn là:</p>
-            <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">${otp}</span>
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(135deg, #2563eb, #1e40af); padding: 24px; text-align: center;">
+              <span style="color: white; font-size: 32px; font-weight: 900; letter-spacing: 4px;">ZUP</span>
             </div>
-            <p style="color: #666; font-size: 14px;">Mã có hiệu lực trong 10 phút. Không chia sẻ mã này với bất kỳ ai.</p>
+            <div style="padding: 32px;">
+              <h2 style="color: #1f2937; margin-top: 0;">Xác thực tài khoản</h2>
+              <p style="color: #4b5563; font-size: 16px;">Mã OTP của bạn là:</p>
+              <div style="background: #f3f4f6; padding: 24px; text-align: center; border-radius: 8px; margin: 24px 0;">
+                <span style="font-size: 36px; font-weight: bold; letter-spacing: 12px; color: #2563eb;">${otp}</span>
+              </div>
+              <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">Mã có hiệu lực trong 10 phút. Không chia sẻ mã này với bất kỳ ai.</p>
+            </div>
           </div>
         `,
       consoleText: `OTP for ${email}: ${otp}`,
@@ -48,15 +53,22 @@ export class MailService {
   async sendPasswordResetLink(email: string, resetLink: string): Promise<void> {
     await this.sendMail({
       to: email,
-      subject: 'Đặt lại mật khẩu - Service Marketplace',
+      subject: 'Đặt lại mật khẩu - Zup',
       html: `
-          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #333;">Đặt lại mật khẩu</h2>
-            <p>Nhấn nút dưới đây để đặt lại mật khẩu:</p>
-            <a href="${resetLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">
-              Đặt lại mật khẩu
-            </a>
-            <p style="color: #666; font-size: 14px;">Link có hiệu lực trong 15 phút.</p>
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(135deg, #2563eb, #1e40af); padding: 24px; text-align: center;">
+              <span style="color: white; font-size: 32px; font-weight: 900; letter-spacing: 4px;">ZUP</span>
+            </div>
+            <div style="padding: 32px;">
+              <h2 style="color: #1f2937; margin-top: 0;">Đặt lại mật khẩu</h2>
+              <p style="color: #4b5563; font-size: 16px;">Nhấn nút dưới đây để đặt lại mật khẩu của bạn:</p>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${resetLink}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                  Đặt lại mật khẩu
+                </a>
+              </div>
+              <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">Link có hiệu lực trong 15 phút. Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+            </div>
           </div>
         `,
       consoleText: `Password reset link for ${email}: ${resetLink}`,
@@ -71,16 +83,21 @@ export class MailService {
   ): Promise<void> {
     await this.sendMail({
       to: email,
-      subject: 'Chào mừng bạn đến Service Marketplace',
+      subject: 'Chào mừng bạn đến với Zup',
       html: `
-          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #333;">Chào mừng ${fullName}!</h2>
-            <p>Tài khoản nhân viên đã được tạo. Thông tin đăng nhập:</p>
-            <ul>
-              <li><strong>Email:</strong> ${email}</li>
-              <li><strong>Mật khẩu:</strong> ${password}</li>
-            </ul>
-            <p style="color: #e11d48; font-size: 14px;">Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.</p>
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(135deg, #2563eb, #1e40af); padding: 24px; text-align: center;">
+              <span style="color: white; font-size: 32px; font-weight: 900; letter-spacing: 4px;">ZUP</span>
+            </div>
+            <div style="padding: 32px;">
+              <h2 style="color: #1f2937; margin-top: 0;">Chào mừng ${fullName}!</h2>
+              <p style="color: #4b5563; font-size: 16px;">Tài khoản nhân viên của bạn đã được tạo thành công. Thông tin đăng nhập:</p>
+              <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 24px 0;">
+                <p style="margin: 0 0 12px 0; color: #1f2937;"><strong>Email:</strong> ${email}</p>
+                <p style="margin: 0; color: #1f2937;"><strong>Mật khẩu:</strong> <span style="font-family: monospace; background: #e5e7eb; padding: 4px 8px; border-radius: 4px;">${password}</span></p>
+              </div>
+              <p style="color: #e11d48; font-size: 14px; margin-bottom: 0;">Vui lòng đổi mật khẩu ngay sau khi đăng nhập lần đầu tiên để bảo mật tài khoản.</p>
+            </div>
           </div>
         `,
       consoleText: `Staff credentials for ${email}: ${password}`,
