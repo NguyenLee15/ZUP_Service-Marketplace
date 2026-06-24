@@ -505,7 +505,7 @@ function RankedBarChart({
     <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-2">
       <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={visibleData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+          <BarChart data={visibleData} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E7EDF6" />
             <XAxis type="number" hide />
             <YAxis 
@@ -514,8 +514,7 @@ function RankedBarChart({
               axisLine={false} 
               tickLine={false} 
               tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }} 
-              width={120} 
-              tickFormatter={(val) => val.length > 16 ? val.substring(0, 16) + "..." : val}
+              width={160}
             />
             <RechartsTooltip 
               cursor={{ fill: "rgba(0,0,0,0.02)" }}
