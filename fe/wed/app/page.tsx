@@ -161,10 +161,7 @@ function getCategorySectionDescription(categoryName: string) {
 }
 
 function getCategorySectionActionLabel(categoryName: string) {
-  const trimmedName = categoryName.trim();
-  return trimmedName.toLowerCase().startsWith("dịch vụ")
-    ? `Xem thêm ${trimmedName}`
-    : `Xem thêm dịch vụ ${trimmedName}`;
+  return "Xem thêm";
 }
 
 async function fetchCategoryServiceSections(categories: Category[]) {
