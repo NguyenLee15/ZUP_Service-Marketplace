@@ -183,7 +183,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const [isLocating, setIsLocating] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [sessionTitle, setSessionTitle] = useState("Trợ lý AI HomeServe");
+  const [sessionTitle, setSessionTitle] = useState("Trợ lý AI Zup");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState("");
   const [titleSaving, setTitleSaving] = useState(false);
@@ -296,7 +296,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           parts: [
             {
               type: "text",
-              text: "Xin chào, tôi là Trợ lý AI HomeServe. Tôi có thể tìm dịch vụ, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
+              text: "Xin chào, tôi là Trợ lý AI Zup. Tôi có thể tìm dịch vụ, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
             },
           ],
         } as ChatbotUIMessage,
