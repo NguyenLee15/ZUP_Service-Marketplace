@@ -209,6 +209,7 @@ export async function POST(req: NextRequest) {
     const result = streamText({
       model: google(modelName),
       system: ctx.systemPrompt,
+      maxRetries: 3,
       messages: messages
         .filter(
           (message) =>
