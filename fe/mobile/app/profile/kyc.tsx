@@ -3,11 +3,12 @@
  */
 import { useEffect, useState, useRef } from 'react';
 import type { ComponentProps, Dispatch, SetStateAction } from 'react';
-import { Image, StyleSheet, View, Alert, Modal } from 'react-native';
+import { Image, StyleSheet, View, Alert, Modal, Dimensions } from 'react-native';
 import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { profileApi } from '../../features/profile/profile.api';
@@ -380,9 +381,29 @@ export default function KycScreen() {
             <IconButton icon="close" size={36} iconColor="white" onPress={() => setCameraVisible(false)} />
             <IconButton icon="circle-slice-8" size={80} iconColor="white" onPress={async () => {
               if (cameraRef.current && cameraSetter) {
-                const photo = await cameraRef.current.takePictureAsync({ quality: 0.75 });
+                const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
                 if (photo) {
-                  cameraSetter(photo as any);
+                  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+                  const cropW = cameraType === 'cccd' ? 340 : 250;
+                  const cropH = cameraType === 'cccd' ? 220 : 350;
+                  
+                  const originX = (photo.width * ((SCREEN_WIDTH - cropW) / 2)) / SCREEN_WIDTH;
+                  const originY = (photo.height * ((SCREEN_HEIGHT - cropH) / 2)) / SCREEN_HEIGHT;
+                  const width = (photo.width * cropW) / SCREEN_WIDTH;
+                  const height = (photo.height * cropH) / SCREEN_HEIGHT;
+
+                  try {
+                    const cropped = await ImageManipulator.manipulateAsync(
+                      photo.uri,
+                      [{ crop: { originX, originY, width, height } }],
+                      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+                    );
+                    cameraSetter(cropped as any);
+                  } catch (error) {
+                    console.warn("Crop failed, using original", error);
+                    cameraSetter(photo as any);
+                  }
+                  
                   setCameraVisible(false);
                 }
               }
