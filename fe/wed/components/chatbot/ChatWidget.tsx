@@ -183,7 +183,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const [isLocating, setIsLocating] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [sessionTitle, setSessionTitle] = useState("Customer AI Assistant");
+  const [sessionTitle, setSessionTitle] = useState("Trợ lý AI HomeServe");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState("");
   const [titleSaving, setTitleSaving] = useState(false);
@@ -296,7 +296,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           parts: [
             {
               type: "text",
-              text: "Xin chào, tôi là Customer AI Assistant. Tôi có thể tìm dịch vụ, so sánh lựa chọn, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
+              text: "Xin chào, tôi là Trợ lý AI HomeServe. Tôi có thể tìm dịch vụ, tạo nháp đặt lịch và tra cứu đơn hàng của bạn.",
             },
           ],
         } as ChatbotUIMessage,
@@ -589,36 +589,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
             </div>
           </div>
 
-          {!coords ? (
-            <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-center justify-between gap-2 text-xs">
-              <span className="text-blue-800 flex items-center gap-1 font-medium">
-                <Sparkles className="h-3 w-3 text-blue-600 animate-pulse" />
-                Bật định vị để đề xuất thợ siêu gần bạn
-              </span>
-              <button
-                type="button"
-                onClick={requestLocation}
-                disabled={isLocating}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50 shrink-0"
-              >
-                {isLocating ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  "📍 Chia sẻ"
-                )}
-              </button>
-            </div>
-          ) : (
-            <div className="bg-emerald-50 border-b border-emerald-100 px-4 py-2 flex items-center justify-between gap-2 text-xs text-emerald-800 font-medium">
-              <span className="flex items-center gap-1">
-                <Check className="h-3 w-3 text-emerald-600" />
-                Đã bật định vị thông minh (thợ gần nhất sẽ được ưu tiên)
-              </span>
-              <span className="text-[10px] text-emerald-600 font-normal">
-                {coords.latitude.toFixed(4)}, {coords.longitude.toFixed(4)}
-              </span>
-            </div>
-          )}
+
 
           <div
             className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4"
