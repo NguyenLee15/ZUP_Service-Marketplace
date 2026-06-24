@@ -2,7 +2,8 @@
 
 import { Suspense, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bot, RotateCcw, Send, Search, Wrench, Image as ImageIcon, X } from "lucide-react";
+import { ArrowLeft, Bot, RotateCcw, Send, Search, Wrench, Image as ImageIcon, X, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { getChatSocket } from "@/lib/socket";
@@ -476,7 +477,10 @@ function ChatPageContent() {
               className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-cloud-mist"
             >
               {selectedService && (
-                <div className="rounded-2xl border border-action-blue/20 glass-panel p-4 shadow-sm">
+                <Link
+                  href={`/services/${selectedService.id}`}
+                  className="block rounded-2xl border border-action-blue/20 glass-panel p-4 shadow-sm transition-all hover:border-action-blue/40 hover:shadow-md group cursor-pointer"
+                >
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-action-blue/10 text-action-blue">
                       <Wrench className="h-5 w-5" />
@@ -485,7 +489,7 @@ function ChatPageContent() {
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         {user?.role === "PROVIDER" ? "Khách đang hỏi về dịch vụ" : "Bạn đang trao đổi về dịch vụ"}
                       </p>
-                      <p className="mt-1 truncate text-sm font-bold text-midnight-indigo sm:text-base">
+                      <p className="mt-1 truncate text-sm font-bold text-midnight-indigo sm:text-base group-hover:text-action-blue transition-colors">
                         {selectedService.name}
                       </p>
                       {selectedChat?.booking && (
@@ -494,8 +498,9 @@ function ChatPageContent() {
                         </p>
                       )}
                     </div>
+                    <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-action-blue transition-colors mt-1" />
                   </div>
-                </div>
+                </Link>
               )}
               {isLoading ? (
                 <div className="text-center text-muted-foreground">

@@ -22,11 +22,12 @@ export default function ChatRoomScreen() {
   const insets = useSafeAreaInsets();
   const styles = getStyles(theme, insets);
   const router = useRouter();
-  const { id, customerName, serviceName, contextType } = useLocalSearchParams<{
+  const { id, customerName, serviceName, contextType, serviceId } = useLocalSearchParams<{
     id: string;
     customerName: string;
     serviceName?: string;
     contextType?: string;
+    serviceId?: string;
   }>();
   const { user } = useAuthStore();
 
@@ -256,6 +257,39 @@ export default function ChatRoomScreen() {
         </View>
       </View>
 
+      {/* Service context banner — clickable */}
+      {serviceName && (
+        <TouchableRipple
+          onPress={() => {
+            if (serviceId) {
+              // Provider app: navigate to service reviews page if available
+              router.push({ pathname: '/service/[id]/reviews', params: { id: serviceId } } as any);
+            }
+          }}
+          rippleColor={`${theme.colors.primary}20`}
+          style={[styles.serviceBanner, { backgroundColor: `${theme.colors.primary}0A`, borderColor: `${theme.colors.primary}25` }]}
+          accessibilityLabel={`Xem dịch vụ ${serviceName}`}
+          accessibilityRole="link"
+        >
+          <View style={styles.serviceBannerContent}>
+            <View style={[styles.serviceBannerIcon, { backgroundColor: `${theme.colors.primary}15` }]}>
+              <MaterialCommunityIcons name="wrench" size={18} color={theme.colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, fontSize: 9 }}>
+                {contextType === 'booking' ? 'Đơn hàng theo dịch vụ' : 'Trao đổi về dịch vụ'}
+              </Text>
+              <Text variant="titleSmall" style={{ color: theme.colors.onSurface, fontWeight: '800', marginTop: 2 }} numberOfLines={1}>
+                {serviceName}
+              </Text>
+            </View>
+            {serviceId && (
+              <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
+            )}
+          </View>
+        </TouchableRipple>
+      )}
+
       {/* Messages */}
       {loading ? (
         <ActivityIndicator style={{ flex: 1 }} />
@@ -413,6 +447,27 @@ const getStyles = (theme: any, insets: any) => StyleSheet.create({
   headerSubtitle: {
     color: theme.colors.onSurfaceVariant,
     marginTop: 2,
+  },
+  serviceBanner: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  serviceBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  serviceBannerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   messageList: { padding: 16, paddingBottom: 8 },
   msgContainer: { marginBottom: 8, maxWidth: '85%', flexDirection: 'row', alignItems: 'flex-end' },

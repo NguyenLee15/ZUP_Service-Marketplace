@@ -31,13 +31,14 @@ export const routes = {
         params: serviceData ? { id: id ?? '', serviceData } : { id: id ?? '' },
       }) as const,
   },
-  chatRoom: (id: string, customerName?: string, serviceName?: string, contextType?: string) => ({
+  chatRoom: (id: string, customerName?: string, serviceName?: string, contextType?: string, serviceId?: string) => ({
     pathname: '/chat-room/[id]' as const,
     params: {
       id,
       ...(customerName ? { customerName } : {}),
       ...(serviceName ? { serviceName } : {}),
       ...(contextType ? { contextType } : {}),
+      ...(serviceId ? { serviceId } : {}),
     },
   }),
   notifications: '/notifications' as const,

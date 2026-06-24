@@ -72,16 +72,18 @@ export default function ChatListScreen() {
         style={styles.conversationCard}
         contentStyle={styles.conversationRow}
         accessibilityLabel={`Tin nhắn với ${customer?.fullName || 'khách hàng'}`}
-        onPress={() =>
+        onPress={() => {
+          const svcId = item.service?.id || item.booking?.service?.id;
           router.push(
             routes.chatRoom(
               String(item.id),
               customer?.fullName || 'Khách hàng',
               contextName,
-              item.booking ? 'booking' : 'service'
+              item.booking ? 'booking' : 'service',
+              svcId ? String(svcId) : undefined
             )
-          )
-        }
+          );
+        }}
       >
         <View style={styles.avatarContainer}>
           <Avatar.Text
