@@ -93,7 +93,9 @@ export default function BookingsPage() {
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN').format(p) + '₫';
   const getBookingPrice = (booking: ApiPayload) =>
-    Number(booking?.quotation?.actualPrice ?? booking?.agreedPrice ?? 0);
+    booking?.quotations?.length
+      ? booking.quotations.reduce((sum: number, q: ApiPayload) => sum + Number(q.actualPrice ?? 0), 0)
+      : Number(booking?.agreedPrice ?? 0);
   const getBookingDescription = (booking: ApiPayload) =>
     booking?.description || booking?.notes || 'Không có ghi chú chi tiết.';
   const canAdminCancel = (booking: ApiPayload) =>
@@ -260,10 +262,18 @@ export default function BookingsPage() {
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Tổng Tiền (Đã chốt)</p>
                     <p className="font-bold text-foreground text-lg">{formatPrice(getBookingPrice(displayBooking))}</p>
-                    {displayBooking.quotations?.[0]?.commissionRateSnapshot && (
+                    {displayBooking.quotations?.[0]?.commissionRateSnapshot && getBookingPrice(displayBooking) > 0 && (
                       <p className="text-xs text-emerald-600 mt-1 font-medium">
-                        Hoa hồng hệ thống ({displayBooking.quotations[0].commissionRateSnapshot}%): <br/>
-                        +{formatPrice(getBookingPrice(displayBooking) * (Number(displayBooking.quotations[0].commissionRateSnapshot) / 100))}
+                        Hoa hồng hệ thống ({displayBooking.quotations[0].commissionRateSnapshot}%):{' '}
+                        <span className="font-bold">
+                          +{formatPrice(getBookingPrice(displayBooking) * (Number(displayBooking.quotations[0].commissionRateSnapshot) / 100))}
+                        </span>
+                      </p>
+                    )}
+                    {displayBooking.quotations?.[0]?.commissionRateSnapshot && getBookingPrice(displayBooking) === 0 && (
+                      <p className="text-xs text-amber-500 mt-1 font-medium">
+                        Tỷ lệ hoa hồng: {displayBooking.quotations[0].commissionRateSnapshot}%
+                        <br/><span className="text-muted-foreground">(Chưa có báo giá chốt)</span>
                       </p>
                     )}
                   </div>
