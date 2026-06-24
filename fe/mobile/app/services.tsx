@@ -2,7 +2,7 @@
  * Services List - Provider's services.
  */
 import { useCallback, useState, useMemo } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View, Alert } from 'react-native';
 import { ActivityIndicator, Button, FAB, IconButton, Switch, Text, useTheme } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
@@ -94,6 +94,23 @@ export default function ServicesScreen() {
         tone: 'error',
         text: err?.response?.data?.error?.message || 'Không thể thay đổi trạng thái dịch vụ.',
       });
+    }
+  };
+
+  const confirmDelete = (service: any) => {
+    Alert.alert('Xóa dịch vụ', `Bạn có chắc muốn xóa dịch vụ "${service.name}"?`, [
+      { text: 'Hủy', style: 'cancel' },
+      { text: 'Xóa', style: 'destructive', onPress: () => deleteService(service.id) },
+    ]);
+  };
+
+  const deleteService = async (id: number) => {
+    try {
+      await serviceApi.deleteService(id);
+      setServices(prev => prev.filter(item => item.id !== id));
+      setMessage({ tone: 'success', text: 'Đã xóa dịch vụ thành công.' });
+    } catch (err: any) {
+      setMessage({ tone: 'error', text: err?.response?.data?.error?.message || 'Không thể xóa dịch vụ này.' });
     }
   };
 
@@ -202,6 +219,14 @@ export default function ServicesScreen() {
           >
             Sửa
           </Button>
+          <IconButton
+            mode="outlined"
+            icon="trash-can-outline"
+            iconColor={activeColors.error}
+            size={20}
+            style={{ margin: 0, borderColor: activeColors.border }}
+            onPress={() => confirmDelete(item)}
+          />
         </View>
       </ProviderCard>
     );

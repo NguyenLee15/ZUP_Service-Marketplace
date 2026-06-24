@@ -56,6 +56,7 @@ type BookingTimelineItem = {
   toStatus?: string | null;
   note?: string | null;
   createdAt?: string | Date | null;
+  changedBy?: number | null;
 };
 
 const getStatusColor = (status: string, activeColors: typeof Colors.light | typeof Colors.dark): string => {
@@ -831,6 +832,7 @@ export default function ProviderBookingDetailScreen() {
         <ProviderBookingTimeline
           timeline={timeline}
           fallbackStatus={booking.status}
+          booking={booking}
         />
 
         <ProviderCard>
@@ -1875,9 +1877,11 @@ const timelineStyles = StyleSheet.create({
 function ProviderBookingTimeline({
   timeline,
   fallbackStatus,
+  booking,
 }: {
   timeline: BookingTimelineItem[];
   fallbackStatus?: string;
+  booking?: any;
 }) {
   const theme = useTheme();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
@@ -1906,6 +1910,15 @@ function ProviderBookingTimeline({
             ? new Date(item.createdAt).toLocaleString("vi-VN")
             : "";
 
+          let prefix = '';
+          if (status === 'CANCELLED' && item.changedBy) {
+            if (item.changedBy === booking?.customerId) prefix = 'Khách hàng hủy: ';
+            else if (item.changedBy === booking?.providerId) prefix = 'Bạn đã hủy: ';
+            else prefix = 'Hệ thống hủy: ';
+          } else if (status === 'CANCELLED' && !item.changedBy) {
+            prefix = 'Hệ thống hủy: ';
+          }
+
           return (
             <View
               key={`${status}-${item.id || index}`}
@@ -1923,9 +1936,9 @@ function ProviderBookingTimeline({
                     </Text>
                   ) : null}
                 </View>
-                {item.note ? (
+                {item.note || prefix ? (
                   <Text variant="bodySmall" style={[timelineStyles.timelineNote, { color: theme.colors.onSurfaceVariant }]}>
-                    {item.note}
+                    {prefix}{item.note || ''}
                   </Text>
                 ) : null}
               </View>

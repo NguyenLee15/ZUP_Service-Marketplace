@@ -65,6 +65,7 @@ type BookingTimelineItem = {
   toStatus?: string | null;
   note?: string | null;
   createdAt?: string | Date | null;
+  changedBy?: number | null;
 };
 
 const BASE_TIMELINE_STEPS = [
@@ -126,7 +127,7 @@ function getTimelineSteps(status?: string | null) {
   return BASE_TIMELINE_STEPS;
 }
 
-function getTimelineStepsFromHistory(history?: BookingTimelineItem[]) {
+function getTimelineStepsFromHistory(history?: BookingTimelineItem[], booking?: any) {
   if (!history?.length) return [];
   return history.map((item, index) => {
     const nextStatus = item.toStatus || item.fromStatus || "PENDING";
@@ -135,10 +136,20 @@ function getTimelineStepsFromHistory(history?: BookingTimelineItem[]) {
     if (item.note === 'Đã đến nơi') {
       label = 'Thợ đã đến';
     }
+
+    let prefix = '';
+    if (nextStatus === 'CANCELLED' && item.changedBy) {
+      if (item.changedBy === booking?.customerId) prefix = 'Bạn đã hủy: ';
+      else if (item.changedBy === booking?.providerId) prefix = 'Thợ hủy: ';
+      else prefix = 'Hệ thống hủy: ';
+    } else if (nextStatus === 'CANCELLED' && !item.changedBy) {
+      prefix = 'Hệ thống hủy: ';
+    }
+
     return {
       key: `${nextStatus}-${item.id || index}`,
       label,
-      description: [item.note, createdAt].filter(Boolean).join(" · "),
+      description: [(prefix ? prefix + (item.note || '') : item.note), createdAt].filter(Boolean).join(" · "),
     };
   });
 }
@@ -215,8 +226,8 @@ export default function BookingDetailScreen() {
   const booking = bookingQuery.data;
   const quoteAmount = getQuoteAmount(booking);
   const historyTimelineSteps = useMemo(
-    () => getTimelineStepsFromHistory(timelineQuery.data),
-    [timelineQuery.data],
+    () => getTimelineStepsFromHistory(timelineQuery.data, booking),
+    [timelineQuery.data, booking],
   );
   const timelineSteps = useMemo(
     () =>
