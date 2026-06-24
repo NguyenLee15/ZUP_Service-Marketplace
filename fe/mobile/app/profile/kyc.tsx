@@ -1,12 +1,12 @@
 /**
  * KYC Form - upload CCCD and portrait.
  */
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import type { ComponentProps, Dispatch, SetStateAction } from 'react';
 import { Image, StyleSheet, View, Alert, Modal, Dimensions } from 'react-native';
 import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -58,19 +58,21 @@ export default function KycScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const res = await profileApi.getKycStatus();
-        setKycStatus(res.data?.data?.status || null);
-      } catch {
-        setKycStatus(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkStatus();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const checkStatus = async () => {
+        try {
+          const res = await profileApi.getKycStatus();
+          setKycStatus(res.data?.data?.status || null);
+        } catch {
+          setKycStatus(null);
+        } finally {
+          setLoading(false);
+        }
+      };
+      checkStatus();
+    }, []),
+  );
 
   const pickImage = async (setter: ImageSetter, type: 'cccd' | 'portrait') => {
     if (!permission?.granted) {
