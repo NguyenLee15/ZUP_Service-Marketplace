@@ -210,7 +210,7 @@ temp/
 # ─────────────────────────────────────────────
 
 # AI Agent skills & references (chỉ dùng local)
-.agents/
+# .agents/
 
 # Skills backup (không cần thiết cho deploy)
 skills-backup/
