@@ -1,7 +1,7 @@
 /**
  * Provider booking queue
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import {
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   useTheme,
 } from 'react-native-paper';
+import { useFocusEffect } from 'expo-router';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import { routes } from '../../lib/route-utils';
@@ -110,15 +111,19 @@ export default function BookingsScreen() {
     [activeTab],
   );
 
-  useEffect(() => {
-    fetchBookings(1, true);
-  }, [fetchBookings]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchBookings(1, true);
+    }, [fetchBookings])
+  );
 
-  useEffect(() => {
-    if (bookingSignal) {
-      void fetchBookings(1, true);
-    }
-  }, [bookingSignal, fetchBookings]);
+  useFocusEffect(
+    useCallback(() => {
+      if (bookingSignal) {
+        void fetchBookings(1, true);
+      }
+    }, [bookingSignal, fetchBookings])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

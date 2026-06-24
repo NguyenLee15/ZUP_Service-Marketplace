@@ -1,8 +1,9 @@
 /**
  * Wallet Tab - Provider wallet, VNPay sandbox and manual transfer requests.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { ActivityIndicator, Button, Chip, Modal, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -133,20 +134,24 @@ export default function WalletScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchWallet();
-    fetchRequests();
-    fetchTransactions(1, true);
-  }, [fetchWallet, fetchRequests, fetchTransactions]);
-
-  // Tự động load dữ liệu mới khi có tín hiệu (đơn hàng mới, nạp tiền thành công qua notif, etc.)
-  useEffect(() => {
-    if (bookingSignal) {
+  useFocusEffect(
+    useCallback(() => {
       fetchWallet();
       fetchRequests();
       fetchTransactions(1, true);
-    }
-  }, [bookingSignal, fetchWallet, fetchRequests, fetchTransactions]);
+    }, [fetchWallet, fetchRequests, fetchTransactions])
+  );
+
+  // Tự động load dữ liệu mới khi có tín hiệu (đơn hàng mới, nạp tiền thành công qua notif, etc.)
+  useFocusEffect(
+    useCallback(() => {
+      if (bookingSignal) {
+        fetchWallet();
+        fetchRequests();
+        fetchTransactions(1, true);
+      }
+    }, [bookingSignal, fetchWallet, fetchRequests, fetchTransactions])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

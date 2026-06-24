@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import {
   Alert,
@@ -18,7 +18,7 @@ import {
   TextInput,
   useTheme,
 } from "react-native-paper";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
@@ -172,15 +172,19 @@ export default function ProviderBookingDetailScreen() {
     }
   }, [id]);
 
-  useEffect(() => {
-    fetchBooking();
-  }, [fetchBooking]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchBooking();
+    }, [fetchBooking])
+  );
 
-  useEffect(() => {
-    if (bookingSignal?.bookingId === Number(id)) {
-      void fetchBooking();
-    }
-  }, [bookingSignal, fetchBooking, id]);
+  useFocusEffect(
+    useCallback(() => {
+      if (bookingSignal?.bookingId === Number(id)) {
+        void fetchBooking();
+      }
+    }, [bookingSignal, fetchBooking, id])
+  );
 
   // Foreground Location Tracking (PENDING, QUOTED, CONFIRMED, IN_PROGRESS)
   useEffect(() => {

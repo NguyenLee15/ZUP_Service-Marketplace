@@ -1,14 +1,15 @@
 /**
  * Provider dashboard — Flighty/Seline style
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
-  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
+  RefreshControl,
   useWindowDimensions,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Button,
@@ -305,16 +306,20 @@ export default function DashboardScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
   // Tự động load dữ liệu mới khi có tín hiệu (ví dụ: có đơn hàng mới qua socket)
-  useEffect(() => {
-    if (bookingSignal) {
-      fetchData();
-    }
-  }, [bookingSignal, fetchData]);
+  useFocusEffect(
+    useCallback(() => {
+      if (bookingSignal) {
+        fetchData();
+      }
+    }, [bookingSignal, fetchData])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
