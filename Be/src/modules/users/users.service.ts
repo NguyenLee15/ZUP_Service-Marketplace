@@ -126,6 +126,18 @@ export class UsersService {
       if (!wallet || wallet.balance.toNumber() <= 0 || wallet.isRestricted) {
         throw new BadRequestException('Tài khoản của bạn đang có số dư 0đ hoặc bị giới hạn. Vui lòng nạp thêm tiền để nhận đơn.');
       }
+
+      const activeServicesCount = await this.prisma.service.count({
+        where: {
+          providerId: userId,
+          status: 'ACTIVE',
+          isDeleted: false,
+        },
+      });
+
+      if (activeServicesCount === 0) {
+        throw new BadRequestException('Bạn chưa có dịch vụ nào đang hoạt động. Vui lòng tạo ít nhất một dịch vụ trước khi bật trạng thái nhận đơn.');
+      }
     }
 
     await this.prisma.user.update({
