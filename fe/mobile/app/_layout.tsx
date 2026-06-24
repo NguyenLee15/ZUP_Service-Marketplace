@@ -116,7 +116,7 @@ function AppBootScreen() {
       </View>
       <Text style={[styles.bootTitle, { color: theme.colors.onSurface }]}>Zup Đối Tác</Text>
       <Text style={[styles.bootSubtitle, { color: theme.colors.onSurfaceVariant }]}>Đang khởi tạo cấu hình thợ</Text>
-      <ActivityIndicator color={theme.colors.primary} style={styles.bootSpinner} />
+      <ActivityIndicator size="large" animating={true} color={theme.colors.primary} style={styles.bootSpinner} />
     </View>
   );
 }
