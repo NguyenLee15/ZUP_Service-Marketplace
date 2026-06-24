@@ -868,177 +868,6 @@ async function main() {
     },
   });
 
-  // Booking 2: Khách đặt sửa chập điện (Trạng thái IN_PROGRESS, thợ Hải làm)
-  const b2 = await prisma.booking.create({
-    data: {
-      bookingCode: 'BK924856',
-      customerId: customer.id,
-      providerId: provider2.id,
-      serviceId: sElec.id,
-      description: 'Phòng bếp bị nhảy CB liên tục khi cắm lò vi sóng',
-      province: 'Hồ Chí Minh',
-      district: 'Quận 1',
-      ward: 'Phường Bến Nghé',
-      addressDetail: '123 Lê Lợi, Nhà phố số 4',
-      desiredTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // ngày mai
-      status: 'IN_PROGRESS',
-      bookingItems: {
-        create: [
-          {
-            name: 'Dò tìm vị trí chập điện cháy nổ hệ thống chôn âm',
-            unit: 'Lần',
-            quantity: 1,
-            priceSnapshot: 250000,
-          },
-        ],
-      },
-      quotations: {
-        create: {
-          actualPrice: 370000,
-          commissionRateSnapshot: 10,
-          estimatedTime: '2 giờ',
-          note: 'Đã phát sinh chập đường dây ổ cắm bếp, thay mới ổ cắm an toàn',
-          quotationItems: {
-            create: [
-              {
-                name: 'Dò tìm vị trí chập điện cháy nổ hệ thống chôn âm',
-                unit: 'Lần',
-                quantity: 1,
-                price: 250000,
-              },
-              {
-                name: 'Thay thế ổ cắm chập điện Panasonic chính hãng (Phát sinh)',
-                unit: 'Cái',
-                quantity: 1,
-                price: 120000, // Thay thế kèm công lắp
-              },
-            ],
-          },
-        },
-      },
-    },
-  });
-
-  const b3 = await prisma.booking.create({
-    data: {
-      bookingCode: 'BK_PENDING1',
-      customerId: customer2.id,
-      providerId: provider1.id,
-      serviceId: sACGas.id,
-      description: 'Máy lạnh phòng ngủ không lạnh, nghi thiếu gas',
-      province: 'Hồ Chí Minh',
-      district: 'Quận 3',
-      ward: 'Phường Võ Thị Sáu',
-      addressDetail: '45 Nguyễn Đình Chiểu',
-      desiredTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-      status: 'PENDING',
-      providerResponseDeadline: new Date(Date.now() + 30 * 60 * 1000),
-      bookingItems: {
-        create: [
-          {
-            name: 'Nạp gas toàn phần trọn gói máy lạnh 1.0HP - 1.5HP',
-            unit: 'Máy',
-            quantity: 1,
-            priceSnapshot: 350000,
-          },
-        ],
-      },
-    },
-  });
-
-  const b4 = await prisma.booking.create({
-    data: {
-      bookingCode: 'BK_QUOTED1',
-      customerId: customer.id,
-      providerId: provider4.id,
-      serviceId: sMassage.id,
-      description:
-        'Đau vai gáy do ngồi làm việc lâu, muốn đặt liệu trình 90 phút',
-      province: 'Hồ Chí Minh',
-      district: 'Quận 1',
-      ward: 'Phường Bến Nghé',
-      addressDetail: '123 Lê Lợi, Căn hộ A102',
-      desiredTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      status: 'QUOTED',
-      providerAcceptedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      bookingItems: {
-        create: [
-          {
-            name: 'Liệu trình massage body thải độc kết hợp đá nóng 90 phút',
-            unit: 'Ca',
-            quantity: 1,
-            priceSnapshot: 380000,
-          },
-        ],
-      },
-      quotations: {
-        create: {
-          actualPrice: 380000,
-          commissionRateSnapshot: 10,
-          estimatedTime: '90 phút',
-          note: 'Có thể đến sau 18h, chuẩn bị không gian yên tĩnh trước khi trị liệu.',
-          quotationItems: {
-            create: [
-              {
-                name: 'Liệu trình massage body thải độc kết hợp đá nóng 90 phút',
-                unit: 'Ca',
-                quantity: 1,
-                price: 380000,
-              },
-            ],
-          },
-        },
-      },
-    },
-  });
-
-  const b5 = await prisma.booking.create({
-    data: {
-      bookingCode: 'BK_DISPUTE1',
-      customerId: customer2.id,
-      providerId: provider5.id,
-      serviceId: sSofa.id,
-      description: 'Giặt sofa chữ L nhưng sau khi khô vẫn còn vết ố ở tay ghế',
-      province: 'Hồ Chí Minh',
-      district: 'Quận Bình Thạnh',
-      ward: 'Phường 25',
-      addressDetail: 'Tòa nhà Pearl Plaza, 561A Điện Biên Phủ',
-      desiredTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      status: 'DISPUTED',
-      providerAcceptedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      completedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-      autoCompletedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      bookingItems: {
-        create: [
-          {
-            name: 'Giặt hơi nước nóng ghế Sofa vải nỉ góc chữ L dưới 2.5m',
-            unit: 'Bộ',
-            quantity: 1,
-            priceSnapshot: 350000,
-          },
-        ],
-      },
-      quotations: {
-        create: {
-          actualPrice: 350000,
-          commissionRateSnapshot: 10,
-          estimatedTime: '2 giờ',
-          note: 'Khách phản ánh còn vết ố sau khi khô, cần admin xử lý khiếu nại.',
-          quotationItems: {
-            create: [
-              {
-                name: 'Giặt hơi nước nóng ghế Sofa vải nỉ góc chữ L dưới 2.5m',
-                unit: 'Bộ',
-                quantity: 1,
-                price: 350000,
-              },
-            ],
-          },
-        },
-      },
-    },
-  });
-
   const b6 = await prisma.booking.create({
     data: {
       bookingCode: 'BK_CANCEL1',
@@ -1104,51 +933,6 @@ async function main() {
         ),
       },
       {
-        bookingId: b2.id,
-        fromStatus: 'PENDING',
-        toStatus: 'QUOTED',
-        changedBy: provider2.id,
-        note: 'Provider báo giá phát sinh thay ổ cắm',
-        createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      },
-      {
-        bookingId: b2.id,
-        fromStatus: 'QUOTED',
-        toStatus: 'CONFIRMED',
-        changedBy: customer.id,
-        note: 'Khách xác nhận báo giá',
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      },
-      {
-        bookingId: b2.id,
-        fromStatus: 'CONFIRMED',
-        toStatus: 'IN_PROGRESS',
-        changedBy: provider2.id,
-        note: 'Provider đang xử lý tại hiện trường',
-        createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      },
-      {
-        bookingId: b3.id,
-        fromStatus: 'PENDING',
-        toStatus: 'PENDING',
-        changedBy: customer2.id,
-        note: 'Khách tạo yêu cầu, đang chờ provider phản hồi',
-      },
-      {
-        bookingId: b4.id,
-        fromStatus: 'PENDING',
-        toStatus: 'QUOTED',
-        changedBy: provider4.id,
-        note: 'Provider gửi báo giá trị liệu 90 phút',
-      },
-      {
-        bookingId: b5.id,
-        fromStatus: 'DONE',
-        toStatus: 'DISPUTED',
-        changedBy: customer2.id,
-        note: 'Khách tạo khiếu nại còn vết ố trên sofa',
-      },
-      {
         bookingId: b6.id,
         fromStatus: 'PENDING',
         toStatus: 'CANCELLED',
@@ -1165,16 +949,7 @@ async function main() {
         type: 'RESULT',
         fileUrl: '/images/demo-result-ac-1.png',
       },
-      {
-        bookingId: b2.id,
-        type: 'SURVEY',
-        fileUrl: '/images/demo-survey-electric-1.png',
-      },
-      {
-        bookingId: b5.id,
-        type: 'RESULT',
-        fileUrl: '/images/demo-result-sofa-1.png',
-      },
+
     ],
   });
 
@@ -1189,26 +964,6 @@ async function main() {
     },
   });
 
-  const dispute = await prisma.dispute.create({
-    data: {
-      bookingId: b5.id,
-      raisedBy: customer2.id,
-      assignedTo: staff.id,
-      reason: 'Sofa vẫn còn vết ố sau khi giặt, khách yêu cầu kiểm tra lại.',
-      status: 'IN_REVIEW',
-      aiSummary:
-        'Khách cung cấp ảnh vết ố sau khi dịch vụ hoàn tất. Cần provider phản hồi và admin xem xét hoàn tiền một phần hoặc yêu cầu xử lý lại.',
-      evidences: {
-        create: [
-          {
-            type: 'IMAGE',
-            fileUrl: '/images/demo-dispute-sofa-stain.png',
-            uploadedBy: customer2.id,
-          },
-        ],
-      },
-    },
-  });
 
   const provider1Wallet = await prisma.providerWallet.findUnique({
     where: { providerId: provider1.id },
@@ -1250,15 +1005,6 @@ async function main() {
         vnpayTxnRef: 'SEED_VNPAY_001',
         idempotencyKey: 'vnpay:SEED_VNPAY_001',
         processedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      },
-      {
-        walletId: provider5Wallet.id,
-        type: 'PENALTY',
-        amount: -50000,
-        bookingId: b5.id,
-        disputeId: dispute.id,
-        status: 'PENDING',
-        idempotencyKey: `dispute:${dispute.id}:pending-penalty`,
       },
     ],
   });
@@ -1335,32 +1081,6 @@ async function main() {
     },
   });
 
-  await prisma.conversation.create({
-    data: {
-      bookingId: b5.id,
-      serviceId: sSofa.id,
-      customerId: customer2.id,
-      providerId: provider5.id,
-      messages: {
-        create: [
-          {
-            senderId: customer2.id,
-            senderType: 'CUSTOMER',
-            content:
-              'Sofa khô rồi nhưng tay ghế vẫn còn vết ố, bên mình kiểm tra lại giúp.',
-            isRead: false,
-          },
-          {
-            senderId: provider5.id,
-            senderType: 'PROVIDER',
-            content:
-              'Bên em đã nhận thông tin và sẽ phối hợp với admin để xử lý.',
-            isRead: false,
-          },
-        ],
-      },
-    },
-  });
 
   await prisma.chatbotSession.create({
     data: {
@@ -1418,14 +1138,6 @@ async function main() {
         isRead: false,
       },
       {
-        userId: provider5.id,
-        type: 'DISPUTE',
-        title: 'Có khiếu nại cần phản hồi',
-        content: 'Booking BK_DISPUTE1 đang được admin xem xét.',
-        referenceId: dispute.id,
-        isRead: false,
-      },
-      {
         userId: admin.id,
         type: 'AUDIT',
         title: 'Seed demo đã tạo dữ liệu mới',
@@ -1452,14 +1164,6 @@ async function main() {
         targetType: 'Service',
         targetId: sPestPending.id,
         description: 'Nhân viên mở hồ sơ dịch vụ đang chờ duyệt để kiểm tra.',
-        ipAddress: '127.0.0.1',
-      },
-      {
-        actorId: customer2.id,
-        action: 'DISPUTE_CREATED',
-        targetType: 'Dispute',
-        targetId: dispute.id,
-        description: 'Khách tạo khiếu nại còn vết ố sau khi giặt sofa.',
         ipAddress: '127.0.0.1',
       },
       {
