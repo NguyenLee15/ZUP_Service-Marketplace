@@ -60,17 +60,36 @@ export default function KycScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      let intervalId: NodeJS.Timeout;
+
       const checkStatus = async () => {
         try {
           const res = await profileApi.getKycStatus();
-          setKycStatus(res.data?.data?.status || null);
+          const newStatus = res.data?.data?.status || null;
+          setKycStatus(newStatus);
+          
+          // Stop polling if status is no longer PENDING
+          if (newStatus !== 'PENDING' && intervalId) {
+            clearInterval(intervalId);
+          }
         } catch {
           setKycStatus(null);
         } finally {
           setLoading(false);
         }
       };
+
+      // Initial check
       checkStatus();
+
+      // Poll every 5 seconds only if we don't know the status yet or it's PENDING
+      // Wait, we need the latest state of kycStatus. Since useCallback has no dependencies on kycStatus,
+      // the best approach is to always poll and let the server response clear the interval if it's no longer pending.
+      intervalId = setInterval(checkStatus, 5000);
+
+      return () => {
+        if (intervalId) clearInterval(intervalId);
+      };
     }, []),
   );
 
