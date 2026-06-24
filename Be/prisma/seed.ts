@@ -5,39 +5,22 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('=== DỌN DẸP TOÀN BỘ DỮ LIỆU CŨ TRÊN DATABASE ===');
-  await prisma.review.deleteMany();
-  await prisma.walletTransaction.deleteMany();
-  await prisma.withdrawalRequest.deleteMany();
-  await prisma.manualDepositRequest.deleteMany();
-  await prisma.featuredListing.deleteMany();
-  await prisma.bookingStatusHistory.deleteMany();
-  await prisma.disputeEvidence.deleteMany();
-  await prisma.dispute.deleteMany();
-  await prisma.quotationItem.deleteMany();
-  await prisma.quotation.deleteMany();
-  await prisma.bookingAttachment.deleteMany();
-  await prisma.message.deleteMany();
-  await prisma.conversation.deleteMany();
-  await prisma.bookingItem.deleteMany();
-  await prisma.booking.deleteMany();
-  await prisma.serviceImage.deleteMany();
-  await prisma.serviceItem.deleteMany();
-  await prisma.service.deleteMany();
-  await prisma.serviceCategory.deleteMany();
-  await prisma.providerWallet.deleteMany();
-  await prisma.kycProfile.deleteMany();
-  await prisma.commissionConfig.deleteMany();
-  await prisma.refreshToken.deleteMany();
-  await prisma.passwordReset.deleteMany();
-  await prisma.loginAttempt.deleteMany();
-  await prisma.userAddress.deleteMany();
-  await prisma.chatbotSessionMessage.deleteMany();
-  await prisma.chatbotSession.deleteMany();
-  await prisma.notification.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.otpAttempt.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.systemSetting.deleteMany();
+  const tablenames = await prisma.$queryRaw<
+    Array<{ tablename: string }>
+  >`SELECT tablename FROM pg_tables WHERE schemaname='public'`;
+
+  const tables = tablenames
+    .map(({ tablename }) => tablename)
+    .filter((name) => name !== '_prisma_migrations')
+    .map((name) => `"public"."${name}"`)
+    .join(', ');
+
+  try {
+    await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
+    console.log('Đã dọn dẹp xong dữ liệu cũ.');
+  } catch (error) {
+    console.error('Lỗi khi xóa dữ liệu:', error);
+  }
 
   console.log('=== KHỞI TẠO BỘ DỮ LIỆU PREMIUM CHUẨN THỊ TRƯỜNG ===');
   const passwordHash = await bcrypt.hash('password123', 10);
