@@ -523,9 +523,14 @@ export default function AdminBookingDetailPage() {
                             </span>
                           </div>
                           {h.note && (
-                            <p className="text-xs text-slate-500 mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 leading-normal">
-                              {h.note}
-                            </p>
+                            <div className="text-xs text-slate-500 mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 leading-normal flex flex-col gap-0.5">
+                              {h.toStatus === "CANCELLED" && h.changedBy && (
+                                <span className="font-semibold text-slate-700">
+                                  [{h.changedBy === booking.customer?.id ? "Khách hàng hủy" : h.changedBy === booking.provider?.id ? "Nhà cung cấp hủy" : "Hệ thống/Quản trị viên hủy"}]
+                                </span>
+                              )}
+                              <span>{h.note}</span>
+                            </div>
                           )}
                         </div>
                       </div>

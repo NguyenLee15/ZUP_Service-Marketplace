@@ -9,6 +9,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as WebBrowser from 'expo-web-browser';
 import { FlashList } from '@shopify/flash-list';
 import { walletApi } from '../../features/wallet/wallet.api';
+import { useNotificationStore } from '../../features/notification/notification.store';
 import { Colors } from '../../constants/colors';
 import {
   ProviderCard,
@@ -60,6 +61,7 @@ function generateManualDepositCode() {
 export default function WalletScreen() {
   const theme = useTheme();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
+  const bookingSignal = useNotificationStore((state) => state.bookingSignal);
   const styles = getStyles(theme, activeColors);
 
   const [balance, setBalance] = useState(0);
@@ -136,6 +138,15 @@ export default function WalletScreen() {
     fetchRequests();
     fetchTransactions(1, true);
   }, [fetchWallet, fetchRequests, fetchTransactions]);
+
+  // Tự động load dữ liệu mới khi có tín hiệu (đơn hàng mới, nạp tiền thành công qua notif, etc.)
+  useEffect(() => {
+    if (bookingSignal) {
+      fetchWallet();
+      fetchRequests();
+      fetchTransactions(1, true);
+    }
+  }, [bookingSignal, fetchWallet, fetchRequests, fetchTransactions]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

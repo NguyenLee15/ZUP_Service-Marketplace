@@ -365,8 +365,26 @@ export default function BookingsPage() {
                     <h4 className="font-medium text-red-900 mb-2 flex items-center gap-2">
                       <AlertCircle className="w-4 h-4" /> Lý do hủy đơn
                     </h4>
-                    <div className="bg-red-50 p-4 rounded-lg text-sm text-red-800 border border-red-100 whitespace-pre-wrap">
-                      {displayBooking.statusHistories.find((h: any) => h.toStatus === 'CANCELLED')?.note || displayBooking.cancellationReason || "Không có lý do"}
+                    <div className="bg-red-50 p-4 rounded-lg text-sm text-red-800 border border-red-100 whitespace-pre-wrap flex flex-col gap-1">
+                      {(() => {
+                        const cancelHistory = displayBooking.statusHistories.find((h: any) => h.toStatus === 'CANCELLED');
+                        let cancelledByRole = "";
+                        if (cancelHistory?.changedBy === displayBooking.customer?.id) {
+                          cancelledByRole = "Khách hàng hủy";
+                        } else if (cancelHistory?.changedBy === displayBooking.provider?.id) {
+                          cancelledByRole = "Nhà cung cấp hủy";
+                        } else if (cancelHistory?.changedBy) {
+                          cancelledByRole = "Hệ thống/Quản trị viên hủy";
+                        }
+
+                        const reason = cancelHistory?.note || displayBooking.cancellationReason || "Không có lý do";
+                        return (
+                          <>
+                            {cancelledByRole && <span className="font-semibold text-red-900">[{cancelledByRole}]</span>}
+                            <span>{reason}</span>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}

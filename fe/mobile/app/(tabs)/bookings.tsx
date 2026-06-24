@@ -63,6 +63,7 @@ export default function BookingsScreen() {
   const [activeTab, setActiveTab] = useState(params.status || '');
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -77,7 +78,15 @@ export default function BookingsScreen() {
     async (nextPage = 1, reset = false) => {
       setError('');
       try {
-        if (nextPage === 1) setLoading(true);
+        if (nextPage === 1) {
+          setIsFetching(true);
+          if (reset) {
+            // Keep old data while fetching, just show spinner
+            // We rely on isFetching to show the top spinner
+          } else {
+             // Initial load without reset
+          }
+        }
         const res = await bookingApi.getMyBookings({
           status: activeTab || undefined,
           page: nextPage,
@@ -95,6 +104,7 @@ export default function BookingsScreen() {
         setError('Không thể tải danh sách đơn hàng. Vui lòng thử lại.');
       } finally {
         setLoading(false);
+        setIsFetching(false);
       }
     },
     [activeTab],
@@ -228,6 +238,10 @@ export default function BookingsScreen() {
             />
 
             {error && <ProviderInlineMessage tone="error" message={error} />}
+
+            {isFetching && bookings.length > 0 && !refreshing && (
+              <ActivityIndicator style={{ marginBottom: 10 }} size="small" color={activeColors.primary} />
+            )}
 
             <Searchbar
               value={search}

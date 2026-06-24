@@ -26,6 +26,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useAuthStore } from "../../features/auth/auth.store";
+import { useNotificationStore } from "../../features/notification/notification.store";
 import { routes } from "../../lib/route-utils";
 import { dashboardApi, bookingApi } from "../../features/booking/booking.api";
 import { profileApi } from "../../features/profile/profile.api";
@@ -242,6 +243,7 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { user, setOnlineStatus } = useAuthStore();
+  const bookingSignal = useNotificationStore((state) => state.bookingSignal);
   const activeColors = theme.dark ? Colors.dark : Colors.light;
   const styles = getStyles(theme, activeColors, insets);
 
@@ -306,6 +308,13 @@ export default function DashboardScreen() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Tự động load dữ liệu mới khi có tín hiệu (ví dụ: có đơn hàng mới qua socket)
+  useEffect(() => {
+    if (bookingSignal) {
+      fetchData();
+    }
+  }, [bookingSignal, fetchData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

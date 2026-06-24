@@ -2,12 +2,21 @@ import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
+import { useQueryClient } from '@tanstack/react-query';
 import { tabLabelStyle } from '../../constants/navigation';
+import { useGlobalNotificationSocket } from '../../hooks/useGlobalNotificationSocket';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const bottomInset = Math.min(Math.max(insets.bottom, 6), 18);
+  const queryClient = useQueryClient();
+
+  useGlobalNotificationSocket(() => {
+    // When a notification arrives (e.g. status changed), silently refetch data
+    queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
+  });
 
   return (
     <Tabs

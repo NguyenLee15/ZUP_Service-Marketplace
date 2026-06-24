@@ -28,6 +28,18 @@ import {
   DashboardErrorState,
   DashboardLoadingState,
 } from "../_components/AdminDashboardPrimitives";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
 type DashboardStats = {
   totalBookings?: number;
@@ -484,35 +496,50 @@ function RankedBarChart({
   barClassName: string;
   valueFormatter?: (value: number) => string;
 }) {
-  const maxValue = Math.max(...data.map((item) => Number(item.count) || 0), 1);
   const visibleData = data.slice(0, 7);
+  let color = "#006BFF"; // action-blue
+  if (barClassName.includes("amber")) color = "#f59e0b";
+  else if (barClassName.includes("emerald")) color = "#10b981";
 
   return (
-    <div className="min-h-[280px] rounded-lg bg-pale-gray/60 p-4">
-      <div className="space-y-3">
-      {visibleData.map((item) => {
-        const value = Number(item.count) || 0;
-        const width = Math.max((value / maxValue) * 100, value > 0 ? 10 : 0);
-
-        return (
-          <div key={item.name} className="rounded-lg bg-white p-3 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="truncate text-sm font-semibold text-midnight-indigo" title={item.name}>
-                {item.name}
-              </p>
-              <p className="shrink-0 font-mono text-sm font-bold text-midnight-indigo">
-                {valueFormatter(value)}
-              </p>
-            </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-[#E7EDF6]">
-              <div
-                className={`h-full rounded-full ${barClassName}`}
-                style={{ width: `${width}%` }}
-              />
-            </div>
-          </div>
-        );
-      })}
+    <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-2">
+      <div className="h-[280px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={visibleData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E7EDF6" />
+            <XAxis type="number" hide />
+            <YAxis 
+              dataKey="name" 
+              type="category" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fontSize: 12, fill: "#334155", fontWeight: 600 }} 
+              width={120} 
+              tickFormatter={(val) => val.length > 16 ? val.substring(0, 16) + "..." : val}
+            />
+            <RechartsTooltip 
+              cursor={{ fill: "rgba(0,0,0,0.02)" }}
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-white p-3 border border-slate-100 shadow-xl rounded-xl z-50 relative">
+                      <p className="text-xs font-semibold text-slate-500 mb-1">{label}</p>
+                      <p className="text-sm font-bold" style={{ color }}>
+                        {valueFormatter(payload[0].value as number)}
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={24} label={{ position: 'right', fill: '#64748b', fontSize: 11, formatter: (val: any) => valueFormatter(val) }}>
+              {visibleData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={color} fillOpacity={Math.max(0.4, 1 - (index * 0.1))} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -526,24 +553,10 @@ function LineChartCard({
   valueFormatter: (value: number) => string;
 }) {
   const visibleData = data.slice(-12);
-  const maxValue = Math.max(...visibleData.map((item) => Number(item.count) || 0), 1);
   const total = visibleData.reduce((sum, item) => sum + (Number(item.count) || 0), 0);
-  const width = 720;
-  const height = 220;
-  const points = visibleData.map((item, index) => {
-    const x =
-      visibleData.length === 1
-        ? width / 2
-        : (index / (visibleData.length - 1)) * width;
-    const y = height - ((Number(item.count) || 0) / maxValue) * (height - 20) - 10;
-    return { ...item, x, y };
-  });
-  const path = points
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
-    .join(" ");
 
   return (
-    <div className="min-h-[280px] rounded-lg bg-pale-gray/60 p-4">
+    <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-4">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium text-slate-blue">Tổng hoa hồng trong kỳ</p>
@@ -555,49 +568,61 @@ function LineChartCard({
           {visibleData.length} mốc dữ liệu
         </p>
       </div>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="h-[190px] w-full overflow-visible rounded-lg bg-white px-2"
-        role="img"
-        aria-label="Biểu đồ đường hoa hồng"
-      >
-        {[0, 1, 2, 3].map((line) => (
-          <line
-            key={line}
-            x1="0"
-            x2={width}
-            y1={(height / 4) * line}
-            y2={(height / 4) * line}
-            stroke="#E7EDF6"
-            strokeDasharray="6 6"
-          />
-        ))}
-        {points.length > 1 && (
-          <path
-            d={`${path} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`}
-            fill="#006BFF"
-            opacity="0.08"
-          />
-        )}
-        <path d={path} fill="none" stroke="#006BFF" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-        {points.map((point) => (
-          <g key={point.name}>
-            <circle cx={point.x} cy={point.y} r="5" fill="#006BFF" stroke="white" strokeWidth="3" />
-            <title>{`${point.name}: ${valueFormatter(Number(point.count) || 0)}`}</title>
-          </g>
-        ))}
-      </svg>
-      <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.max(points.length, 1)}, minmax(0, 1fr))` }}>
-        {points.map((point) => (
-          <div key={point.name} className="min-w-0 text-center">
-            <p className="truncate text-xs font-medium text-slate-blue" title={point.name}>
-              {point.name}
-            </p>
-            <p className="truncate text-[11px] font-semibold text-midnight-indigo">
-              {valueFormatter(Number(point.count) || 0)}
-            </p>
-          </div>
-        ))}
+      <div className="h-[230px] w-full mt-6">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={visibleData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#006BFF" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#006BFF" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7EDF6" />
+            <XAxis 
+              dataKey="name" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fontSize: 11, fill: "#64748b" }} 
+              dy={10} 
+            />
+            <YAxis 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fontSize: 11, fill: "#64748b" }} 
+              tickFormatter={(val) => {
+                if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+                if (val >= 1000) return `${(val / 1000).toFixed(0)}k`;
+                return val;
+              }}
+              width={50}
+            />
+            <RechartsTooltip 
+              cursor={{ stroke: '#006BFF', strokeWidth: 1, strokeDasharray: '4 4' }}
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-white p-3 border border-slate-100 shadow-xl rounded-xl z-50 relative">
+                      <p className="text-xs font-semibold text-slate-500 mb-1">{label}</p>
+                      <p className="text-sm font-bold text-[#006BFF]">
+                        {valueFormatter(payload[0].value as number)}
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Area 
+              type="monotone" 
+              dataKey="count" 
+              stroke="#006BFF" 
+              strokeWidth={3}
+              fillOpacity={1} 
+              fill="url(#colorCount)" 
+              activeDot={{ r: 6, strokeWidth: 0, fill: "#006BFF" }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

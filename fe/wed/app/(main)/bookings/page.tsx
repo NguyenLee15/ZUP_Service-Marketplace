@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Package, Clock, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon, User } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon, User, Loader2 } from 'lucide-react';
 import { bookingsApi } from '@/features/auth/services/api';
+import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,23 +28,34 @@ const PAGE_SIZE = 10;
 export default function BookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
-  useEffect(() => {
-    setLoading(true);
+  const fetchBookings = useCallback(() => {
+    setIsFetching(true);
     const params: ApiPayload = { page, limit: PAGE_SIZE };
     if (status) params.status = status;
     bookingsApi.getMyBookings(params)
       .then((res) => {
         setBookings(res.data.data || []);
         if (res.data.meta) setMeta(res.data.meta);
+        setInitialLoading(false);
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => setIsFetching(false));
   }, [status, page]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
+  useNotificationsSocket(useCallback(() => {
+    // Tự động load dữ liệu mới khi có tín hiệu (ví dụ: thợ nhận đơn, hoàn thành đơn)
+    fetchBookings();
+  }, [fetchBookings]));
 
   // Reset page khi đổi tab status
   useEffect(() => { setPage(1); }, [status]);
@@ -65,7 +77,7 @@ export default function BookingsPage() {
         </TabsList>
       </Tabs>
 
-      {loading ? (
+      {initialLoading ? (
         <div className="space-y-3">
            {[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-xl animate-pulse" />)}
         </div>
@@ -85,8 +97,13 @@ export default function BookingsPage() {
           </Link>
         </div>
       ) : (
-        <>
-          <div className="space-y-3">
+        <div className="relative">
+          {isFetching && !initialLoading && (
+             <div className="absolute top-0 right-0 z-10 flex items-center gap-2 px-3 py-1 bg-background/80 backdrop-blur-sm text-xs text-muted-foreground rounded-bl-lg">
+               <Loader2 className="w-3 h-3 animate-spin" /> Đang cập nhật...
+             </div>
+          )}
+          <div className={`space-y-3 transition-opacity duration-300 ${isFetching ? 'opacity-60 pointer-events-none' : ''}`}>
             {bookings.map((booking) => {
               const sc = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PENDING;
               const StatusIcon = sc.icon;
@@ -167,7 +184,7 @@ export default function BookingsPage() {
               </Button>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
