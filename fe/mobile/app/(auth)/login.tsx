@@ -178,7 +178,7 @@ export default function LoginScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* Custom Premium Header */}
+      {/* Header — no back button on entry screen */}
       <View
         style={[
           styles.headerBar,
@@ -188,13 +188,7 @@ export default function LoginScreen() {
           },
         ]}
       >
-        <IconButton
-          icon="arrow-left"
-          size={24}
-          iconColor={theme.colors.onSurface}
-          onPress={() => router.back()}
-          style={styles.backBtn}
-        />
+        <View style={styles.backBtn} />
         <Text
           variant="titleMedium"
           style={[styles.headerTitle, { color: theme.colors.onSurface }]}
@@ -367,6 +361,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: 24,
     paddingTop: 22,
     paddingBottom: 32,
