@@ -169,6 +169,7 @@ export class BookingDisputeService {
       if (dto.resolutionAction === 'COMPLETE') {
         await this.bookingCommissionService.deductCommission(
           dispute.bookingId,
+          adminId,
           tx,
         );
       } else if (dto.resolutionAction === 'PENALIZE' && dto.penaltyAmount) {

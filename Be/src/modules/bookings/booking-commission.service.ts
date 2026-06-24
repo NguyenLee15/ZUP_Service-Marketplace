@@ -37,6 +37,7 @@ export class BookingCommissionService {
 
   async deductCommission(
     bookingId: number,
+    actorId: number,
     txClient?: Prisma.TransactionClient,
   ) {
     const tx = txClient || this.prisma;
@@ -67,7 +68,7 @@ export class BookingCommissionService {
         amount: fee,
         type: 'COMMISSION',
         bookingId,
-        actorId: 0, // System
+        actorId,
         actionName: 'COMMISSION_DEDUCTION',
         description: `Trừ ${fee.toLocaleString('vi-VN')}₫ hoa hồng cho đơn hàng #${booking.bookingCode}`,
       });

@@ -8,6 +8,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { chatApi } from "@/features/chat/services/chat.api";
 import { getChatSocket } from "@/lib/socket";
 import { useAuthStore } from "@/store/auth.store";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface Message {
   id: number;
@@ -79,6 +80,7 @@ function ChatPageContent() {
   const [inputValue, setInputValue] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFilePreview, setSelectedFilePreview] = useState<string | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -578,7 +580,8 @@ function ChatPageContent() {
                               <img 
                                 src={message.imageUrl} 
                                 alt="Chat image" 
-                                className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
+                                className="max-w-[200px] max-h-[200px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => setZoomedImage(message.imageUrl || null)}
                               />
                             </div>
                           )}
@@ -679,6 +682,19 @@ function ChatPageContent() {
           </div>
         )}
       </div>
+      <Dialog open={!!zoomedImage} onOpenChange={(open) => !open && setZoomedImage(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-1 flex justify-center items-center bg-black/90 border-none sm:max-w-screen-lg">
+          <DialogTitle className="sr-only">Phóng to hình ảnh</DialogTitle>
+          {zoomedImage && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img 
+              src={zoomedImage} 
+              alt="Zoomed" 
+              className="max-w-full max-h-[85vh] object-contain rounded-md"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

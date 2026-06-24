@@ -694,7 +694,11 @@ export class BookingLifecycleService {
         });
       }
 
-      await this.bookingCommissionService.deductCommission(bookingId, tx);
+      await this.bookingCommissionService.deductCommission(
+        bookingId,
+        customerId,
+        tx,
+      );
 
       await tx.booking.update({
         where: { id: bookingId },

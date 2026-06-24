@@ -69,7 +69,7 @@ export class BookingsProcessor extends WorkerHost {
       });
 
       // 3. Trừ hoa hồng
-      await this.commissionService.deductCommission(booking.id, tx);
+      await this.commissionService.deductCommission(booking.id, booking.customerId, tx);
     });
   }
 
