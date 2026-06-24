@@ -187,6 +187,15 @@ export async function POST(req: NextRequest) {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
       process.env.GEMINI_API_KEY ||
       "";
+
+    if (process.env.MOCK_AI === "true") {
+      return createTextOnlyResponse(
+        "Dạ, hiện tại AI đang ở chế độ Demo (MOCK_AI) để đảm bảo ổn định. Tôi có thể hỗ trợ bạn tìm dịch vụ vệ sinh máy lạnh, sửa điện nước, hoặc các dịch vụ khác.",
+        ctx,
+        { auth, ctx, userMessage: userText }
+      );
+    }
+
     if (!apiKey) {
       return createTextOnlyResponse(FALLBACK_REPLY, ctx, {
         auth,
