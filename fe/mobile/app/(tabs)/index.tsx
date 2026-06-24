@@ -463,11 +463,18 @@ export default function DashboardScreen() {
         action={
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Text variant="labelSmall" style={{ color: activeColors.textSecondary }}>
-                {user?.isOnline ? "Nhận đơn" : "Nghỉ"}
+              <Text 
+                variant="labelSmall" 
+                style={{ 
+                  color: user?.isOnline ? activeColors.success : activeColors.error,
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {user?.isOnline ? "Đang nhận đơn" : "Đang nghỉ"}
               </Text>
               <Switch
-                value={user?.isOnline ?? true}
+                value={user?.isOnline ?? false}
                 onValueChange={handleToggleOnline}
                 disabled={toggling}
                 color={activeColors.success}
