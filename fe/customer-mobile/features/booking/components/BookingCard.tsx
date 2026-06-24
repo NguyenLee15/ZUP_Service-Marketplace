@@ -113,7 +113,7 @@ export function BookingCard({
   const status = booking.status || 'PENDING';
   const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
   const price = getBookingPrice(booking);
-  const address = [booking.addressDetail, booking.ward, booking.province].filter(Boolean).join(', ');
+  const address = [booking.addressDetail, booking.ward, booking.province].filter(Boolean).filter(p => p !== 'Không áp dụng').join(', ');
   const cta = getCtaConfig(status, activeColors);
 
   return (

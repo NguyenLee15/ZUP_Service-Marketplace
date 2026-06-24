@@ -98,6 +98,7 @@ export default function AddressesScreen() {
   const queryClient = useQueryClient();
   const { addressOptions, loading: optionsLoading, fallback } = useAddressOptions();
   const [form, setForm] = useState<AddressForm>(emptyForm);
+  const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'error' | 'info' | 'warning'>('info');
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
@@ -197,6 +198,7 @@ export default function AddressesScreen() {
 
   function resetForm() {
     setForm(emptyForm);
+    setShowForm(false);
   }
 
   function updateForm(patch: Partial<AddressForm>) {
@@ -217,6 +219,7 @@ export default function AddressesScreen() {
       latitude: address.latitude || undefined,
       longitude: address.longitude || undefined,
     });
+    setShowForm(true);
     Haptics.selectionAsync().catch(() => {});
   }
 
@@ -290,6 +293,17 @@ export default function AddressesScreen() {
         />
       ))}
 
+      {!showForm ? (
+        <Button
+          mode="outlined"
+          icon="plus"
+          onPress={() => setShowForm(true)}
+          style={{ marginTop: 12, borderColor: activeColors.primary, borderRadius: 12 }}
+          textColor={activeColors.primary}
+        >
+          Thêm địa chỉ mới
+        </Button>
+      ) : (
       <ProviderCard>
         <View style={styles.form}>
           <View style={styles.formHeader}>
@@ -301,11 +315,9 @@ export default function AddressesScreen() {
                 Nhập chính xác để khách hàng có thể tìm đến bạn.
               </Text>
             </View>
-            {form.id ? (
-              <Button mode="text" onPress={resetForm} textColor={activeColors.error}>
-                Hủy sửa
-              </Button>
-            ) : null}
+            <Button mode="text" onPress={resetForm} textColor={activeColors.error}>
+              {form.id ? 'Hủy sửa' : 'Đóng'}
+            </Button>
           </View>
 
           <PickerField 
@@ -356,6 +368,7 @@ export default function AddressesScreen() {
           </Button>
         </View>
       </ProviderCard>
+      )}
 
       <RegionPickerModal
         visible={regionPickerVisible}

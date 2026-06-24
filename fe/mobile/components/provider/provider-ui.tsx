@@ -158,7 +158,7 @@ export function ProviderMetricCard({
                 color={trend > 0 ? activeColors.success : trend < 0 ? activeColors.error : activeColors.textSecondary} 
               />
               <Text style={[styles.trendText, { color: trend > 0 ? activeColors.success : trend < 0 ? activeColors.error : activeColors.textSecondary }]}>
-                {Math.abs(trend)}{trendSuffix}
+                {Math.round(Math.abs(trend) * 10) / 10}{trendSuffix}
               </Text>
             </View>
           )}

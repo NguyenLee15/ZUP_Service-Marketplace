@@ -176,7 +176,7 @@ export default function BookingsScreen() {
         <InfoRow icon="account-outline" text={item.customer?.fullName || '—'} />
         <InfoRow
           icon="map-marker-outline"
-          text={`${item.district || ''}, ${item.province || ''}`}
+          text={[item.district, item.province].filter(Boolean).filter(p => p !== 'Không áp dụng').join(', ') || '—'}
         />
 
         <View style={[styles.cardFooter, { borderTopColor: theme.colors.outlineVariant }]}>
