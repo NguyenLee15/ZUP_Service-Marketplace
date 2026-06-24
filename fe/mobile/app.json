@@ -49,6 +49,12 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Ứng dụng cần truy cập camera để quét mã QR và xác thực CCCD."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",

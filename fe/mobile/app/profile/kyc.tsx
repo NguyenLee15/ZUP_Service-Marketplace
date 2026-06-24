@@ -1,13 +1,14 @@
 /**
  * KYC Form - upload CCCD and portrait.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { ComponentProps, Dispatch, SetStateAction } from 'react';
-import { Image, StyleSheet, View, Alert } from 'react-native';
+import { Image, StyleSheet, View, Alert, Modal } from 'react-native';
 import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { profileApi } from '../../features/profile/profile.api';
 import { useAuthStore } from '../../features/auth/auth.store';
@@ -42,6 +43,12 @@ export default function KycScreen() {
   const [cccdBack, setCccdBack] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [portrait, setPortrait] = useState<ImagePicker.ImagePickerAsset | null>(null);
 
+  const [cameraVisible, setCameraVisible] = useState(false);
+  const [cameraType, setCameraType] = useState<'cccd' | 'portrait'>('cccd');
+  const [cameraSetter, setCameraSetter] = useState<ImageSetter | null>(null);
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+
   useEffect(() => {
     // Initialize NFC
     NfcManager.start().catch((err) => console.warn('NFC start error', err));
@@ -64,7 +71,7 @@ export default function KycScreen() {
     checkStatus();
   }, []);
 
-  const pickImage = async (setter: ImageSetter) => {
+  const pickImage = async (setter: ImageSetter, type: 'cccd' | 'portrait') => {
     Alert.alert(
       'Chọn ảnh',
       'Vui lòng chọn nguồn ảnh hoặc chụp ảnh mới.',
@@ -73,18 +80,16 @@ export default function KycScreen() {
         {
           text: 'Chụp ảnh mới',
           onPress: async () => {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            if (status !== 'granted') {
-              Alert.alert('Quyền truy cập', 'Vui lòng cho phép truy cập camera để chụp ảnh.');
-              return;
+            if (!permission?.granted) {
+              const req = await requestPermission();
+              if (!req.granted) {
+                Alert.alert('Quyền truy cập', 'Vui lòng cho phép truy cập camera để chụp ảnh.');
+                return;
+              }
             }
-            const result = await ImagePicker.launchCameraAsync({
-              quality: 0.75,
-            });
-            if (!result.canceled) {
-              setter(result.assets[0]);
-              setMessage(null);
-            }
+            setCameraType(type);
+            setCameraSetter(() => setter);
+            setCameraVisible(true);
           },
         },
         {
@@ -286,21 +291,21 @@ export default function KycScreen() {
             description: 'Ảnh rõ toàn bộ mặt trước CCCD.',
             asset: cccdFront,
             icon: 'card-account-details-outline',
-            onPress: () => pickImage(setCccdFront),
+            onPress: () => pickImage(setCccdFront, 'cccd'),
           })}
           {renderUploadCard({
             title: 'CCCD mặt sau',
             description: 'Ảnh rõ mã QR và thông tin mặt sau.',
             asset: cccdBack,
             icon: 'card-bulleted-outline',
-            onPress: () => pickImage(setCccdBack),
+            onPress: () => pickImage(setCccdBack, 'cccd'),
           })}
           {renderUploadCard({
             title: 'Ảnh chân dung',
             description: 'Ảnh chụp chân dung có cầm CCCD sát mặt.',
             asset: portrait,
             icon: 'face-recognition',
-            onPress: () => pickImage(setPortrait),
+            onPress: () => pickImage(setPortrait, 'portrait'),
           })}
 
           <ProviderCard 
@@ -339,6 +344,53 @@ export default function KycScreen() {
           </Button>
         </>
       )}
+
+      {/* Custom Camera Modal */}
+      <Modal visible={cameraVisible} animationType="slide" transparent={false}>
+        <CameraView 
+          style={{ flex: 1 }} 
+          facing={cameraType === 'portrait' ? 'front' : 'back'} 
+          ref={cameraRef}
+        >
+          {/* Top mask */}
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} />
+          {/* Center mask row */}
+          <View style={{ flexDirection: 'row', height: cameraType === 'cccd' ? 220 : 350 }}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} />
+            <View style={{ 
+              width: cameraType === 'cccd' ? 340 : 250, 
+              backgroundColor: 'transparent', 
+              borderColor: '#2563eb', 
+              borderWidth: 2, 
+              borderRadius: cameraType === 'cccd' ? 16 : 125,
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', padding: 20 }}>
+                {cameraType === 'cccd' ? 'Căn chỉnh CCCD vào trong khung này' : 'Căn chỉnh khuôn mặt vào trong khung này'}
+              </Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} />
+          </View>
+          {/* Bottom mask */}
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} />
+
+          {/* Controls Overlay */}
+          <View style={{ position: 'absolute', bottom: 40, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
+            <IconButton icon="close" size={36} iconColor="white" onPress={() => setCameraVisible(false)} />
+            <IconButton icon="circle-slice-8" size={80} iconColor="white" onPress={async () => {
+              if (cameraRef.current && cameraSetter) {
+                const photo = await cameraRef.current.takePictureAsync({ quality: 0.75 });
+                if (photo) {
+                  cameraSetter(photo as any);
+                  setCameraVisible(false);
+                }
+              }
+            }} />
+            <View style={{ width: 68 }} />
+          </View>
+        </CameraView>
+      </Modal>
     </ProviderScreen>
   );
 }
