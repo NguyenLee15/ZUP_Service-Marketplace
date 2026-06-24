@@ -319,12 +319,12 @@ export default function KYCPage() {
                       <p className="font-medium text-foreground">{selectedKYC.provider?.fullName}</p>
                     </div>
 
-                    <div className="bg-muted p-3 rounded-lg">
+                    <div className="bg-muted p-3 rounded-lg col-span-2">
                       <p className="text-xs text-muted-foreground mb-1">Email</p>
-                      <p className="font-medium text-foreground">{selectedKYC.provider?.email}</p>
+                      <p className="font-medium text-foreground break-all">{selectedKYC.provider?.email}</p>
                     </div>
 
-                    <div className="bg-muted p-3 rounded-lg">
+                    <div className="bg-muted p-3 rounded-lg col-span-2">
                       <p className="text-xs text-muted-foreground mb-1">Số Điện Thoại</p>
                       <p className="font-medium text-foreground">{selectedKYC.provider?.phone}</p>
                     </div>

@@ -54,6 +54,8 @@ export function usePushNotifications() {
         Notifications.addNotificationResponseReceivedListener((response) => {
           const data = response.notification.request.content.data || {};
           const bookingId = data.bookingId || data.referenceId;
+          // Only navigate if this is actually our app's notification (has type field)
+          if (!data.type && !bookingId) return;
           if (bookingId) {
             router.push(`/booking/${bookingId}` as any);
           } else {
