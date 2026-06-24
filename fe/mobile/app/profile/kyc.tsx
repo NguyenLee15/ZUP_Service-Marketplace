@@ -73,41 +73,16 @@ export default function KycScreen() {
   }, []);
 
   const pickImage = async (setter: ImageSetter, type: 'cccd' | 'portrait') => {
-    Alert.alert(
-      'Chọn ảnh',
-      'Vui lòng chọn nguồn ảnh hoặc chụp ảnh mới.',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Chụp ảnh mới',
-          onPress: async () => {
-            if (!permission?.granted) {
-              const req = await requestPermission();
-              if (!req.granted) {
-                Alert.alert('Quyền truy cập', 'Vui lòng cho phép truy cập camera để chụp ảnh.');
-                return;
-              }
-            }
-            setCameraType(type);
-            setCameraSetter(() => setter);
-            setCameraVisible(true);
-          },
-        },
-        {
-          text: 'Chọn từ Thư viện',
-          onPress: async () => {
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ['images'],
-              quality: 0.75,
-            });
-            if (!result.canceled) {
-              setter(result.assets[0]);
-              setMessage(null);
-            }
-          },
-        },
-      ]
-    );
+    if (!permission?.granted) {
+      const req = await requestPermission();
+      if (!req.granted) {
+        Alert.alert('Quyền truy cập', 'Vui lòng cho phép truy cập camera để chụp ảnh.');
+        return;
+      }
+    }
+    setCameraType(type);
+    setCameraSetter(() => setter);
+    setCameraVisible(true);
   };
 
   const handleScanNFC = async () => {
