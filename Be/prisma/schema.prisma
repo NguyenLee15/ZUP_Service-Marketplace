@@ -117,7 +117,7 @@ model User {
   avatarUrl     String?    @map("avatar_url") @db.VarChar(255)
   role          UserRole
   status        UserStatus @default(PENDING)
-  isOnline      Boolean    @default(true) @map("is_online")
+  isOnline      Boolean    @default(false) @map("is_online")
   emailVerified Boolean    @default(false) @map("email_verified")
   permissions   String[]   @default([]) @map("permissions")
   createdAt     DateTime   @default(now()) @map("created_at")
