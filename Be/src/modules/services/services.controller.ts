@@ -88,6 +88,11 @@ export class ServicesController {
     return this.searchService.getAiState();
   }
 
+  @Post('ai-test')
+  async testAiSearch(@Body() dto: AiSearchDto) {
+    return this.searchService.testAiSearch(dto.query);
+  }
+
   @Post('ai-search')
   async aiSearch(@Body() dto: AiSearchDto) {
     return this.searchService.aiSearch(dto.query);

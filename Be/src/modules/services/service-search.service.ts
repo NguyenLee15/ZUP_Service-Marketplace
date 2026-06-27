@@ -196,6 +196,41 @@ export class ServiceSearchService {
     return this.aiService.getState();
   }
 
+  async testAiSearch(query: string) {
+    const state = await this.aiService.getState();
+    const log = { query, state, embeddingError: null, pgError: null, success: false, results: [] };
+    
+    let embedding: number[] | null = null;
+    try {
+      embedding = await this.aiService.createEmbedding(query);
+      if (!embedding) {
+        log.embeddingError = "createEmbedding returned null";
+      }
+    } catch (e) {
+      log.embeddingError = e instanceof Error ? e.message : String(e);
+    }
+
+    if (embedding) {
+      const vectorStr = `[${embedding.join(',')}]`;
+      try {
+        const services = await this.prisma.$queryRaw<any[]>(
+          Prisma.sql`
+            SELECT s.*, 1 - (s.embedding <=> ${vectorStr}::vector) as similarity
+            FROM services s
+            WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
+            ORDER BY s.embedding <=> ${vectorStr}::vector
+            LIMIT 10
+          `,
+        );
+        log.success = true;
+        log.results = services;
+      } catch (e) {
+        log.pgError = e instanceof Error ? e.message : String(e);
+      }
+    }
+    return log;
+  }
+
   async aiSearch(query: string) {
     const normalizedQuery = query.toLowerCase().trim().replace(/\s+/g, ' ');
     const cacheKey = `ai_search:${normalizedQuery}`;
