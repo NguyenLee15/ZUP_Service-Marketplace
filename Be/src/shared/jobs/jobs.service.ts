@@ -158,6 +158,28 @@ export class JobsService {
           );
           return;
         }
+        case JobName.ServiceGenerateEmbedding: {
+          const embPayload = payload as ServiceGenerateEmbeddingPayload;
+          const { AiService } = await import('../ai/ai.service');
+          const { PrismaService } = await import('../../prisma/prisma.service');
+          const aiService = this.moduleRef.get(AiService, { strict: false });
+          const prisma = this.moduleRef.get(PrismaService, { strict: false });
+          
+          if (aiService && prisma) {
+            const text = `${embPayload.name} ${embPayload.description}`;
+            const embedding = await aiService.createEmbedding(text);
+            if (embedding) {
+              const vectorStr = `[${embedding.join(',')}]`;
+              await prisma.$executeRawUnsafe(`
+                UPDATE services
+                SET embedding = '${vectorStr}'::vector
+                WHERE id = ${Number(embPayload.serviceId)}
+              `);
+              this.logger.log(`Inline generated embedding for service #${embPayload.serviceId}`);
+            }
+          }
+          return;
+        }
         default:
           this.logger.debug(
             `Inline queue skipped non-critical job "${jobName}".`,
