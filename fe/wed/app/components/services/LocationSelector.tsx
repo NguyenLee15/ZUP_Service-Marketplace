@@ -25,12 +25,11 @@ const COMMON_LOCATIONS = [
 ];
 
 interface LocationSelectorProps {
-  currentSource: 'fallback' | 'gps' | 'manual' | 'all';
+  currentSource: 'gps' | 'manual' | 'fallback';
   currentLabel: string;
   savedAddresses?: any[];
   onSelectManual: (lat: number, lng: number, label: string) => void;
   onSelectGps: () => void;
-  onClearLocation: () => void;
 }
 
 export function LocationSelector({
@@ -39,7 +38,6 @@ export function LocationSelector({
   savedAddresses = [],
   onSelectManual,
   onSelectGps,
-  onClearLocation,
 }: LocationSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -57,7 +55,7 @@ export function LocationSelector({
         >
           <MapPin className="w-4 h-4 text-muted-foreground" />
           <span className="font-semibold text-slate-blue max-w-[140px] truncate">
-            {currentSource === 'gps' ? 'Vị trí của tôi' : currentSource === 'all' ? 'Toàn quốc' : currentLabel}
+            {currentSource === 'gps' ? 'Vị trí của tôi' : currentLabel}
           </span>
         </Button>
       </PopoverTrigger>
@@ -96,28 +94,6 @@ export function LocationSelector({
                   <p className="text-xs text-muted-foreground">Sử dụng định vị thiết bị</p>
                 </div>
                 {currentSource === 'gps' && <Check className="w-4 h-4 text-action-blue" />}
-              </button>
-              
-              <div className="h-px bg-platinum-tint mx-2 my-1" />
-
-              <button
-                type="button"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-                  currentSource === 'all' ? 'bg-action-blue/5 text-action-blue' : 'hover:bg-pale-gray text-slate-blue'
-                }`}
-                onClick={() => {
-                  onClearLocation();
-                  setOpen(false);
-                }}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentSource === 'all' ? 'bg-action-blue/10' : 'bg-white border border-platinum-tint'}`}>
-                  <Search className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold">Toàn quốc</p>
-                  <p className="text-xs text-muted-foreground">Tìm kiếm trên toàn quốc</p>
-                </div>
-                {currentSource === 'all' && <Check className="w-4 h-4 text-action-blue" />}
               </button>
               
               <div className="h-px bg-platinum-tint mx-2 my-1" />

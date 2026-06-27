@@ -331,7 +331,16 @@ export class ServiceCommandService {
   async deleteByProvider(providerId: number, serviceId: number) {
     const service = await this.shared.checkOwnership(serviceId, providerId);
 
-
+    if (
+      !(
+        [ServiceStatus.DRAFT, ServiceStatus.HIDDEN] as ServiceStatus[]
+      ).includes(service.status)
+    ) {
+      throw new BadRequestException({
+        code: ErrorCodes.INVALID_STATUS,
+        message: 'Chỉ có thể xóa dịch vụ ở trạng thái Nháp hoặc Đã ẩn',
+      });
+    }
 
     await this.prisma.service.update({
       where: { id: serviceId },

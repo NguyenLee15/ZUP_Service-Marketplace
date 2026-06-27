@@ -26,7 +26,6 @@ interface LocationPickerProps {
   currentLocation: UserLocation;
   onSelectManual: (lat: number, lng: number, label: string) => void;
   onSelectGps: () => void;
-  onClearLocation: () => void;
 }
 
 export function LocationPicker({
@@ -35,7 +34,6 @@ export function LocationPicker({
   currentLocation,
   onSelectManual,
   onSelectGps,
-  onClearLocation,
 }: LocationPickerProps) {
   const activeColors = useActiveColors();
   const styles = getStyles(activeColors);
@@ -61,13 +59,6 @@ export function LocationPicker({
   const handleSelectGps = () => {
     Haptics.selectionAsync().catch(() => {});
     onSelectGps();
-    setSearchQuery('');
-    onDismiss();
-  };
-
-  const handleClearLocation = () => {
-    Haptics.selectionAsync().catch(() => {});
-    onClearLocation();
     setSearchQuery('');
     onDismiss();
   };
@@ -125,32 +116,6 @@ export function LocationPicker({
             <Text style={styles.gpsSubtitle}>Sử dụng định vị thiết bị</Text>
           </View>
           {currentLocation.source === 'gps' && (
-            <MaterialCommunityIcons name="check-circle" size={20} color={activeColors.primary} />
-          )}
-        </Pressable>
-
-        <Pressable
-          style={[
-            styles.gpsButton,
-            currentLocation.source === 'all' && styles.gpsButtonActive,
-            { marginTop: 8 }
-          ]}
-          onPress={handleClearLocation}
-        >
-          <View style={[styles.gpsIconWrap, currentLocation.source === 'all' && styles.gpsIconWrapActive]}>
-            <MaterialCommunityIcons 
-              name="earth" 
-              size={20} 
-              color={currentLocation.source === 'all' ? activeColors.primary : activeColors.textSecondary} 
-            />
-          </View>
-          <View style={styles.gpsTextWrap}>
-            <Text style={[styles.gpsTitle, currentLocation.source === 'all' && styles.gpsTitleActive]}>
-              Toàn quốc
-            </Text>
-            <Text style={styles.gpsSubtitle}>Tìm kiếm trên toàn quốc</Text>
-          </View>
-          {currentLocation.source === 'all' && (
             <MaterialCommunityIcons name="check-circle" size={20} color={activeColors.primary} />
           )}
         </Pressable>

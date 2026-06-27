@@ -47,9 +47,9 @@ type SearchMeta = {
 };
 
 type UserLocationState = {
-  lat?: number;
-  lng?: number;
-  source: 'fallback' | 'gps' | 'manual' | 'all';
+  lat: number;
+  lng: number;
+  source: 'fallback' | 'gps' | 'manual';
   label: string;
 };
 
@@ -75,8 +75,10 @@ function ServicesSearchContent() {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [userLocation, setUserLocation] = useState<UserLocationState>({
-    source: 'all',
-    label: 'Toàn quốc',
+    lat: DEFAULT_SEARCH_LOCATION.lat,
+    lng: DEFAULT_SEARCH_LOCATION.lng,
+    source: 'fallback',
+    label: DEFAULT_SEARCH_LOCATION.label,
   });
   const [isListening, setIsListening] = useState(false);
   const observerTarget = useRef(null);
@@ -407,7 +409,6 @@ function ServicesSearchContent() {
                     setUserLocation(prev => ({ ...prev, source: 'fallback', label: 'Hà Nội' })); // temporary reset
                     fetchGpsLocation();
                   }}
-                  onClearLocation={() => setUserLocation({ source: 'all', label: 'Toàn quốc' })}
                 />
 
                 <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
@@ -574,7 +575,7 @@ function ServicesSearchContent() {
             )}
 
             {viewMode === 'map' ? (
-              <ServiceMap services={services} userLocation={(userLocation.source === 'gps' && userLocation.lat && userLocation.lng) ? { lat: userLocation.lat, lng: userLocation.lng } : null} />
+              <ServiceMap services={services} userLocation={userLocation.source === 'gps' ? userLocation : null} />
             ) : loading && !isFetchingMore ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {[...Array(6)].map((_, i) => (

@@ -606,7 +606,7 @@ export default function ProviderBookingDetailScreen() {
       
       const fullAddress = [booking.addressDetail, booking.ward, booking.district, booking.province]
         .filter(Boolean)
-        .filter(p => !p.toLowerCase().includes('không áp dụng'))
+        .filter(p => p !== 'Không áp dụng')
         .join(', ');
         
       const geocoded = await Location.geocodeAsync(fullAddress);
@@ -746,21 +746,8 @@ export default function ProviderBookingDetailScreen() {
   }
 
   const color = getStatusColor(booking.status, activeColors);
-  let statusLabel =
+  const statusLabel =
     BOOKING_STATUS_LABEL[booking.status as BookingStatus] || booking.status;
-  
-  if (booking.status === 'CANCELLED' && booking.statusHistories) {
-    const cancelHistory = booking.statusHistories.find(h => h.toStatus === 'CANCELLED');
-    if (cancelHistory) {
-      if (cancelHistory.changedBy === booking.customerId) {
-        statusLabel += ' (Khách hàng hủy)';
-      } else if (cancelHistory.changedBy === booking.providerId) {
-        statusLabel += ' (Bạn đã hủy)';
-      } else {
-        statusLabel += ' (Hệ thống hủy)';
-      }
-    }
-  }
   const isAwaitingProviderAcceptance =
     booking.status === "PENDING" && !booking.providerAcceptedAt;
   const canHandlePendingWorkflow =
@@ -914,7 +901,7 @@ export default function ProviderBookingDetailScreen() {
                 booking.province,
               ]
                 .filter(Boolean)
-                .filter((p) => typeof p === 'string' && !p.toLowerCase().includes("không áp dụng"))
+                .filter((p) => p !== "Không áp dụng")
                 .join(", ") || "Chưa có địa chỉ"
             }
             selectable

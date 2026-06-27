@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 
-export type LocationSource = 'gps' | 'manual' | 'fallback' | 'all';
+export type LocationSource = 'gps' | 'manual' | 'fallback';
 
 export interface UserLocation {
-  lat?: number;
-  lng?: number;
+  lat: number;
+  lng: number;
   source: LocationSource;
   label?: string;
 }
 
-// Fallback: Toàn quốc by default so all services show up
+// Fallback: Hanoi
 export const DEFAULT_LOCATION: UserLocation = {
-  source: 'all',
-  label: 'Toàn quốc',
+  lat: 21.0285,
+  lng: 105.8522,
+  source: 'fallback',
+  label: 'Hà Nội',
 };
 
 // Common districts for hardcoded selection
@@ -92,10 +94,6 @@ export function useUserLocation() {
     setLocation({ lat, lng, source: 'manual', label });
   };
 
-  const clearLocation = () => {
-    setLocation({ source: 'all', label: 'Toàn quốc' });
-  };
-
   const resetToGps = () => {
     fetchGpsLocation();
   };
@@ -105,7 +103,6 @@ export function useUserLocation() {
     loading,
     errorMsg,
     setManualLocation,
-    clearLocation,
     resetToGps,
   };
 }
