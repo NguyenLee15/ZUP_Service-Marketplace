@@ -37,7 +37,6 @@ export function LocationPicker({
 }: LocationPickerProps) {
   const activeColors = useActiveColors();
   const styles = getStyles(activeColors);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: savedAddresses = [] } = useQuery({
     queryKey: ['addresses'],
@@ -45,21 +44,9 @@ export function LocationPicker({
     enabled: visible,
   });
 
-  const filteredLocations = COMMON_LOCATIONS.filter((loc) =>
-    loc.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleSelectLocation = (loc: { lat: number; lng: number; label: string }) => {
-    Haptics.selectionAsync().catch(() => {});
-    onSelectManual(loc.lat, loc.lng, loc.label);
-    setSearchQuery('');
-    onDismiss();
-  };
-
   const handleSelectGps = () => {
     Haptics.selectionAsync().catch(() => {});
     onSelectGps();
-    setSearchQuery('');
     onDismiss();
   };
 
@@ -68,7 +55,6 @@ export function LocationPicker({
     const coords = getCoordinatesForProvince(address.province);
     const label = address.label || address.addressDetail || 'Địa chỉ đã lưu';
     onSelectManual(coords.lat, coords.lng, label);
-    setSearchQuery('');
     onDismiss();
   };
 
@@ -84,15 +70,9 @@ export function LocationPicker({
       visible={visible}
       title="Chọn khu vực"
       description="Tìm dịch vụ quanh khu vực bạn mong muốn"
-      onDismiss={() => {
-        setSearchQuery('');
-        onDismiss();
-      }}
+      onDismiss={onDismiss}
       confirmLabel="Đóng"
-      onConfirm={() => {
-        setSearchQuery('');
-        onDismiss();
-      }}
+      onConfirm={onDismiss}
     >
       <View style={styles.container}>
         <Pressable
@@ -122,7 +102,7 @@ export function LocationPicker({
 
         <View style={styles.divider} />
 
-        {savedAddresses.length > 0 && !searchQuery ? (
+        {savedAddresses.length > 0 ? (
           <View style={styles.savedSection}>
             <Text style={styles.sectionTitle}>ĐỊA CHỈ ĐÃ LƯU</Text>
             {savedAddresses.map((address) => (
@@ -162,47 +142,6 @@ export function LocationPicker({
             <View style={styles.divider} />
           </View>
         ) : null}
-
-        <Searchbar
-          placeholder="Nhập tên khu vực (VD: Quận 1)..."
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-          inputStyle={styles.searchInput}
-          iconColor={activeColors.textSecondary}
-          elevation={0}
-        />
-
-        <ScrollView style={styles.listContainer} keyboardShouldPersistTaps="handled">
-          {filteredLocations.map((loc) => {
-            const isSelected =
-              currentLocation.source === 'manual' && currentLocation.label === loc.label;
-
-            return (
-              <Pressable
-                key={loc.label}
-                style={[styles.listItem, isSelected && styles.listItemSelected]}
-                onPress={() => handleSelectLocation(loc)}
-              >
-                <MaterialCommunityIcons
-                  name="map-marker-outline"
-                  size={20}
-                  color={isSelected ? activeColors.primary : activeColors.textSecondary}
-                />
-                <Text style={[styles.listItemText, isSelected && styles.listItemTextSelected]}>
-                  {loc.label}
-                </Text>
-                {isSelected && (
-                  <MaterialCommunityIcons name="check" size={20} color={activeColors.primary} />
-                )}
-              </Pressable>
-            );
-          })}
-          
-          {filteredLocations.length === 0 && (
-            <Text style={styles.emptyText}>Không tìm thấy khu vực nào phù hợp</Text>
-          )}
-        </ScrollView>
       </View>
     </ConfirmSheet>
   );
