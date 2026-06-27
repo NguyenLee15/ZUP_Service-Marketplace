@@ -257,19 +257,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-2xl font-semibold text-midnight-indigo dark:text-white">
-            Tổng quan
-          </h3>
-          <p
-            className="mt-1 text-sm text-slate-blue dark:text-gray-400"
-            suppressHydrationWarning
-          >
-            Cập nhật ngày {formattedToday}
-          </p>
-        </div>
-
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
         <div className="flex flex-wrap items-center gap-3">
           <Button
             type="button"

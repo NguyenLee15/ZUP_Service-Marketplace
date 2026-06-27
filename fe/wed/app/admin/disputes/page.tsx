@@ -6,7 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { adminApi } from '@/features/auth/services/api';
-import { AlertTriangle, CheckCircle, Clock, Eye, Scale } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Eye, Scale, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 export default function AdminDisputesPage() {
@@ -14,6 +15,7 @@ export default function AdminDisputesPage() {
   const [disputes, setDisputes] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | ''>('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchDisputes = async () => {
     setLoading(true);
@@ -39,6 +41,16 @@ export default function AdminDisputesPage() {
     minute: '2-digit'
   });
 
+  const filteredDisputes = disputes.filter(d => {
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      (d.booking?.bookingCode?.toLowerCase() || '').includes(q) ||
+      (d.booking?.customer?.fullName?.toLowerCase() || '').includes(q) ||
+      (d.booking?.provider?.fullName?.toLowerCase() || '').includes(q)
+    );
+  });
+
   return (
     <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -51,7 +63,17 @@ export default function AdminDisputesPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:items-center">
+          <div className="relative w-full sm:w-64 mb-2 sm:mb-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Tìm mã đơn, khách, thợ..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-9 text-sm rounded-lg"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
           {[
             { value: '', label: 'Tất cả' },
             { value: 'PENDING', label: 'Đang chờ xử lý' },
@@ -71,6 +93,7 @@ export default function AdminDisputesPage() {
             </button>
           ))}
         </div>
+        </div>
       </div>
 
       {loading ? (
@@ -87,7 +110,7 @@ export default function AdminDisputesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {disputes.map((d: ApiPayload) => {
+          {filteredDisputes.map((d: ApiPayload) => {
             const isResolved = d.status === 'RESOLVED';
             const booking = d.booking || {};
             const service = booking.service || {};

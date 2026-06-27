@@ -8,7 +8,9 @@ import {
   XCircle,
   Eye,
   Filter,
+  Search,
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,7 @@ export default function AdminServicesPage() {
   const [services, setServices] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedService, setSelectedService] = useState<ApiPayload>(null);
   const [showModal, setShowModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -102,6 +105,15 @@ export default function AdminServicesPage() {
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN').format(p) + '₫';
 
+  const filteredServices = services.filter((s: ApiPayload) => {
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      (s.name?.toLowerCase() || '').includes(q) ||
+      (s.provider?.fullName?.toLowerCase() || '').includes(q)
+    );
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -109,15 +121,26 @@ export default function AdminServicesPage() {
         <p className="text-muted-foreground mt-1">Duyệt và quản lý dịch vụ của nhà cung cấp</p>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {['all', 'PENDING', 'ACTIVE', 'REJECTED', 'HIDDEN'].map((status) => (
-          <Button key={status} variant={filterStatus === status ? 'default' : 'outline'}
-            onClick={() => { setFilterStatus(status); setPage(1); }} size="sm" className="gap-1">
-            <Filter className="w-3 h-3" />
-            {status === 'all' ? 'Tất Cả' : statusConfig[status]?.label || status}
-          </Button>
-        ))}
+      {/* Filter Tabs & Search */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="flex gap-2 flex-wrap">
+          {['all', 'PENDING', 'ACTIVE', 'REJECTED', 'HIDDEN'].map((status) => (
+            <Button key={status} variant={filterStatus === status ? 'default' : 'outline'}
+              onClick={() => { setFilterStatus(status); setPage(1); }} size="sm" className="gap-1">
+              <Filter className="w-3 h-3" />
+              {status === 'all' ? 'Tất Cả' : statusConfig[status]?.label || status}
+            </Button>
+          ))}
+        </div>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Tìm dịch vụ, thợ..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
       </div>
 
       {/* Services Table */}
@@ -141,7 +164,7 @@ export default function AdminServicesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {services.map((service: ApiPayload) => {
+                  {filteredServices.map((service: ApiPayload) => {
                     const sc = statusConfig[service.status] || statusConfig.DRAFT;
                     const StatusIcon = sc.icon;
                     return (

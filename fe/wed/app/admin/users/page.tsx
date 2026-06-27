@@ -212,20 +212,6 @@ export default function UsersPage() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-              <Input
-                placeholder="Tìm kiếm theo tên hoặc email…"
-              className="h-10 rounded-md border-[var(--admin-border)] bg-white pl-9 text-sm"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPage(1);
-                }}
-              />
-            </div>
-          </div>
       </div>
 
       <div className="flex-1 overflow-auto bg-white p-5 xl:p-6">

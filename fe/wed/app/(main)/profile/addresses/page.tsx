@@ -305,6 +305,7 @@ export default function AddressesPage() {
                 <MapPicker 
                   latitude={form.watch('latitude') || 21.028511}
                   longitude={form.watch('longitude') || 105.804817}
+                  searchSuffix={selectedProvince && selectedWard ? `${selectedWard}, ${selectedProvince}` : undefined}
                   onChange={(lat, lng) => {
                     form.setValue('latitude', lat, { shouldDirty: true })
                     form.setValue('longitude', lng, { shouldDirty: true })

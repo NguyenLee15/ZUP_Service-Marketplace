@@ -19,6 +19,7 @@ L.Icon.Default.mergeOptions({
 interface MapPickerProps {
   latitude: number
   longitude: number
+  searchSuffix?: string
   onChange: (lat: number, lng: number) => void
 }
 
@@ -39,7 +40,7 @@ function MapEvents({ onChange }: { onChange: (lat: number, lng: number) => void 
   return null
 }
 
-export default function AddressMapPicker({ latitude, longitude, onChange }: MapPickerProps) {
+export default function AddressMapPicker({ latitude, longitude, searchSuffix, onChange }: MapPickerProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [gettingLocation, setGettingLocation] = useState(false)
@@ -48,11 +49,12 @@ export default function AddressMapPicker({ latitude, longitude, onChange }: MapP
     if (!searchQuery.trim()) return
     try {
       setSearching(true)
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&countrycodes=vn`)
+      const fullQuery = searchSuffix ? `${searchQuery}, ${searchSuffix}` : searchQuery;
+      const res = await fetch(`/api/geocode?address=${encodeURIComponent(fullQuery)}`);
       const data = await res.json()
-      if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat)
-        const lon = parseFloat(data[0].lon)
+      if (data.results && data.results.length > 0) {
+        const lat = data.results[0].geometry.location.lat
+        const lon = data.results[0].geometry.location.lng
         onChange(lat, lon)
       }
     } catch (e) {
