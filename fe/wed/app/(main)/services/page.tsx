@@ -347,26 +347,8 @@ function ServicesSearchContent() {
                 <p className="text-xs font-bold text-muted-foreground">Zup</p>
                 <h1 className="text-lg font-bold tracking-tight text-midnight-indigo">Tìm dịch vụ tại nhà</h1>
               </div>
-              <div className="relative min-w-0 flex-1 max-w-2xl group">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <Search className={`w-5 h-5 transition-colors duration-300 ${loading ? 'text-action-blue' : 'text-muted-foreground group-focus-within:text-action-blue'}`} />
-                </div>
-                <Input 
-                  id="main-search-input"
-                  name="services-search"
-                  aria-label="Tìm kiếm dịch vụ"
-                  autoComplete="off"
-                  placeholder="Tìm kiếm dịch vụ…" 
-                  className="pl-12 pr-24 h-14 bg-cloud-mist border border-platinum-tint focus:border-action-blue focus:ring-action-blue/20 rounded-2xl text-base shadow-sm transition-[background-color,border-color,box-shadow] hover:bg-pale-gray/60 group-focus-within:bg-white group-focus-within:shadow-md"
-                  defaultValue={searchParams.get('keyword') || ''}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const newParams = new URLSearchParams(searchParams.toString());
-                      newParams.set('keyword', e.currentTarget.value);
-                      router.push(`/services?${newParams.toString()}`);
-                    }
-                  }}
-                />
+              <div className="relative min-w-0 flex-1 max-w-2xl group flex justify-end">
+                {/* Removed text search input per user request */}
                 <button 
                   type="button"
                   onClick={() => {
