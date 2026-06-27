@@ -100,6 +100,16 @@ export class AiService {
     );
   }
 
+  getState() {
+    return {
+      provider: this.provider,
+      chatModel: this.chatModelName,
+      embedModel: this.embeddingModelName,
+      hasApiKey: !!this.apiKey,
+      apiKeyPrefix: this.apiKey ? this.apiKey.substring(0, 5) : null,
+    };
+  }
+
   async createEmbedding(text: string): Promise<number[] | null> {
     if (!this.apiKey || this.provider !== 'gemini') return null;
 

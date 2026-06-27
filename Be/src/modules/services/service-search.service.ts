@@ -192,6 +192,10 @@ export class ServiceSearchService {
     return result;
   }
 
+  async getAiState() {
+    return this.aiService.getState();
+  }
+
   async aiSearch(query: string) {
     const normalizedQuery = query.toLowerCase().trim().replace(/\s+/g, ' ');
     const cacheKey = `ai_search:${normalizedQuery}`;
