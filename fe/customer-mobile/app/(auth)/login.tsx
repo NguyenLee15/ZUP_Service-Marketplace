@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 22,
+    paddingTop: 80,
     paddingBottom: 40,
   },
   logoWrap: {
