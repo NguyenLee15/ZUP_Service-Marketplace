@@ -104,7 +104,7 @@ function getCategoryName(categories: SearchCategory[], categoryId?: string) {
 }
 
 export function useSearchFilters() {
-  const { location, setManualLocation, resetToGps } = useUserLocation();
+  const { location, setManualLocation, clearLocation, resetToGps } = useUserLocation();
   const router = useRouter();
   const params = useLocalSearchParams<{ categoryId?: string }>();
   const selectedCategoryId = typeof params.categoryId === 'string' ? params.categoryId : '';
@@ -244,6 +244,7 @@ export function useSearchFilters() {
     debouncedQuery,
     location,
     setManualLocation,
+    clearLocation,
     resetToGps,
   };
 }

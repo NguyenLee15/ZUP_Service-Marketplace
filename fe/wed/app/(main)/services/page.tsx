@@ -75,10 +75,8 @@ function ServicesSearchContent() {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [userLocation, setUserLocation] = useState<UserLocationState>({
-    lat: DEFAULT_SEARCH_LOCATION.lat,
-    lng: DEFAULT_SEARCH_LOCATION.lng,
-    source: 'fallback',
-    label: DEFAULT_SEARCH_LOCATION.label,
+    source: 'all',
+    label: 'Toàn quốc',
   });
   const [isListening, setIsListening] = useState(false);
   const observerTarget = useRef(null);
@@ -409,6 +407,7 @@ function ServicesSearchContent() {
                     setUserLocation(prev => ({ ...prev, source: 'fallback', label: 'Hà Nội' })); // temporary reset
                     fetchGpsLocation();
                   }}
+                  onClearLocation={() => setUserLocation({ source: 'all', label: 'Toàn quốc' })}
                 />
 
                 <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>

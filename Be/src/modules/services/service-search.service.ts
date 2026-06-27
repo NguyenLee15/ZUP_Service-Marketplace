@@ -213,9 +213,9 @@ export class ServiceSearchService {
 
     const vectorStr = `[${embedding.join(',')}]`;
     try {
-      const services = await this.prisma.$queryRaw<AiSearchRow[]>(
+      const rawServices = await this.prisma.$queryRaw<{ id: number; similarity: number }[]>(
         Prisma.sql`
-          SELECT s.*, 1 - (s.embedding <=> ${vectorStr}::vector) as similarity
+          SELECT s.id, 1 - (s.embedding <=> ${vectorStr}::vector) as similarity
           FROM services s
           WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
           ORDER BY s.embedding <=> ${vectorStr}::vector
@@ -223,8 +223,29 @@ export class ServiceSearchService {
         `,
       );
 
-      await this.redisService.set(cacheKey, JSON.stringify(services), 86400);
-      return { data: services };
+      if (rawServices.length === 0) {
+        return { data: [] };
+      }
+
+      const serviceIds = rawServices.map((s) => s.id);
+      const services = await this.prisma.service.findMany({
+        where: { id: { in: serviceIds } },
+        include: {
+          category: { select: { id: true, name: true } },
+          provider: { select: { id: true, fullName: true, avatarUrl: true } },
+          images: true,
+          featuredListings: true,
+        },
+      });
+
+      // Sort by similarity
+      const sortedServices = rawServices.map((rs) => {
+        const s = services.find((s) => s.id === rs.id);
+        return { ...s, similarity: rs.similarity, isFeatured: s?.featuredListings && s.featuredListings.length > 0 };
+      }).filter((s) => s.id); // ensure not undefined
+
+      await this.redisService.set(cacheKey, JSON.stringify(sortedServices), 86400);
+      return { data: sortedServices };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`pgvector search failed: ${message}`);

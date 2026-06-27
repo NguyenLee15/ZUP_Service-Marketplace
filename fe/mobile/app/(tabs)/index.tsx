@@ -574,10 +574,10 @@ export default function DashboardScreen() {
           label="Tỷ lệ hủy"
           value={
             todayStats?.cancelRate != null
-              ? `${Number(todayStats.cancelRate).toFixed(1)}%`
+              ? `${Math.round(Number(todayStats.cancelRate))}%`
               : "—"
           }
-          trend={todayStats && yesterdayStats ? Number(todayStats.cancelRate) - Number(yesterdayStats.cancelRate) : undefined}
+          trend={todayStats && yesterdayStats ? Math.round(Number(todayStats.cancelRate)) - Math.round(Number(yesterdayStats.cancelRate)) : undefined}
           trendSuffix="%"
           tone="error"
           loading={loading}

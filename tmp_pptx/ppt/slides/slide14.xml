@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+ xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="Title"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="720000" y="380000"/>
+            <a:ext cx="10800000" cy="600000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:r>
+              <a:rPr lang="vi-VN" sz="3600" b="1"/>
+              <a:t>Kết quả đạt được &amp; Hướng phát triển</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="20" name="Bullet 1"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="720000" y="1524000"/>
+            <a:ext cx="10400000" cy="400000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" indent="0"/>
+            <a:r>
+              <a:rPr lang="vi-VN" sz="3000"/>
+              <a:t>• Kết quả đạt được: Hoàn thành hệ thống Service Marketplace đa vai trò ổn định, bảo mật cao</a:t>
+            </a:r>
+            <a:endParaRPr lang="vi-VN" sz="3000"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="21" name="Bullet 2"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="720000" y="2038350"/>
+            <a:ext cx="10400000" cy="400000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" indent="0"/>
+            <a:r>
+              <a:rPr lang="vi-VN" sz="3000"/>
+              <a:t>• Nổi bật: Cơ chế báo giá minh bạch, thanh toán an toàn, AI chatbot tư vấn tự động</a:t>
+            </a:r>
+            <a:endParaRPr lang="vi-VN" sz="3000"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="22" name="Bullet 3"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="720000" y="2552700"/>
+            <a:ext cx="10400000" cy="400000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" indent="0"/>
+            <a:r>
+              <a:rPr lang="vi-VN" sz="3000"/>
+              <a:t>• Hạn chế: AI Chatbot mới ở dạng đàm thoại cơ bản, ứng dụng di động mới tối ưu cho Thợ sửa chữa</a:t>
+            </a:r>
+            <a:endParaRPr lang="vi-VN" sz="3000"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="23" name="Bullet 4"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="720000" y="3067050"/>
+            <a:ext cx="10400000" cy="400000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" indent="0"/>
+            <a:r>
+              <a:rPr lang="vi-VN" sz="3000"/>
+              <a:t>• Hướng phát triển: Nâng cấp AI phân tích ảnh lỗi để tự tạo đơn, hoàn thiện mobile app cho Khách</a:t>
+            </a:r>
+            <a:endParaRPr lang="vi-VN" sz="3000"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="vi-VN" sz="1400"/><a:t>Khẳng định giá trị thực tiễn của đề tài và mở ra các hướng cải tiến kỹ thuật rõ ràng.</a:t></a:r></a:p></p:txBody>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
+</p:sld>
