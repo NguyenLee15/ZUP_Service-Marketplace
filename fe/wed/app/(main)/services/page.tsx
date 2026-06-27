@@ -9,8 +9,7 @@ import {
   X, 
   Filter, 
   Map as MapIcon, 
-  LayoutGrid, 
-  Mic
+  LayoutGrid
 } from 'lucide-react';
 import { servicesApi, categoriesApi } from '@/features/auth/services/api';
 import { userApi } from '@/features/user/services/user.api';
@@ -80,7 +79,6 @@ function ServicesSearchContent() {
     source: 'fallback',
     label: DEFAULT_SEARCH_LOCATION.label,
   });
-  const [isListening, setIsListening] = useState(false);
   const observerTarget = useRef(null);
 
   const { favorites, toggleFavoriteService, addRecentlyViewed } = useServiceStore();
@@ -124,37 +122,6 @@ function ServicesSearchContent() {
     }
   }, [fetchGpsLocation]);
 
-  // Voice Search Logic
-  const startVoiceSearch = () => {
-    const SpeechRecognition = (window as ApiPayload).SpeechRecognition || (window as ApiPayload).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ title: 'Trình duyệt không hỗ trợ', description: 'Tính năng tìm kiếm giọng nói cần trình duyệt hiện đại hơn.', variant: 'destructive' });
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'vi-VN';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-
-    recognition.onresult = (event: ApiPayload) => {
-      const transcript = event.results[0][0].transcript;
-      const input = document.getElementById('main-search-input') as HTMLInputElement;
-      if (input) {
-        input.value = transcript;
-        const newParams = new URLSearchParams(searchParams.toString());
-        newParams.set('keyword', transcript);
-        router.push(`/services?${newParams.toString()}`);
-        toast({ title: 'Tìm kiếm giọng nói', description: `Đang tìm: "${transcript}"` });
-      }
-    };
-
-    recognition.start();
-  };
 
   const formatPrice = useCallback((price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -347,8 +314,26 @@ function ServicesSearchContent() {
                 <p className="text-xs font-bold text-muted-foreground">Zup</p>
                 <h1 className="text-lg font-bold tracking-tight text-midnight-indigo">Tìm dịch vụ tại nhà</h1>
               </div>
-              <div className="relative min-w-0 flex-1 max-w-2xl group flex justify-end">
-                {/* Removed text search input per user request */}
+              <div className="relative min-w-0 flex-1 max-w-2xl group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Search className={`w-5 h-5 transition-colors duration-300 ${loading ? 'text-action-blue' : 'text-muted-foreground group-focus-within:text-action-blue'}`} />
+                </div>
+                <Input 
+                  id="main-search-input"
+                  name="services-search"
+                  aria-label="Tìm kiếm dịch vụ"
+                  autoComplete="off"
+                  placeholder="Tìm kiếm dịch vụ…" 
+                  className="pl-12 pr-24 h-14 bg-cloud-mist border border-platinum-tint focus:border-action-blue focus:ring-action-blue/20 rounded-2xl text-base shadow-sm transition-[background-color,border-color,box-shadow] hover:bg-pale-gray/60 group-focus-within:bg-white group-focus-within:shadow-md"
+                  defaultValue={searchParams.get('keyword') || ''}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const newParams = new URLSearchParams(searchParams.toString());
+                      newParams.set('keyword', e.currentTarget.value);
+                      router.push(`/services?${newParams.toString()}`);
+                    }
+                  }}
+                />
                 <button 
                   type="button"
                   onClick={() => {
@@ -362,21 +347,11 @@ function ServicesSearchContent() {
                   }}
                   aria-label={searchParams.get('ai') === 'true' ? 'Tắt tìm kiếm AI' : 'Bật tìm kiếm AI'}
                   title="Tìm bằng AI"
-                  className={`absolute right-12 top-1/2 -translate-y-1/2 p-2 rounded-full transition-[background-color,color,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-[background-color,color,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
                     searchParams.get('ai') === 'true' ? 'bg-amber-pop/20 text-amber-500' : 'text-muted-foreground hover:text-amber-500 hover:bg-amber-pop/10'
                   }`}
                 >
                   <Sparkles className="w-5 h-5" />
-                </button>
-                <button 
-                  type="button"
-                  onClick={startVoiceSearch}
-                  aria-label={isListening ? 'Dừng nghe tìm kiếm giọng nói' : 'Tìm kiếm bằng giọng nói'}
-                  className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-[background-color,color,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue ${
-                    isListening ? 'bg-red-500 text-white' : 'text-muted-foreground hover:text-action-blue hover:bg-pale-gray'
-                  }`}
-                >
-                  {isListening ? <Mic className="w-5 h-5" /> : <Mic className="w-5 h-5 opacity-40" />}
                 </button>
               </div>
             </div>
