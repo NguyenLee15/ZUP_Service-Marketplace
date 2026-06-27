@@ -25,7 +25,7 @@ const COMMON_LOCATIONS = [
 ];
 
 interface LocationSelectorProps {
-  currentSource: 'gps' | 'manual' | 'fallback' | 'all';
+  currentSource: 'fallback' | 'gps' | 'manual' | 'all';
   currentLabel: string;
   savedAddresses?: any[];
   onSelectManual: (lat: number, lng: number, label: string) => void;

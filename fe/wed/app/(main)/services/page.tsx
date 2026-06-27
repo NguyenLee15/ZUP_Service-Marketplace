@@ -47,9 +47,9 @@ type SearchMeta = {
 };
 
 type UserLocationState = {
-  lat: number;
-  lng: number;
-  source: 'fallback' | 'gps' | 'manual';
+  lat?: number;
+  lng?: number;
+  source: 'fallback' | 'gps' | 'manual' | 'all';
   label: string;
 };
 
@@ -574,7 +574,7 @@ function ServicesSearchContent() {
             )}
 
             {viewMode === 'map' ? (
-              <ServiceMap services={services} userLocation={userLocation.source === 'gps' ? userLocation : null} />
+              <ServiceMap services={services} userLocation={(userLocation.source === 'gps' && userLocation.lat && userLocation.lng) ? { lat: userLocation.lat, lng: userLocation.lng } : null} />
             ) : loading && !isFetchingMore ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {[...Array(6)].map((_, i) => (
