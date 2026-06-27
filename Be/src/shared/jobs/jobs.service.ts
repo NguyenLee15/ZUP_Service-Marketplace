@@ -4,6 +4,8 @@ import { ModuleRef } from '@nestjs/core';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { MailService } from '../mail/mail.service';
+import { AiService } from '../ai/ai.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 export enum JobName {
   AuthSendOtp = 'auth.send-otp',
@@ -160,8 +162,6 @@ export class JobsService {
         }
         case JobName.ServiceGenerateEmbedding: {
           const embPayload = payload as ServiceGenerateEmbeddingPayload;
-          const { AiService } = await import('../ai/ai.service');
-          const { PrismaService } = await import('../../prisma/prisma.service');
           const aiService = this.moduleRef.get(AiService, { strict: false });
           const prisma = this.moduleRef.get(PrismaService, { strict: false });
           
