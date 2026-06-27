@@ -213,15 +213,44 @@ export class ServiceSearchService {
     if (embedding) {
       const vectorStr = `[${embedding.join(',')}]`;
       try {
-        const services = await this.prisma.$queryRawUnsafe<any[]>(`
-          SELECT s.*, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
+        const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
+          SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
           FROM services s
           WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
           ORDER BY s.embedding <=> '${vectorStr}'::vector
           LIMIT 10
         `);
-        log.success = true;
-        log.results = services;
+        
+        if (rawResults.length > 0) {
+          const serviceIds = rawResults.map(r => r.id);
+          const similarityMap = new Map(rawResults.map(r => [r.id, r.similarity]));
+          
+          const fullServices = await this.prisma.service.findMany({
+            where: { id: { in: serviceIds } },
+            include: {
+              category: { select: { id: true, name: true } },
+              provider: { select: { id: true, fullName: true, avatarUrl: true } },
+              images: { orderBy: { displayOrder: 'asc' }, take: 1 },
+              featuredListings: {
+                where: { status: 'ACTIVE', endDate: { gt: new Date() } },
+                take: 1,
+              },
+            },
+          });
+          
+          // Gắn isFeatured và similarity, sắp xếp lại theo similarity
+          const mappedData: any[] = fullServices.map(service => ({
+            ...service,
+            isFeatured: service.featuredListings.length > 0,
+            similarity: similarityMap.get(service.id) || 0,
+          })).sort((a, b) => b.similarity - a.similarity);
+          
+          log.success = true;
+          log.results = mappedData;
+        } else {
+          log.success = true;
+          log.results = [];
+        }
       } catch (e) {
         log.pgError = e instanceof Error ? e.message : String(e);
       }
@@ -251,16 +280,42 @@ export class ServiceSearchService {
     const vectorStr = `[${embedding.join(',')}]`;
 
     try {
-      const services = await this.prisma.$queryRawUnsafe<AiSearchRow[]>(`
-        SELECT s.*, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
+      const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
+        SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
         FROM services s
         WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
         ORDER BY s.embedding <=> '${vectorStr}'::vector
         LIMIT 10
       `);
 
-      await this.redisService.set(cacheKey, JSON.stringify(services), 86400);
-      return { data: services };
+      if (rawResults.length === 0) {
+        return { data: [] };
+      }
+
+      const serviceIds = rawResults.map(r => r.id);
+      const similarityMap = new Map(rawResults.map(r => [r.id, r.similarity]));
+
+      const fullServices = await this.prisma.service.findMany({
+        where: { id: { in: serviceIds } },
+        include: {
+          category: { select: { id: true, name: true } },
+          provider: { select: { id: true, fullName: true, avatarUrl: true } },
+          images: { orderBy: { displayOrder: 'asc' }, take: 1 },
+          featuredListings: {
+            where: { status: 'ACTIVE', endDate: { gt: new Date() } },
+            take: 1,
+          },
+        },
+      });
+
+      const mappedData = fullServices.map(service => ({
+        ...service,
+        isFeatured: service.featuredListings.length > 0,
+        similarity: similarityMap.get(service.id) || 0,
+      })).sort((a, b) => b.similarity - a.similarity);
+
+      await this.redisService.set(cacheKey, JSON.stringify(mappedData), 86400);
+      return { data: mappedData };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`pgvector search failed: ${message}`);
