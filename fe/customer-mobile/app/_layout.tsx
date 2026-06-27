@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, View, Animated, useColorScheme } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
+import { ThemeProvider, DefaultTheme, DarkTheme as NavDarkTheme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { MD3LightTheme, MD3DarkTheme, PaperProvider, Text, useTheme } from 'react-native-paper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -86,15 +87,19 @@ export default function RootLayout() {
     },
   };
 
+  const navTheme = isDark ? NavDarkTheme : DefaultTheme;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <PaperProvider theme={theme}>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
-          <View style={[styles.appShell, { backgroundColor: theme.colors.background }]}>
-            {shouldHoldRoute ? <AppBootScreen /> : <Slot />}
-            <OfflineBanner visible={isOnline === false} />
-          </View>
+          <ThemeProvider value={navTheme}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <View style={[styles.appShell, { backgroundColor: theme.colors.background }]}>
+              {shouldHoldRoute ? <AppBootScreen /> : <Slot />}
+              <OfflineBanner visible={isOnline === false} />
+            </View>
+          </ThemeProvider>
         </PaperProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

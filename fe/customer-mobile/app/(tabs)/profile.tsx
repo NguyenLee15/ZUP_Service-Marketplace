@@ -168,59 +168,6 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          /* ── Loyalty & Wallet Balance Card ── */
-          <CustomerCard style={styles.statsCard} contentStyle={styles.statsCardContent}>
-            <View style={styles.statsGrid}>
-              {/* Wallet / Coin section */}
-              <View style={styles.walletSection}>
-                <View style={styles.sectionHeaderRow}>
-                  <MaterialCommunityIcons name="wallet-outline" size={16} color={activeColors.primary} />
-                  <Text variant="labelSmall" style={styles.walletTitle}>Ví Zup Xu</Text>
-                </View>
-                <Text variant="titleLarge" style={styles.walletBalance}>
-                  2,450 <Text variant="bodySmall" style={styles.walletUnit}>xu</Text>
-                </Text>
-                <Text variant="bodySmall" style={styles.walletEquivalent}>
-                  Tương đương 24.500đ
-                </Text>
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    Alert.alert('Zup Xu', 'Zup Xu được tích lũy từ các đơn đặt lịch hoàn thành thành công và được áp dụng trực tiếp để trừ vào chi phí các dịch vụ tiếp theo.');
-                  }}
-                  style={({ pressed }) => [styles.walletLink, pressed && { opacity: 0.7 }]}
-                >
-                  <Text variant="labelSmall" style={styles.walletLinkText}>Xem lịch sử →</Text>
-                </Pressable>
-              </View>
-
-              {/* Vertical divider */}
-              <View style={styles.statDivider} />
-
-              {/* Membership section */}
-              <View style={styles.memberSection}>
-                <View style={styles.sectionHeaderRow}>
-                  <MaterialCommunityIcons name="crown-outline" size={16} color="#F59E0B" />
-                  <Text variant="labelSmall" style={[styles.walletTitle, { color: '#F59E0B' }]}>Hạng Vàng</Text>
-                </View>
-                <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBar, { width: '75%' }]} />
-                </View>
-                <Text variant="bodySmall" style={styles.progressText}>
-                  Tích lũy thêm <Text style={{ fontWeight: '700' }}>550 xu</Text> để thăng hạng Bạch Kim
-                </Text>
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                    Alert.alert('Đặc quyền Hạng Vàng', '✓ Tích lũy x1.5 Zup Xu trên mỗi đơn hàng\n✓ Ưu tiên kết nối thợ tay nghề cao, được đánh giá tốt nhất\n✓ Đường dây hỗ trợ khẩn cấp 24/7');
-                  }}
-                  style={({ pressed }) => [styles.walletLink, pressed && { opacity: 0.7 }]}
-                >
-                  <Text variant="labelSmall" style={[styles.walletLinkText, { color: '#F59E0B' }]}>Đặc quyền hạng →</Text>
-                </Pressable>
-              </View>
-            </View>
-          </CustomerCard>
         </>
       )}
 

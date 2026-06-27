@@ -390,7 +390,7 @@ export function LocationConfirmationModal({
               icon="crosshairs-gps"
               size={24}
               mode="contained"
-              containerColor="white"
+              containerColor={activeColors.surface}
               iconColor={activeColors.text}
               onPress={goToCurrentLocation}
               style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}
@@ -433,7 +433,7 @@ const getStyles = (activeColors: any) =>
     optionText: { fontSize: 15, color: activeColors.text },
     mapContainer: { flex: 1, backgroundColor: activeColors.surfaceVariant, position: 'relative' },
     mapSearchOverlay: { position: 'absolute', top: 16, left: 16, right: 16, zIndex: 10 },
-    mapSearchBox: { backgroundColor: 'white', borderRadius: 12, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+    mapSearchBox: { backgroundColor: activeColors.surface, borderRadius: 12, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
     mapSearchLabel: { fontSize: 12, color: activeColors.textSecondary, marginBottom: 4 },
     mapSearchValue: { fontSize: 14, color: activeColors.text, flex: 1 },
     mapSearchChangeBtn: { fontSize: 14, color: activeColors.primary, marginLeft: 8 },
@@ -444,7 +444,7 @@ const getStyles = (activeColors: any) =>
     markerTooltipArrow: { width: 0, height: 0, backgroundColor: 'transparent', borderStyle: 'solid', borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 8, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#EA580C', position: 'absolute', bottom: -8 },
     centerMarkerIcon: { marginTop: -4 },
     mapCurrentLocationBtn: { position: 'absolute', bottom: 24, right: 16, zIndex: 10 },
-    mapFooter: { padding: 16, backgroundColor: 'white', borderTopWidth: 1, borderColor: activeColors.borderLight },
+    mapFooter: { padding: 16, backgroundColor: activeColors.surface, borderTopWidth: 1, borderColor: activeColors.border },
     confirmMapButton: { borderRadius: 8, paddingVertical: 4, backgroundColor: '#EA580C' },
     confirmMapButtonLabel: { fontSize: 16, fontWeight: 'bold' },
     rowAlign: { flexDirection: 'row', alignItems: 'center' },
