@@ -213,15 +213,13 @@ export class ServiceSearchService {
     if (embedding) {
       const vectorStr = `[${embedding.join(',')}]`;
       try {
-        const services = await this.prisma.$queryRaw<any[]>(
-          Prisma.sql`
-            SELECT s.*, 1 - (s.embedding <=> ${vectorStr}::vector) as similarity
-            FROM services s
-            WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
-            ORDER BY s.embedding <=> ${vectorStr}::vector
-            LIMIT 10
-          `,
-        );
+        const services = await this.prisma.$queryRawUnsafe<any[]>(`
+          SELECT s.*, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
+          FROM services s
+          WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
+          ORDER BY s.embedding <=> '${vectorStr}'::vector
+          LIMIT 10
+        `);
         log.success = true;
         log.results = services;
       } catch (e) {
@@ -251,16 +249,15 @@ export class ServiceSearchService {
     }
 
     const vectorStr = `[${embedding.join(',')}]`;
+
     try {
-      const services = await this.prisma.$queryRaw<AiSearchRow[]>(
-        Prisma.sql`
-          SELECT s.*, 1 - (s.embedding <=> ${vectorStr}::vector) as similarity
-          FROM services s
-          WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
-          ORDER BY s.embedding <=> ${vectorStr}::vector
-          LIMIT 10
-        `,
-      );
+      const services = await this.prisma.$queryRawUnsafe<AiSearchRow[]>(`
+        SELECT s.*, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
+        FROM services s
+        WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
+        ORDER BY s.embedding <=> '${vectorStr}'::vector
+        LIMIT 10
+      `);
 
       await this.redisService.set(cacheKey, JSON.stringify(services), 86400);
       return { data: services };
