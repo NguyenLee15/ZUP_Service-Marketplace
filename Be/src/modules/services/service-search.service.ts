@@ -291,7 +291,7 @@ export class ServiceSearchService {
       `);
 
       if (rawResults.length === 0) {
-        this.logger.log(\`[AI Caching] No AI results > 0.66, falling back to keyword search for: "\${query}"\`);
+        this.logger.log(`[AI Caching] No AI results > 0.66, falling back to keyword search for: "${query}"`);
         return this.search({ keyword: query, page: 1, limit: 10 });
       }
 
