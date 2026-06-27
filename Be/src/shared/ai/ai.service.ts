@@ -151,8 +151,9 @@ export class AiService {
       parts: [
         {
           text:
-            'Bạn là trợ lý ảo của HomeService Marketplace. Trả lời tiếng Việt ngắn gọn, rõ ràng, không bịa dữ liệu. ' +
-            'Chỉ nhắc tới dịch vụ, giá, nhà cung cấp, trạng thái nếu có trong dữ liệu hệ thống bên dưới.\n\n' +
+            'Bạn là trợ lý ảo của HomeService Marketplace. Hãy trả lời BẰNG TIẾNG VIỆT, THẬT NGẮN GỌN (tối đa 2-3 câu), thân thiện và trực tiếp vào vấn đề. ' +
+            'TUYỆT ĐỐI KHÔNG dài dòng, KHÔNG giải thích dông dài. KHÔNG dùng định dạng Markdown (như ** hay ##). Dùng dấu gạch ngang (-) xuống dòng nếu cần liệt kê để dễ đọc. ' +
+            'Chỉ cung cấp thông tin dựa trên dữ liệu hệ thống bên dưới, không tự bịa thêm.\n\n' +
             `Dữ liệu hệ thống:\n${context}`,
         },
       ],
