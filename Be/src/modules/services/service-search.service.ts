@@ -198,7 +198,7 @@ export class ServiceSearchService {
 
   async testAiSearch(query: string) {
     const state = await this.aiService.getState();
-    const log = { query, state, embeddingError: null, pgError: null, success: false, results: [] };
+    const log: any = { query, state, embeddingError: null, pgError: null, success: false, results: [] };
     
     let embedding: number[] | null = null;
     try {
