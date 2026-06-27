@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import MapView, { Region } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
+import Constants from 'expo-constants';
 import { useTheme } from 'react-native-paper';
 import { Colors } from '../../constants/colors';
 import { ProviderEmptyState } from './provider-ui';
@@ -27,10 +28,12 @@ export type NominatimPlace = {
 
 export function AddressAutocompleteModal({
   visible,
+  searchSuffix,
   onDismiss,
   onSelect,
 }: {
   visible: boolean;
+  searchSuffix?: string;
   onDismiss: () => void;
   onSelect: (place: NominatimPlace) => void;
 }) {
@@ -50,19 +53,23 @@ export function AddressAutocompleteModal({
     const timeoutId = setTimeout(async () => {
       setLoading(true);
       try {
+        const fullQuery = searchSuffix ? `${query}, ${searchSuffix}` : query;
+        const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            query
-          )}&format=json&addressdetails=1&countrycodes=vn&limit=5`,
-          {
-            headers: {
-              'Accept-Language': 'vi-VN,vi;q=0.9',
-              'User-Agent': 'ServiceMarketplaceApp/1.0',
-            },
-          }
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullQuery)}&components=country:VN&key=${apiKey}`
         );
         const data = await res.json();
-        setResults(data);
+        if (data.results && data.results.length > 0) {
+          const mapped = data.results.map((item: any) => ({
+            place_id: item.place_id,
+            lat: item.geometry.location.lat.toString(),
+            lon: item.geometry.location.lng.toString(),
+            display_name: item.formatted_address,
+          }));
+          setResults(mapped);
+        } else {
+          setResults([]);
+        }
       } catch (err) {
         console.error('Nominatim error', err);
       } finally {

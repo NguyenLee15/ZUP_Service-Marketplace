@@ -2,7 +2,7 @@
  * Root Layout — Auth gate + theme provider + socket init + QueryClient + Offline banner
  */
 import { useEffect, useRef } from 'react';
-import { StyleSheet, View, Animated, useColorScheme, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Animated, useColorScheme, ActivityIndicator, Image } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PaperProvider, MD3DarkTheme, MD3LightTheme, Text, useTheme } from 'react-native-paper';
@@ -111,12 +111,11 @@ function AppBootScreen() {
   const theme = useTheme();
   return (
     <View style={[styles.bootScreen, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.bootMark, { backgroundColor: theme.colors.primary }]}>
-        <Text style={styles.bootInitial}>Z</Text>
-      </View>
-      <Text style={[styles.bootTitle, { color: theme.colors.onSurface }]}>Zup Đối Tác</Text>
-      <Text style={[styles.bootSubtitle, { color: theme.colors.onSurfaceVariant }]}>Đang khởi tạo cấu hình thợ</Text>
-      <ActivityIndicator size="large" animating={true} color={theme.colors.primary} style={styles.bootSpinner} />
+      <Image 
+        source={require('../assets/icon.png')} 
+        style={{ width: 120, height: 120, borderRadius: 24 }} 
+        resizeMode="contain" 
+      />
     </View>
   );
 }

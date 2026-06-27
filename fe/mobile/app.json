@@ -21,6 +21,11 @@
       "bundleIdentifier": "com.homeservice.provider"
     },
     "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBPUVlevpey_vgJF24CRNqQzhYvwDP8wwA"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E40AF"
@@ -29,7 +34,10 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.NFC",
-        "android.permission.BIND_NFC_SERVICE"
+        "android.permission.BIND_NFC_SERVICE",
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "plugins": [
@@ -71,7 +79,14 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần quyền truy cập vị trí để xác định địa chỉ hoạt động của bạn.",
+          "locationWhenInUsePermission": "Ứng dụng cần quyền truy cập vị trí để xác định địa chỉ hoạt động của bạn."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -79,9 +94,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "013116d2-2587-4c19-b4c7-dbc58b652ccf"
+        "projectId": "bef8a973-2515-45d8-ab0b-8dcab21cb930"
       }
-    },
-    "owner": "nguyenlee"
+    }
   }
 }

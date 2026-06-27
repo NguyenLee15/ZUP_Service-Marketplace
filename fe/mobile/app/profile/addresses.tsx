@@ -393,6 +393,7 @@ export default function AddressesScreen() {
       
       <AddressAutocompleteModal
         visible={autocompleteVisible}
+        searchSuffix={form.province && form.ward ? `${form.ward}, ${form.province}` : undefined}
         onDismiss={() => setAutocompleteVisible(false)}
         onSelect={(place) => {
           setAutocompleteVisible(false);

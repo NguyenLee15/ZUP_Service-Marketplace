@@ -60,7 +60,7 @@ export default function KycScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      let intervalId: NodeJS.Timeout;
+      let intervalId: ReturnType<typeof setInterval>;
 
       const checkStatus = async () => {
         try {

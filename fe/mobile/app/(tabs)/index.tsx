@@ -502,7 +502,7 @@ export default function DashboardScreen() {
       />
 
       {/* KYC Warning Banner */}
-      {user?.kycStatus !== 'APPROVED' && (
+      {user?.kycStatus && user.kycStatus !== 'APPROVED' && (
         <TouchableRipple
           onPress={() => router.push('/profile/kyc')}
           style={styles.kycBanner}
