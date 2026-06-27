@@ -112,16 +112,6 @@ export default function KYCPage() {
 
       {/* Filter & Search */}
       <div className="flex gap-4 items-center flex-wrap">
-        <div className="relative flex-1 min-w-[300px]">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Tìm kiếm theo tên hoặc email..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
         <div className="flex gap-2">
           {['all', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
             <Button

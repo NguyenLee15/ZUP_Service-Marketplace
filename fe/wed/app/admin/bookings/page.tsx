@@ -128,16 +128,6 @@ export default function BookingsPage() {
 
       {/* Search & Filter */}
       <div className="flex gap-4 items-center flex-wrap">
-        <div className="relative flex-1 min-w-[300px]">
-          <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Tìm kiếm theo mã, khách hàng, nhà cung cấp hoặc dịch vụ…"
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
         <div className="flex gap-2 flex-wrap">
           {['all', 'PENDING', 'ACCEPTED', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'DONE', 'CANCELLED', 'DISPUTED'].map((status) => (
             <Button
