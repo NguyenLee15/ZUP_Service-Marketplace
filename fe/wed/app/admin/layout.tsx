@@ -219,18 +219,6 @@ export default function AdminLayout({
           <header className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-white/92 px-6 py-3 backdrop-blur-md shrink-0 xl:px-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-5">
-                <h2 className="hidden text-lg font-bold tracking-tight text-slate-900 xl:block">
-                  {navItems.find((item) => pathname.startsWith(item.href))
-                    ?.label || "Quản trị hệ thống"}
-                </h2>
-                <div className="relative hidden w-80 md:block">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                  <input
-                    type="search"
-                    placeholder="Tìm kiếm giao dịch, người dùng..."
-                    className="h-10 w-full rounded-md border border-[var(--admin-border)] bg-slate-50 pl-9 pr-3 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-700 focus:bg-white"
-                  />
-                </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
