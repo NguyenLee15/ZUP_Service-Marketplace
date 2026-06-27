@@ -217,7 +217,7 @@ export class ServiceSearchService {
           SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
           FROM services s
           WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
-            AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.66
+            AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
           ORDER BY s.embedding <=> '${vectorStr}'::vector
           LIMIT 20
         `);
@@ -285,13 +285,13 @@ export class ServiceSearchService {
         SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
         FROM services s
         WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
-          AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.66
+          AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
         ORDER BY s.embedding <=> '${vectorStr}'::vector
         LIMIT 20
       `);
 
       if (rawResults.length === 0) {
-        this.logger.log(`[AI Caching] No AI results > 0.66, falling back to keyword search for: "${query}"`);
+        this.logger.log(`[AI Caching] No AI results > 0.50, falling back to keyword search for: "${query}"`);
         return this.search({ keyword: query, page: 1, limit: 10 });
       }
 
