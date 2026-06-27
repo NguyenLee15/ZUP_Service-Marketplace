@@ -255,7 +255,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     lineHeight: 18,
   },
   outlineStyle: { borderRadius: 14 },
-  textInput: { backgroundColor: '#FFFFFF' },
+  textInput: { backgroundColor: activeColors.surface },
   checklistGroup: {
     gap: 8,
     paddingHorizontal: 4,

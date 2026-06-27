@@ -283,7 +283,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     borderRadius: 54,
     borderWidth: 4,
     borderColor: activeColors.primarySoft,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: activeColors.surface,
   },
   avatar: {
     width: 100,
@@ -299,7 +299,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     backgroundColor: activeColors.primary,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: activeColors.surface,
     fontSize: 40,
     fontWeight: '900',
   },
@@ -314,7 +314,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: activeColors.surface,
   },
   avatarLabel: {
     color: activeColors.textSecondary,
@@ -334,7 +334,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     borderRadius: 14,
   },
   textInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: activeColors.surface,
   },
   errorText: {
     color: activeColors.error,

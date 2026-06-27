@@ -16,6 +16,11 @@
       "bundleIdentifier": "com.homeservice.customer"
     },
     "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD0K0JX_cUHSvRYA1RzeV5z46TvccQXQPY"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B7CFF"
@@ -68,9 +73,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0a178318-4e54-472e-a817-0c6545b46fde"
+        "projectId": "97fcfc43-b00f-4822-a7f2-ffdc47615f84"
       }
     },
-    "owner": "nguyenlee"
+    "owner": "leee15"
   }
 }

@@ -376,7 +376,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: activeColors.surface,
   },
   title: { color: activeColors.text, fontWeight: '900', letterSpacing: -0.5 },
   subtitle: { color: activeColors.textSecondary, lineHeight: 22, fontSize: 14 },

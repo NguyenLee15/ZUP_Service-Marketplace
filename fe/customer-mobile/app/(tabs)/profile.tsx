@@ -430,10 +430,10 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   content: { padding: 16, gap: 16 },
   // Hero Card
   heroCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: activeColors.surface,
     borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
+    borderColor: activeColors.border,
     padding: 24,
     alignItems: 'center',
     gap: 8,
@@ -455,7 +455,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: '#FFF1E5', // Warm peach background
+    backgroundColor: activeColors.warningBg, // Warm peach background
     bottom: -60,
     left: -45,
     opacity: 0.8,
@@ -466,7 +466,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   avatarWrapper: { position: 'relative', marginBottom: 4 },
   avatarImage: {
@@ -474,22 +474,22 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     height: 88,
     borderRadius: 44,
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: activeColors.surface,
     backgroundColor: activeColors.surfaceVariant,
-    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
+    boxShadow: activeColors.elevation,
   },
-  avatarFallback: {
+  avatarInitial: {
     width: 88,
     height: 88,
     borderRadius: 44,
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: activeColors.surface,
     backgroundColor: activeColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
+    boxShadow: activeColors.elevation,
   },
-  avatarLetter: { color: '#FFFFFF', fontWeight: '900', fontSize: 34 },
+  avatarLetter: { color: activeColors.surface, fontWeight: '900', fontSize: 34 },
   editAvatarBtn: {
     position: 'absolute',
     bottom: 2,
@@ -501,8 +501,19 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+    borderColor: activeColors.surface,
+    boxShadow: activeColors.elevation,
+  },
+  levelBadge: {
+    position: 'absolute',
+    bottom: -8,
+    backgroundColor: activeColors.warning,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: activeColors.surface,
+    boxShadow: activeColors.elevation,
   },
   heroName: { color: activeColors.text, fontWeight: '900', textAlign: 'center' },
   heroEmail: { color: activeColors.textSecondary, textAlign: 'center' },
@@ -574,7 +585,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   skeletonBlock: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
   // Stats & Loyalty
   statsCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: activeColors.surface,
     marginTop: -8,
   },
   statsCardContent: {

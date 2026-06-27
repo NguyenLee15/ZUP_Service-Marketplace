@@ -726,7 +726,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     borderRadius: 14,
     padding: 10,
     gap: 10,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: activeColors.surface,
   },
   serviceBody: { flexDirection: "row", gap: 10 },
   serviceImage: {
@@ -766,7 +766,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     paddingBottom: 18,
     borderTopWidth: 1,
     borderTopColor: activeColors.border,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: activeColors.surface,
   },
   quickReplyRow: {
     flexDirection: "row",

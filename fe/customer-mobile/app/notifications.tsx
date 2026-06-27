@@ -677,7 +677,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   filterCard: {
     gap: 10,
     padding: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: activeColors.surface,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: activeColors.border,

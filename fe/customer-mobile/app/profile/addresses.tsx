@@ -460,6 +460,7 @@ export default function AddressesScreen() {
       
       <AddressAutocompleteModal
         visible={autocompleteVisible}
+        searchSuffix={form.province && form.ward ? `${form.ward}, ${form.province}` : undefined}
         onDismiss={() => setAutocompleteVisible(false)}
         onSelect={(place) => {
           setAutocompleteVisible(false);
@@ -709,13 +710,13 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: activeColors.border,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: activeColors.surface,
   },
   segmentedButtonActive: { backgroundColor: activeColors.primary, borderColor: activeColors.primary },
   segmentedButtonText: { fontSize: 13, color: activeColors.textSecondary, fontWeight: '700' },
   segmentedButtonTextActive: { color: '#FFFFFF' },
   outlineStyle: { borderRadius: 14 },
-  textInput: { backgroundColor: '#FFFFFF' },
+  textInput: { backgroundColor: activeColors.surface },
   miniMapContainer: {
     height: 140,
     borderRadius: 14,
@@ -731,7 +732,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: activeColors.surface + 'D9', // 85% opacity
     paddingVertical: 6,
     paddingHorizontal: 10,
   },
