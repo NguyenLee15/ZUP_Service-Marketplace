@@ -294,14 +294,6 @@ export default function ProfileScreen() {
               title="Trợ giúp & Hỗ trợ"
               description="Câu hỏi thường gặp và liên hệ hỗ trợ"
               onPress={() => {}}
-              isLast={false}
-            />
-            <ProfileAction
-              icon="information-outline"
-              color="#64748B"
-              title="Về Zup"
-              description="Phiên bản ứng dụng và điều khoản sử dụng"
-              onPress={() => {}}
               isLast={true}
             />
           </CustomerCard>
@@ -314,7 +306,7 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           style={({ pressed }) => [styles.logoutButton, pressed && { opacity: 0.75 }]}
           accessibilityRole="button"
-          accessibilityLabel="Đăng xuất khỏi Zup"
+          accessibilityLabel="Đăng xuất"
         >
           <MaterialCommunityIcons name="logout" size={20} color={activeColors.error} />
           <Text style={styles.logoutText}>Đăng xuất</Text>
