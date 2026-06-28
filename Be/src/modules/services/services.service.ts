@@ -83,8 +83,8 @@ export class ServicesService {
     return this.searchService.search(dto);
   }
 
-  aiSearch(query: string) {
-    return this.searchService.aiSearch(query);
+  aiSearch(query: string, lat?: number, lng?: number) {
+    return this.searchService.aiSearch(query, lat, lng);
   }
 
   getPublicDetail(serviceId: number) {

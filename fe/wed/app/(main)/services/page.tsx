@@ -168,7 +168,7 @@ function ServicesSearchContent() {
       let metaData;
 
       if (isAiMode && keyword.trim()) {
-        const res = await servicesApi.aiSearch(keyword.trim());
+        const res = await servicesApi.aiSearch(keyword.trim(), userLocation.lat, userLocation.lng);
         data = (res.data.data || []).map((s: any) => ({
           ...s,
           distance: s.distanceKm ?? s.distance,

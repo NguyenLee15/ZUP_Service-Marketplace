@@ -259,80 +259,107 @@ export class ServiceSearchService {
     return log;
   }
 
-  async aiSearch(query: string) {
+  async aiSearch(query: string, lat?: number, lng?: number) {
     const normalizedQuery = query.toLowerCase().trim().replace(/\s+/g, ' ');
     const cacheKey = `ai_search:${normalizedQuery}`;
     const cachedResult = await this.redisService.get(cacheKey);
 
+    let baseData: SearchServiceItem[] = [];
+
     if (cachedResult) {
       this.logger.log(`[AI Caching] Cache hit for query: "${query}"`);
-      return { data: this.parseAiSearchRows(cachedResult) };
-    }
+      baseData = this.parseAiSearchRows(cachedResult) as any;
+    } else {
+      this.logger.log(`[AI Caching] Cache miss for query: "${query}". Calling Gemini API...`);
 
-    this.logger.log(
-      `[AI Caching] Cache miss for query: "${query}". Calling Gemini API...`,
-    );
-
-    const embedding = await this.aiService.createEmbedding(query);
-    if (!embedding) {
-      return this.search({ keyword: query, page: 1, limit: 10 });
-    }
-
-    const vectorStr = `[${embedding.join(',')}]`;
-
-    try {
-      const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
-        SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
-        FROM services s
-        WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
-          AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
-        ORDER BY s.embedding <=> '${vectorStr}'::vector
-        LIMIT 20
-      `);
-
-      if (rawResults.length === 0) {
-        this.logger.log(`[AI Caching] No AI results > 0.50, falling back to keyword search for: "${query}"`);
-        return this.search({ keyword: query, page: 1, limit: 10 });
+      const embedding = await this.aiService.createEmbedding(query);
+      if (!embedding) {
+        return this.search({ keyword: query, page: 1, limit: 10, lat, lng });
       }
 
-      const maxSimilarity = rawResults[0].similarity;
-      // Chỉ lấy các kết quả có điểm >= 0.55 và không được thấp hơn kết quả tốt nhất quá 0.05 điểm
-      const filteredResults = rawResults.filter(r => r.similarity >= 0.55 && r.similarity >= maxSimilarity - 0.05);
+      const vectorStr = `[${embedding.join(',')}]`;
 
-      if (filteredResults.length === 0) {
-        this.logger.log(`[AI Caching] No filtered AI results, falling back to keyword search for: "${query}"`);
-        return this.search({ keyword: query, page: 1, limit: 10 });
-      }
+      try {
+        const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
+          SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
+          FROM services s
+          WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
+            AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
+          ORDER BY s.embedding <=> '${vectorStr}'::vector
+          LIMIT 20
+        `);
 
-      const serviceIds = filteredResults.map(r => r.id);
-      const similarityMap = new Map(filteredResults.map(r => [r.id, r.similarity]));
+        if (rawResults.length === 0) {
+          this.logger.log(`[AI Caching] No AI results > 0.50, falling back to keyword search for: "${query}"`);
+          return this.search({ keyword: query, page: 1, limit: 10, lat, lng });
+        }
 
-      const fullServices = await this.prisma.service.findMany({
-        where: { id: { in: serviceIds } },
-        include: {
-          category: { select: { id: true, name: true } },
-          provider: { select: { id: true, fullName: true, avatarUrl: true } },
-          images: { orderBy: { displayOrder: 'asc' }, take: 1 },
-          featuredListings: {
-            where: { status: 'ACTIVE', endDate: { gt: new Date() } },
-            take: 1,
+        const maxSimilarity = rawResults[0].similarity;
+        const filteredResults = rawResults.filter(r => r.similarity >= 0.55 && r.similarity >= maxSimilarity - 0.05);
+
+        if (filteredResults.length === 0) {
+          this.logger.log(`[AI Caching] No filtered AI results, falling back to keyword search for: "${query}"`);
+          return this.search({ keyword: query, page: 1, limit: 10, lat, lng });
+        }
+
+        const serviceIds = filteredResults.map(r => r.id);
+        const similarityMap = new Map(filteredResults.map(r => [r.id, r.similarity]));
+
+        const fullServices = await this.prisma.service.findMany({
+          where: { id: { in: serviceIds } },
+          include: {
+            category: { select: { id: true, name: true } },
+            provider: { select: { id: true, fullName: true, avatarUrl: true } },
+            images: { orderBy: { displayOrder: 'asc' }, take: 1 },
+            featuredListings: {
+              where: { status: 'ACTIVE', endDate: { gt: new Date() } },
+              take: 1,
+            },
           },
-        },
-      });
+        });
 
-      const mappedData = fullServices.map(service => ({
-        ...service,
-        isFeatured: service.featuredListings.length > 0,
-        similarity: similarityMap.get(service.id) || 0,
-      })).sort((a, b) => b.similarity - a.similarity);
+        baseData = fullServices.map(service => ({
+          ...service,
+          isFeatured: service.featuredListings.length > 0,
+          similarity: similarityMap.get(service.id) || 0,
+        })).sort((a, b) => (b as any).similarity - (a as any).similarity) as any;
 
-      await this.redisService.set(cacheKey, JSON.stringify(mappedData), 86400);
-      return { data: mappedData };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`pgvector search failed: ${message}`);
-      return this.search({ keyword: query, page: 1, limit: 10 });
+        await this.redisService.set(cacheKey, JSON.stringify(baseData), 86400);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(`pgvector search failed: ${message}`);
+        return this.search({ keyword: query, page: 1, limit: 10, lat, lng });
+      }
     }
+
+    let resultData = [...baseData];
+    if (lat && lng) {
+      const providerIds = [...new Set(resultData.map(s => s.providerId))];
+      const addressMap = await this.getProviderAddressMap(providerIds);
+
+      resultData = resultData.map(service => {
+        const address = addressMap.get(service.providerId);
+        if (!address) return service;
+
+        const distanceKm = calculateHaversineDistance(
+          lat,
+          lng,
+          Number(address.latitude),
+          Number(address.longitude),
+        );
+
+        return {
+          ...service,
+          latitude: Number(address.latitude),
+          longitude: Number(address.longitude),
+          distance: distanceKm,
+          distanceKm,
+          providerAddress: `${address.addressDetail}, ${address.ward}, ${address.district}, ${address.province}`,
+        };
+      });
+    }
+
+    return { data: resultData };
   }
 
   private buildSearchCacheKey(

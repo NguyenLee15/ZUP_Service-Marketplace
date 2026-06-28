@@ -158,7 +158,7 @@ export function useSearchFilters() {
     enabled: !isAiWaitingForKeyword,
     queryFn: async ({ pageParam }) => {
       if (filters.aiMode) {
-        const response = await serviceApi.aiSearch(debouncedQuery.trim());
+        const response = await serviceApi.aiSearch(debouncedQuery.trim(), filters.lat, filters.lng);
         return { items: normalizeList<SearchService>(response), page: 1, hasMore: false };
       }
       const response = await serviceApi.search(

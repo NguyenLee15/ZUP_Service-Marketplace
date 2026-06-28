@@ -1,8 +1,8 @@
-﻿import api from '../../lib/axios';
+import api from '../../lib/axios';
 
 export const serviceApi = {
   search: (params?: Record<string, unknown>) => api.get('/services/search', { params }),
-  aiSearch: (query: string) => api.post('/services/ai-search', { query }),
+  aiSearch: (query: string, lat?: number, lng?: number) => api.post('/services/ai-search', { query, lat, lng }),
   getFeatured: () => api.get('/services/featured'),
   getById: (id: number) => api.get(`/services/${id}`),
   getReviews: (serviceId: number, params?: Record<string, unknown>) =>

@@ -94,8 +94,9 @@ export class ServicesController {
   }
 
   @Post('ai-search')
+  @HttpCode(200)
   async aiSearch(@Body() dto: AiSearchDto) {
-    return this.searchService.aiSearch(dto.query);
+    return this.searchService.aiSearch(dto.query, dto.lat, dto.lng);
   }
 
   /** GET /services/:id â€” public detail */

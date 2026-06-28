@@ -1,4 +1,4 @@
-﻿import {
+import {
   IsIn,
   IsString,
   IsOptional,
@@ -192,6 +192,16 @@ export class AdminHideDto {
 export class AiSearchDto {
   @IsString()
   query: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  lat?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  lng?: number;
 }
 
 export class AdminServicesQueryDto {
