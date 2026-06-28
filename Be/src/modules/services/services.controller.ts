@@ -12,6 +12,7 @@ import {
   UploadedFiles,
   Delete,
   BadRequestException,
+  HttpCode,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
