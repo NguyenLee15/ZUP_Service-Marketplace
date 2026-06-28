@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
@@ -36,6 +36,9 @@ export function CustomerHeader() {
   const { user, isAuthenticated, logout: storeLogout, setUser } = useAuthStore();
   const { favorites } = useServiceStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const isServicesPage = pathname === '/services';
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -193,8 +196,9 @@ export function CustomerHeader() {
               </Link>
             </div>
 
-            <div className="hidden min-w-0 flex-1 max-w-2xl px-1 pr-12 sm:block sm:px-2 sm:pr-12 md:pr-0">
-              <form onSubmit={handleSearch} role="search" id="header-search-form" className="relative group">
+            {!isServicesPage && (
+              <div className="hidden min-w-0 flex-1 max-w-2xl px-1 pr-12 sm:block sm:px-2 sm:pr-12 md:pr-0">
+                <form onSubmit={handleSearch} role="search" id="header-search-form" className="relative group">
                 <input
                   type="text"
                   name="search"
@@ -228,6 +232,7 @@ export function CustomerHeader() {
                 </div>
               </form>
             </div>
+            )}
 
             <div className="flex items-center gap-1 sm:gap-3 shrink-0">
               {mounted && isAuthenticated() ? (
