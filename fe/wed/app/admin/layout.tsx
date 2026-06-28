@@ -20,10 +20,13 @@ import {
   WalletCards,
   Search,
   ScrollText,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth.store";
 import { authApi } from "@/features/auth/services/auth.api";
+import { notificationsApi } from "@/features/auth/services/api";
+import { useNotificationsSocket } from "@/features/notification/hooks/useNotificationsSocket";
 import { Toaster } from "@/components/ui/sonner";
 
 interface NavItem {
@@ -98,6 +101,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { logout: clearStore, user, _hasHydrated } = useAuthStore();
 
   React.useEffect(() => {
@@ -107,6 +111,20 @@ export default function AdminLayout({
       }
     }
   }, [user, _hasHydrated, router]);
+
+  React.useEffect(() => {
+    if (_hasHydrated && user && user.role === "ADMIN") {
+      notificationsApi.getUnreadCount()
+        .then((res) => setUnreadCount(Number(res.data.data?.count || 0)))
+        .catch(() => {});
+    }
+  }, [_hasHydrated, user]);
+
+  const handleNotificationReceived = React.useCallback(() => {
+    setUnreadCount((prev) => prev + 1);
+  }, []);
+
+  useNotificationsSocket(handleNotificationReceived);
 
   if (!_hasHydrated || !user || user.role !== "ADMIN") {
     return null; // or a loading spinner
@@ -221,6 +239,17 @@ export default function AdminLayout({
               <div className="flex items-center gap-5">
               </div>
               <div className="flex items-center gap-4">
+                <Link
+                  href="/admin/notifications"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold text-slate-800">
                     {user?.fullName || "Quản trị viên"}
