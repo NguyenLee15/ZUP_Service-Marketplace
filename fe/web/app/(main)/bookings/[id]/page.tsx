@@ -486,7 +486,7 @@ export default function BookingDetailPage() {
                           key={item.id}
                           className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
                             !originallyOrdered
-                              ? "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-l-2 border-l-amber-500"
+                              ? "bg-amber-500/10 text-amber-500 border-l-2 border-l-amber-500"
                               : ""
                           }`}
                         >
@@ -700,19 +700,7 @@ export default function BookingDetailPage() {
           </div>
         )}
 
-        {/* Customer: Track provider */}
-        {isCustomer &&
-          (booking.status === BookingStatus.CONFIRMED ||
-            booking.status === BookingStatus.IN_PROGRESS ||
-            (booking.status === BookingStatus.PENDING && booking.providerAcceptedAt) ||
-            booking.status === BookingStatus.QUOTED) && (
-            <Button
-              onClick={() => router.push(`/bookings/${booking.id}/track`)}
-              className="w-full bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white rounded-xl shadow-[0_0_15px_rgba(0,107,255,0.3)] py-5 font-bold text-sm transition-all hover:-translate-y-0.5"
-            >
-              <Navigation className="w-4 h-4 mr-2" /> Theo dõi lộ trình thợ
-            </Button>
-          )}
+
 
         {/* Customer: Post-Service UX (DONE) */}
         {isCustomer &&
