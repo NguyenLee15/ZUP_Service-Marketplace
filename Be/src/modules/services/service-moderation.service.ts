@@ -60,17 +60,55 @@ export class ServiceModerationService {
       });
     }
 
+    const wallet = await this.prisma.providerWallet.findUnique({
+      where: { providerId: service.providerId },
+    });
+
+    const activeServices = await this.prisma.service.findMany({
+      where: { providerId: service.providerId, status: 'ACTIVE', isDeleted: false },
+      select: { referencePrice: true },
+    });
+
+    const sumReferencePrice = activeServices.reduce(
+      (sum, s) => sum + Number(s.referencePrice),
+      0,
+    );
+    const totalExpectedRefPrice = sumReferencePrice + Number(service.referencePrice);
+
+    let rate = 8.5;
+    const setting = await this.prisma.systemSetting.findUnique({
+      where: { key: 'commission_rate' },
+    });
+    if (setting?.value) {
+      try {
+        const parsed = JSON.parse(setting.value) as { rate?: unknown };
+        if (typeof parsed.rate === 'number') rate = parsed.rate;
+      } catch {}
+    } else {
+      const commissionConfig = await this.prisma.commissionConfig.findFirst({
+        orderBy: { effectiveFrom: 'desc' },
+      });
+      if (commissionConfig) rate = Number(commissionConfig.rate);
+    }
+
+    const requiredDeposit = (totalExpectedRefPrice * rate) / 100;
+    const hasEnoughBalance = wallet && Number(wallet.balance) >= requiredDeposit;
+
+    const newStatus = hasEnoughBalance ? ServiceStatus.ACTIVE : ServiceStatus.HIDDEN;
+
     const updated = await this.prisma.service.update({
       where: { id: serviceId },
-      data: { status: ServiceStatus.HIDDEN },
+      data: { status: newStatus },
     });
 
     await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
 
-    await this.prisma.user.update({
-      where: { id: service.providerId },
-      data: { isOnline: false },
-    });
+    if (!hasEnoughBalance) {
+      await this.prisma.user.update({
+        where: { id: service.providerId },
+        data: { isOnline: false },
+      });
+    }
 
     await this.jobsService.enqueue(JobName.ServiceGenerateEmbedding, {
       serviceId,
@@ -82,7 +120,9 @@ export class ServiceModerationService {
       userId: service.providerId,
       type: 'SERVICE_APPROVED',
       title: 'Dịch vụ đã được duyệt',
-      content: `Dịch vụ "${service.name}" đã được phê duyệt. Vui lòng nạp tối thiểu 50.000đ vào ví và bật hoạt động để khách hàng có thể đặt lịch.`,
+      content: hasEnoughBalance
+        ? `Dịch vụ "${service.name}" đã được phê duyệt và tự động hoạt động do ví của bạn đã đủ số dư ký quỹ.`
+        : `Dịch vụ "${service.name}" đã được phê duyệt. Vui lòng nạp thêm tiền vào ví để đạt mức ký quỹ tối thiểu và bật hoạt động để khách hàng có thể đặt lịch.`,
       referenceId: serviceId,
     });
 
