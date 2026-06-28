@@ -425,7 +425,8 @@ function CreateBookingContent() {
       )}
 
       <form onSubmit={handleSubmit} onKeyDown={(e) => {
-        if (e.key === 'Enter' && step !== 3) {
+        if (e.key === 'Enter') {
+          // Ngăn không cho form tự submit khi user ấn Enter (đặc biệt trong datetime-local picker)
           e.preventDefault();
         }
       }} className="space-y-4 sm:space-y-5">
