@@ -295,8 +295,17 @@ export class ServiceSearchService {
         return this.search({ keyword: query, page: 1, limit: 10 });
       }
 
-      const serviceIds = rawResults.map(r => r.id);
-      const similarityMap = new Map(rawResults.map(r => [r.id, r.similarity]));
+      const maxSimilarity = rawResults[0].similarity;
+      // Chỉ lấy các kết quả có điểm >= 0.55 và không được thấp hơn kết quả tốt nhất quá 0.05 điểm
+      const filteredResults = rawResults.filter(r => r.similarity >= 0.55 && r.similarity >= maxSimilarity - 0.05);
+
+      if (filteredResults.length === 0) {
+        this.logger.log(`[AI Caching] No filtered AI results, falling back to keyword search for: "${query}"`);
+        return this.search({ keyword: query, page: 1, limit: 10 });
+      }
+
+      const serviceIds = filteredResults.map(r => r.id);
+      const similarityMap = new Map(filteredResults.map(r => [r.id, r.similarity]));
 
       const fullServices = await this.prisma.service.findMany({
         where: { id: { in: serviceIds } },
