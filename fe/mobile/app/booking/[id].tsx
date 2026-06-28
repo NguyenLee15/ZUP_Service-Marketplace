@@ -62,6 +62,7 @@ type BookingTimelineItem = {
 const getStatusColor = (status: string, activeColors: typeof Colors.light | typeof Colors.dark): string => {
   const map: Record<string, string> = {
     PENDING: activeColors.statusPending,
+    ACCEPTED: activeColors.statusPending, // Using same color or statusAccepted if available
     QUOTED: activeColors.statusQuoted,
     CONFIRMED: activeColors.statusConfirmed,
     IN_PROGRESS: activeColors.statusInProgress,
@@ -748,10 +749,8 @@ export default function ProviderBookingDetailScreen() {
   const color = getStatusColor(booking.status, activeColors);
   const statusLabel =
     BOOKING_STATUS_LABEL[booking.status as BookingStatus] || booking.status;
-  const isAwaitingProviderAcceptance =
-    booking.status === "PENDING" && !booking.providerAcceptedAt;
-  const canHandlePendingWorkflow =
-    booking.status === "PENDING" && Boolean(booking.providerAcceptedAt);
+  const isAwaitingProviderAcceptance = booking.status === "PENDING";
+  const canHandlePendingWorkflow = booking.status === "ACCEPTED";
   const isAnyModalVisible = showQuoteModal || showCancelModal || showSuppQuoteModal;
   const responseDeadline = booking.providerResponseDeadline
     ? new Date(booking.providerResponseDeadline).toLocaleTimeString("vi-VN", {
@@ -762,6 +761,7 @@ export default function ProviderBookingDetailScreen() {
     : null;
   const hasBottomActions = [
     "PENDING",
+    "ACCEPTED",
     "QUOTED",
     "CONFIRMED",
     "IN_PROGRESS",
@@ -1179,60 +1179,57 @@ export default function ProviderBookingDetailScreen() {
         >
           {booking.status === "PENDING" && (
             <>
-              {isAwaitingProviderAcceptance ? (
-                <>
-                  <Button
-                    mode="contained"
-                    onPress={() => requireKyc(handleAcceptBooking)}
-                    loading={actionLoading}
-                    disabled={actionLoading}
-                    style={styles.actionButton}
-                    icon="check-circle-outline"
-                    contentStyle={styles.actionContent}
-                  >
-                    Nhận đơn
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    onPress={handleDeclineBooking}
-                    disabled={actionLoading}
-                    textColor={activeColors.error}
-                    style={[
-                      styles.actionButton,
-                      { borderColor: activeColors.error },
-                    ]}
-                    icon="close-circle-outline"
-                    contentStyle={styles.actionContent}
-                  >
-                    Từ chối
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    mode="contained"
-                    onPress={() => requireKyc(() => setShowQuoteModal(true))}
-                    style={styles.actionButton}
-                    icon="file-document-edit-outline"
-                    contentStyle={styles.actionContent}
-                  >
-                    Gửi báo giá
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    onPress={() => setShowCancelModal(true)}
-                    textColor={activeColors.error}
-                    style={[
-                      styles.actionButton,
-                      { borderColor: activeColors.error },
-                    ]}
-                    icon="close-circle-outline"
-                    contentStyle={styles.actionContent}
-                  >
-                    Hủy đơn
-                  </Button>
-                </>
-              )}
+              <Button
+                mode="contained"
+                onPress={() => requireKyc(handleAcceptBooking)}
+                loading={actionLoading}
+                disabled={actionLoading}
+                style={styles.actionButton}
+                icon="check-circle-outline"
+                contentStyle={styles.actionContent}
+              >
+                Nhận đơn
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={handleDeclineBooking}
+                disabled={actionLoading}
+                textColor={activeColors.error}
+                style={[
+                  styles.actionButton,
+                  { borderColor: activeColors.error },
+                ]}
+                icon="close-circle-outline"
+                contentStyle={styles.actionContent}
+              >
+                Từ chối
+              </Button>
+            </>
+          )}
+          {booking.status === "ACCEPTED" && (
+            <>
+              <Button
+                mode="contained"
+                onPress={() => requireKyc(() => setShowQuoteModal(true))}
+                style={styles.actionButton}
+                icon="file-document-edit-outline"
+                contentStyle={styles.actionContent}
+              >
+                Gửi báo giá
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => setShowCancelModal(true)}
+                textColor={activeColors.error}
+                style={[
+                  styles.actionButton,
+                  { borderColor: activeColors.error },
+                ]}
+                icon="close-circle-outline"
+                contentStyle={styles.actionContent}
+              >
+                Hủy đơn
+              </Button>
             </>
           )}
           {booking.status === "QUOTED" && (
