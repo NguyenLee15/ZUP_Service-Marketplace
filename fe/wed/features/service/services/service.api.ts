@@ -5,8 +5,8 @@ export const serviceApi = {
   search: (params?: Record<string, unknown>) =>
     api.get('/services/search', { params }),
 
-  aiSearch: (query: string) =>
-    api.post('/services/ai-search', { query }),
+  aiSearch: (query: string, lat?: number, lng?: number) =>
+    api.post('/services/ai-search', { query, lat, lng }),
 
   getById: (id: number) =>
     api.get(`/services/${id}`),
