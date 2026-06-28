@@ -215,8 +215,8 @@ export default function AdminAuditLogsPage() {
             Bộ lọc
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-4 xl:grid-cols-8">
-          <div className="relative md:col-span-2">
+        <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+          <div className="relative col-span-1 sm:col-span-2 md:col-span-2 lg:col-span-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={filters.keyword}
@@ -294,7 +294,7 @@ export default function AdminAuditLogsPage() {
           <Button
             variant="ghost"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-slate-500 hover:text-slate-900 md:col-span-2 xl:col-span-8"
+            className="text-slate-500 hover:text-slate-900 col-span-1 sm:col-span-2 md:col-span-4 lg:col-span-6"
           >
             {showAdvanced ? "Ẩn bớt bộ lọc" : "Bộ lọc nâng cao (ID)"}
           </Button>
