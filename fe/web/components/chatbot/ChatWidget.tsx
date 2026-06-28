@@ -853,7 +853,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl rounded-tl-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-600 shadow-sm">
                   <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                  Đang phân tích dữ liệu thật…
+                  Đang xử lý...
                 </div>
               </div>
             )}

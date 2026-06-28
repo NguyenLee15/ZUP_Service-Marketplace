@@ -21,6 +21,9 @@ export class ChatbotIntentService {
       this.hasAny(normalized, [
         'don cua toi',
         'don hang',
+        'co don',
+        'don nao',
+        'don ang',
         'lich hen',
         'trang thai',
         'toi dau',

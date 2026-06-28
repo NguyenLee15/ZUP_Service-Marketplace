@@ -9,18 +9,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 // Fix Leaflet's default icon path issues in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as any)._getIconUrl
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  })
+}
 
 interface MapPickerProps {
   latitude: number
   longitude: number
   searchSuffix?: string
-  onChange: (lat: number, lng: number) => void
+  onChange: (lat: number, lng: number, addressDetails?: any) => void
 }
 
 function MapUpdater({ center }: { center: [number, number] }) {
@@ -31,10 +33,44 @@ function MapUpdater({ center }: { center: [number, number] }) {
   return null
 }
 
-function MapEvents({ onChange }: { onChange: (lat: number, lng: number) => void }) {
+function MapEvents({ onChange }: { onChange: (lat: number, lng: number, details?: any) => void }) {
   useMapEvents({
-    click(e) {
-      onChange(e.latlng.lat, e.latlng.lng)
+    async click(e) {
+      const lat = e.latlng.lat
+      const lng = e.latlng.lng
+      onChange(lat, lng) // Immediate visual update
+      
+      try {
+        const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`)
+        const data = await res.json()
+        if (data.results && data.results.length > 0) {
+          const result = data.results[0]
+          let province = ''
+          let district = ''
+          let ward = ''
+          let street = ''
+          
+          result.address_components.forEach((component: any) => {
+            if (component.types.includes('administrative_area_level_1')) {
+              province = component.long_name
+            }
+            if (component.types.includes('administrative_area_level_2') || component.types.includes('locality')) {
+              district = component.long_name
+            }
+            if (component.types.includes('administrative_area_level_3') || component.types.includes('sublocality_level_1') || component.types.includes('sublocality')) {
+              ward = component.long_name
+            }
+            if (component.types.includes('route')) {
+              street = component.long_name
+            }
+          })
+          
+          const fullAddress = result.formatted_address
+          onChange(lat, lng, { province, district, ward, street, fullAddress })
+        }
+      } catch (err) {
+        console.error('Reverse geocode error:', err)
+      }
     },
   })
   return null

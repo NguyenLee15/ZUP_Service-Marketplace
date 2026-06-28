@@ -306,9 +306,30 @@ export default function AddressesPage() {
                   latitude={form.watch('latitude') || 21.028511}
                   longitude={form.watch('longitude') || 105.804817}
                   searchSuffix={selectedProvince && selectedWard ? `${selectedWard}, ${selectedProvince}` : undefined}
-                  onChange={(lat, lng) => {
+                  onChange={(lat, lng, details) => {
                     form.setValue('latitude', lat, { shouldDirty: true })
                     form.setValue('longitude', lng, { shouldDirty: true })
+                    
+                    if (details) {
+                      if (details.province) {
+                        const matchedProvince = provinceOptions.find(p => p.includes(details.province) || details.province.includes(p) || p.replace(/Tỉnh |Thành phố /g, '') === details.province.replace(/Tỉnh |Thành phố /g, ''))
+                        if (matchedProvince) {
+                          form.setValue('province', matchedProvince, { shouldValidate: true, shouldDirty: true })
+                        } else {
+                          form.setValue('province', details.province, { shouldValidate: true, shouldDirty: true })
+                        }
+                      }
+                      if (details.district) {
+                        form.setValue('district', details.district, { shouldValidate: true, shouldDirty: true })
+                      }
+                      if (details.ward) {
+                        // try to find a match in future wardOptions
+                        form.setValue('ward', details.ward, { shouldValidate: true, shouldDirty: true })
+                      }
+                      if (details.street) {
+                        form.setValue('addressDetail', details.street, { shouldValidate: true, shouldDirty: true })
+                      }
+                    }
                   }}
                 />
               </div>
