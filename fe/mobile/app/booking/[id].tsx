@@ -1208,28 +1208,59 @@ export default function ProviderBookingDetailScreen() {
           )}
           {booking.status === "ACCEPTED" && (
             <>
-              <Button
-                mode="contained"
-                onPress={() => requireKyc(() => setShowQuoteModal(true))}
-                style={styles.actionButton}
-                icon="file-document-edit-outline"
-                contentStyle={styles.actionContent}
-              >
-                Gửi báo giá
-              </Button>
-              <Button
-                mode="outlined"
-                onPress={() => setShowCancelModal(true)}
-                textColor={activeColors.error}
-                style={[
-                  styles.actionButton,
-                  { borderColor: activeColors.error },
-                ]}
-                icon="close-circle-outline"
-                contentStyle={styles.actionContent}
-              >
-                Hủy đơn
-              </Button>
+              {!booking.providerArrivedAt ? (
+                <>
+                  <Button
+                    mode="contained"
+                    onPress={handleArrive}
+                    loading={actionLoading}
+                    disabled={actionLoading}
+                    style={styles.actionButton}
+                    icon="map-marker-check-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Tôi đã đến nơi
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowCancelModal(true)}
+                    textColor={activeColors.error}
+                    style={[
+                      styles.actionButton,
+                      { borderColor: activeColors.error },
+                    ]}
+                    icon="close-circle-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Hủy đơn
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    mode="contained"
+                    onPress={() => requireKyc(() => setShowQuoteModal(true))}
+                    style={styles.actionButton}
+                    icon="file-document-edit-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Gửi báo giá
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowCancelModal(true)}
+                    textColor={activeColors.error}
+                    style={[
+                      styles.actionButton,
+                      { borderColor: activeColors.error },
+                    ]}
+                    icon="close-circle-outline"
+                    contentStyle={styles.actionContent}
+                  >
+                    Hủy đơn
+                  </Button>
+                </>
+              )}
             </>
           )}
           {booking.status === "QUOTED" && (
@@ -1249,33 +1280,17 @@ export default function ProviderBookingDetailScreen() {
             </Button>
           )}
           {booking.status === "CONFIRMED" && (
-            <>
-              {!booking.providerArrivedAt ? (
-                <Button
-                  mode="contained"
-                  onPress={handleArrive}
-                  loading={actionLoading}
-                  disabled={actionLoading}
-                  style={[styles.actionButton, styles.singleAction]}
-                  icon="map-marker-check-outline"
-                  contentStyle={styles.actionContent}
-                >
-                  {actionLoading ? "Đang xử lý…" : "Tôi đã đến nơi"}
-                </Button>
-              ) : (
-                <Button
-                  mode="contained"
-                  onPress={handleStart}
-                  loading={actionLoading}
-                  disabled={actionLoading}
-                  style={[styles.actionButton, styles.singleAction]}
-                  icon="play-circle-outline"
-                  contentStyle={styles.actionContent}
-                >
-                  {actionLoading ? "Đang xử lý…" : "Bắt đầu thực hiện"}
-                </Button>
-              )}
-            </>
+            <Button
+              mode="contained"
+              onPress={handleStart}
+              loading={actionLoading}
+              disabled={actionLoading}
+              style={[styles.actionButton, styles.singleAction]}
+              icon="play-circle-outline"
+              contentStyle={styles.actionContent}
+            >
+              {actionLoading ? "Đang xử lý…" : "Bắt đầu thực hiện"}
+            </Button>
           )}
           {booking.status === "IN_PROGRESS" && (
             <View style={{ gap: 8 }}>
@@ -1958,7 +1973,7 @@ const getStyles = (theme: any, activeColors: any, insets: any) => StyleSheet.cre
     gap: 14,
   },
   contentWithActions: {
-    paddingBottom: Math.max(insets.bottom, 16) + 84,
+    paddingBottom: Math.max(insets.bottom, 16) + 140,
   },
   statusCard: {
     gap: 12,

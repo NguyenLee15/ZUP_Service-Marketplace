@@ -375,6 +375,13 @@ export class BookingLifecycleService {
       });
     }
 
+    if (!booking.providerArrivedAt) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Vui lòng xác nhận đã đến nơi trước khi gửi báo giá',
+      });
+    }
+
     if (!dto.items || dto.items.length === 0) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
@@ -539,7 +546,7 @@ export class BookingLifecycleService {
   async arriveAtLocation(providerId: number, bookingId: number) {
     const booking = await this.shared.checkBooking(bookingId, {
       providerId,
-      status: BookingStatus.CONFIRMED,
+      status: BookingStatus.ACCEPTED,
     });
 
     if (booking.providerArrivedAt) {
@@ -556,8 +563,8 @@ export class BookingLifecycleService {
 
     await this.shared.addStatusHistory(
       bookingId,
-      'CONFIRMED',
-      'CONFIRMED',
+      'ACCEPTED',
+      'ACCEPTED',
       providerId,
       'Đã đến nơi',
     );
