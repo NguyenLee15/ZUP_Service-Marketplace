@@ -8,11 +8,21 @@ import {
   IsArray,
   ValidateNested,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { Type, Transform, plainToInstance } from 'class-transformer';
 
-function parseJsonArrayValue(value: unknown): unknown {
-  if (typeof value !== 'string') return value;
-  return JSON.parse(value) as unknown;
+function parseJsonArrayValue(value: unknown, classType?: any): unknown {
+  let parsed = value;
+  if (typeof value === 'string') {
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+  if (classType && Array.isArray(parsed)) {
+    return parsed.map((item) => plainToInstance(classType, item));
+  }
+  return parsed;
 }
 
 export class CreateBookingItemDto {
@@ -50,7 +60,7 @@ export class CreateBookingDto {
 
   @IsArray()
   @IsOptional()
-  @Transform(({ value }) => parseJsonArrayValue(value))
+  @Transform(({ value }) => parseJsonArrayValue(value, CreateBookingItemDto))
   @ValidateNested({ each: true })
   @Type(() => CreateBookingItemDto)
   items?: CreateBookingItemDto[];
@@ -94,7 +104,7 @@ export class SendQuoteDto {
 
   @IsArray()
   @IsOptional()
-  @Transform(({ value }) => parseJsonArrayValue(value))
+  @Transform(({ value }) => parseJsonArrayValue(value, CreateQuotationItemDto))
   @ValidateNested({ each: true })
   @Type(() => CreateQuotationItemDto)
   items?: CreateQuotationItemDto[];
@@ -116,7 +126,7 @@ export class SendSupplementaryQuoteDto {
   note?: string;
 
   @IsArray()
-  @Transform(({ value }) => parseJsonArrayValue(value))
+  @Transform(({ value }) => parseJsonArrayValue(value, CreateQuotationItemDto))
   @ValidateNested({ each: true })
   @Type(() => CreateQuotationItemDto)
   items: CreateQuotationItemDto[];
