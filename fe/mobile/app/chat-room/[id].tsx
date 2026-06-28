@@ -86,11 +86,22 @@ export default function ChatRoomScreen() {
         }
       };
 
+      const handleMessageRecalled = (recalledMsg: any) => {
+        if (mounted) {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === recalledMsg.id ? { ...msg, ...recalledMsg } : msg
+            )
+          );
+        }
+      };
+
       socket.on('newMessage', handleNewMessage);
       socket.on('typing', handleTypingEvent);
+      socket.on('messageRecalled', handleMessageRecalled);
 
       // Save handlers for cleanup
-      (socket as any)._chatRoomHandlers = { handleNewMessage, handleTypingEvent };
+      (socket as any)._chatRoomHandlers = { handleNewMessage, handleTypingEvent, handleMessageRecalled };
     };
 
     init();
@@ -99,9 +110,10 @@ export default function ChatRoomScreen() {
       mounted = false;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       if (activeSocket && (activeSocket as any)._chatRoomHandlers) {
-        const { handleNewMessage, handleTypingEvent } = (activeSocket as any)._chatRoomHandlers;
+        const { handleNewMessage, handleTypingEvent, handleMessageRecalled } = (activeSocket as any)._chatRoomHandlers;
         activeSocket.off('newMessage', handleNewMessage);
         activeSocket.off('typing', handleTypingEvent);
+        activeSocket.off('messageRecalled', handleMessageRecalled);
         delete (activeSocket as any)._chatRoomHandlers;
       }
     };
@@ -188,6 +200,7 @@ export default function ChatRoomScreen() {
   const renderMessage = ({ item }: { item: any }) => {
     const isMe = item.senderId === user?.id;
     const isAi = item.isAiGenerated || item.senderType === 'AI';
+    const isRecalled = Boolean(item.recalledAt);
 
     return (
       <View style={[styles.msgContainer, isMe ? styles.msgRight : styles.msgLeft]}>
@@ -199,7 +212,7 @@ export default function ChatRoomScreen() {
           />
         )}
         <View style={{ flexShrink: 1 }}>
-          {isAi && (
+          {isAi && !isRecalled && (
             <View style={styles.aiLabel}>
               <MaterialCommunityIcons name="robot-outline" size={12} color={theme.colors.secondary} />
               <Text variant="labelSmall" style={{ color: theme.colors.secondary, marginLeft: 2 }}>AI</Text>
@@ -207,13 +220,15 @@ export default function ChatRoomScreen() {
           )}
           <View style={[
             styles.bubble,
-            isMe
-              ? { backgroundColor: theme.colors.primary }
-              : isAi
-                ? { backgroundColor: `${theme.colors.secondary}15`, borderColor: `${theme.colors.secondary}30`, borderWidth: 1 }
-                : { backgroundColor: theme.colors.surfaceVariant },
+            isRecalled
+              ? { backgroundColor: theme.colors.surfaceVariant, opacity: 0.7, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.colors.outlineVariant }
+              : isMe
+                ? { backgroundColor: theme.colors.primary }
+                : isAi
+                  ? { backgroundColor: `${theme.colors.secondary}15`, borderColor: `${theme.colors.secondary}30`, borderWidth: 1 }
+                  : { backgroundColor: theme.colors.surfaceVariant },
           ]}>
-            {item.imageUrl && (
+            {item.imageUrl && !isRecalled && (
               <Pressable onPress={() => setViewingImage(item.imageUrl)}>
                 <Image 
                   source={{ uri: item.imageUrl }} 
@@ -223,13 +238,19 @@ export default function ChatRoomScreen() {
               </Pressable>
             )}
             {item.content && (
-              <Text variant="bodyMedium" style={{ color: isMe ? '#fff' : theme.colors.onSurface }}>
+              <Text 
+                variant="bodyMedium" 
+                style={[
+                  { color: isMe && !isRecalled ? '#fff' : theme.colors.onSurface },
+                  isRecalled && { fontStyle: 'italic', color: theme.colors.onSurfaceVariant }
+                ]}
+              >
                 {item.content}
               </Text>
             )}
-            <Text variant="labelSmall" style={[styles.time, { color: isMe ? 'rgba(255,255,255,0.6)' : theme.colors.onSurfaceVariant }]}>
+            <Text variant="labelSmall" style={[styles.time, { color: isMe && !isRecalled ? 'rgba(255,255,255,0.6)' : theme.colors.onSurfaceVariant }]}>
               {formatTime(item.createdAt)}
-              {isMe && item.isRead && ' ✓✓'}
+              {isMe && item.isRead && !isRecalled && ' ✓✓'}
             </Text>
           </View>
         </View>

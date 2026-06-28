@@ -329,6 +329,7 @@ export class ChatsService {
       data: {
         recalledAt: new Date(),
         content: 'Tin nhắn đã được thu hồi',
+        imageUrl: null,
       },
       include: {
         sender: { select: { id: true, fullName: true, avatarUrl: true } },
