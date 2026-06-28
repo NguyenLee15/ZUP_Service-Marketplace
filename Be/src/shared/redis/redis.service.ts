@@ -73,6 +73,19 @@ export class RedisService implements OnModuleDestroy {
     await this.client.del(key);
   }
 
+  /** DEL by pattern */
+  async delByPattern(pattern: string): Promise<void> {
+    if (!this.client) return;
+    try {
+      const keys = await this.client.keys(pattern);
+      if (keys.length > 0) {
+        await this.client.del(...keys);
+      }
+    } catch (e) {
+      this.logger.warn(`Failed to delete keys by pattern ${pattern}`);
+    }
+  }
+
   /** INCR key — tăng counter (brute-force, rate-limit) */
   async incr(key: string): Promise<number> {
     if (!this.client) return 1;

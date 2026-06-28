@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { Prisma, ServiceStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../../shared/ai/ai.service';
@@ -42,6 +43,7 @@ export class ServiceSearchService {
       isDeleted: false,
       provider: {
         status: 'ACTIVE',
+        isOnline: true,
       },
     };
 
@@ -216,7 +218,9 @@ export class ServiceSearchService {
         const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
           SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
           FROM services s
+          INNER JOIN users u ON s.provider_id = u.id
           WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
+            AND u.status = 'ACTIVE' AND u.is_online = true
             AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
           ORDER BY s.embedding <=> '${vectorStr}'::vector
           LIMIT 20
@@ -283,7 +287,9 @@ export class ServiceSearchService {
         const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
           SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
           FROM services s
+          INNER JOIN users u ON s.provider_id = u.id
           WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
+            AND u.status = 'ACTIVE' AND u.is_online = true
             AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
           ORDER BY s.embedding <=> '${vectorStr}'::vector
           LIMIT 20
@@ -360,6 +366,13 @@ export class ServiceSearchService {
     }
 
     return { data: resultData };
+  }
+
+  @OnEvent('cache.clear.services')
+  async clearCache() {
+    this.logger.log('Clearing service search caches...');
+    this.searchCache.clear();
+    await this.redisService.delByPattern('ai_search:*');
   }
 
   private buildSearchCacheKey(
