@@ -69,7 +69,7 @@ export class ServiceModerationService {
 
     await this.prisma.user.update({
       where: { id: service.providerId },
-      data: { isOnline: true },
+      data: { isOnline: false },
     });
 
     await this.jobsService.enqueue(JobName.ServiceGenerateEmbedding, {
