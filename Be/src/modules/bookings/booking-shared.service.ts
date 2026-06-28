@@ -38,7 +38,7 @@ export class BookingSharedService {
     opts: {
       customerId?: number;
       providerId?: number;
-      status: BookingStatus;
+      status?: BookingStatus | BookingStatus[];
       includeService?: boolean;
     },
   ) {
@@ -59,11 +59,16 @@ export class BookingSharedService {
         message: 'Đơn hàng không tồn tại',
       });
     }
-    if (booking.status !== opts.status) {
-      throw new BadRequestException({
-        code: ErrorCodes.BOOKING_INVALID_STATE,
-        message: `Đơn hàng không ở trạng thái phù hợp (hiện tại: ${booking.status})`,
-      });
+    if (opts.status) {
+      const allowedStatuses = Array.isArray(opts.status)
+        ? opts.status
+        : [opts.status];
+      if (!allowedStatuses.includes(booking.status)) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message: `Đơn hàng không ở trạng thái phù hợp (hiện tại: ${booking.status})`,
+        });
+      }
     }
     return booking;
   }

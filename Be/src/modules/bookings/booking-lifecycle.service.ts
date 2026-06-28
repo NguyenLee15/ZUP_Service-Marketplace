@@ -358,7 +358,7 @@ export class BookingLifecycleService {
   ) {
     const booking = await this.shared.checkBooking(bookingId, {
       providerId,
-      status: { in: [BookingStatus.PENDING, BookingStatus.ACCEPTED] } as any,
+      status: [BookingStatus.PENDING, BookingStatus.ACCEPTED],
     });
 
     if (!booking.providerAcceptedAt) {
@@ -441,7 +441,7 @@ export class BookingLifecycleService {
 
     await this.shared.addStatusHistory(
       bookingId,
-      'PENDING',
+      booking.status,
       'QUOTED',
       providerId,
       'Nhà cung cấp gửi báo giá',
