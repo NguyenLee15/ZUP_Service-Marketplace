@@ -169,10 +169,20 @@ function ServicesSearchContent() {
 
       if (isAiMode && keyword.trim()) {
         const res = await servicesApi.aiSearch(keyword.trim(), userLocation.lat, userLocation.lng);
-        data = (res.data.data || []).map((s: any) => ({
+        let aiData = (res.data.data || []).map((s: any) => ({
           ...s,
           distance: s.distanceKm ?? s.distance,
         }));
+
+        if (sortBy === 'price_asc') {
+          aiData.sort((a: any, b: any) => a.referencePrice - b.referencePrice);
+        } else if (sortBy === 'price_desc') {
+          aiData.sort((a: any, b: any) => b.referencePrice - a.referencePrice);
+        } else if (sortBy === 'rating') {
+          aiData.sort((a: any, b: any) => (b.avgRating || 0) - (a.avgRating || 0));
+        }
+
+        data = aiData;
         metaData = { total: data.length, page: 1, totalPages: 1 };
       } else {
         const params: Record<string, ApiPayload> = {

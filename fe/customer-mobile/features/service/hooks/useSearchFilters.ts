@@ -159,7 +159,14 @@ export function useSearchFilters() {
     queryFn: async ({ pageParam }) => {
       if (filters.aiMode) {
         const response = await serviceApi.aiSearch(debouncedQuery.trim(), filters.lat, filters.lng);
-        return { items: normalizeList<SearchService>(response), page: 1, hasMore: false };
+        let aiData = normalizeList<SearchService>(response);
+        if (filters.sort === 'price') {
+          aiData.sort((a: any, b: any) => a.referencePrice - b.referencePrice);
+        } else if (filters.sort === 'rating') {
+          aiData.sort((a: any, b: any) => (b.avgRating || 0) - (a.avgRating || 0));
+        }
+        
+        return { items: aiData, page: 1, hasMore: false };
       }
       const response = await serviceApi.search(
         buildSearchParams({
