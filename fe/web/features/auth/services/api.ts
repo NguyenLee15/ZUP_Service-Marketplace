@@ -47,6 +47,10 @@ export const categoriesApi = {
 export const bookingsApi = {
   create: (data: ApiPayload) => api.post("/bookings", data),
 
+  extractIntent: (prompt: string, latitude?: number, longitude?: number) =>
+    api.post("/bookings/intent-extract", { prompt, latitude, longitude }),
+
+
   getMyBookings: (params?: Record<string, ApiPayload>) =>
     api.get("/bookings", { params }),
 

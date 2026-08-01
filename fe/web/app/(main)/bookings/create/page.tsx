@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DynamicQuestionnaire } from '@/app/components/bookings/DynamicQuestionnaire';
+import { SmartBookingInput } from '@/app/components/bookings/SmartBookingInput';
 import { userApi } from '@/features/user/services/user.api';
 import {
   Select,
@@ -97,6 +98,8 @@ function CreateBookingContent() {
   const [step, setStep] = useState(1);
   const [gpsLoading, setGpsLoading] = useState(false);
   const submittedRef = useRef(false);
+  const [showSmartInput, setShowSmartInput] = useState(!serviceId);
+  const [aiIntentResult, setAiIntentResult] = useState<ApiPayload>(null);
 
   const defaultAddress = addresses.find((address) => address.isDefault);
   const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), province);
@@ -434,17 +437,50 @@ function CreateBookingContent() {
         {/* ================= STEP 1: CHI TIẾT & HẠNG MỤC ================= */}
         {step === 1 && (
           <div className="space-y-5 animate-in fade-in duration-300">
-            <div className="glass-panel glow-hover space-y-2 p-4 sm:p-6 rounded-[20px] text-white shadow-xl">
-              <DynamicQuestionnaire 
-                serviceName={service?.name || ''}
-                description={description}
-                onChange={(val) => {
-                  setDescription(val);
-                  validate('description', val);
-                }}
-                error={fieldErrors.description}
-              />
-            </div>
+            {/* AI Smart Booking Input */}
+            {showSmartInput && (
+              <div className="glass-panel glow-hover space-y-2 p-4 sm:p-6 rounded-[20px] text-white shadow-xl">
+                <SmartBookingInput
+                  onIntentExtracted={(result) => {
+                    setAiIntentResult(result);
+                    if (result.intent.summary) {
+                      setDescription(result.intent.summary);
+                      validate('description', result.intent.summary);
+                    }
+                  }}
+                  onServiceSelected={(svcId) => {
+                    router.push(`/bookings/create?serviceId=${svcId}`);
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Toggle between Smart / Manual mode */}
+            {serviceId && (
+              <button
+                type="button"
+                onClick={() => setShowSmartInput(!showSmartInput)}
+                className="w-full flex items-center justify-center gap-2 py-2 text-[11px] font-bold uppercase tracking-widest text-action-blue hover:text-glacier-blue transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {showSmartInput ? 'Quay lại nhập thủ công' : 'Dùng AI mô tả sự cố'}
+              </button>
+            )}
+
+            {/* Traditional DynamicQuestionnaire (visible when serviceId exists and smart input is hidden) */}
+            {(!showSmartInput || serviceId) && !showSmartInput && (
+              <div className="glass-panel glow-hover space-y-2 p-4 sm:p-6 rounded-[20px] text-white shadow-xl">
+                <DynamicQuestionnaire 
+                  serviceName={service?.name || ''}
+                  description={description}
+                  onChange={(val) => {
+                    setDescription(val);
+                    validate('description', val);
+                  }}
+                  error={fieldErrors.description}
+                />
+              </div>
+            )}
 
             {service?.items && service.items.length > 0 && (
               <div className="glass-panel glow-hover space-y-3 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">

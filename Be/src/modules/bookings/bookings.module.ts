@@ -29,6 +29,7 @@ import { CustomerBookingExportService } from './customer-booking-export.service'
 import { BookingCommissionService } from './booking-commission.service';
 import { BookingSharedService } from './booking-shared.service';
 import { BookingTimeoutService } from './booking-timeout.service';
+import { BookingIntentService } from './booking-intent.service';
 import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.module';
 
 @Module({
@@ -67,6 +68,7 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
     BookingQueryService,
     ProviderDashboardService,
     CustomerBookingExportService,
+    BookingIntentService,
     TrackingGateway,
     ...(isCronEnabled() ? [BookingsCron] : []),
     ...(isWorkerEnabled() ? [BookingsProcessor, DisputeProcessor] : []),
@@ -80,6 +82,8 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
     BookingCommissionService,
     BookingSharedService,
     BookingTimeoutService,
+    BookingIntentService,
   ],
 })
 export class BookingsModule {}
+

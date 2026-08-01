@@ -52,16 +52,28 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!reason || !description) return
+    e.preventDefault();
+    if (!reason || !description) return;
 
-    setIsSubmitting(true)
-    // Simulate submission
-    setTimeout(() => {
-      setIsSubmitting(false)
-      router.push('/bookings')
-    }, 1500)
-  }
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('reason', `${reason} - ${description}`);
+      uploadedFiles.forEach((file) => formData.append('evidences', file));
+
+      const { bookingApi } = await import('@/features/booking/services/booking.api');
+      const { toast } = await import('sonner');
+
+      await bookingApi.dispute(Number(id), formData);
+      toast.success('Gửi khiếu nại thành công');
+      router.push(`/bookings/${id}`);
+    } catch (error) {
+      const { toast } = await import('sonner');
+      toast.error('Có lỗi xảy ra khi gửi khiếu nại');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="p-4 md:p-6">

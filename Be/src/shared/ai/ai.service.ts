@@ -239,6 +239,64 @@ Yêu cầu trả về JSON có cấu trúc sau:
     }
   }
 
+  async extractBookingIntent(
+    userPrompt: string,
+  ): Promise<{
+    categoryName: string;
+    keywords: string[];
+    summary: string;
+    urgency: 'HIGH' | 'MEDIUM' | 'LOW';
+    estimatedBudgetMin?: number;
+    estimatedBudgetMax?: number;
+  } | null> {
+    if (!this.apiKey || this.provider !== 'gemini') return null;
+
+    const prompt = `Phân tích yêu cầu dịch vụ sửa chữa gia đình sau từ khách hàng và trích xuất thông tin cấu trúc:
+Yêu cầu: "${userPrompt}"
+
+Hãy bóc tách thành JSON chuẩn với các trường:
+- categoryName: Tên danh mục dịch vụ phù hợp nhất (ví dụ: Điện lạnh, Điện nước, Sửa máy giặt, Sửa tủ lạnh, Sửa điều hòa, Vệ sinh nhà cửa, Sửa chữa đồ gỗ...)
+- keywords: Mảng các từ khóa cốt lõi chỉ loại thiết bị/sự cố (ví dụ: ["máy giặt", "kêu to", "không vắt"])
+- summary: Tóm tắt sự cố chuẩn hóa ngắn gọn dưới 35 chữ
+- urgency: Mức độ khẩn cấp ("HIGH" nếu cần gấp/rò rỉ/chập điện, "MEDIUM" nếu hỏng hóc thông thường, "LOW" nếu dịch vụ định kỳ)
+- estimatedBudgetMin: Ngân sách tối thiểu ước tính bằng VND (nếu có đề cập hoặc đoán được, ví dụ 100000)
+- estimatedBudgetMax: Ngân sách tối đa ước tính bằng VND (nếu có đề cập hoặc đoán được, ví dụ 500000)
+`;
+
+    const schema = {
+      type: 'OBJECT',
+      properties: {
+        categoryName: { type: 'STRING' },
+        keywords: {
+          type: 'ARRAY',
+          items: { type: 'STRING' },
+        },
+        summary: { type: 'STRING' },
+        urgency: { type: 'STRING' },
+        estimatedBudgetMin: { type: 'INTEGER' },
+        estimatedBudgetMax: { type: 'INTEGER' },
+      },
+      required: ['categoryName', 'keywords', 'summary', 'urgency'],
+    };
+
+    try {
+      const result = await this.generateJson<{
+        categoryName: string;
+        keywords: string[];
+        summary: string;
+        urgency: 'HIGH' | 'MEDIUM' | 'LOW';
+        estimatedBudgetMin?: number;
+        estimatedBudgetMax?: number;
+      }>(prompt, this.timeoutMs * 2, schema);
+      if (!result || !result.categoryName) return null;
+      return result;
+    } catch (err) {
+      this.logger.error(`Failed to extract booking intent via Gemini: ${err}`);
+      return null;
+    }
+  }
+
+
   async suggestReplies(messages: string[]): Promise<string[]> {
     if (!this.apiKey || this.provider !== 'gemini') return [];
 

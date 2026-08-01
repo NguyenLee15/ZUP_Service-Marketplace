@@ -39,7 +39,9 @@ import { BookingDisputeService } from './booking-dispute.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 import { BookingQueryService } from './booking-query.service';
 import { CustomerBookingExportService } from './customer-booking-export.service';
+import { BookingIntentService } from './booking-intent.service';
 import { BookingListQueryDto } from './dto/booking-query.dto';
+import { ExtractBookingIntentDto } from './dto/booking-intent.dto';
 import {
   CreateBookingDto,
   ConfirmSurveyorDto,
@@ -65,7 +67,17 @@ export class BookingsController {
     private readonly bookingDisputeService: BookingDisputeService,
     private readonly bookingQueryService: BookingQueryService,
     private readonly customerBookingExportService: CustomerBookingExportService,
+    private readonly bookingIntentService: BookingIntentService,
   ) {}
+
+  /** POST /bookings/intent-extract — AI bóc tách ý định từ mô tả sự cố */
+  @Post('intent-extract')
+  @ApiOperation({ summary: 'Extract booking intent from natural language prompt via AI' })
+  @ApiSuccessResponse('Extracted booking intent')
+  async extractIntent(@Body() dto: ExtractBookingIntentDto) {
+    return this.bookingIntentService.extractIntent(dto);
+  }
+
 
   /** POST /bookings — Customer tạo booking */
   @Post()

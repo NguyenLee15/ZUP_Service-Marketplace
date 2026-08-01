@@ -1,0 +1,1 @@
+﻿fetch('https://nominatim.openstreetmap.org/search?q=Cầu+Giấy,+Hà+Nội&format=json&addressdetails=1', {headers: {'User-Agent': 'zup-app'}}).then(r => r.json()).then(data => console.log(JSON.stringify(data[0], null, 2)));

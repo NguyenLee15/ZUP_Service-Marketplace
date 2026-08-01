@@ -751,6 +751,168 @@
             line-height: 1.4;
             font-weight: 500;
         }
+        /* Testing Tables Styles */
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-top: 10px;
+        }
+
+        .test-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 2px solid #f1f5f9;
+            padding: 30px;
+        }
+
+        .test-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 19px;
+        }
+
+        .test-table th {
+            background: #1e293b;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: left;
+            padding: 20px 24px;
+        }
+
+        .test-table th:last-child {
+            text-align: right;
+            border-radius: 0 8px 0 0;
+        }
+        
+        .test-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .test-table td {
+            padding: 20px 24px;
+            color: #334155;
+            font-weight: 600;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .test-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .test-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .test-table td:last-child {
+            text-align: right;
+        }
+
+        .status-pass {
+            color: #10b981;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .status-pass i {
+            font-size: 24px;
+        }
+
+        .metric-value {
+            color: #ea580c !important;
+            font-weight: 800 !important;
+            font-size: 20px;
+        }
+
+        /* Summary Grid Styles */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .summary-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-header {
+            padding: 20px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .summary-card-1 .summary-header {
+            background: #8e9eab; /* Grayish blue */
+        }
+
+        .summary-card-2 .summary-header {
+            background: #1b6535; /* Dark Green */
+        }
+
+        .summary-card-3 .summary-header {
+            background: #b47c20; /* Dark Yellow/Brown */
+        }
+
+        .summary-list {
+            padding: 25px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            list-style: none;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            font-size: 19px;
+            color: #334155;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .summary-item-icon {
+            font-size: 20px;
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+
+        .summary-card-1 .summary-item-icon {
+            color: #94a3b8;
+        }
+
+        .summary-card-2 .summary-item-icon {
+            color: #f59e0b; /* Amber */
+        }
+
+        .summary-card-3 .summary-item-icon {
+            color: #f59e0b; /* Amber */
+        }
     </style>
 </head>
 
@@ -1502,6 +1664,185 @@
     </div>
 
     </div>
+    <!-- SECTION 5: KẾT QUẢ KIỂM THỬ -->
+    <div class="slide-wrapper" id="slide-testing" style="margin-top: 40px;">
+        <div class="slide-section-title">
+            <i class="fa-solid fa-vial-circle-check"></i>
+            5. KẾT QUẢ KIỂM THỬ HỆ THỐNG
+        </div>
+        
+        <div class="test-grid">
+            <!-- Table 1 -->
+            <div class="test-container">
+                <div class="test-title">KIỂM THỬ CHỨC NĂNG</div>
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Chức năng</th>
+                            <th>Kết quả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Đăng ký / Đăng nhập (Web/App)</td>
+                            <td><span class="status-pass"><i class="fa-solid fa-check-double"></i> Đạt</span></td>
+                        </tr>
+                        <tr>
+                            <td>Tìm kiếm & Lọc dịch vụ (Maps)</td>
+                            <td><span class="status-pass"><i class="fa-solid fa-check-double"></i> Đạt</span></td>
+                        </tr>
+                        <tr>
+                            <td>Đặt lịch & Thanh toán PayOS</td>
+                            <td><span class="status-pass"><i class="fa-solid fa-check-double"></i> Đạt</span></td>
+                        </tr>
+                        <tr>
+                            <td>Điều phối & Nhận đơn thợ</td>
+                            <td><span class="status-pass"><i class="fa-solid fa-check-double"></i> Đạt</span></td>
+                        </tr>
+                        <tr>
+                            <td>Nghiệm thu công việc & Báo giá</td>
+                            <td><span class="status-pass"><i class="fa-solid fa-check-double"></i> Đạt</span></td>
+                        </tr>
+                        <tr>
+                            <td>Đối soát dòng tiền Admin</td>
+                            <td><span class="status-pass"><i class="fa-solid fa-check-double"></i> Đạt</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table 2 -->
+            <div class="test-container">
+                <div class="test-title">KIỂM THỬ HIỆU NĂNG</div>
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Chỉ số (JMeter)</th>
+                            <th>Kết quả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>API tải trang chủ (GET Home)</td>
+                            <td class="metric-value">107 ms</td>
+                        </tr>
+                        <tr>
+                            <td>API tìm kiếm (GET Search)</td>
+                            <td class="metric-value">50 ms</td>
+                        </tr>
+                        <tr>
+                            <td>API giao dịch (TRX_Anonymous)</td>
+                            <td class="metric-value">209 ms</td>
+                        </tr>
+                        <tr>
+                            <td>Trung bình toàn hệ thống</td>
+                            <td class="metric-value">104 ms</td>
+                        </tr>
+                        <tr>
+                            <td>Số lượng mẫu thử (Samples)</td>
+                            <td class="metric-value">2000 req</td>
+                        </tr>
+                        <tr>
+                            <td>Tỷ lệ lỗi (Error Rate)</td>
+                            <td class="metric-value">0.00 %</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 6: TỔNG KẾT & ĐÁNH GIÁ -->
+    <div class="slide-wrapper" id="slide-summary" style="margin-top: 40px;">
+        <div class="slide-section-title">
+            <i class="fa-solid fa-flag-checkered"></i>
+            6. TỔNG KẾT & HƯỚNG PHÁT TRIỂN
+        </div>
+        
+        <div class="summary-grid">
+            <!-- Cột 1 -->
+            <div class="summary-card summary-card-1">
+                <div class="summary-header">KẾ THỪA / THAM KHẢO</div>
+                <ul class="summary-list">
+                    <li class="summary-item">
+                        <i class="fa-solid fa-circle summary-item-icon" style="font-size: 10px; margin-top: 10px;"></i>
+                        Mô hình nền tảng kết nối dịch vụ (Service Marketplace)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-circle summary-item-icon" style="font-size: 10px; margin-top: 10px;"></i>
+                        Framework Next.js (Web) & NestJS (Backend)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-circle summary-item-icon" style="font-size: 10px; margin-top: 10px;"></i>
+                        Kiến trúc React Native (Expo) cho Mobile App
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-circle summary-item-icon" style="font-size: 10px; margin-top: 10px;"></i>
+                        Tích hợp bản đồ trực tuyến (Leaflet / Goong)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-circle summary-item-icon" style="font-size: 10px; margin-top: 10px;"></i>
+                        Giao tiếp Real-time bằng Socket.io
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Cột 2 -->
+            <div class="summary-card summary-card-2">
+                <div class="summary-header">ĐIỂM MỚI CỦA ĐỀ TÀI</div>
+                <ul class="summary-list">
+                    <li class="summary-item">
+                        <i class="fa-solid fa-star summary-item-icon"></i>
+                        Định vị & Đề xuất thợ gần nhất trên bản đồ theo thời gian thực
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-star summary-item-icon"></i>
+                        Xác thực định danh thợ (KYC) qua thẻ CCCD gắn chip (NFC)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-star summary-item-icon"></i>
+                        Luồng nghiệm thu & báo giá động đa bước (Dynamic Quotation)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-star summary-item-icon"></i>
+                        Đối soát tự động giao dịch 100% qua cổng PayOS (VietQR)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-star summary-item-icon"></i>
+                        App Mobile chuyên biệt cho Thợ với chu trình khép kín
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Cột 3 -->
+            <div class="summary-card summary-card-3">
+                <div class="summary-header">HƯỚNG PHÁT TRIỂN</div>
+                <ul class="summary-list">
+                    <li class="summary-item">
+                        <i class="fa-solid fa-rocket summary-item-icon"></i>
+                        AI Chatbot tự động phân loại sự cố & tư vấn dịch vụ
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-rocket summary-item-icon"></i>
+                        Thuật toán gợi ý thợ sửa chữa (Matching Algorithm) tối ưu
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-rocket summary-item-icon"></i>
+                        Mở rộng đa dạng danh mục dịch vụ (B2B, Kho vận, Logistics)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-rocket summary-item-icon"></i>
+                        Hệ thống phát hiện gian lận & xếp hạng rủi ro (Machine Learning)
+                    </li>
+                    <li class="summary-item">
+                        <i class="fa-solid fa-rocket summary-item-icon"></i>
+                        Ứng dụng Blockchain trong quản lý hợp đồng thông minh
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

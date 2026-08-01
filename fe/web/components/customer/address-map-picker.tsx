@@ -25,6 +25,30 @@ interface MapPickerProps {
   onChange: (lat: number, lng: number, addressDetails?: any) => void
 }
 
+const parseAddressComponents = (result: any) => {
+  let province = ''
+  let district = ''
+  let ward = ''
+  let street = ''
+  
+  result.address_components?.forEach((component: any) => {
+    if (component.types.includes('administrative_area_level_1')) {
+      province = component.long_name
+    }
+    if (component.types.includes('administrative_area_level_2') || component.types.includes('locality')) {
+      district = component.long_name
+    }
+    if (component.types.includes('administrative_area_level_3') || component.types.includes('sublocality_level_1') || component.types.includes('sublocality')) {
+      ward = component.long_name
+    }
+    if (component.types.includes('route')) {
+      street = component.long_name
+    }
+  })
+  
+  return { province, district, ward, street, fullAddress: result.formatted_address }
+}
+
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap()
   useEffect(() => {
@@ -45,28 +69,8 @@ function MapEvents({ onChange }: { onChange: (lat: number, lng: number, details?
         const data = await res.json()
         if (data.results && data.results.length > 0) {
           const result = data.results[0]
-          let province = ''
-          let district = ''
-          let ward = ''
-          let street = ''
-          
-          result.address_components.forEach((component: any) => {
-            if (component.types.includes('administrative_area_level_1')) {
-              province = component.long_name
-            }
-            if (component.types.includes('administrative_area_level_2') || component.types.includes('locality')) {
-              district = component.long_name
-            }
-            if (component.types.includes('administrative_area_level_3') || component.types.includes('sublocality_level_1') || component.types.includes('sublocality')) {
-              ward = component.long_name
-            }
-            if (component.types.includes('route')) {
-              street = component.long_name
-            }
-          })
-          
-          const fullAddress = result.formatted_address
-          onChange(lat, lng, { province, district, ward, street, fullAddress })
+          const details = parseAddressComponents(result)
+          onChange(lat, lng, details)
         }
       } catch (err) {
         console.error('Reverse geocode error:', err)
@@ -89,9 +93,11 @@ export default function AddressMapPicker({ latitude, longitude, searchSuffix, on
       const res = await fetch(`/api/geocode?address=${encodeURIComponent(fullQuery)}`);
       const data = await res.json()
       if (data.results && data.results.length > 0) {
-        const lat = data.results[0].geometry.location.lat
-        const lon = data.results[0].geometry.location.lng
-        onChange(lat, lon)
+        const result = data.results[0]
+        const lat = result.geometry.location.lat
+        const lon = result.geometry.location.lng
+        const details = parseAddressComponents(result)
+        onChange(lat, lon, details)
       }
     } catch (e) {
       console.error(e)
@@ -104,8 +110,23 @@ export default function AddressMapPicker({ latitude, longitude, searchSuffix, on
     if (!navigator.geolocation) return
     setGettingLocation(true)
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        onChange(pos.coords.latitude, pos.coords.longitude)
+      async (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        onChange(lat, lng)
+        
+        try {
+          const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`)
+          const data = await res.json()
+          if (data.results && data.results.length > 0) {
+            const result = data.results[0]
+            const details = parseAddressComponents(result)
+            onChange(lat, lng, details)
+          }
+        } catch (e) {
+          console.error('Reverse geocode error:', e)
+        }
+        
         setGettingLocation(false)
       },
       (err) => {

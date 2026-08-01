@@ -2,7 +2,6 @@
   "expo": {
     "name": "Zup Đối Tác",
     "slug": "homeservice-provider",
-    "owner": "leee15",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -95,7 +94,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "bef8a973-2515-45d8-ab0b-8dcab21cb930"
+        "projectId": "01751a05-1165-4389-8b42-aa1df665a02c"
       }
     }
   }

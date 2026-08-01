@@ -29,16 +29,23 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (rating === 0) return
+    e.preventDefault();
+    if (rating === 0) return;
 
-    setIsSubmitting(true)
-    // Simulate submission
-    setTimeout(() => {
-      setIsSubmitting(false)
-      router.push('/bookings')
-    }, 1500)
-  }
+    setIsSubmitting(true);
+    try {
+      const { reviewsApi } = await import('@/features/auth/services/api');
+      const { toast } = await import('sonner');
+      await reviewsApi.create({ bookingId: Number(id), rating, comment });
+      toast.success('Đánh giá thành công');
+      router.push('/bookings');
+    } catch (error) {
+      const { toast } = await import('sonner');
+      toast.error('Có lỗi xảy ra khi gửi đánh giá');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleAutoSuggest = () => {
     const suggestions = [
