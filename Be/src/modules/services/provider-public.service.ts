@@ -52,6 +52,43 @@ export class ProviderPublicService {
     return { data: service };
   }
 
+  async getServiceReviews(
+    serviceId: number,
+    rating?: number,
+    page = 1,
+    limit = 10,
+  ) {
+    const where: Prisma.ReviewWhereInput = { serviceId, isFlagged: false };
+    if (rating) where.rating = rating;
+
+    const [data, total, stats] = await Promise.all([
+      this.prisma.review.findMany({
+        where,
+        include: {
+          customer: { select: { id: true, fullName: true, avatarUrl: true } },
+        },
+        orderBy: { id: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.review.count({ where }),
+      this.prisma.review.groupBy({
+        by: ['rating'],
+        where: { serviceId },
+        _count: { rating: true },
+      }),
+    ]);
+
+    const distribution = Object.fromEntries(
+      [1, 2, 3, 4, 5].map((r) => [
+        r,
+        stats.find((s) => s.rating === r)?._count?.rating || 0,
+      ]),
+    );
+
+    return { data, meta: { total, page, limit, distribution } };
+  }
+
   async getProviderMetrics(providerId: number) {
     const [responseTimeData, completionData] = await Promise.all([
       this.prisma.$queryRaw<Array<{ avg_response_hours: number }>>`

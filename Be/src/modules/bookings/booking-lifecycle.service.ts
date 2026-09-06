@@ -45,6 +45,10 @@ export class BookingLifecycleService {
         id: dto.serviceId,
         status: ServiceStatus.ACTIVE,
         isDeleted: false,
+        provider: {
+          status: 'ACTIVE',
+          providerWallet: { isRestricted: false },
+        },
       },
     });
     if (!service) {
@@ -483,18 +487,23 @@ export class BookingLifecycleService {
       booking.status,
       BookingStatus.CONFIRMED,
     );
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: BookingStatus.CONFIRMED },
-    });
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedBooking = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: BookingStatus.CONFIRMED },
+      });
 
-    await this.shared.addStatusHistory(
-      bookingId,
-      'QUOTED',
-      'CONFIRMED',
-      customerId,
-      'Khách hàng đồng ý báo giá',
-    );
+      await this.shared.addStatusHistory(
+        bookingId,
+        'QUOTED',
+        'CONFIRMED',
+        customerId,
+        'Khách hàng đồng ý báo giá',
+        tx,
+      );
+
+      return updatedBooking;
+    });
     await this.shared.notify(
       booking.providerId,
       'QUOTE_CONFIRMED',
@@ -1093,6 +1102,7 @@ export class BookingLifecycleService {
     await this.shared.checkActiveUser(customerId);
     const oldBooking = await this.prisma.booking.findFirst({
       where: { id: oldBookingId, customerId },
+      include: { bookingItems: true },
     });
 
     if (!oldBooking) {
@@ -1102,11 +1112,30 @@ export class BookingLifecycleService {
       });
     }
 
+    const pendingCount = await this.prisma.booking.count({
+      where: {
+        customerId,
+        status: BookingStatus.PENDING,
+      },
+    });
+
+    if (pendingCount >= 3) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message:
+          'Bạn đang có quá nhiều đơn chờ xác nhận (tối đa 3 đơn). Vui lòng chờ thợ phản hồi hoặc hủy bớt đơn cũ trước khi đặt thêm.',
+      });
+    }
+
     const service = await this.prisma.service.findFirst({
       where: {
         id: oldBooking.serviceId,
         status: ServiceStatus.ACTIVE,
         isDeleted: false,
+        provider: {
+          status: 'ACTIVE',
+          providerWallet: { isRestricted: false },
+        },
       },
     });
 
@@ -1136,7 +1165,20 @@ export class BookingLifecycleService {
         desiredTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
         status: BookingStatus.PENDING,
         providerResponseDeadline,
+        bookingItems:
+          oldBooking.bookingItems && oldBooking.bookingItems.length > 0
+            ? {
+                create: oldBooking.bookingItems.map((item) => ({
+                  serviceItemId: item.serviceItemId,
+                  name: item.name,
+                  unit: item.unit,
+                  quantity: item.quantity,
+                  priceSnapshot: item.priceSnapshot,
+                })),
+              }
+            : undefined,
       },
+      include: { bookingItems: true },
     });
 
     await this.shared.addStatusHistory(

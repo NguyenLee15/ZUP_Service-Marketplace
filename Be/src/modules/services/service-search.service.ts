@@ -84,6 +84,29 @@ export class ServiceSearchService {
     }
     if (dto.minRating) where.avgRating = { gte: dto.minRating };
 
+    if (isLocationSearch) {
+      const lat = dto.lat as number;
+      const lng = dto.lng as number;
+      const deltaLat = radiusKm / 111;
+      const deltaLng = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+      const minLat = lat - deltaLat;
+      const maxLat = lat + deltaLat;
+      const minLng = lng - deltaLng;
+      const maxLng = lng + deltaLng;
+
+      const nearbyAddresses = await this.prisma.userAddress.findMany({
+        where: {
+          isDefault: true,
+          latitude: { gte: minLat, lte: maxLat },
+          longitude: { gte: minLng, lte: maxLng },
+        },
+        select: { userId: true },
+      });
+
+      const nearbyProviderIds = nearbyAddresses.map((a) => a.userId);
+      where.providerId = { in: nearbyProviderIds };
+    }
+
     const orderBy: Prisma.ServiceOrderByWithRelationInput[] = [
       { featuredListings: { _count: 'desc' } },
     ];

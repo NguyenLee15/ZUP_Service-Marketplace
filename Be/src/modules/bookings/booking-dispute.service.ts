@@ -36,7 +36,7 @@ export class BookingDisputeService {
   ) {
     const booking = await this.shared.checkBooking(bookingId, {
       customerId,
-      status: BookingStatus.DONE,
+      status: [BookingStatus.IN_PROGRESS, BookingStatus.DONE],
     });
 
     this.bookingStatePolicy.assertTransition(
@@ -60,7 +60,7 @@ export class BookingDisputeService {
 
       await this.shared.addStatusHistory(
         bookingId,
-        'DONE',
+        booking.status,
         'DISPUTED',
         customerId,
         dto.reason,
@@ -140,16 +140,6 @@ export class BookingDisputeService {
       });
     }
 
-    const targetStatus =
-      dto.resolutionAction === 'COMPLETE'
-        ? BookingStatus.DONE
-        : BookingStatus.CANCELLED;
-
-    this.bookingStatePolicy.assertTransition(
-      dispute.booking.status,
-      targetStatus,
-    );
-
     await this.prisma.$transaction(async (tx) => {
       await tx.dispute.update({
         where: { id: disputeId },
@@ -159,11 +149,6 @@ export class BookingDisputeService {
           resolutionReason: dto.resolutionReason,
           assignedTo: adminId,
         },
-      });
-
-      await tx.booking.update({
-        where: { id: dispute.bookingId },
-        data: { status: targetStatus },
       });
 
       if (dto.resolutionAction === 'COMPLETE') {
@@ -219,10 +204,10 @@ export class BookingDisputeService {
 
       await this.shared.addStatusHistory(
         dispute.bookingId,
-        dispute.booking.status,
-        targetStatus,
+        BookingStatus.DISPUTED,
+        BookingStatus.DISPUTED,
         adminId,
-        dto.resolutionReason,
+        `Phán quyết tranh chấp: ${dto.resolutionAction}. ${dto.resolutionReason || ''}`.trim(),
         tx,
       );
     });

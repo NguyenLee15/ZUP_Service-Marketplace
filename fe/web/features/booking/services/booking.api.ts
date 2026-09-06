@@ -17,6 +17,12 @@ export const bookingApi = {
   rejectQuote: (id: number, reason: string) =>
     api.patch(`/bookings/${id}/reject-quote`, { reason }),
 
+  confirmSupplementaryQuote: (id: number, quoteId: number) =>
+    api.patch(`/bookings/${id}/supplementary-quotes/${quoteId}/confirm`),
+
+  rejectSupplementaryQuote: (id: number, quoteId: number, reason: string) =>
+    api.patch(`/bookings/${id}/supplementary-quotes/${quoteId}/reject`, { reason }),
+
   cancelByCustomer: (id: number, reason: string) =>
     api.patch(`/bookings/${id}/cancel`, { reason }),
 
@@ -27,6 +33,18 @@ export const bookingApi = {
     api.post(`/bookings/${id}/dispute`, data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+
+  rebook: (id: number) =>
+    api.post(`/bookings/${id}/rebook`),
+
+  getTimeline: (id: number) =>
+    api.get(`/bookings/${id}/timeline`),
+
+  exportPdf: (params?: Record<string, unknown>) =>
+    api.get('/bookings/export-pdf', { params, responseType: 'blob' }),
+
+  exportReceiptPdf: (id: number) =>
+    api.get(`/bookings/${id}/receipt-pdf`, { responseType: 'blob' }),
 
   // Provider
   getProviderBookings: (params?: Record<string, unknown>) =>
