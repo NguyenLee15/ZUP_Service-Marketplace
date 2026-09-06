@@ -23,6 +23,11 @@ interface DashboardRevenueChartProps {
 }
 
 export function DashboardRevenueChart({ data, loading }: DashboardRevenueChartProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const visibleData = data.slice(-12).map((item) => ({
     name: item.month,
     count: item.commission,
@@ -42,7 +47,7 @@ export function DashboardRevenueChart({ data, loading }: DashboardRevenueChartPr
       className="lg:col-span-2"
       contentClassName="px-4 pb-5 pt-4"
     >
-      {loading ? (
+      {!isMounted || loading ? (
         <DashboardLoadingState label="Đang tải biểu đồ…" />
       ) : visibleData.length > 0 ? (
         <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-4">
@@ -61,7 +66,7 @@ export function DashboardRevenueChart({ data, loading }: DashboardRevenueChartPr
           </div>
 
           <div className="mt-6 h-[230px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={230}>
               <AreaChart
                 data={visibleData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -124,6 +129,7 @@ export function DashboardRevenueChart({ data, loading }: DashboardRevenueChartPr
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorCommission)"
+                  dot={{ r: 5, fill: '#006BFF', strokeWidth: 2, stroke: '#ffffff' }}
                   activeDot={{ r: 6, strokeWidth: 0, fill: '#006BFF' }}
                 />
               </AreaChart>

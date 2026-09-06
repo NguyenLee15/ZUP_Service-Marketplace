@@ -24,6 +24,11 @@ interface DashboardStatusChartProps {
 }
 
 export function DashboardStatusChart({ data, loading }: DashboardStatusChartProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const visibleData = data.slice(0, 7).map((item) => ({
     name: item.status,
     count: item.count,
@@ -36,16 +41,16 @@ export function DashboardStatusChart({ data, loading }: DashboardStatusChartProp
       title="Trạng thái đơn hàng"
       contentClassName="px-4 pb-5 pt-4"
     >
-      {loading ? (
+      {!isMounted || loading ? (
         <DashboardLoadingState />
       ) : visibleData.length > 0 ? (
         <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-2">
           <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
               <BarChart
                 data={visibleData}
                 layout="vertical"
-                margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
+                margin={{ top: 0, right: 45, left: 10, bottom: 0 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
