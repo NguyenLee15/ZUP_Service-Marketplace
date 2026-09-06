@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { User, ShieldCheck, Briefcase, Wrench, Sparkles, Check, ChevronRight } from 'lucide-react';
+import { User, ShieldCheck, Briefcase, Sparkles, Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type DemoRoleKey = 'customer' | 'staff' | 'admin' | 'provider';
+export type DemoRoleKey = 'customer' | 'staff' | 'admin';
 
 export interface DemoAccount {
   key: DemoRoleKey;
@@ -56,18 +56,6 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     activeColor: 'from-emerald-600 to-teal-600 text-white shadow-emerald-500/25',
     tagColor: 'text-emerald-300',
   },
-  {
-    key: 'provider',
-    label: 'Thợ Dịch Vụ',
-    badgeLabel: 'Provider',
-    email: 'provider1@demo.com',
-    password: 'password123',
-    name: 'Nguyễn Đức Cường (Điện Lạnh)',
-    roleDescription: 'Nhận đơn, gửi báo giá (Ưu tiên dùng trên Mobile App)',
-    icon: Wrench,
-    activeColor: 'from-amber-600 to-orange-600 text-white shadow-amber-500/25',
-    tagColor: 'text-amber-300',
-  },
 ];
 
 interface DemoAccountSelectorProps {
@@ -111,8 +99,8 @@ export function DemoAccountSelector({
         </span>
       </div>
 
-      {/* Role Selection Tabs */}
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      {/* Role Selection Tabs (3 vai trò Web: Khách Hàng, Nhân Viên, Quản Trị Viên) */}
+      <div className="grid grid-cols-3 gap-2">
         {DEMO_ACCOUNTS.map((acc) => {
           const isSelected = selectedKey === acc.key;
           const Icon = acc.icon;
