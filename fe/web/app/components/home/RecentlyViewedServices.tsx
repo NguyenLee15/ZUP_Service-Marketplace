@@ -41,7 +41,7 @@ export function RecentlyViewedServices() {
             } else {
               invalidIds.push(service.id);
             }
-          } catch (error) {
+          } catch (_error) {
             invalidIds.push(service.id);
           }
         })
