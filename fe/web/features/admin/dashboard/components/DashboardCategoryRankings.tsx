@@ -42,11 +42,11 @@ function RankedHorizontalBar({
   return (
     <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-2">
       <div className="h-[280px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
           <BarChart
             data={visibleData}
             layout="vertical"
-            margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
+            margin={{ top: 0, right: 45, left: 10, bottom: 0 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -112,13 +112,18 @@ export function DashboardCategoryRankings({
   serviceData,
   loading,
 }: DashboardCategoryRankingsProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <AdminDashboardCard
         title="Đơn hàng theo danh mục"
         contentClassName="px-4 pb-5 pt-4"
       >
-        {loading ? (
+        {!isMounted || loading ? (
           <DashboardLoadingState />
         ) : (
           <RankedHorizontalBar

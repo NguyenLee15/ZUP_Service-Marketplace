@@ -43,7 +43,7 @@ export interface DashboardFilters {
 }
 
 export const DEFAULT_DASHBOARD_FILTERS: DashboardFilters = {
-  range: 'month',
+  range: 'all',
   from: '',
   to: '',
   status: '',
