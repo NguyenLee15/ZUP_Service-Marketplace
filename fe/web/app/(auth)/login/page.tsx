@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { authApi } from '@/features/auth/services/auth.api';
 import { useAuthStore } from '@/store/auth.store';
 import { Role, type User } from '@/types';
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { AuthDivider, AuthMessage, AuthShell } from '../_components/AuthShell';
+import { DemoAccountSelector, type DemoAccount } from '../_components/DemoAccountSelector';
 import {
   getAuthErrorCode,
   getAuthErrorMessage,
@@ -61,15 +62,23 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { setTokens, setUser } = useAuthStore();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('customer@demo.com');
+  const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [gsiReady, setGsiReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const handleSelectDemoAccount = useCallback((account: DemoAccount) => {
+    setEmail(account.email);
+    setPassword(account.password);
+    setFieldErrors({});
+    setError('');
+  }, []);
 
   useEffect(() => {
     if (getGoogleIdentity()) {
@@ -262,10 +271,16 @@ export default function LoginPage() {
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {/* Bộ chọn tài khoản Demo theo vai trò */}
+        <DemoAccountSelector
+          onSelectAccount={handleSelectDemoAccount}
+          currentEmail={email}
+        />
+
         <div className="space-y-2">
           <Label htmlFor="email" className="font-semibold text-midnight-indigo">
-            Email
+            Email / Tên đăng nhập *
           </Label>
           <Input
             id="email"
@@ -294,7 +309,7 @@ export default function LoginPage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4">
             <Label htmlFor="password" className="font-semibold text-midnight-indigo">
-              Mật khẩu
+              Mật khẩu *
             </Label>
             <Link
               href="/forgot-password"
@@ -336,12 +351,29 @@ export default function LoginPage() {
           )}
         </div>
 
+        {/* Checkbox Ghi nhớ đăng nhập */}
+        <div className="flex items-center space-x-2 pt-1">
+          <input
+            id="remember-me"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="size-4 rounded border-slate-300 bg-white text-action-blue focus:ring-action-blue cursor-pointer"
+          />
+          <label
+            htmlFor="remember-me"
+            className="text-xs font-medium text-slate-600 cursor-pointer select-none"
+          >
+            Ghi nhớ đăng nhập
+          </label>
+        </div>
+
         {error && <AuthMessage>{error}</AuthMessage>}
 
         <Button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue"
+          className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-all hover:bg-glacier-blue flex items-center justify-center gap-2 active:scale-[0.99]"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -349,7 +381,10 @@ export default function LoginPage() {
               Đang đăng nhập…
             </span>
           ) : (
-            'Đăng nhập'
+            <>
+              <LogIn className="size-4 shrink-0" />
+              <span>Đăng Nhập Vào Hệ Thống</span>
+            </>
           )}
         </Button>
 
