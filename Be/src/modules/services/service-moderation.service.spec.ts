@@ -49,11 +49,11 @@ describe('ServiceModerationService', () => {
     ledger = { syncWalletRestriction: jest.fn() };
 
     service = new ServiceModerationService(
-      prisma as unknown as PrismaService,
-      jobsService as unknown as JobsService,
-      shared as unknown as ServiceSharedService,
-      eventEmitter as unknown as EventEmitter2,
-      ledger as unknown as WalletLedgerService,
+      prisma,
+      jobsService,
+      shared,
+      eventEmitter,
+      ledger,
     );
   });
 
@@ -84,7 +84,8 @@ describe('ServiceModerationService', () => {
           action: 'REJECT_SERVICE',
           targetType: 'SERVICE',
           targetId: 101,
-          description: 'Từ chối dịch vụ: Sửa điều hòa. Lý do: Hình ảnh không rõ ràng',
+          description:
+            'Từ chối dịch vụ: Sửa điều hòa. Lý do: Hình ảnh không rõ ràng',
           ipAddress: '10.0.0.1',
         },
       });
@@ -127,7 +128,8 @@ describe('ServiceModerationService', () => {
           action: 'HIDE_SERVICE',
           targetType: 'SERVICE',
           targetId: 102,
-          description: 'Ẩn dịch vụ: Vệ sinh máy giặt. Lý do: Tạm ngưng hoạt động',
+          description:
+            'Ẩn dịch vụ: Vệ sinh máy giặt. Lý do: Tạm ngưng hoạt động',
           ipAddress: '127.0.0.1',
         },
       });
@@ -189,4 +191,3 @@ describe('ServiceModerationService', () => {
     });
   });
 });
-

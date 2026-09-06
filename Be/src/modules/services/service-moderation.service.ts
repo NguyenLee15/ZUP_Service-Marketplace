@@ -152,7 +152,12 @@ export class ServiceModerationService {
     return { data: updated, message: 'Đã phê duyệt dịch vụ' };
   }
 
-  async reject(adminId: number, serviceId: number, reason: string, ip?: string) {
+  async reject(
+    adminId: number,
+    serviceId: number,
+    reason: string,
+    ip?: string,
+  ) {
     const service = await this.getServiceOrThrow(serviceId);
     if (service.status !== ServiceStatus.PENDING) {
       throw new BadRequestException({

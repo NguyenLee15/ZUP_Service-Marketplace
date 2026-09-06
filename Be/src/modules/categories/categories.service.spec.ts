@@ -84,7 +84,10 @@ describe('CategoriesService', () => {
     });
 
     it('throws BadRequestException if category name already exists', async () => {
-      prisma.serviceCategory.findFirst.mockResolvedValue({ id: 5, name: 'Điện' });
+      prisma.serviceCategory.findFirst.mockResolvedValue({
+        id: 5,
+        name: 'Điện',
+      });
 
       await expect(
         service.create(1, '127.0.0.1', { name: 'Điện' }),
@@ -178,4 +181,3 @@ describe('CategoriesService', () => {
     });
   });
 });
-
