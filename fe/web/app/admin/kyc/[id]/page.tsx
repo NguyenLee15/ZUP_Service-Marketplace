@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/auth/services/api";
+import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
+import { AdminPermission } from "@/types/admin-permissions";
 import {
   ZoomIn, ZoomOut, RotateCw, CheckCircle, XCircle, ArrowLeft,
   User, Mail, Phone, Shield, FileText, Maximize2,
@@ -146,7 +148,8 @@ export default function AdminKYCDetail() {
   const canReview = kyc.status === "PENDING";
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 pb-10">
+    <AdminPermissionGuard permission={AdminPermission.KYC_VIEW}>
+      <div className="mx-auto max-w-[1400px] space-y-6 pb-10">
       {/* Lightbox */}
       {lightboxOpen && selectedImage && (
         <div
@@ -444,5 +447,6 @@ export default function AdminKYCDetail() {
         </div>
       </div>
     </div>
+  </AdminPermissionGuard>
   );
 }

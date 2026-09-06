@@ -6,9 +6,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { adminApi } from '@/features/auth/services/api';
-import { AlertTriangle, CheckCircle, Clock, Eye, Scale, Search } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Eye,
+  Scale,
+  Search,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 export default function AdminDisputesPage() {
   const router = useRouter();
@@ -52,7 +61,8 @@ export default function AdminDisputesPage() {
   });
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
+    <AdminPermissionGuard permission={AdminPermission.DISPUTE_VIEW}>
+      <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -179,6 +189,7 @@ export default function AdminDisputesPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

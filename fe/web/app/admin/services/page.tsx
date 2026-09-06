@@ -17,6 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 const statusConfig: Record<string, { label: string; color: string; icon: ApiPayload }> = {
   PENDING: { label: 'Chờ Duyệt', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
@@ -115,7 +117,8 @@ export default function AdminServicesPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <AdminPermissionGuard permission={AdminPermission.SERVICE_MODERATE}>
+      <div className="space-y-6">
       <div>
         <h3 className="text-2xl font-bold text-foreground">Quản Lý Dịch Vụ</h3>
         <p className="text-muted-foreground mt-1">Duyệt và quản lý dịch vụ của nhà cung cấp</p>
@@ -333,6 +336,7 @@ export default function AdminServicesPage() {
           </Card>
         </div>
       )}
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

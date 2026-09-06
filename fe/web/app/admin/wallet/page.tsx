@@ -15,6 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 type WalletRequest = {
   id: number;
@@ -159,7 +161,13 @@ export default function AdminWalletPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPermissionGuard
+      permission={[
+        AdminPermission.WALLET_DEPOSIT_MANAGE,
+        AdminPermission.WALLET_WITHDRAWAL_MANAGE,
+      ]}
+    >
+      <div className="space-y-6">
       <div>
         <h3 className="text-2xl font-bold text-foreground">Quản Lý Ví</h3>
         <p className="mt-1 text-muted-foreground">
@@ -352,6 +360,7 @@ export default function AdminWalletPage() {
           </Card>
         </div>
       )}
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

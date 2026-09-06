@@ -10,6 +10,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi, categoriesApi } from '@/features/auth/services/api';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Tên danh mục phải có ít nhất 2 ký tự'),
@@ -121,7 +123,8 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPermissionGuard permission={AdminPermission.SERVICE_MODERATE}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold text-foreground">Quản Lý Danh Mục</h3>
@@ -218,6 +221,7 @@ export default function CategoriesPage() {
           </Card>
         </div>
       )}
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

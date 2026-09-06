@@ -10,8 +10,9 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { adminApi } from '@/features/auth/services/api';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 import {
   Dialog,
   DialogContent,
@@ -118,7 +119,8 @@ export default function BookingsPage() {
     const displayBooking = bookingDetail || selectedBooking;
 
   return (
-    <div className="space-y-6">
+    <AdminPermissionGuard permission={AdminPermission.BOOKING_VIEW}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold text-foreground">Quản Lý Đơn Hàng</h3>
@@ -457,6 +459,7 @@ export default function BookingsPage() {
           </DialogContent>
         )}
       </Dialog>
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

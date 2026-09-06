@@ -17,6 +17,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
 import { Textarea } from '@/components/ui/textarea';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 const statusConfig: Record<string, { label: string; color: string; icon: ApiPayload }> = {
   PENDING: { label: 'Chờ Duyệt', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
@@ -100,7 +102,8 @@ export default function KYCPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPermissionGuard permission={AdminPermission.KYC_VIEW}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold text-foreground">Quản Lý KYC</h3>
@@ -382,6 +385,7 @@ export default function KYCPage() {
           </Card>
         </div>
       )}
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

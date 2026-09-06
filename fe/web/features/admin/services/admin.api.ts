@@ -15,8 +15,14 @@ export const adminApi = {
     api.patch(`/admin/services/${id}/hide`),
 
   // Disputes
-  resolveDispute: (id: number, resolution: string, refundPercent: number) =>
-    api.patch(`/admin/disputes/${id}/resolve`, { resolution, refundPercent }),
+  resolveDispute: (
+    id: number,
+    data: {
+      resolutionAction: 'COMPLETE' | 'PENALIZE';
+      resolutionReason: string;
+      penaltyAmount?: number;
+    },
+  ) => api.patch(`/admin/disputes/${id}/resolve`, data),
 
   // Bookings
   getBookings: (params?: Record<string, ApiPayload>) =>
