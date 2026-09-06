@@ -45,7 +45,9 @@ export class CreateServiceDto {
   referencePrice?: number;
 
   @IsArray()
-  @ArrayMinSize(1, { message: 'Pháº£i cÃ³ Ã­t nháº¥t 1 dá»‹ch vá»¥ con (háº¡ng má»¥c)' })
+  @ArrayMinSize(1, {
+    message: 'Pháº£i cÃ³ Ã­t nháº¥t 1 dá»‹ch vá»¥ con (háº¡ng má»¥c)',
+  })
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
   @Transform(({ value }) => {

@@ -151,7 +151,7 @@ export class ServiceSearchService {
       isFeatured: service.featuredListings.length > 0,
     }));
 
-    let locationExpanded = false;
+    const locationExpanded = false;
     if (isLocationSearch) {
       const providerIds = [
         ...new Set(mappedData.map((service) => service.providerId)),
@@ -223,13 +223,20 @@ export class ServiceSearchService {
 
   async testAiSearch(query: string) {
     const state = await this.aiService.getState();
-    const log: any = { query, state, embeddingError: null, pgError: null, success: false, results: [] };
-    
+    const log: any = {
+      query,
+      state,
+      embeddingError: null,
+      pgError: null,
+      success: false,
+      results: [],
+    };
+
     let embedding: number[] | null = null;
     try {
       embedding = await this.aiService.createEmbedding(query);
       if (!embedding) {
-        log.embeddingError = "createEmbedding returned null";
+        log.embeddingError = 'createEmbedding returned null';
       }
     } catch (e) {
       log.embeddingError = e instanceof Error ? e.message : String(e);
@@ -238,7 +245,9 @@ export class ServiceSearchService {
     if (embedding) {
       const vectorStr = `[${embedding.join(',')}]`;
       try {
-        const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
+        const rawResults = await this.prisma.$queryRawUnsafe<
+          { id: number; similarity: number }[]
+        >(`
           SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
           FROM services s
           INNER JOIN users u ON s.provider_id = u.id
@@ -248,16 +257,20 @@ export class ServiceSearchService {
           ORDER BY s.embedding <=> '${vectorStr}'::vector
           LIMIT 20
         `);
-        
+
         if (rawResults.length > 0) {
-          const serviceIds = rawResults.map(r => r.id);
-          const similarityMap = new Map(rawResults.map(r => [r.id, r.similarity]));
-          
+          const serviceIds = rawResults.map((r) => r.id);
+          const similarityMap = new Map(
+            rawResults.map((r) => [r.id, r.similarity]),
+          );
+
           const fullServices = await this.prisma.service.findMany({
             where: { id: { in: serviceIds } },
             include: {
               category: { select: { id: true, name: true } },
-              provider: { select: { id: true, fullName: true, avatarUrl: true } },
+              provider: {
+                select: { id: true, fullName: true, avatarUrl: true },
+              },
               images: { orderBy: { displayOrder: 'asc' }, take: 1 },
               featuredListings: {
                 where: { status: 'ACTIVE', endDate: { gt: new Date() } },
@@ -265,14 +278,16 @@ export class ServiceSearchService {
               },
             },
           });
-          
+
           // Gắn isFeatured và similarity, sắp xếp lại theo similarity
-          const mappedData: any[] = fullServices.map(service => ({
-            ...service,
-            isFeatured: service.featuredListings.length > 0,
-            similarity: similarityMap.get(service.id) || 0,
-          })).sort((a, b) => b.similarity - a.similarity);
-          
+          const mappedData: any[] = fullServices
+            .map((service) => ({
+              ...service,
+              isFeatured: service.featuredListings.length > 0,
+              similarity: similarityMap.get(service.id) || 0,
+            }))
+            .sort((a, b) => b.similarity - a.similarity);
+
           log.success = true;
           log.results = mappedData;
         } else {
@@ -297,7 +312,9 @@ export class ServiceSearchService {
       this.logger.log(`[AI Caching] Cache hit for query: "${query}"`);
       baseData = this.parseAiSearchRows(cachedResult) as any;
     } else {
-      this.logger.log(`[AI Caching] Cache miss for query: "${query}". Calling Gemini API...`);
+      this.logger.log(
+        `[AI Caching] Cache miss for query: "${query}". Calling Gemini API...`,
+      );
 
       const embedding = await this.aiService.createEmbedding(query);
       if (!embedding) {
@@ -307,7 +324,9 @@ export class ServiceSearchService {
       const vectorStr = `[${embedding.join(',')}]`;
 
       try {
-        const rawResults = await this.prisma.$queryRawUnsafe<{ id: number; similarity: number }[]>(`
+        const rawResults = await this.prisma.$queryRawUnsafe<
+          { id: number; similarity: number }[]
+        >(`
           SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
           FROM services s
           INNER JOIN users u ON s.provider_id = u.id
@@ -319,20 +338,28 @@ export class ServiceSearchService {
         `);
 
         if (rawResults.length === 0) {
-          this.logger.log(`[AI Caching] No AI results > 0.50, falling back to keyword search for: "${query}"`);
+          this.logger.log(
+            `[AI Caching] No AI results > 0.50, falling back to keyword search for: "${query}"`,
+          );
           return this.search({ keyword: query, page: 1, limit: 10, lat, lng });
         }
 
         const maxSimilarity = rawResults[0].similarity;
-        const filteredResults = rawResults.filter(r => r.similarity >= 0.55 && r.similarity >= maxSimilarity - 0.05);
+        const filteredResults = rawResults.filter(
+          (r) => r.similarity >= 0.55 && r.similarity >= maxSimilarity - 0.05,
+        );
 
         if (filteredResults.length === 0) {
-          this.logger.log(`[AI Caching] No filtered AI results, falling back to keyword search for: "${query}"`);
+          this.logger.log(
+            `[AI Caching] No filtered AI results, falling back to keyword search for: "${query}"`,
+          );
           return this.search({ keyword: query, page: 1, limit: 10, lat, lng });
         }
 
-        const serviceIds = filteredResults.map(r => r.id);
-        const similarityMap = new Map(filteredResults.map(r => [r.id, r.similarity]));
+        const serviceIds = filteredResults.map((r) => r.id);
+        const similarityMap = new Map(
+          filteredResults.map((r) => [r.id, r.similarity]),
+        );
 
         const fullServices = await this.prisma.service.findMany({
           where: { id: { in: serviceIds } },
@@ -347,11 +374,13 @@ export class ServiceSearchService {
           },
         });
 
-        baseData = fullServices.map(service => ({
-          ...service,
-          isFeatured: service.featuredListings.length > 0,
-          similarity: similarityMap.get(service.id) || 0,
-        })).sort((a, b) => (b as any).similarity - (a as any).similarity) as any;
+        baseData = fullServices
+          .map((service) => ({
+            ...service,
+            isFeatured: service.featuredListings.length > 0,
+            similarity: similarityMap.get(service.id) || 0,
+          }))
+          .sort((a, b) => (b as any).similarity - (a as any).similarity);
 
         await this.redisService.set(cacheKey, JSON.stringify(baseData), 86400);
       } catch (error) {
@@ -363,10 +392,10 @@ export class ServiceSearchService {
 
     let resultData = [...baseData];
     if (lat && lng) {
-      const providerIds = [...new Set(resultData.map(s => s.providerId))];
+      const providerIds = [...new Set(resultData.map((s) => s.providerId))];
       const addressMap = await this.getProviderAddressMap(providerIds);
 
-      resultData = resultData.map(service => {
+      resultData = resultData.map((service) => {
         const address = addressMap.get(service.providerId);
         if (!address) return service;
 

@@ -40,7 +40,10 @@ export class CustomerBookingExportService {
           select: { id: true, fullName: true, phone: true, email: true },
         },
         provider: { select: { id: true, fullName: true, phone: true } },
-        quotations: { where: { status: 'ACCEPTED' }, include: { quotationItems: true } },
+        quotations: {
+          where: { status: 'ACCEPTED' },
+          include: { quotationItems: true },
+        },
         bookingItems: true,
         review: true,
       },
@@ -56,7 +59,7 @@ export class CustomerBookingExportService {
     const printer = new PdfPrinter(this.getFonts());
     const acceptedQuotations = booking.quotations || [];
     const items = acceptedQuotations.length
-      ? acceptedQuotations.flatMap(q => q.quotationItems || [])
+      ? acceptedQuotations.flatMap((q) => q.quotationItems || [])
       : booking.bookingItems;
     const amount = acceptedQuotations.length
       ? acceptedQuotations.reduce((sum, q) => sum + Number(q.actualPrice), 0)
@@ -193,8 +196,13 @@ export class CustomerBookingExportService {
           booking.service?.name || '-',
           booking.provider?.fullName || '-',
           STATUS_LABELS[booking.status] || booking.status,
-          (booking.quotations && booking.quotations.length > 0)
-            ? this.formatCurrency(booking.quotations.reduce((s, q) => s + Number(q.actualPrice), 0))
+          booking.quotations && booking.quotations.length > 0
+            ? this.formatCurrency(
+                booking.quotations.reduce(
+                  (s, q) => s + Number(q.actualPrice),
+                  0,
+                ),
+              )
             : '-',
         ]),
       ),

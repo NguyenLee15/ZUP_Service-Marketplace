@@ -68,7 +68,10 @@ export class AdminDashboardService {
         _count: { id: true },
       }),
       this.prisma.quotation.findMany({
-        where: { booking: { ...bookingWhere, status: BookingStatus.DONE }, status: 'ACCEPTED' },
+        where: {
+          booking: { ...bookingWhere, status: BookingStatus.DONE },
+          status: 'ACCEPTED',
+        },
         select: { actualPrice: true, commissionRateSnapshot: true },
       }),
     ]);
@@ -116,7 +119,10 @@ export class AdminDashboardService {
           _count: { id: true },
         }),
         this.prisma.quotation.findMany({
-          where: { booking: { ...bookingWhere, status: BookingStatus.DONE }, status: 'ACCEPTED' },
+          where: {
+            booking: { ...bookingWhere, status: BookingStatus.DONE },
+            status: 'ACCEPTED',
+          },
           select: {
             actualPrice: true,
             commissionRateSnapshot: true,
@@ -231,8 +237,13 @@ export class AdminDashboardService {
             item.service?.name || '-',
             item.provider?.fullName || '-',
             STATUS_LABELS[item.status] || item.status,
-            (item.quotations && item.quotations.length > 0)
-              ? this.formatCurrency(item.quotations.reduce((s, q) => s + Number(q.actualPrice), 0))
+            item.quotations && item.quotations.length > 0
+              ? this.formatCurrency(
+                  item.quotations.reduce(
+                    (s, q) => s + Number(q.actualPrice),
+                    0,
+                  ),
+                )
               : '-',
           ]),
         ),
@@ -322,9 +333,10 @@ export class AdminDashboardService {
         provider: item.provider?.fullName,
         customer: item.customer?.fullName,
         status: STATUS_LABELS[item.status] || item.status,
-        value: (item.quotations && item.quotations.length > 0)
-          ? item.quotations.reduce((s, q) => s + Number(q.actualPrice), 0)
-          : 0,
+        value:
+          item.quotations && item.quotations.length > 0
+            ? item.quotations.reduce((s, q) => s + Number(q.actualPrice), 0)
+            : 0,
         createdAt: this.formatDateTime(item.createdAt),
       })),
     );

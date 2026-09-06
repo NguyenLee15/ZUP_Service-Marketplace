@@ -68,7 +68,6 @@ export function RecentlyViewedServices() {
     return () => {
       isMounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (isChecking) return null;

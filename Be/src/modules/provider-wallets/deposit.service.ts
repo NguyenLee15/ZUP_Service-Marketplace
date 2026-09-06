@@ -200,18 +200,15 @@ export class DepositService {
       );
       const amount = Number(request.amount);
 
-      const walletTransaction = await this.walletLedgerService.creditWallet(
-        tx,
-        {
-          walletId: wallet.id,
-          type: 'DEPOSIT',
-          amount,
-          idempotencyKey: `manual-deposit:${id}`,
-          actorId: adminId,
-          actionName: 'MANUAL_DEPOSIT_APPROVED',
-          description: `Xác nhận nạp thủ công ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
-        },
-      );
+      await this.walletLedgerService.creditWallet(tx, {
+        walletId: wallet.id,
+        type: 'DEPOSIT',
+        amount,
+        idempotencyKey: `manual-deposit:${id}`,
+        actorId: adminId,
+        actionName: 'MANUAL_DEPOSIT_APPROVED',
+        description: `Xác nhận nạp thủ công ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
+      });
 
       const updatedRequest = await tx.manualDepositRequest.findUniqueOrThrow({
         where: { id },
@@ -234,8 +231,6 @@ export class DepositService {
           referenceId: id,
         },
       });
-
-
 
       return updatedRequest;
     });

@@ -183,7 +183,7 @@ export class WithdrawalService {
         });
       }
 
-      const walletTransaction = await this.walletLedgerService.debitWallet(tx, {
+      await this.walletLedgerService.debitWallet(tx, {
         walletId: wallet.id,
         type: 'WITHDRAWAL',
         amount,
@@ -214,8 +214,6 @@ export class WithdrawalService {
           referenceId: id,
         },
       });
-
-
 
       return updatedRequest;
     });

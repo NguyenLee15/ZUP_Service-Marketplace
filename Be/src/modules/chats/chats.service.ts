@@ -281,7 +281,14 @@ export class ChatsService {
     imageUrl?: string,
   ) {
     const message = await this.prisma.message.create({
-      data: { conversationId, senderId, senderType, content, messageType, imageUrl },
+      data: {
+        conversationId,
+        senderId,
+        senderType,
+        content,
+        messageType,
+        imageUrl,
+      },
       include: {
         sender: { select: { id: true, fullName: true, avatarUrl: true } },
       },

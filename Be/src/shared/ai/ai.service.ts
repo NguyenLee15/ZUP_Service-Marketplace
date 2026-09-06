@@ -172,9 +172,7 @@ export class AiService {
     return text || this.getFallbackMessage();
   }
 
-  async analyzeDispute(
-    reason: string,
-  ): Promise<{
+  async analyzeDispute(reason: string): Promise<{
     category: string;
     severity: string;
     summary: string;
@@ -212,9 +210,9 @@ Yêu cầu trả về JSON có cấu trúc sau:
             type: 'OBJECT',
             properties: {
               type: { type: 'STRING' },
-              text: { type: 'STRING' }
-            }
-          }
+              text: { type: 'STRING' },
+            },
+          },
         },
         anomalies: {
           type: 'ARRAY',
@@ -222,16 +220,28 @@ Yêu cầu trả về JSON có cấu trúc sau:
             type: 'OBJECT',
             properties: {
               type: { type: 'STRING' },
-              text: { type: 'STRING' }
-            }
-          }
-        }
+              text: { type: 'STRING' },
+            },
+          },
+        },
       },
-      required: ['category', 'severity', 'summary', 'confidence', 'recommendation', 'evidencePoints', 'anomalies'],
+      required: [
+        'category',
+        'severity',
+        'summary',
+        'confidence',
+        'recommendation',
+        'evidencePoints',
+        'anomalies',
+      ],
     };
 
     try {
-      const result = await this.generateJson<any>(prompt, this.timeoutMs * 2, schema);
+      const result = await this.generateJson<any>(
+        prompt,
+        this.timeoutMs * 2,
+        schema,
+      );
       if (!result) return null;
       return result;
     } catch {
@@ -239,9 +249,7 @@ Yêu cầu trả về JSON có cấu trúc sau:
     }
   }
 
-  async extractBookingIntent(
-    userPrompt: string,
-  ): Promise<{
+  async extractBookingIntent(userPrompt: string): Promise<{
     categoryName: string;
     keywords: string[];
     summary: string;
@@ -295,7 +303,6 @@ Hãy bóc tách thành JSON chuẩn với các trường:
       return null;
     }
   }
-
 
   async suggestReplies(messages: string[]): Promise<string[]> {
     if (!this.apiKey || this.provider !== 'gemini') return [];

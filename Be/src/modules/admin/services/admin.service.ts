@@ -146,9 +146,9 @@ export class AdminService {
             category: { select: { name: true } },
           },
         },
-        quotations: { 
+        quotations: {
           where: { status: 'ACCEPTED' },
-          include: { quotationItems: true }
+          include: { quotationItems: true },
         },
         bookingItems: { include: { serviceItem: true } },
         attachments: true,

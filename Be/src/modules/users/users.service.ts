@@ -74,7 +74,7 @@ export class UsersService {
     userId: number,
     dto: UpdateProfileDto,
     avatarFile?: Express.Multer.File,
-    ip?: string,
+    _ip?: string,
   ) {
     await this.checkActiveUser(userId);
     const updateData: Prisma.UserUpdateInput = {};
@@ -116,15 +116,19 @@ export class UsersService {
   async updateOnlineStatus(userId: number, isOnline: boolean) {
     const user = await this.checkActiveUser(userId);
     if (user.role !== 'PROVIDER') {
-      throw new BadRequestException('Chỉ nhà cung cấp mới có thể cập nhật trạng thái này');
+      throw new BadRequestException(
+        'Chỉ nhà cung cấp mới có thể cập nhật trạng thái này',
+      );
     }
-    
+
     if (isOnline) {
       const wallet = await this.prisma.providerWallet.findUnique({
         where: { providerId: userId },
       });
       if (!wallet || wallet.balance.toNumber() <= 0 || wallet.isRestricted) {
-        throw new BadRequestException('Tài khoản của bạn đang có số dư 0đ hoặc bị giới hạn. Vui lòng nạp thêm tiền để nhận đơn.');
+        throw new BadRequestException(
+          'Tài khoản của bạn đang có số dư 0đ hoặc bị giới hạn. Vui lòng nạp thêm tiền để nhận đơn.',
+        );
       }
 
       const activeServicesCount = await this.prisma.service.count({
@@ -136,7 +140,9 @@ export class UsersService {
       });
 
       if (activeServicesCount === 0) {
-        throw new BadRequestException('Bạn chưa có dịch vụ nào đang hoạt động. Vui lòng tạo ít nhất một dịch vụ trước khi bật trạng thái nhận đơn.');
+        throw new BadRequestException(
+          'Bạn chưa có dịch vụ nào đang hoạt động. Vui lòng tạo ít nhất một dịch vụ trước khi bật trạng thái nhận đơn.',
+        );
       }
     }
 
@@ -145,7 +151,12 @@ export class UsersService {
       data: { isOnline },
     });
     this.eventEmitter.emit('cache.clear.services');
-    return { message: isOnline ? 'Đã bật trạng thái nhận đơn' : 'Đã tắt trạng thái nhận đơn', isOnline };
+    return {
+      message: isOnline
+        ? 'Đã bật trạng thái nhận đơn'
+        : 'Đã tắt trạng thái nhận đơn',
+      isOnline,
+    };
   }
 
   // ===== ADDRESSES =====
@@ -159,7 +170,7 @@ export class UsersService {
     return { data: addresses };
   }
 
-  async createAddress(userId: number, dto: CreateAddressDto, ip?: string) {
+  async createAddress(userId: number, dto: CreateAddressDto, _ip?: string) {
     await this.checkActiveUser(userId);
     // Kiểm tra max 5 địa chỉ
     const count = await this.prisma.userAddress.count({ where: { userId } });
@@ -202,7 +213,7 @@ export class UsersService {
     userId: number,
     addressId: number,
     dto: UpdateAddressDto,
-    ip?: string,
+    _ip?: string,
   ) {
     await this.checkActiveUser(userId);
     // Kiểm tra ownership
@@ -225,7 +236,7 @@ export class UsersService {
     return { data: updated, message: 'Cập nhật địa chỉ thành công' };
   }
 
-  async deleteAddress(userId: number, addressId: number, ip?: string) {
+  async deleteAddress(userId: number, addressId: number, _ip?: string) {
     await this.checkActiveUser(userId);
     const address = await this.prisma.userAddress.findFirst({
       where: { id: addressId, userId },
@@ -257,7 +268,7 @@ export class UsersService {
     return { message: 'Xóa địa chỉ thành công' };
   }
 
-  async setDefaultAddress(userId: number, addressId: number, ip?: string) {
+  async setDefaultAddress(userId: number, addressId: number, _ip?: string) {
     await this.checkActiveUser(userId);
     const address = await this.prisma.userAddress.findFirst({
       where: { id: addressId, userId },

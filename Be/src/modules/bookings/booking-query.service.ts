@@ -47,8 +47,9 @@ export class BookingQueryService {
 
     if (booking.customerId === userId) {
       const sanitizedQuotations = booking.quotations.map((q) => {
-        const { commissionRateSnapshot, ...rest } = q;
-        return rest;
+        const item = { ...q } as Record<string, unknown>;
+        delete item.commissionRateSnapshot;
+        return item;
       });
       return { data: { ...booking, quotations: sanitizedQuotations } };
     }

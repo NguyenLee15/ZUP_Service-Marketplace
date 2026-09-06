@@ -66,8 +66,9 @@ export class BookingIntentService {
       .split(/\s+/)
       .filter((w) => w.length > 2);
 
-    const isUrgent =
-      /gấp|khẩn|ngay|chập|cháy|rò rỉ|nước tràn|cứu hộ/i.test(prompt);
+    const isUrgent = /gấp|khẩn|ngay|chập|cháy|rò rỉ|nước tràn|cứu hộ/i.test(
+      prompt,
+    );
 
     return {
       categoryName: words[0] || 'Chưa xác định',

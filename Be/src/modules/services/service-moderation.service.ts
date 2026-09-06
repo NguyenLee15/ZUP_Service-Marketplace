@@ -65,7 +65,11 @@ export class ServiceModerationService {
     });
 
     const activeServices = await this.prisma.service.findMany({
-      where: { providerId: service.providerId, status: 'ACTIVE', isDeleted: false },
+      where: {
+        providerId: service.providerId,
+        status: 'ACTIVE',
+        isDeleted: false,
+      },
       select: { referencePrice: true },
     });
 
@@ -73,7 +77,8 @@ export class ServiceModerationService {
       (sum, s) => sum + Number(s.referencePrice),
       0,
     );
-    const totalExpectedRefPrice = sumReferencePrice + Number(service.referencePrice);
+    const totalExpectedRefPrice =
+      sumReferencePrice + Number(service.referencePrice);
 
     let rate = 8.5;
     const setting = await this.prisma.systemSetting.findUnique({
@@ -83,7 +88,9 @@ export class ServiceModerationService {
       try {
         const parsed = JSON.parse(setting.value) as { rate?: unknown };
         if (typeof parsed.rate === 'number') rate = parsed.rate;
-      } catch {}
+      } catch {
+        // use default fallback rate
+      }
     } else {
       const commissionConfig = await this.prisma.commissionConfig.findFirst({
         orderBy: { effectiveFrom: 'desc' },
@@ -92,9 +99,12 @@ export class ServiceModerationService {
     }
 
     const requiredDeposit = (totalExpectedRefPrice * rate) / 100;
-    const hasEnoughBalance = wallet && Number(wallet.balance) >= requiredDeposit;
+    const hasEnoughBalance =
+      wallet && Number(wallet.balance) >= requiredDeposit;
 
-    const newStatus = hasEnoughBalance ? ServiceStatus.ACTIVE : ServiceStatus.HIDDEN;
+    const newStatus = hasEnoughBalance
+      ? ServiceStatus.ACTIVE
+      : ServiceStatus.HIDDEN;
 
     const updated = await this.prisma.service.update({
       where: { id: serviceId },

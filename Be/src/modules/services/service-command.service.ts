@@ -46,7 +46,9 @@ export class ServiceCommandService {
           categoryId: dto.categoryId,
           name: dto.name,
           description: dto.description,
-          referencePrice: dto.items?.length ? Math.min(...dto.items.map((i) => Number(i.price))) : 0,
+          referencePrice: dto.items?.length
+            ? Math.min(...dto.items.map((i) => Number(i.price)))
+            : 0,
           status: ServiceStatus.PENDING,
         },
       });
@@ -117,9 +119,11 @@ export class ServiceCommandService {
     if (dto.description) updateData.description = dto.description;
     if (dto.categoryId)
       updateData.category = { connect: { id: dto.categoryId } };
-    
+
     if (dto.items && dto.items.length > 0) {
-      updateData.referencePrice = Math.min(...dto.items.map((i) => Number(i.price)));
+      updateData.referencePrice = Math.min(
+        ...dto.items.map((i) => Number(i.price)),
+      );
     } else if (dto.referencePrice) {
       updateData.referencePrice = dto.referencePrice;
     }
@@ -262,16 +266,15 @@ export class ServiceCommandService {
       where: { providerId, status: 'ACTIVE', isDeleted: false },
       select: { referencePrice: true },
     });
-    
+
     const wallet = await this.prisma.providerWallet.findUnique({
       where: { providerId },
     });
-    
+
     // Add the current service's price since we are about to activate it
-    const sumReferencePrice = activeServices.reduce(
-      (sum, s) => sum + Number(s.referencePrice),
-      0
-    ) + Number(service.referencePrice);
+    const sumReferencePrice =
+      activeServices.reduce((sum, s) => sum + Number(s.referencePrice), 0) +
+      Number(service.referencePrice);
 
     // Get commission rate
     let rate = 8.5;
@@ -282,7 +285,9 @@ export class ServiceCommandService {
       try {
         const parsed = JSON.parse(setting.value) as { rate?: unknown };
         if (typeof parsed.rate === 'number') rate = parsed.rate;
-      } catch {}
+      } catch {
+        // use default fallback rate
+      }
     } else {
       const commissionConfig = await this.prisma.commissionConfig.findFirst({
         orderBy: { effectiveFrom: 'desc' },
@@ -292,7 +297,7 @@ export class ServiceCommandService {
 
     const requiredDeposit = (sumReferencePrice * rate) / 100;
     const balanceNum = wallet ? Number(wallet.balance) : 0;
-    
+
     if (balanceNum < requiredDeposit) {
       throw new ForbiddenException({
         code: ErrorCodes.FORBIDDEN,
