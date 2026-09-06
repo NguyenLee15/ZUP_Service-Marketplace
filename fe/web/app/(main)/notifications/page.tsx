@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import {
 import { notificationsApi } from "@/features/auth/services/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useNotificationStore } from "@/store/notification.store";
 
 type CustomerNotification = {
   id: number;
@@ -71,7 +72,9 @@ export default function NotificationsPage() {
         isRead: readFilter === "all" ? undefined : readFilter === "read",
         type: typeFilter.trim() || undefined,
       });
-      setNotifications(res.data.data || []);
+      const items = res.data.data || [];
+      setNotifications(items);
+      useNotificationStore.getState().setNotifications(items);
     } catch (error: unknown) {
       const status =
         typeof error === "object" && error !== null
@@ -98,6 +101,7 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
+      useNotificationStore.getState().markRead(id);
     } catch (error) {
       console.error("Failed to mark read:", error);
     }
@@ -107,6 +111,7 @@ export default function NotificationsPage() {
     try {
       await notificationsApi.markAllRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      useNotificationStore.getState().markAllRead();
     } catch (error) {
       console.error("Failed to mark all read:", error);
     }
@@ -138,11 +143,11 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto p-6 space-y-4">
-        <div className="h-8 w-48 bg-white/10 rounded animate-pulse mb-6"></div>
+        <div className="h-8 w-48 bg-slate-200 rounded animate-pulse mb-6"></div>
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-24 bg-white/10 rounded-xl animate-pulse"
+            className="h-24 bg-slate-200/80 rounded-xl animate-pulse"
           ></div>
         ))}
       </div>
@@ -228,36 +233,36 @@ export default function NotificationsPage() {
                 onClick={() =>
                   !notification.isRead && handleMarkAsRead(notification.id)
                 }
-                className={`p-4 md:p-5 rounded-2xl border transition-[background-color,border-color,box-shadow] cursor-pointer backdrop-blur-md ${
+                className={`p-4 md:p-5 rounded-2xl border transition-[background-color,border-color,box-shadow] cursor-pointer ${
                   notification.isRead
-                    ? "bg-slate-950/45 border-white/10 opacity-80"
-                    : "bg-slate-900/75 border-cyan-300/20 shadow-[rgba(2,132,199,0.2)_0_18px_50px_-28px] hover:border-cyan-300/35"
+                    ? "bg-white border-slate-200 hover:border-slate-300 opacity-80"
+                    : "bg-blue-50/40 border-action-blue/30 shadow-sm hover:border-action-blue/50"
                 }`}
               >
                 <div className="flex gap-4">
                   <div className="mt-1 shrink-0">
                     {notification.isRead ? (
-                      <Circle className="w-3 h-3 text-slate-500 fill-slate-700" />
+                      <Circle className="w-3 h-3 text-slate-300 fill-slate-300" />
                     ) : (
-                      <Circle className="w-3 h-3 text-cyan-300 fill-cyan-300" />
+                      <Circle className="w-3 h-3 text-action-blue fill-action-blue" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
                       <h4
-                        className={`font-semibold text-base ${notification.isRead ? "text-slate-300" : "text-white"}`}
+                        className={`font-semibold text-base ${notification.isRead ? "text-slate-700" : "text-foreground font-bold"}`}
                       >
                         {notification.title}
                       </h4>
-                      <span className="text-xs text-slate-400 flex items-center gap-1 shrink-0">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
                         <Clock className="w-3 h-3" />
                         {formatDate(notification.createdAt)}
                       </span>
                     </div>
 
                     <p
-                      className={`text-sm leading-relaxed ${notification.isRead ? "text-slate-400" : "text-slate-200"}`}
+                      className={`text-sm leading-relaxed ${notification.isRead ? "text-muted-foreground" : "text-foreground/90"}`}
                     >
                       {notification.content}
                     </p>

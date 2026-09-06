@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Sparkles } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
+import { useNotificationStore } from '@/store/notification.store';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
 
 type NotificationPayload = {
@@ -30,7 +31,7 @@ export function CustomerHeader() {
   const [keyword, setKeyword] = useState('');
   const [aiMode, setAiMode] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
   const { user, isAuthenticated, logout: storeLogout, setUser } = useAuthStore();
@@ -53,7 +54,7 @@ export function CustomerHeader() {
     if (!mounted) return;
 
     if (!isAuthenticated()) {
-      setUnreadCount(0);
+      useNotificationStore.setState({ unreadCount: 0 });
       return;
     }
 
@@ -87,7 +88,7 @@ export function CustomerHeader() {
 
       notificationsApi.getUnreadCount()
         .then((res) => {
-          if (!cancelled) setUnreadCount(Number(res.data.data?.count || 0));
+          if (!cancelled) useNotificationStore.setState({ unreadCount: Number(res.data.data?.count || 0) });
         })
         .catch((err: unknown) => {
           if (isUnauthorizedError(err)) {
@@ -131,7 +132,7 @@ export function CustomerHeader() {
   }, [accountMenuOpen]);
 
   const handleNotificationReceived = useCallback((data: NotificationPayload) => {
-    setUnreadCount((prev) => prev + 1);
+    useNotificationStore.setState((state) => ({ unreadCount: state.unreadCount + 1 }));
     void import('sonner').then(({ toast }) => {
       toast.info('Thông báo mới', {
         description: data?.title || data?.content || 'Bạn vừa có một cập nhật mới từ hệ thống.',
@@ -271,10 +272,10 @@ export function CustomerHeader() {
                       <span className="flex size-8 items-center justify-center rounded-full bg-action-blue text-sm font-semibold text-white">
                         {userInitial}
                       </span>
-                      <span className="max-w-28 xl:max-w-36 truncate text-sm font-medium text-foreground">
+                      <span className="max-w-28 xl:max-w-36 truncate text-sm font-medium text-white">
                         {displayName}
                       </span>
-                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {accountMenuOpen && (

@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Booking } from '@/types';
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: ApiPayload }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   PENDING: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
   ACCEPTED: { label: 'Đã tiếp nhận', color: 'bg-blue-100 text-blue-700', icon: CheckCircle },
   QUOTED: { label: 'Đã báo giá', color: 'bg-pale-gray text-action-blue', icon: Package },
@@ -36,7 +36,7 @@ export default function BookingsPage() {
 
   const fetchBookings = useCallback(() => {
     setIsFetching(true);
-    const params: ApiPayload = { page, limit: PAGE_SIZE };
+    const params: any = { page, limit: PAGE_SIZE };
     if (status) params.status = status;
     bookingsApi.getMyBookings(params)
       .then((res) => {
@@ -74,6 +74,8 @@ export default function BookingsPage() {
           <TabsTrigger value="QUOTED" className="text-xs">Đã báo giá</TabsTrigger>
           <TabsTrigger value="IN_PROGRESS" className="text-xs">Đang thực hiện</TabsTrigger>
           <TabsTrigger value="DONE" className="text-xs">Hoàn thành</TabsTrigger>
+          <TabsTrigger value="DISPUTED" className="text-xs">Khiếu nại</TabsTrigger>
+          <TabsTrigger value="CANCELLED" className="text-xs">Đã hủy</TabsTrigger>
         </TabsList>
       </Tabs>
 

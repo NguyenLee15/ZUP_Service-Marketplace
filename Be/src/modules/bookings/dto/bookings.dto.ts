@@ -7,6 +7,9 @@ import {
   IsNumber,
   IsArray,
   ValidateNested,
+  Min,
+  MinLength,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type, Transform, plainToInstance } from 'class-transformer';
 
@@ -30,6 +33,7 @@ export class CreateBookingItemDto {
   serviceItemId: number;
 
   @IsInt()
+  @Min(1)
   quantity: number;
 }
 
@@ -112,11 +116,15 @@ export class SendQuoteDto {
 
 export class CancelBookingDto {
   @IsString()
+  @IsNotEmpty()
+  @MinLength(5)
   reason: string;
 }
 
 export class RejectQuoteDto {
   @IsString()
+  @IsNotEmpty()
+  @MinLength(5)
   reason: string;
 }
 
@@ -136,11 +144,15 @@ export class ConfirmSupplementaryDto {}
 
 export class RejectSupplementaryDto {
   @IsString()
+  @IsNotEmpty()
+  @MinLength(5)
   reason: string;
 }
 
 export class DisputeDto {
   @IsString()
+  @IsNotEmpty()
+  @MinLength(5)
   reason: string;
 }
 

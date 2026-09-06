@@ -24,6 +24,7 @@ type MockPrisma = {
   };
   bookingAttachment: {
     create: jest.Mock;
+    createMany: jest.Mock;
   };
   notification: {
     create: jest.Mock;
@@ -56,6 +57,7 @@ describe('BookingLifecycleService', () => {
     },
     bookingAttachment: {
       create: jest.fn(),
+      createMany: jest.fn(),
     },
     notification: {
       create: jest.fn(),

@@ -7,6 +7,19 @@ type MockTx = {
   };
   providerWallet: {
     update: jest.Mock;
+    findUnique: jest.Mock;
+  };
+  service: {
+    findMany: jest.Mock;
+  };
+  systemSetting: {
+    findUnique: jest.Mock;
+  };
+  commissionConfig: {
+    findFirst: jest.Mock;
+  };
+  auditLog: {
+    create: jest.Mock;
   };
 };
 
@@ -31,6 +44,24 @@ describe('WalletLedgerService', () => {
       },
       providerWallet: {
         update: jest.fn(),
+        findUnique: jest.fn().mockResolvedValue({
+          id: 1,
+          providerId: 10,
+          balance: 5000,
+          isRestricted: true,
+        }),
+      },
+      service: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      systemSetting: {
+        findUnique: jest.fn().mockResolvedValue(null),
+      },
+      commissionConfig: {
+        findFirst: jest.fn().mockResolvedValue({ rate: 8.5 }),
+      },
+      auditLog: {
+        create: jest.fn().mockResolvedValue({ id: 1 }),
       },
     };
   });
@@ -72,6 +103,12 @@ describe('WalletLedgerService', () => {
     tx.providerWallet.update
       .mockResolvedValueOnce({ id: 1, balance: -1000, isRestricted: false })
       .mockResolvedValueOnce({ id: 1, balance: -1000, isRestricted: true });
+    tx.providerWallet.findUnique.mockResolvedValueOnce({
+      id: 1,
+      providerId: 10,
+      balance: -1000,
+      isRestricted: false,
+    });
 
     await service.debitWallet(tx as unknown as Prisma.TransactionClient, {
       walletId: 1,

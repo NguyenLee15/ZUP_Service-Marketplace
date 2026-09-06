@@ -59,7 +59,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm);
       setCurrentPage(1); // reset to page 1 on new search
-    }, 4000); // 400ms debounce
+    }, 400); // 400ms debounce
 
     return () => clearTimeout(handler);
   }, [searchTerm]);

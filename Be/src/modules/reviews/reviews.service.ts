@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -26,7 +27,17 @@ export class ReviewsService {
     rating: number,
     comment?: string,
   ) {
-    // Kiá»ƒm tra booking thuá»™c customer + Ä‘Ã£ DONE + autoCompletedAt ghi rá»“i
+    const user = await this.prisma.user.findUnique({
+      where: { id: customerId, status: 'ACTIVE' },
+    });
+    if (!user) {
+      throw new ForbiddenException({
+        code: ErrorCodes.ACCOUNT_LOCKED,
+        message: 'Tài khoản của bạn đã bị khóa hoặc không tồn tại',
+      });
+    }
+
+    // Kiểm tra booking thuộc customer + đã DONE + autoCompletedAt ghi rồi
     const booking = await this.prisma.booking.findFirst({
       where: { id: bookingId, customerId },
     });

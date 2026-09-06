@@ -45,6 +45,14 @@ export class BookingQueryService {
       });
     }
 
+    if (booking.customerId === userId) {
+      const sanitizedQuotations = booking.quotations.map((q) => {
+        const { commissionRateSnapshot, ...rest } = q;
+        return rest;
+      });
+      return { data: { ...booking, quotations: sanitizedQuotations } };
+    }
+
     return { data: booking };
   }
 

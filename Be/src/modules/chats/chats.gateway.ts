@@ -17,6 +17,7 @@ import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { resolveWebsocketCorsOrigin } from '../../config/websocket-cors.config';
 
 import { OnEvent } from '@nestjs/event-emitter';
+import { ErrorCodes } from '../../common/errors/error-codes';
 import {
   extractSocketToken,
   isJwtTokenPayload,
@@ -114,6 +115,18 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const user = client.data.user;
     if (!user) return;
+
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.id, status: 'ACTIVE' },
+      select: { id: true },
+    });
+    if (!dbUser) {
+      client.emit('error', {
+        code: ErrorCodes.ACCOUNT_LOCKED,
+        message: 'Tài khoản của bạn đã bị khóa',
+      });
+      return;
+    }
 
     const isMember = await this.chatsService.isMember(
       data.conversationId,

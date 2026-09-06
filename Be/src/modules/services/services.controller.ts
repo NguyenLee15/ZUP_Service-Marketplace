@@ -108,8 +108,18 @@ export class ServicesController {
 
   /** GET /services/:id/reviews */
   @Get(':id/reviews')
-  async getReviews(@Param('id', ParseIntPipe) serviceId: number) {
-    return this.providerPublicService.getPublicDetail(serviceId);
+  async getReviews(
+    @Param('id', ParseIntPipe) serviceId: number,
+    @Query('rating') rating?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.providerPublicService.getServiceReviews(
+      serviceId,
+      rating ? parseInt(rating, 10) : undefined,
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 10,
+    );
   }
 
   /** GET /services/:id/provider-stats â€” chá»‰ sá»‘ hiá»‡u suáº¥t NCC */
