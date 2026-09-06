@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { Sparkles } from "lucide-react";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { CategoryGrid } from "@/app/components/home/CategoryGrid";
 import { DeferredRecentlyViewedServices } from "@/app/components/home/DeferredRecentlyViewedServices";
@@ -241,6 +242,23 @@ function buildFallbackCategorySections(
 }
 
 export default async function Home() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("hs_access_token")?.value;
+  if (token) {
+    try {
+      const payloadBase64 = token.split(".")[1];
+      if (payloadBase64) {
+        const payloadJson = Buffer.from(payloadBase64, "base64").toString("utf8");
+        const payload = JSON.parse(payloadJson);
+        if (payload?.role === "ADMIN" || payload?.role === "STAFF") {
+          redirect("/admin/dashboard");
+        }
+      }
+    } catch {
+      // Ignored: Token parse failure falls through to standard page render
+    }
+  }
+
   const headersList = await headers();
   const nonce = headersList.get("x-nonce") || undefined;
 
