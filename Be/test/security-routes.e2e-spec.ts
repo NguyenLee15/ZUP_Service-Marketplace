@@ -27,6 +27,8 @@ import {
 import { BookingDisputeService } from '../src/modules/bookings/booking-dispute.service';
 import { BookingLifecycleService } from '../src/modules/bookings/booking-lifecycle.service';
 import { BookingQueryService } from '../src/modules/bookings/booking-query.service';
+import { CustomerBookingExportService } from '../src/modules/bookings/customer-booking-export.service';
+import { BookingIntentService } from '../src/modules/bookings/booking-intent.service';
 import { CategoriesController } from '../src/modules/categories/categories.controller';
 import { CategoriesService } from '../src/modules/categories/categories.service';
 import { ProviderWalletsController } from '../src/modules/provider-wallets/provider-wallets.controller';
@@ -34,6 +36,7 @@ import { DepositService } from '../src/modules/provider-wallets/deposit.service'
 import { PaymentCallbackService } from '../src/modules/provider-wallets/payment-callback.service';
 import { WalletAccountService } from '../src/modules/provider-wallets/wallet-account.service';
 import { WithdrawalService } from '../src/modules/provider-wallets/withdrawal.service';
+import { PayosService } from '../src/modules/provider-wallets/payos.service';
 import {
   AdminFeaturedListingsController,
   AdminFeaturedRateController,
@@ -45,6 +48,7 @@ import { ProviderPublicService } from '../src/modules/services/provider-public.s
 import { ServiceCommandService } from '../src/modules/services/service-command.service';
 import { ServiceModerationService } from '../src/modules/services/service-moderation.service';
 import { ServiceSearchService } from '../src/modules/services/service-search.service';
+import { AiService } from '../src/shared/ai/ai.service';
 import { SettingsService } from '../src/modules/settings/settings.service';
 import { KycService } from '../src/modules/users/kyc.service';
 import { UsersController } from '../src/modules/users/users.controller';
@@ -127,10 +131,19 @@ describe('Route security smoke (e2e)', () => {
         { provide: BookingLifecycleService, useValue: mocks.lifecycle },
         { provide: BookingDisputeService, useValue: mocks.dispute },
         { provide: BookingQueryService, useValue: mocks.bookingQuery },
+        { provide: CustomerBookingExportService, useValue: {} },
+        { provide: BookingIntentService, useValue: {} },
         { provide: WalletAccountService, useValue: mocks.wallet },
         { provide: DepositService, useValue: mocks.deposit },
         { provide: WithdrawalService, useValue: mocks.withdrawal },
         { provide: PaymentCallbackService, useValue: mocks.paymentCallback },
+        {
+          provide: PayosService,
+          useValue: {
+            createDepositRequest: jest.fn(),
+            verifyWebhook: jest.fn(),
+          },
+        },
         { provide: ServiceCommandService, useValue: mocks.command },
         { provide: ServiceSearchService, useValue: mocks.search },
         { provide: ProviderPublicService, useValue: mocks.providerPublic },
@@ -142,6 +155,10 @@ describe('Route security smoke (e2e)', () => {
         { provide: StaffAdminService, useValue: mocks.staff },
         { provide: SettingsService, useValue: mocks.settings },
         { provide: AdminAuditLogService, useValue: mocks.audit },
+        {
+          provide: AiService,
+          useValue: { generateText: jest.fn(), generateEmbedding: jest.fn() },
+        },
       ],
     })
       .overrideGuard(JwtAuthGuard)

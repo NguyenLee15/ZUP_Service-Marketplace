@@ -13,6 +13,15 @@ jobs:
     defaults:
       run:
         working-directory: ./Be
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/service_marketplace_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/service_marketplace_test?schema=public
+      JWT_SECRET: test-secret-long-enough
+      JWT_REFRESH_SECRET: test-refresh-secret-long-enough
+      REDIS_ENABLED: 'false'
+      QUEUE_MODE: inline
+      WORKER_ENABLED: 'false'
+      CRON_ENABLED: 'false'
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js
@@ -52,6 +61,7 @@ jobs:
         working-directory: ./Be
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/service_marketplace_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/service_marketplace_test?schema=public
       DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/service_marketplace_test?schema=public
       JWT_SECRET: test-secret-long-enough
       JWT_REFRESH_SECRET: test-refresh-secret-long-enough
@@ -77,7 +87,9 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./fe/wed
+        working-directory: ./fe/web
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js
@@ -85,7 +97,7 @@ jobs:
         with:
           node-version: '20.x'
           cache: 'npm'
-          cache-dependency-path: './fe/wed/package-lock.json'
+          cache-dependency-path: './fe/web/package-lock.json'
       - run: npm ci
       - run: npm run lint
       - run: npm run build
