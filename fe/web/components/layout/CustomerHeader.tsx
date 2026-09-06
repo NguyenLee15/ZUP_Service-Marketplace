@@ -4,11 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Sparkles } from 'lucide-react';
+import { Search, Package, MessageSquare, User, Bell, Menu, X, LogOut, ChevronDown, Heart, Sparkles, LayoutDashboard } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
 import { useNotificationStore } from '@/store/notification.store';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
+import { Role } from '@/types';
 
 type NotificationPayload = {
   title?: string;
@@ -39,6 +40,7 @@ export function CustomerHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const isServicesPage = pathname === '/services';
+  const isAdminOrStaff = user?.role === Role.ADMIN || user?.role === Role.STAFF;
 
   useEffect(() => {
     setMounted(true);
@@ -238,6 +240,16 @@ export function CustomerHeader() {
             <div className="flex items-center gap-1 sm:gap-3 shrink-0">
               {mounted && isAuthenticated() ? (
                 <>
+                  {isAdminOrStaff && (
+                    <Link
+                      href="/admin/dashboard"
+                      prefetch={false}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span>Trang quản trị</span>
+                    </Link>
+                  )}
                   <Link href="/bookings" prefetch={false} aria-label="Đơn hàng" className="hidden sm:flex flex-col items-center justify-center text-slate-300 hover:text-cyan-300 hover:bg-white/10 w-10 h-10 rounded-lg transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                     <Package className="w-5 h-5" />
                   </Link>
@@ -291,6 +303,21 @@ export function CustomerHeader() {
                           )}
                         </div>
                         <div className="my-1 h-px bg-platinum-tint" />
+                        {isAdminOrStaff && (
+                          <>
+                            <Link
+                              href="/admin/dashboard"
+                              prefetch={false}
+                              role="menuitem"
+                              onClick={() => setAccountMenuOpen(false)}
+                              className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-sky-600 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                            >
+                              <LayoutDashboard className="w-4 h-4" />
+                              Trang quản trị (Admin)
+                            </Link>
+                            <div className="my-1 h-px bg-platinum-tint" />
+                          </>
+                        )}
                         <Link
                           href="/profile"
                           prefetch={false}
@@ -365,6 +392,15 @@ export function CustomerHeader() {
             </Link>
             {mounted && isAuthenticated() ? (
               <>
+                {isAdminOrStaff && (
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl font-semibold border border-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                  >
+                    <LayoutDashboard className="w-5 h-5 text-sky-600" /> Vào trang quản trị
+                  </Link>
+                )}
                 <Link href="/bookings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-foreground/80 hover:bg-pale-gray rounded-xl font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
                   <Package className="w-5 h-5" /> Đơn hàng của tôi
                 </Link>

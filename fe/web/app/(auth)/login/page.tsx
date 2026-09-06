@@ -60,7 +60,7 @@ function normalizeLoginPayload(payload: unknown): LoginPayload {
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { setTokens, setUser } = useAuthStore();
+  const { setTokens, setUser, user, _hasHydrated } = useAuthStore();
 
   const [email, setEmail] = useState('customer@demo.com');
   const [password, setPassword] = useState('password123');
@@ -72,6 +72,16 @@ export default function LoginPage() {
   const [gsiReady, setGsiReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  useEffect(() => {
+    if (_hasHydrated && user) {
+      if (user.role === Role.ADMIN || user.role === Role.STAFF) {
+        router.replace('/admin/dashboard');
+      } else if (user.role === Role.CUSTOMER) {
+        router.replace('/');
+      }
+    }
+  }, [_hasHydrated, user, router]);
 
   const handleSelectDemoAccount = useCallback((account: DemoAccount) => {
     setEmail(account.email);

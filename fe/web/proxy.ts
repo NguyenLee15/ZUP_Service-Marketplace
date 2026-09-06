@@ -76,20 +76,60 @@ export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // --- AUTH CHECK & ROLE REDIRECT ---
-  if (pathname.startsWith('/admin') || pathname.startsWith('/provider')) {
-    const token = request.cookies.get('hs_access_token')?.value;
-    if (!token) {
+  const token = request.cookies.get('hs_access_token')?.value;
+  const payload = token ? parseJwt(token) : null;
+  const role = payload?.role as string | undefined;
+  const isAdminOrStaff = role === 'ADMIN' || role === 'STAFF';
+
+  // 1. Phân quyền ADMIN & STAFF:
+  // Nếu đã đăng nhập tài khoản quản trị (ADMIN/STAFF) mà truy cập trang chủ ('/')
+  // hoặc các trang auth / trang cá nhân của khách hàng, tự động chuyển về /admin/dashboard
+  if (isAdminOrStaff) {
+    if (pathname === '/admin' || pathname === '/admin/') {
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    }
+    const isCustomerPersonalRoute =
+      pathname === '/' ||
+      pathname.startsWith('/login') ||
+      pathname.startsWith('/register') ||
+      pathname.startsWith('/forgot-password') ||
+      pathname.startsWith('/bookings') ||
+      pathname.startsWith('/profile') ||
+      pathname.startsWith('/chat') ||
+      pathname.startsWith('/favorites') ||
+      pathname.startsWith('/notifications') ||
+      pathname.startsWith('/payment');
+
+    if (isCustomerPersonalRoute) {
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    }
+  }
+
+  // 2. Bảo vệ cổng Quản trị (/admin/*):
+  // Chỉ cho phép ADMIN và STAFF truy cập. Nếu chưa đăng nhập hoặc sai vai trò -> chuyển về /login
+  if (pathname.startsWith('/admin')) {
+    if (pathname === '/admin' || pathname === '/admin/') {
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    }
+    if (!token || !payload || !role || !isAdminOrStaff) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    const payload = parseJwt(token);
-    if (!payload || !payload.role) {
-      return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // 3. Khách hàng đã đăng nhập truy cập trang auth (/login, /register, /forgot-password) -> về trang chủ '/'
+  if (role === 'CUSTOMER') {
+    if (
+      pathname.startsWith('/login') ||
+      pathname.startsWith('/register') ||
+      pathname.startsWith('/forgot-password')
+    ) {
+      return NextResponse.redirect(new URL('/', request.url));
     }
-    
-    if (pathname.startsWith('/admin') && payload.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    if (pathname.startsWith('/provider') && payload.role !== 'PROVIDER') {
+  }
+
+  // 4. Bảo vệ đường dẫn Thợ (/provider/*) nếu có trên web
+  if (pathname.startsWith('/provider')) {
+    if (!token || !payload || !role || role !== 'PROVIDER') {
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }

@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Bell, Heart, MessageSquare, Package, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Bell, Heart, LayoutDashboard, MessageSquare, Package, User } from 'lucide-react';
 
 import { useAuthStore } from '@/store/auth.store';
 import { useServiceStore } from '@/store/service.store';
+import { Role } from '@/types';
 
 function isUnauthorizedError(error: unknown) {
   const candidate = error as {
@@ -17,6 +19,7 @@ function isUnauthorizedError(error: unknown) {
 }
 
 export function HomeHeaderAuth() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const user = useAuthStore((state) => state.user);
@@ -25,10 +28,17 @@ export function HomeHeaderAuth() {
   const logout = useAuthStore((state) => state.logout);
   const favoriteCount = useServiceStore((state) => state.favorites.length);
   const authenticated = mounted && isAuthenticated();
+  const isAdminOrStaff = user?.role === Role.ADMIN || user?.role === Role.STAFF;
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (authenticated && isAdminOrStaff) {
+      router.replace('/admin/dashboard');
+    }
+  }, [authenticated, isAdminOrStaff, router]);
 
   useEffect(() => {
     if (!authenticated) {
@@ -112,6 +122,32 @@ export function HomeHeaderAuth() {
 
   const displayName = user?.fullName?.trim() || user?.email || 'Tài khoản';
   const userInitial = displayName.charAt(0).toUpperCase();
+
+  if (isAdminOrStaff) {
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          href="/admin/dashboard"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 text-sm font-semibold text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] transition-colors hover:bg-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          <span>Trang quản trị</span>
+        </Link>
+        <Link
+          href="/admin/dashboard"
+          aria-label="Tài khoản Quản trị"
+          className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/10 py-1.5 pl-1 pr-3 transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:flex"
+        >
+          <span className="flex size-8 items-center justify-center rounded-full bg-amber-600 text-sm font-semibold text-white">
+            {userInitial || <User className="h-4 w-4" />}
+          </span>
+          <span className="max-w-28 truncate text-sm font-medium text-white xl:max-w-36">
+            {displayName}
+          </span>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1 sm:gap-2">
