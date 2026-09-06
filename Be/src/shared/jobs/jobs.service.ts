@@ -164,7 +164,7 @@ export class JobsService {
           const embPayload = payload as ServiceGenerateEmbeddingPayload;
           const aiService = this.moduleRef.get(AiService, { strict: false });
           const prisma = this.moduleRef.get(PrismaService, { strict: false });
-          
+
           if (aiService && prisma) {
             const text = `${embPayload.name} ${embPayload.description}`;
             const embedding = await aiService.createEmbedding(text);
@@ -175,7 +175,9 @@ export class JobsService {
                 SET embedding = '${vectorStr}'::vector
                 WHERE id = ${Number(embPayload.serviceId)}
               `);
-              this.logger.log(`Inline generated embedding for service #${embPayload.serviceId}`);
+              this.logger.log(
+                `Inline generated embedding for service #${embPayload.serviceId}`,
+              );
             }
           }
           return;

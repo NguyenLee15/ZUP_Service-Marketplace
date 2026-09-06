@@ -72,7 +72,9 @@ export class ReviewsService {
       try {
         isFlagged = await this.aiService.moderateReview(comment);
         if (isFlagged) {
-          this.logger.warn(`AI Moderation flagged review for booking ${bookingId}`);
+          this.logger.warn(
+            `AI Moderation flagged review for booking ${bookingId}`,
+          );
         }
       } catch (error) {
         this.logger.error('AI Moderation failed, skipping...', error);
@@ -155,4 +157,3 @@ export class ReviewsService {
     return { data, meta: { total, page, limit, distribution } };
   }
 }
-

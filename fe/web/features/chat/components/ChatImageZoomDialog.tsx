@@ -17,7 +17,6 @@ export function ChatImageZoomDialog({
       <DialogContent className="max-w-[90vw] max-h-[90vh] p-1 flex justify-center items-center bg-black/90 border-none sm:max-w-screen-lg">
         <DialogTitle className="sr-only">Phóng to hình ảnh</DialogTitle>
         {zoomedImage && (
-          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={zoomedImage}
             alt="Zoomed"

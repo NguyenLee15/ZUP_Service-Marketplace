@@ -111,7 +111,13 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { conversationId: number; content: string; messageType?: string; imageUrl?: string },
+    @MessageBody()
+    data: {
+      conversationId: number;
+      content: string;
+      messageType?: string;
+      imageUrl?: string;
+    },
   ) {
     const user = client.data.user;
     if (!user) return;

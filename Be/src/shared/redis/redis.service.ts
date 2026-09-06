@@ -81,7 +81,7 @@ export class RedisService implements OnModuleDestroy {
       if (keys.length > 0) {
         await this.client.del(...keys);
       }
-    } catch (e) {
+    } catch (_e) {
       this.logger.warn(`Failed to delete keys by pattern ${pattern}`);
     }
   }

@@ -180,7 +180,6 @@ export function ChatMessageList({
                   >
                     {message.imageUrl && !isRecalled && (
                       <div className="mb-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={message.imageUrl}
                           alt="Chat image"

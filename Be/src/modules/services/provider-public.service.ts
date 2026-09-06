@@ -10,14 +10,14 @@ export class ProviderPublicService {
 
   async getPublicDetail(serviceId: number) {
     const service = await this.prisma.service.findFirst({
-      where: { 
-        id: serviceId, 
-        status: ServiceStatus.ACTIVE, 
+      where: {
+        id: serviceId,
+        status: ServiceStatus.ACTIVE,
         isDeleted: false,
         provider: {
           status: 'ACTIVE',
           providerWallet: { isRestricted: false },
-        }
+        },
       },
       include: {
         category: true,

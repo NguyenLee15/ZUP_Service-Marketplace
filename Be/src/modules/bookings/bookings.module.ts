@@ -86,4 +86,3 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
   ],
 })
 export class BookingsModule {}
-

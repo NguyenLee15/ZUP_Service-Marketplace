@@ -53,8 +53,9 @@ export class BookingCommissionService {
     if (!booking) return;
 
     const fee = quotations.reduce(
-      (sum, q) => sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
-      0
+      (sum, q) =>
+        sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
+      0,
     );
 
     const executeDeduction = async (dbTx: Prisma.TransactionClient) => {

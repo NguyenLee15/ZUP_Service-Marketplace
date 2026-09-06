@@ -1,4 +1,9 @@
-import { Injectable, Logger, BadRequestException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { PayOS } from '@payos/node';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WalletSharedService } from './wallet-shared.service';
@@ -16,7 +21,7 @@ export class PayosService implements OnModuleInit {
     this.isEnabled = Boolean(
       process.env.PAYOS_CLIENT_ID &&
       process.env.PAYOS_API_KEY &&
-      process.env.PAYOS_CHECKSUM_KEY
+      process.env.PAYOS_CHECKSUM_KEY,
     );
   }
 
@@ -25,11 +30,13 @@ export class PayosService implements OnModuleInit {
       this.payos = new PayOS({
         clientId: process.env.PAYOS_CLIENT_ID!,
         apiKey: process.env.PAYOS_API_KEY!,
-        checksumKey: process.env.PAYOS_CHECKSUM_KEY!
+        checksumKey: process.env.PAYOS_CHECKSUM_KEY!,
       });
       this.logger.log('PayOS Client initialized');
     } else {
-      this.logger.warn('PayOS config is missing. PayOS payments will be disabled.');
+      this.logger.warn(
+        'PayOS config is missing. PayOS payments will be disabled.',
+      );
     }
   }
 
@@ -42,11 +49,16 @@ export class PayosService implements OnModuleInit {
       throw new BadRequestException('PAYOS_MIN_AMOUNT_2000');
     }
 
-    const wallet = await this.walletShared.getOrCreateWallet(this.prisma, providerId);
-    
+    const wallet = await this.walletShared.getOrCreateWallet(
+      this.prisma,
+      providerId,
+    );
+
     // PayOS requires a numeric orderCode (max 53 bit integer)
     // We generate a relatively unique number using timestamp and random digits
-    const orderCode = Number(String(Date.now()).slice(-9) + Math.floor(100 + Math.random() * 900));
+    const orderCode = Number(
+      String(Date.now()).slice(-9) + Math.floor(100 + Math.random() * 900),
+    );
 
     // Save transaction
     const txn = await this.prisma.walletTransaction.create({
@@ -97,11 +109,11 @@ export class PayosService implements OnModuleInit {
 
     try {
       const data = await this.payos.webhooks.verify(webhookBody);
-      
+
       if (webhookBody.code === '00') {
         const orderCode = data.orderCode;
         const amount = data.amount;
-        
+
         await this.handleSuccessPayment(String(orderCode), amount);
       }
       return { success: true };
@@ -118,12 +130,16 @@ export class PayosService implements OnModuleInit {
     });
 
     if (!pendingTxn) {
-      this.logger.warn(`No pending PayOS deposit found for orderCode: ${orderCodeStr}`);
+      this.logger.warn(
+        `No pending PayOS deposit found for orderCode: ${orderCodeStr}`,
+      );
       return;
     }
 
     if (Number(pendingTxn.amount) !== amount) {
-      this.logger.error(`Amount mismatch for ${orderCodeStr}. Expected ${pendingTxn.amount}, got ${amount}`);
+      this.logger.error(
+        `Amount mismatch for ${orderCodeStr}. Expected ${pendingTxn.amount.toString()}, got ${amount}`,
+      );
       return;
     }
 
@@ -173,7 +189,9 @@ export class PayosService implements OnModuleInit {
         },
       });
     });
-    
-    this.logger.log(`Successfully processed PayOS deposit for orderCode: ${orderCodeStr}`);
+
+    this.logger.log(
+      `Successfully processed PayOS deposit for orderCode: ${orderCodeStr}`,
+    );
   }
 }

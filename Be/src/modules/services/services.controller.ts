@@ -164,10 +164,15 @@ export class ServicesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Provider sinh mÃ´ táº£ dá»‹ch vá»¥ tá»± Ä‘á»™ng báº±ng AI' })
+  @ApiOperation({
+    summary: 'Provider sinh mÃ´ táº£ dá»‹ch vá»¥ tá»± Ä‘á»™ng báº±ng AI',
+  })
   @ApiSuccessResponse('Sinh mÃ´ táº£ thÃ nh cÃ´ng')
   async generateDescription(@Body() dto: AiGenerateDescriptionDto) {
-    const text = await this.aiService.generateServiceDescription(dto.name, dto.keywords);
+    const text = await this.aiService.generateServiceDescription(
+      dto.name,
+      dto.keywords,
+    );
     if (!text) {
       throw new BadRequestException({
         code: ErrorCodes.INTERNAL_ERROR,
@@ -441,5 +446,3 @@ export class AdminFeaturedRateController {
     );
   }
 }
-
-

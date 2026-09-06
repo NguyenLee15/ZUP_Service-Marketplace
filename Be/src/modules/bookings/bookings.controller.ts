@@ -72,12 +72,13 @@ export class BookingsController {
 
   /** POST /bookings/intent-extract — AI bóc tách ý định từ mô tả sự cố */
   @Post('intent-extract')
-  @ApiOperation({ summary: 'Extract booking intent from natural language prompt via AI' })
+  @ApiOperation({
+    summary: 'Extract booking intent from natural language prompt via AI',
+  })
   @ApiSuccessResponse('Extracted booking intent')
   async extractIntent(@Body() dto: ExtractBookingIntentDto) {
     return this.bookingIntentService.extractIntent(dto);
   }
-
 
   /** POST /bookings — Customer tạo booking */
   @Post()

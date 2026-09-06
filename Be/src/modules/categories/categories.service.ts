@@ -32,7 +32,11 @@ export class CategoriesService {
       orderBy: { id: 'asc' },
     });
 
-    await this.redisService.set(CACHE_KEY, JSON.stringify(categories), CACHE_TTL);
+    await this.redisService.set(
+      CACHE_KEY,
+      JSON.stringify(categories),
+      CACHE_TTL,
+    );
     return { data: categories };
   }
 

@@ -33,7 +33,6 @@ export function ChatInputArea({
     <div className="bg-card border-t border-action-blue/10 px-4 md:px-6 py-4 flex flex-col">
       {selectedFilePreview && (
         <div className="mb-3 relative inline-block w-fit">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={selectedFilePreview}
             alt="preview"

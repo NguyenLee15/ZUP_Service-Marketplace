@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -12,7 +12,6 @@ export class CreateCategoryDto {
   @IsString()
   @IsOptional()
   iconUrl?: string;
-
 }
 
 export class UpdateCategoryDto {
@@ -28,5 +27,4 @@ export class UpdateCategoryDto {
   @IsString()
   @IsOptional()
   iconUrl?: string;
-
 }

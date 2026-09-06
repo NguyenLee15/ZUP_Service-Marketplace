@@ -48,7 +48,9 @@ export class WalletLedgerService {
         action: input.actionName,
         targetType: 'WALLET',
         targetId: transaction.id,
-        description: input.description || `Cộng ví ${input.amount.toLocaleString('vi-VN')}₫ (Mã ví: ${input.walletId})`,
+        description:
+          input.description ||
+          `Cộng ví ${input.amount.toLocaleString('vi-VN')}₫ (Mã ví: ${input.walletId})`,
         ipAddress: input.ipAddress || 'System',
       },
     });
@@ -100,7 +102,9 @@ export class WalletLedgerService {
         action: input.actionName,
         targetType: 'WALLET',
         targetId: transaction.id,
-        description: input.description || `Trừ ví ${amount.toLocaleString('vi-VN')}₫ (Mã ví: ${input.walletId})`,
+        description:
+          input.description ||
+          `Trừ ví ${amount.toLocaleString('vi-VN')}₫ (Mã ví: ${input.walletId})`,
         ipAddress: input.ipAddress || 'System',
       },
     });
@@ -108,7 +112,10 @@ export class WalletLedgerService {
     return transaction;
   }
 
-  async syncWalletRestriction(providerId: number, tx: Prisma.TransactionClient) {
+  async syncWalletRestriction(
+    providerId: number,
+    tx: Prisma.TransactionClient,
+  ) {
     const wallet = await tx.providerWallet.findUnique({
       where: { providerId },
     });
@@ -134,7 +141,9 @@ export class WalletLedgerService {
       try {
         const parsed = JSON.parse(setting.value) as { rate?: unknown };
         if (typeof parsed.rate === 'number') rate = parsed.rate;
-      } catch {}
+      } catch {
+        // use default fallback rate
+      }
     } else {
       const commissionConfig = await tx.commissionConfig.findFirst({
         orderBy: { effectiveFrom: 'desc' },

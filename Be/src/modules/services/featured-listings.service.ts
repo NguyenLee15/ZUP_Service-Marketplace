@@ -233,12 +233,11 @@ export class FeaturedListingsService {
     });
 
     // Dịch vụ đã được lọc qua query Prisma, chỉ cần map
-    const activeServices = featured
-      .map((f) => ({
-        ...f.service,
-        isFeatured: true,
-        featuredUntil: f.endDate,
-      }));
+    const activeServices = featured.map((f) => ({
+      ...f.service,
+      isFeatured: true,
+      featuredUntil: f.endDate,
+    }));
 
     const result = { data: activeServices };
 
