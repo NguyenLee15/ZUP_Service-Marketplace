@@ -10,6 +10,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { adminApi } from "@/features/auth/services/api";
+import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
+import { AdminPermission } from "@/types/admin-permissions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -174,7 +176,8 @@ export default function AdminAuditLogsPage() {
     Math.max(1, Math.ceil((Number(meta.total) || logs.length) / filters.limit));
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 pb-10">
+    <AdminPermissionGuard permission={AdminPermission.AUDIT_LOG_VIEW}>
+      <div className="mx-auto max-w-[1600px] space-y-6 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -398,6 +401,7 @@ export default function AdminAuditLogsPage() {
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

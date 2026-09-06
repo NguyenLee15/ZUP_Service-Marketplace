@@ -45,7 +45,11 @@ export class CategoriesService {
     return this.getFlat();
   }
 
-  async create(dto: CreateCategoryDto) {
+  async create(
+    adminId: number | undefined,
+    ip: string | undefined,
+    dto: CreateCategoryDto,
+  ) {
     const existing = await this.prisma.serviceCategory.findFirst({
       where: {
         name: dto.name,
@@ -59,18 +63,40 @@ export class CategoriesService {
       });
     }
 
-    const category = await this.prisma.serviceCategory.create({
-      data: {
-        name: dto.name,
-        description: dto.description,
-      },
+    const category = await this.prisma.$transaction(async (tx) => {
+      const cat = await tx.serviceCategory.create({
+        data: {
+          name: dto.name,
+          description: dto.description,
+        },
+      });
+
+      if (adminId) {
+        await tx.auditLog.create({
+          data: {
+            actorId: adminId,
+            action: 'CREATE_CATEGORY',
+            targetType: 'CATEGORY',
+            targetId: cat.id,
+            description: `Tạo danh mục: ${dto.name}`,
+            ipAddress: ip,
+          },
+        });
+      }
+
+      return cat;
     });
 
     await this.invalidateCache();
     return { data: category, message: 'Tạo danh mục thành công' };
   }
 
-  async update(id: number, dto: UpdateCategoryDto) {
+  async update(
+    adminId: number | undefined,
+    ip: string | undefined,
+    id: number,
+    dto: UpdateCategoryDto,
+  ) {
     const category = await this.prisma.serviceCategory.findUnique({
       where: { id },
     });
@@ -81,19 +107,40 @@ export class CategoriesService {
       });
     }
 
-    const updated = await this.prisma.serviceCategory.update({
-      where: { id },
-      data: {
-        name: dto.name,
-        description: dto.description,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const res = await tx.serviceCategory.update({
+        where: { id },
+        data: {
+          name: dto.name,
+          description: dto.description,
+        },
+      });
+
+      if (adminId) {
+        await tx.auditLog.create({
+          data: {
+            actorId: adminId,
+            action: 'UPDATE_CATEGORY',
+            targetType: 'CATEGORY',
+            targetId: id,
+            description: `Cập nhật danh mục: ${dto.name || category.name}`,
+            ipAddress: ip,
+          },
+        });
+      }
+
+      return res;
     });
 
     await this.invalidateCache();
     return { data: updated, message: 'Cập nhật danh mục thành công' };
   }
 
-  async softDelete(id: number) {
+  async softDelete(
+    adminId: number | undefined,
+    ip: string | undefined,
+    id: number,
+  ) {
     const category = await this.prisma.serviceCategory.findUnique({
       where: { id },
     });
@@ -114,9 +161,24 @@ export class CategoriesService {
       });
     }
 
-    await this.prisma.serviceCategory.update({
-      where: { id },
-      data: { isDeleted: true },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.serviceCategory.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+
+      if (adminId) {
+        await tx.auditLog.create({
+          data: {
+            actorId: adminId,
+            action: 'DELETE_CATEGORY',
+            targetType: 'CATEGORY',
+            targetId: id,
+            description: `Xóa danh mục: ${category.name}`,
+            ipAddress: ip,
+          },
+        });
+      }
     });
 
     await this.invalidateCache();

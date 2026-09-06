@@ -29,7 +29,7 @@ export class ServiceModerationService {
     private readonly ledger: WalletLedgerService,
   ) {}
 
-  async approve(adminId: number, serviceId: number) {
+  async approve(adminId: number, serviceId: number, ip?: string) {
     const service = await this.prisma.service.findUnique({
       where: { id: serviceId },
       include: {
@@ -136,10 +136,23 @@ export class ServiceModerationService {
       referenceId: serviceId,
     });
 
+    if (adminId) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'APPROVE_SERVICE',
+          targetType: 'SERVICE',
+          targetId: serviceId,
+          description: `Phê duyệt dịch vụ: ${service.name}`,
+          ipAddress: ip,
+        },
+      });
+    }
+
     return { data: updated, message: 'Đã phê duyệt dịch vụ' };
   }
 
-  async reject(adminId: number, serviceId: number, reason: string) {
+  async reject(adminId: number, serviceId: number, reason: string, ip?: string) {
     const service = await this.getServiceOrThrow(serviceId);
     if (service.status !== ServiceStatus.PENDING) {
       throw new BadRequestException({
@@ -165,10 +178,23 @@ export class ServiceModerationService {
       },
     });
 
+    if (adminId) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'REJECT_SERVICE',
+          targetType: 'SERVICE',
+          targetId: serviceId,
+          description: `Từ chối dịch vụ: ${service.name}. Lý do: ${reason}`,
+          ipAddress: ip,
+        },
+      });
+    }
+
     return { data: updated, message: 'Đã từ chối dịch vụ' };
   }
 
-  async hide(adminId: number, serviceId: number, reason = '') {
+  async hide(adminId: number, serviceId: number, reason = '', ip?: string) {
     const service = await this.getServiceOrThrow(serviceId);
     if (service.status !== ServiceStatus.ACTIVE) {
       throw new BadRequestException({
@@ -194,10 +220,23 @@ export class ServiceModerationService {
       },
     });
 
+    if (adminId) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'HIDE_SERVICE',
+          targetType: 'SERVICE',
+          targetId: serviceId,
+          description: `Ẩn dịch vụ: ${service.name}. Lý do: ${reason}`,
+          ipAddress: ip,
+        },
+      });
+    }
+
     return { data: updated, message: 'Đã ẩn dịch vụ' };
   }
 
-  async show(adminId: number, serviceId: number) {
+  async show(adminId: number, serviceId: number, ip?: string) {
     const service = await this.getServiceOrThrow(serviceId);
     if (service.status !== ServiceStatus.HIDDEN) {
       throw new BadRequestException({
@@ -223,10 +262,23 @@ export class ServiceModerationService {
       },
     });
 
+    if (adminId) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'SHOW_SERVICE',
+          targetType: 'SERVICE',
+          targetId: serviceId,
+          description: `Mở hiển thị dịch vụ: ${service.name}`,
+          ipAddress: ip,
+        },
+      });
+    }
+
     return { data: updated, message: 'Đã mở ẩn dịch vụ' };
   }
 
-  async delete(adminId: number, serviceId: number) {
+  async delete(adminId: number, serviceId: number, ip?: string) {
     const service = await this.getServiceOrThrow(serviceId);
 
     await this.prisma.service.update({
@@ -245,6 +297,19 @@ export class ServiceModerationService {
         referenceId: serviceId,
       },
     });
+
+    if (adminId) {
+      await this.prisma.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'DELETE_SERVICE',
+          targetType: 'SERVICE',
+          targetId: serviceId,
+          description: `Xóa dịch vụ: ${service.name}`,
+          ipAddress: ip,
+        },
+      });
+    }
 
     return { message: 'Đã xóa dịch vụ' };
   }

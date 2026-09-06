@@ -239,7 +239,7 @@ export const adminApi = {
   resolveDispute: (
     id: number,
     data: {
-      resolutionAction: string;
+      resolutionAction: 'COMPLETE' | 'PENALIZE';
       resolutionReason: string;
       penaltyAmount?: number;
     },

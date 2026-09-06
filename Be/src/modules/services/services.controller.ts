@@ -13,6 +13,7 @@ import {
   Delete,
   BadRequestException,
   HttpCode,
+  Ip,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
@@ -340,47 +341,52 @@ export class AdminServicesController {
   @Patch(':id/approve')
   async approve(
     @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.moderationService.approve(adminId, id);
+    return this.moderationService.approve(adminId, id, ip);
   }
 
   /** PATCH /admin/services/:id/reject */
   @Patch(':id/reject')
   async reject(
     @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AdminRejectDto,
   ) {
-    return this.moderationService.reject(adminId, id, dto.reason);
+    return this.moderationService.reject(adminId, id, dto.reason, ip);
   }
 
   /** PATCH /admin/services/:id/hide */
   @Patch(':id/hide')
   async hide(
     @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AdminHideDto,
   ) {
-    return this.moderationService.hide(adminId, id, dto.reason);
+    return this.moderationService.hide(adminId, id, dto.reason, ip);
   }
 
   /** PATCH /admin/services/:id/show */
   @Patch(':id/show')
   async show(
     @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.moderationService.show(adminId, id);
+    return this.moderationService.show(adminId, id, ip);
   }
 
   /** DELETE /admin/services/:id â€” UC05.4 Admin xÃ³a dá»‹ch vá»¥ */
   @Delete(':id')
   async deleteByAdmin(
     @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.moderationService.delete(adminId, id);
+    return this.moderationService.delete(adminId, id, ip);
   }
 }
 

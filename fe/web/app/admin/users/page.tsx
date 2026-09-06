@@ -10,13 +10,13 @@ import {
   Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 const lockSchema = z.object({
   reason: z.string().min(10, 'Lý do phải có ít nhất 10 ký tự'),
@@ -144,7 +146,8 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="-m-5 flex min-h-[calc(100vh-64px)] flex-col xl:-m-6">
+    <AdminPermissionGuard permission={AdminPermission.USER_VIEW}>
+      <div className="-m-5 flex min-h-[calc(100vh-64px)] flex-col xl:-m-6">
       <div className="shrink-0 border-b border-[var(--admin-border)] bg-white px-5 pt-5 xl:px-6">
         <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -424,6 +427,7 @@ export default function UsersPage() {
           </DialogContent>
         )}
       </Dialog>
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

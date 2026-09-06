@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -111,7 +112,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-5">
+    <AdminPermissionGuard adminOnly={true}>
+      <div className="mx-auto max-w-[1440px] space-y-5">
       <div className="flex flex-col gap-1 border-b border-[var(--admin-border)] pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-slate-950">Cài đặt hệ thống</h1>
         <p className="text-sm text-slate-500">Quản lý cấu hình vận hành, hoa hồng và trạng thái module.</p>
@@ -255,6 +257,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }

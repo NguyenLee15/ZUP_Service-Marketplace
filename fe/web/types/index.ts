@@ -61,6 +61,9 @@ export enum SenderType {
   AI = 'AI',
 }
 
+export * from './admin-permissions';
+import type { AdminPermissionValue } from './admin-permissions';
+
 // ===== Common Types =====
 
 export interface User {
@@ -73,6 +76,7 @@ export interface User {
   status: UserStatus;
   emailVerified: boolean;
   isOnline?: boolean;
+  permissions?: AdminPermissionValue[];
   createdAt: string;
 }
 

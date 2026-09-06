@@ -8,12 +8,14 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Ip,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Permissions } from '../../common/decorators/permissions.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AdminPermission } from '../../common/constants/admin-permissions';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/categories.dto';
@@ -39,8 +41,12 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles('ADMIN', 'STAFF')
   @Permissions(AdminPermission.SERVICE_MODERATE)
-  async create(@Body() dto: CreateCategoryDto) {
-    return this.categoriesService.create(dto);
+  async create(
+    @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
+    @Body() dto: CreateCategoryDto,
+  ) {
+    return this.categoriesService.create(adminId, ip, dto);
   }
 
   /** PATCH /categories/:id — Admin only */
@@ -49,10 +55,12 @@ export class CategoriesController {
   @Roles('ADMIN', 'STAFF')
   @Permissions(AdminPermission.SERVICE_MODERATE)
   async update(
+    @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateCategoryDto,
   ) {
-    return this.categoriesService.update(id, dto);
+    return this.categoriesService.update(adminId, ip, id, dto);
   }
 
   /** DELETE /categories/:id — Admin only */
@@ -60,7 +68,11 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles('ADMIN', 'STAFF')
   @Permissions(AdminPermission.SERVICE_MODERATE)
-  async softDelete(@Param('id', ParseIntPipe) id: number) {
-    return this.categoriesService.softDelete(id);
+  async softDelete(
+    @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.categoriesService.softDelete(adminId, ip, id);
   }
 }
