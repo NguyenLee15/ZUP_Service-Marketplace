@@ -15,7 +15,10 @@ import { PermissionsGuard } from '../src/common/guards/permissions.guard';
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { AdminController } from '../src/modules/admin/admin.controller';
+import {
+  AdminUsersController,
+  AdminAuditLogsController,
+} from '../src/modules/admin/controllers';
 import { AdminService } from '../src/modules/admin/services/admin.service';
 import { AdminAuditLogService } from '../src/modules/admin/services/admin-audit-log.service';
 import { AdminDashboardService } from '../src/modules/admin/services/admin-dashboard.service';
@@ -120,7 +123,8 @@ describe('Route security smoke (e2e)', () => {
         AdminFeaturedListingsController,
         AdminFeaturedRateController,
         CategoriesController,
-        AdminController,
+        AdminUsersController,
+        AdminAuditLogsController,
       ],
       providers: [
         RolesGuard,

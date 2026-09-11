@@ -84,4 +84,3 @@ export class AdminUsersController {
     return this.adminService.deleteUser(adminId, id, ip);
   }
 }
-

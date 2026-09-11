@@ -76,4 +76,3 @@ export class AdminAuditLogsController {
     return res.status(HttpStatus.OK).send(csv);
   }
 }
-

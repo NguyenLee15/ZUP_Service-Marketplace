@@ -86,4 +86,3 @@ export class AdminServicesController {
     return this.moderationService.show(adminId, id, ip);
   }
 }
-

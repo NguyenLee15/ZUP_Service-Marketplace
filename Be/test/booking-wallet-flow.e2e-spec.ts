@@ -14,10 +14,11 @@ import { PermissionsGuard } from '../src/common/guards/permissions.guard';
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import {
-  AdminDisputesController,
   BookingsController,
   ProviderBookingsController,
 } from '../src/modules/bookings/controllers';
+import { AdminDisputesController } from '../src/modules/admin/controllers';
+import { AdminService } from '../src/modules/admin/services/admin.service';
 import { BookingDisputeService } from '../src/modules/bookings/booking-dispute.service';
 import { BookingLifecycleService } from '../src/modules/bookings/booking-lifecycle.service';
 import { BookingQueryService } from '../src/modules/bookings/booking-query.service';
@@ -156,6 +157,10 @@ describe('Booking/wallet production flow (e2e)', () => {
       providers: [
         { provide: BookingLifecycleService, useValue: mocks.lifecycle },
         { provide: BookingDisputeService, useValue: mocks.dispute },
+        {
+          provide: AdminService,
+          useValue: { resolveDispute: mocks.dispute.resolveDispute },
+        },
         { provide: BookingQueryService, useValue: mocks.query },
         { provide: CustomerBookingExportService, useValue: {} },
         { provide: BookingIntentService, useValue: {} },
