@@ -147,15 +147,15 @@ export class AdminReasonDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(500)
-  reason: string;
+  reason!: string;
 }
 
 export class CreateStaffDto {
   @IsString()
-  fullName: string;
+  fullName!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsOptional()
@@ -163,7 +163,7 @@ export class CreateStaffDto {
 
   @IsString()
   @MinLength(8)
-  password: string;
+  password!: string;
 
   @IsArray()
   @IsString({ each: true })
@@ -197,17 +197,17 @@ export class UpdateCommissionSettingsDto {
   @Type(() => Number)
   @Min(0)
   @Max(100)
-  rate: number;
+  rate!: number;
 
   @IsInt()
   @Type(() => Number)
   @Min(0)
-  minAmount: number;
+  minAmount!: number;
 
   @IsInt()
   @Type(() => Number)
   @Min(0)
-  maxAmount: number;
+  maxAmount!: number;
 }
 
 export class SocialZaloConfigDto {
@@ -269,10 +269,10 @@ export class UpdateSocialConfigDto {
 export class AdminResolveDisputeDto {
   @IsString()
   @IsIn(['COMPLETE', 'PENALIZE'])
-  resolutionAction: 'COMPLETE' | 'PENALIZE';
+  resolutionAction!: 'COMPLETE' | 'PENALIZE';
 
   @IsString()
-  resolutionReason: string;
+  resolutionReason!: string;
 
   @IsOptional()
   @IsNumber()
