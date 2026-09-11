@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, UseGuards, Body } from '@nestjs/common';
+import { Controller, Get, Patch, UseGuards, Body, Ip } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -9,12 +9,12 @@ import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses } from '../../../common/decorators/api-contract.decorator';
 import { AdminPermission } from '../../../common/constants/admin-permissions';
-import { UpdateCommissionSettingsDto } from '../dto/admin.dto';
-import { AdminService } from '../services/admin.service';
 import {
-  PublicSocialConfig,
-  SettingsService,
-} from '../../settings/settings.service';
+  UpdateCommissionSettingsDto,
+  UpdateSocialConfigDto,
+} from '../dto/admin.dto';
+import { AdminService } from '../services/admin.service';
+import { SettingsService } from '../../settings/settings.service';
 
 @Controller('admin/settings')
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
@@ -42,8 +42,9 @@ export class AdminFinanceController {
   async updateCommission(
     @CurrentUser('id') adminId: number,
     @Body() body: UpdateCommissionSettingsDto,
+    @Ip() ip: string,
   ) {
-    await this.adminService.updateCommissionSettings(adminId, body);
+    await this.adminService.updateCommissionSettings(adminId, body, ip);
     return { message: 'Đã cập nhật cấu hình hoa hồng' };
   }
 
@@ -58,7 +59,7 @@ export class AdminFinanceController {
   @Patch('social')
   @Permissions(AdminPermission.SETTINGS_MANAGE)
   @ApiOperation({ summary: 'Update public social configuration' })
-  async updateSocialSettings(@Body() body: Partial<PublicSocialConfig>) {
+  async updateSocialSettings(@Body() body: UpdateSocialConfigDto) {
     const data = await this.settingsService.updatePublicSocialConfig(body);
     return { data, message: 'Đã cập nhật cấu hình mạng xã hội' };
   }

@@ -19,7 +19,7 @@ import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses } from '../../../common/decorators/api-contract.decorator';
 import { AdminPermission } from '../../../common/constants/admin-permissions';
-import { AdminReasonDto, AdminStatusListQueryDto } from '../dto/admin.dto';
+import { AdminKycQueryDto, AdminReasonDto } from '../dto/admin.dto';
 import { AdminService } from '../services/admin.service';
 
 @Controller('admin/kyc')
@@ -34,7 +34,7 @@ export class AdminKycController {
   @Get()
   @Permissions(AdminPermission.KYC_VIEW)
   @ApiOperation({ summary: 'List provider KYC requests' })
-  async getKycRequests(@Query() query: AdminStatusListQueryDto) {
+  async getKycRequests(@Query() query: AdminKycQueryDto) {
     return this.adminService.getKycRequests(
       query.status,
       query.page,

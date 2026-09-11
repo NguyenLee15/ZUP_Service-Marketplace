@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ErrorCodes } from '../../../common/errors/error-codes';
+import { paginationMeta } from '../../../common/dto/pagination.dto';
 import { KycService } from '../../users/kyc.service';
 import { BookingDisputeService } from '../../bookings/booking-dispute.service';
 import { BookingLifecycleService } from '../../bookings/booking-lifecycle.service';
@@ -29,8 +30,6 @@ export class AdminService {
     private bookingDisputeService: BookingDisputeService,
   ) {}
 
-  // ... (getUsers, lockUser, unlockUser, deleteUser stay as is)
-
   // ===== KYC =====
 
   async getKycRequests(status?: string, page: number = 1, limit: number = 20) {
@@ -52,7 +51,7 @@ export class AdminService {
       this.prisma.kycProfile.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit } };
+    return { data, meta: paginationMeta(total, page, limit) };
   }
 
   async getKycRequestById(kycId: number) {
@@ -70,6 +69,7 @@ export class AdminService {
 
     if (!kyc) {
       throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
         message: 'Yêu cầu KYC không tồn tại',
       });
     }
@@ -127,7 +127,7 @@ export class AdminService {
       this.prisma.booking.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit } };
+    return { data, meta: paginationMeta(total, page, limit) };
   }
 
   async getBookingDetail(id: number) {
@@ -197,7 +197,7 @@ export class AdminService {
       this.prisma.dispute.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit } };
+    return { data, meta: paginationMeta(total, page, limit) };
   }
 
   async getDisputeDetail(id: number) {
@@ -278,7 +278,7 @@ export class AdminService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: paginationMeta(total, page, limit),
     };
   }
 
@@ -491,6 +491,7 @@ export class AdminService {
       minAmount: number;
       maxAmount: number;
     },
+    ip?: string,
   ) {
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({
@@ -505,6 +506,17 @@ export class AdminService {
           reason: `Cập nhật cấu hình: min=${body.minAmount}, max=${body.maxAmount}`,
           configuredBy: adminId,
           effectiveFrom: new Date(),
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'UPDATE_COMMISSION_SETTINGS',
+          targetType: 'SYSTEM_SETTING',
+          targetId: 0,
+          description: `Cập nhật cấu hình hoa hồng: ${body.rate}%, min=${body.minAmount}, max=${body.maxAmount}`,
+          ipAddress: ip,
         },
       });
     });
