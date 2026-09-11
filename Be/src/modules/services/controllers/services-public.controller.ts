@@ -306,4 +306,3 @@ export class ServicesController {
     return this.featuredListingsService.getMyFeaturedListings(providerId);
   }
 }
-

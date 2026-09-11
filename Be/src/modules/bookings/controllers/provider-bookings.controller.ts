@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Body,
   Param,
@@ -98,8 +99,11 @@ export class ProviderBookingsController {
   }
 
   /** POST /provider/bookings/:id/quote — Thá»£ gá»­i bÃ¡o giÃ¡ gá»‘c (kÃ¨m biÃªn báº£n kháº£o sÃ¡t) */
+  @Post(':id/quote')
   @Patch(':id/quote')
-  @ApiOperation({ summary: 'Thá»£ gá»­i bÃ¡o giÃ¡ gá»‘c kÃ¨m biÃªn báº£n kháº£o sÃ¡t' })
+  @ApiOperation({
+    summary: 'Thá»£ gá»­i bÃ¡o giÃ¡ gá»‘c kÃ¨m biÃªn báº£n kháº£o sÃ¡t',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -138,7 +142,8 @@ export class ProviderBookingsController {
     return this.bookingLifecycleService.sendQuote(userId, id, dto, files);
   }
 
-  /** POST /provider/bookings/:id/supplementary-quotes — Thá»£ táº¡o bÃ¡o giÃ¡ phÃ¡t sinh */
+  /** POST /provider/bookings/:id/supplementary-quotes — Thợ tạo báo giá phát sinh */
+  @Post(':id/supplementary-quotes')
   @Patch(':id/supplementary-quotes')
   async sendSupplementaryQuote(
     @CurrentUser('id') userId: number,
@@ -205,4 +210,3 @@ export class ProviderBookingsController {
     return this.bookingLifecycleService.cancelByProvider(userId, id, dto);
   }
 }
-

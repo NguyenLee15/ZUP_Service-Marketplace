@@ -112,11 +112,10 @@ export class BookingsController {
     @Param('id', ParseIntPipe) id: number,
     @Res() res: Response,
   ) {
-    const pdfDoc =
-      await this.customerBookingExportService.exportReceiptPdf(
-        userId,
-        id,
-      );
+    const pdfDoc = await this.customerBookingExportService.exportReceiptPdf(
+      userId,
+      id,
+    );
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
@@ -134,11 +133,10 @@ export class BookingsController {
     @Query() query: BookingListQueryDto,
     @Res() res: Response,
   ) {
-    const pdfDoc =
-      await this.customerBookingExportService.exportHistoryPdf(
-        userId,
-        query,
-      );
+    const pdfDoc = await this.customerBookingExportService.exportHistoryPdf(
+      userId,
+      query,
+    );
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
@@ -291,4 +289,3 @@ export class BookingsController {
     return this.bookingLifecycleService.rebook(userId, id);
   }
 }
-

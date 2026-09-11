@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Patch,
-  UseGuards,
-  Body,
-} from '@nestjs/common';
+import { Controller, Get, Patch, UseGuards, Body } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -69,4 +63,3 @@ export class AdminFinanceController {
     return { data, message: 'Đã cập nhật cấu hình mạng xã hội' };
   }
 }
-

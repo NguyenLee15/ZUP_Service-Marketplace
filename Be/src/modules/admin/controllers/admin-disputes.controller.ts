@@ -19,7 +19,10 @@ import { Permissions } from '../../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses } from '../../../common/decorators/api-contract.decorator';
 import { AdminPermission } from '../../../common/constants/admin-permissions';
-import { AdminResolveDisputeDto, AdminStatusListQueryDto } from '../dto/admin.dto';
+import {
+  AdminResolveDisputeDto,
+  AdminStatusListQueryDto,
+} from '../dto/admin.dto';
 import { AdminService } from '../services/admin.service';
 
 @Controller('admin/disputes')
@@ -48,7 +51,9 @@ export class AdminDisputesController {
 
   @Patch(':id/resolve')
   @Permissions(AdminPermission.DISPUTE_RESOLVE)
-  @ApiOperation({ summary: 'Resolve dispute with COMPLETE or PENALIZE verdict' })
+  @ApiOperation({
+    summary: 'Resolve dispute with COMPLETE or PENALIZE verdict',
+  })
   async resolveDispute(
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -58,4 +63,3 @@ export class AdminDisputesController {
     return this.adminService.resolveDispute(adminId, id, dto, ip);
   }
 }
-

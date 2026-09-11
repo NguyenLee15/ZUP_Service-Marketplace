@@ -13,7 +13,11 @@ import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { AdminController } from '../src/modules/admin/admin.controller';
+import {
+  AdminStaffsController,
+  AdminAuditLogsController,
+  AdminBookingsController,
+} from '../src/modules/admin/controllers';
 import { AdminService } from '../src/modules/admin/services/admin.service';
 import { AdminDashboardService } from '../src/modules/admin/services/admin-dashboard.service';
 import { StaffAdminService } from '../src/modules/admin/services/staff-admin.service';
@@ -118,7 +122,9 @@ describe('Admin permissions and audit logs (e2e)', () => {
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [
-        AdminController,
+        AdminStaffsController,
+        AdminAuditLogsController,
+        AdminBookingsController,
         AdminWalletDepositsController,
         AdminServicesController,
       ],

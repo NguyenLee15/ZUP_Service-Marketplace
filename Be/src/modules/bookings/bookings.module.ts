@@ -1,8 +1,5 @@
 import { Module } from '@nestjs/common';
-import {
-  BookingsController,
-  ProviderBookingsController,
-} from './controllers';
+import { BookingsController, ProviderBookingsController } from './controllers';
 import { ProviderDashboardController } from './provider-dashboard.controller';
 import { CloudinaryModule } from '../../shared/cloudinary/cloudinary.module';
 import { BookingsCron } from './bookings.cron';

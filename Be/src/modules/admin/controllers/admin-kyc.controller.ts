@@ -72,4 +72,3 @@ export class AdminKycController {
     return this.adminService.reviewKyc(adminId, id, 'REJECT', body.reason, ip);
   }
 }
-
