@@ -1,5 +1,14 @@
 import { Module } from '@nestjs/common';
-import { AdminController } from './admin.controller';
+import {
+  AdminUsersController,
+  AdminStaffsController,
+  AdminKycController,
+  AdminBookingsController,
+  AdminDisputesController,
+  AdminFinanceController,
+  AdminAuditLogsController,
+  AdminDashboardController,
+} from './controllers';
 import { BookingsModule } from '../bookings/bookings.module';
 import { UsersModule } from '../users/users.module';
 import { AdminService } from './services/admin.service';
@@ -10,7 +19,16 @@ import { AdminAuditLogService } from './services/admin-audit-log.service';
 
 @Module({
   imports: [BookingsModule, UsersModule, SettingsModule],
-  controllers: [AdminController],
+  controllers: [
+    AdminUsersController,
+    AdminStaffsController,
+    AdminKycController,
+    AdminBookingsController,
+    AdminDisputesController,
+    AdminFinanceController,
+    AdminAuditLogsController,
+    AdminDashboardController,
+  ],
   providers: [
     AdminService,
     AdminDashboardService,

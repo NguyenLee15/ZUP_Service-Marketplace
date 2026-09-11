@@ -64,6 +64,14 @@ export class BookingLifecycleService {
       });
     }
 
+    const desiredDate = new Date(dto.desiredTime);
+    if (isNaN(desiredDate.getTime()) || desiredDate.getTime() <= Date.now()) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Thời gian mong muốn thực hiện dịch vụ phải ở tương lai',
+      });
+    }
+
     // Guard: chống đặt trùng cùng dịch vụ trong thời gian ngắn
     const duplicateWindow = new Date(Date.now() - 5 * 60 * 1000); // 5 phút
     const existingBooking = await this.prisma.booking.findFirst({
@@ -529,18 +537,30 @@ export class BookingLifecycleService {
       booking.status,
       BookingStatus.CANCELLED,
     );
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: BookingStatus.CANCELLED },
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const b = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: BookingStatus.CANCELLED },
+      });
+
+      await tx.quotation.updateMany({
+        where: { bookingId, status: { in: ['PENDING', 'ACCEPTED'] } },
+        data: { status: 'REJECTED' },
+      });
+
+      await this.shared.addStatusHistory(
+        bookingId,
+        'QUOTED',
+        'CANCELLED',
+        customerId,
+        dto.reason,
+        tx,
+      );
+
+      return b;
     });
 
-    await this.shared.addStatusHistory(
-      bookingId,
-      'QUOTED',
-      'CANCELLED',
-      customerId,
-      dto.reason,
-    );
     await this.shared.notify(
       booking.providerId,
       'QUOTE_REJECTED',
@@ -1010,18 +1030,30 @@ export class BookingLifecycleService {
       booking.status,
       BookingStatus.CANCELLED,
     );
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: BookingStatus.CANCELLED },
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const b = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: BookingStatus.CANCELLED },
+      });
+
+      await tx.quotation.updateMany({
+        where: { bookingId, status: { in: ['PENDING', 'ACCEPTED'] } },
+        data: { status: 'REJECTED' },
+      });
+
+      await this.shared.addStatusHistory(
+        bookingId,
+        booking.status,
+        'CANCELLED',
+        customerId,
+        dto.reason,
+        tx,
+      );
+
+      return b;
     });
 
-    await this.shared.addStatusHistory(
-      bookingId,
-      booking.status,
-      'CANCELLED',
-      customerId,
-      dto.reason,
-    );
     await this.shared.notify(
       booking.providerId,
       'BOOKING_CANCELLED',

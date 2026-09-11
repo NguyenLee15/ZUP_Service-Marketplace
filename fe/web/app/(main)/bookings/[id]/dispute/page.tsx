@@ -67,9 +67,16 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
       await bookingApi.dispute(Number(id), formData);
       toast.success('Gửi khiếu nại thành công');
       router.push(`/bookings/${id}`);
-    } catch (error) {
+    } catch (error: unknown) {
       const { toast } = await import('sonner');
-      toast.error('Có lỗi xảy ra khi gửi khiếu nại');
+      const err = error as {
+        response?: { data?: { error?: { message?: string }; message?: string } };
+      };
+      const message =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        'Có lỗi xảy ra khi gửi khiếu nại';
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -163,6 +170,8 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
 
               {/* Drag & Drop Area */}
               <div
+                role="region"
+                aria-label="Khu vực kéo thả tệp bằng chứng"
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}

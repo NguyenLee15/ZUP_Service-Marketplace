@@ -242,6 +242,8 @@ model UserAddress {
   isDefault     Boolean @default(false) @map("is_default")
   user          User    @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([isDefault, latitude, longitude])
   @@map("user_addresses")
 }
 
@@ -353,10 +355,11 @@ model Quotation {
   estimatedTime          String          @map("estimated_time") @db.VarChar(100)
   note                   String?         @db.Text
   type                   String          @default("ORIGINAL") @db.VarChar(20) // ORIGINAL, SUPPLEMENTARY
-  status                 String          @default("ACCEPTED") @db.VarChar(20) // ACCEPTED, PENDING, REJECTED
+  status                 String          @default("PENDING") @db.VarChar(20) // ACCEPTED, PENDING, REJECTED
   booking                Booking         @relation(fields: [bookingId], references: [id])
   quotationItems         QuotationItem[]
 
+  @@index([bookingId])
   @@map("quotations")
 }
 
@@ -576,6 +579,8 @@ model Notification {
   createdAt   DateTime @default(now()) @map("created_at")
   user        User     @relation(fields: [userId], references: [id])
 
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
   @@map("notifications")
 }
 

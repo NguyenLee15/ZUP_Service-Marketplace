@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -10,14 +12,11 @@ import {
 } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotSessionService } from './chatbot-session.service';
-import type {
-  ChatbotAskRequest,
-  ChatbotStreamResultRequest,
-} from './chatbot.types';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UpdateChatbotSessionTitleDto } from './dto/chatbot-session.dto';
+import { ChatbotAskDto, ChatbotStreamResultDto } from './dto/chatbot.dto';
 
 @Controller('chatbot')
 export class ChatbotController {
@@ -30,7 +29,7 @@ export class ChatbotController {
   @UseGuards(OptionalJwtAuthGuard)
   async askQuestion(
     @CurrentUser('id') userId: number | undefined,
-    @Body() body: ChatbotAskRequest,
+    @Body() body: ChatbotAskDto,
   ) {
     const result = await this.chatbotService.askQuestion(userId, body);
     return { data: result };
@@ -40,7 +39,7 @@ export class ChatbotController {
   @UseGuards(OptionalJwtAuthGuard)
   async prepareContext(
     @CurrentUser('id') userId: number | undefined,
-    @Body() body: ChatbotAskRequest,
+    @Body() body: ChatbotAskDto,
   ) {
     const result = await this.chatbotService.prepareContext(userId, body);
     return { data: result };
@@ -50,7 +49,7 @@ export class ChatbotController {
   @UseGuards(OptionalJwtAuthGuard)
   async persistStreamResult(
     @CurrentUser('id') userId: number | undefined,
-    @Body() body: ChatbotStreamResultRequest,
+    @Body() body: ChatbotStreamResultDto,
   ) {
     return this.chatbotService.persistStreamResult(userId, body);
   }
@@ -62,12 +61,13 @@ export class ChatbotController {
   }
 
   @Delete('sessions/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard)
   async deleteSession(
     @CurrentUser('id') userId: number,
     @Param('id') sessionId: string,
   ) {
-    return this.chatbotSessionService.deleteSession(userId, sessionId);
+    await this.chatbotSessionService.deleteSession(userId, sessionId);
   }
 
   @Patch('sessions/:id/title')

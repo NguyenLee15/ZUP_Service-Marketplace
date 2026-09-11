@@ -82,30 +82,34 @@ export class ReviewsService {
       }
     }
 
-    const review = await this.prisma.review.create({
-      data: {
-        bookingId,
-        customerId,
-        serviceId: booking.serviceId,
-        rating,
-        comment,
-        isFlagged,
-      },
-    });
+    const review = await this.prisma.$transaction(async (tx) => {
+      const createdReview = await tx.review.create({
+        data: {
+          bookingId,
+          customerId,
+          serviceId: booking.serviceId,
+          rating,
+          comment,
+          isFlagged,
+        },
+      });
 
-    // Cáº­p nháº­t avgRating + totalReviews trÃªn Service
-    const stats = await this.prisma.review.aggregate({
-      where: { serviceId: booking.serviceId },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
+      // Cập nhật avgRating + totalReviews trên Service
+      const stats = await tx.review.aggregate({
+        where: { serviceId: booking.serviceId },
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
 
-    await this.prisma.service.update({
-      where: { id: booking.serviceId },
-      data: {
-        avgRating: stats._avg.rating || 0,
-        totalReviews: stats._count.rating,
-      },
+      await tx.service.update({
+        where: { id: booking.serviceId },
+        data: {
+          avgRating: stats._avg.rating || 0,
+          totalReviews: stats._count.rating,
+        },
+      });
+
+      return createdReview;
     });
 
     // Báº¯n event kiá»ƒm duyá»‡t AI náº¿u cÃ³ comment

@@ -2,6 +2,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Patch,
   Param,
   Query,
@@ -49,6 +51,7 @@ export class NotificationsController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteNotification(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,

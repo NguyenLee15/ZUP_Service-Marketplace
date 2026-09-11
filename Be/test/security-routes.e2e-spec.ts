@@ -23,7 +23,7 @@ import { StaffAdminService } from '../src/modules/admin/services/staff-admin.ser
 import {
   BookingsController,
   ProviderBookingsController,
-} from '../src/modules/bookings/bookings.controller';
+} from '../src/modules/bookings/controllers';
 import { BookingDisputeService } from '../src/modules/bookings/booking-dispute.service';
 import { BookingLifecycleService } from '../src/modules/bookings/booking-lifecycle.service';
 import { BookingQueryService } from '../src/modules/bookings/booking-query.service';
@@ -42,7 +42,7 @@ import {
   AdminFeaturedRateController,
   AdminServicesController,
   ServicesController,
-} from '../src/modules/services/services.controller';
+} from '../src/modules/services/controllers';
 import { FeaturedListingsService } from '../src/modules/services/featured-listings.service';
 import { ProviderPublicService } from '../src/modules/services/provider-public.service';
 import { ServiceCommandService } from '../src/modules/services/service-command.service';

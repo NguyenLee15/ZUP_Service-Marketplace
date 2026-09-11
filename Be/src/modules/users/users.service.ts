@@ -181,29 +181,31 @@ export class UsersService {
       });
     }
 
-    // Nếu đặt default → unset tất cả cũ
-    if (dto.isDefault) {
-      await this.prisma.userAddress.updateMany({
-        where: { userId, isDefault: true },
-        data: { isDefault: false },
-      });
-    }
-
     // Nếu là địa chỉ đầu tiên → tự động default
     const isFirst = count === 0;
 
-    const address = await this.prisma.userAddress.create({
-      data: {
-        userId,
-        label: dto.label,
-        province: dto.province,
-        district: dto.district,
-        ward: dto.ward,
-        addressDetail: dto.addressDetail,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
-        isDefault: dto.isDefault || isFirst,
-      },
+    const address = await this.prisma.$transaction(async (tx) => {
+      // Nếu đặt default → unset tất cả cũ
+      if (dto.isDefault) {
+        await tx.userAddress.updateMany({
+          where: { userId, isDefault: true },
+          data: { isDefault: false },
+        });
+      }
+
+      return tx.userAddress.create({
+        data: {
+          userId,
+          label: dto.label,
+          province: dto.province,
+          district: dto.district,
+          ward: dto.ward,
+          addressDetail: dto.addressDetail,
+          latitude: dto.latitude,
+          longitude: dto.longitude,
+          isDefault: dto.isDefault || isFirst,
+        },
+      });
     });
 
     return { data: address, message: 'Thêm địa chỉ thành công' };
@@ -249,21 +251,23 @@ export class UsersService {
       });
     }
 
-    await this.prisma.userAddress.delete({ where: { id: addressId } });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.userAddress.delete({ where: { id: addressId } });
 
-    // Nếu vừa xóa default → set cái mới nhất làm default
-    if (address.isDefault) {
-      const newest = await this.prisma.userAddress.findFirst({
-        where: { userId },
-        orderBy: { id: 'desc' },
-      });
-      if (newest) {
-        await this.prisma.userAddress.update({
-          where: { id: newest.id },
-          data: { isDefault: true },
+      // Nếu vừa xóa default → set cái mới nhất làm default
+      if (address.isDefault) {
+        const newest = await tx.userAddress.findFirst({
+          where: { userId },
+          orderBy: { id: 'desc' },
         });
+        if (newest) {
+          await tx.userAddress.update({
+            where: { id: newest.id },
+            data: { isDefault: true },
+          });
+        }
       }
-    }
+    });
 
     return { message: 'Xóa địa chỉ thành công' };
   }

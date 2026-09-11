@@ -34,7 +34,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
     setIsSubmitting(true);
     try {
-      const { reviewsApi } = await import('@/features/auth/services/api');
+      const { reviewsApi } = await import(
+        '@/features/booking/services/review.api'
+      );
       const { toast } = await import('sonner');
       await reviewsApi.create({ bookingId: Number(id), rating, comment });
       toast.success('Đánh giá thành công');
@@ -85,6 +87,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                     <button
                       key={idx}
                       type="button"
+                      aria-label={`Đánh giá ${idx + 1} sao`}
                       onClick={() => setRating(idx + 1)}
                       onMouseEnter={() => setHoveredRating(idx + 1)}
                       onMouseLeave={() => setHoveredRating(0)}

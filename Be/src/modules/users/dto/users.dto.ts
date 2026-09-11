@@ -5,6 +5,8 @@ import {
   Matches,
   IsBoolean,
   IsNumber,
+  Max,
+  Min,
 } from 'class-validator';
 
 export class UpdateProfileDto {
@@ -41,9 +43,13 @@ export class CreateAddressDto {
   addressDetail: string;
 
   @IsNumber()
+  @Min(-90)
+  @Max(90)
   latitude: number;
 
   @IsNumber()
+  @Min(-180)
+  @Max(180)
   longitude: number;
 
   @IsBoolean()
@@ -78,10 +84,14 @@ export class UpdateAddressDto {
 
   @IsNumber()
   @IsOptional()
+  @Min(-90)
+  @Max(90)
   latitude?: number;
 
   @IsNumber()
   @IsOptional()
+  @Min(-180)
+  @Max(180)
   longitude?: number;
 }
 

@@ -2,8 +2,10 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { ErrorCodes } from '../../../common/errors/error-codes';
 import * as bcrypt from 'bcrypt';
 import { Prisma, UserRole, UserStatus } from '@prisma/client';
 import {
@@ -152,12 +154,38 @@ export class StaffAdminService {
   }
 
   async deleteStaff(adminId: number, id: number, ip: string) {
+    if (adminId === id) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Không thể tự xóa tài khoản của chính mình',
+      });
+    }
+
+    const actor = await this.prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true, status: true },
+    });
+    if (!actor || actor.status !== UserStatus.ACTIVE) {
+      throw new ForbiddenException({
+        code: ErrorCodes.ACCOUNT_LOCKED,
+        message: 'Tài khoản người thực hiện đã bị khóa hoặc không hợp lệ',
+      });
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user)
+    if (!user) {
       throw new NotFoundException({
-        code: 'NOT_FOUND',
+        code: ErrorCodes.NOT_FOUND,
         message: 'Nhân viên không tồn tại',
       });
+    }
+
+    if (user.role !== UserRole.STAFF) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Chỉ có thể xóa tài khoản có vai trò Nhân viên (STAFF)',
+      });
+    }
 
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({

@@ -155,7 +155,12 @@ export class DepositService {
     };
   }
 
-  async adminApproveManualDeposit(adminId: number, id: number, note?: string) {
+  async adminApproveManualDeposit(
+    adminId: number,
+    id: number,
+    note?: string,
+    ipAddress?: string,
+  ) {
     const approved = await this.prisma.$transaction(async (tx) => {
       await this.shared.expireStaleManualDeposits(tx);
 
@@ -171,10 +176,7 @@ export class DepositService {
       if (request.status !== 'PENDING') {
         throw new BadRequestException({
           code: ErrorCodes.VALIDATION_ERROR,
-          message:
-            request.status === 'EXPIRED'
-              ? 'Yêu cầu nạp tiền đã quá 5 phút và tự hết hạn'
-              : 'Yêu cầu này đã được xử lý',
+          message: 'Yêu cầu này đã được xử lý hoặc đã hết hạn',
         });
       }
 
@@ -208,6 +210,7 @@ export class DepositService {
         actorId: adminId,
         actionName: 'MANUAL_DEPOSIT_APPROVED',
         description: `Xác nhận nạp thủ công ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
+        ipAddress,
       });
 
       const updatedRequest = await tx.manualDepositRequest.findUniqueOrThrow({

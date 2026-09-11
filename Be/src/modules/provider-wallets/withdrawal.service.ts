@@ -131,7 +131,12 @@ export class WithdrawalService {
     };
   }
 
-  async adminApproveWithdrawal(adminId: number, id: number, note?: string) {
+  async adminApproveWithdrawal(
+    adminId: number,
+    id: number,
+    note?: string,
+    ipAddress?: string,
+  ) {
     const approved = await this.prisma.$transaction(async (tx) => {
       const request = await tx.withdrawalRequest.findUnique({
         where: { id },
@@ -191,6 +196,7 @@ export class WithdrawalService {
         actorId: adminId,
         actionName: 'WITHDRAWAL_APPROVED',
         description: `Xác nhận rút ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
+        ipAddress,
       });
 
       const updatedRequest = await tx.withdrawalRequest.findUniqueOrThrow({

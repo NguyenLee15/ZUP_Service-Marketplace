@@ -52,6 +52,7 @@ export class AdminDashboardService {
       totalProviders,
       totalServices,
       statusCounts,
+      quotationAggregate,
       quotations,
     ] = await Promise.all([
       this.prisma.booking.count({ where: bookingWhere }),
@@ -67,26 +68,33 @@ export class AdminDashboardService {
         where: bookingWhere,
         _count: { id: true },
       }),
+      this.prisma.quotation.aggregate({
+        where: {
+          booking: { ...bookingWhere, status: BookingStatus.DONE },
+          status: 'ACCEPTED',
+        },
+        _sum: { actualPrice: true },
+        _count: { id: true },
+      }),
       this.prisma.quotation.findMany({
         where: {
           booking: { ...bookingWhere, status: BookingStatus.DONE },
           status: 'ACCEPTED',
         },
         select: { actualPrice: true, commissionRateSnapshot: true },
+        take: 5000,
       }),
     ]);
 
     const statsMap = this.toStatusMap(statusCounts);
-    const totalRevenue = quotations.reduce(
-      (sum, item) => sum + Number(item.actualPrice),
-      0,
-    );
+    const totalRevenue = Number(quotationAggregate._sum.actualPrice || 0);
     const commissionRevenue = quotations.reduce(
       (sum, item) =>
         sum +
         (Number(item.actualPrice) * Number(item.commissionRateSnapshot)) / 100,
       0,
     );
+    const quotationCount = quotationAggregate._count.id || 0;
 
     return {
       totalBookings,
@@ -102,7 +110,7 @@ export class AdminDashboardService {
       cancelledBookings: statsMap[BookingStatus.CANCELLED] || 0,
       totalRevenue,
       commissionRevenue,
-      avgOrderValue: quotations.length ? totalRevenue / quotations.length : 0,
+      avgOrderValue: quotationCount ? totalRevenue / quotationCount : 0,
       filterSummary: this.describeFilters(normalized),
     };
   }
@@ -129,6 +137,7 @@ export class AdminDashboardService {
             booking: { select: { createdAt: true } },
           },
           orderBy: { booking: { createdAt: 'asc' } },
+          take: 2000,
         }),
         this.prisma.booking.findMany({
           where: bookingWhere,
@@ -142,6 +151,7 @@ export class AdminDashboardService {
               },
             },
           },
+          take: 2000,
         }),
         this.getFilterOptions(),
       ]);

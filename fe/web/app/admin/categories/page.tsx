@@ -1,20 +1,38 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useToast } from '@/components/ui/use-toast';
-import { adminApi, categoriesApi } from '@/features/auth/services/api';
-import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
-import { AdminPermission } from '@/types/admin-permissions';
+import React, { useState, useEffect, useCallback } from "react";
+import { Plus, Edit2, Trash2, Loader2, AlertCircle, FolderTree } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/components/ui/use-toast";
+import { adminApi } from "@/features/admin/services/admin.api";
+import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
+import { AdminPermission } from "@/types/admin-permissions";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const categorySchema = z.object({
-  name: z.string().min(2, 'Tên danh mục phải có ít nhất 2 ký tự'),
+  name: z.string().min(2, "Tên danh mục phải có ít nhất 2 ký tự"),
   description: z.string().optional(),
 });
 
@@ -24,15 +42,18 @@ interface Category {
   id: number;
   name: string;
   description: string | null;
+  parentId?: number | null;
+  children?: Category[];
 }
 
 export default function CategoriesPage() {
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const {
@@ -43,185 +64,249 @@ export default function CategoriesPage() {
     formState: { errors },
   } = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
-    mode: 'onChange',
+    mode: "onChange",
   });
 
-  const fetchCategories = () => {
+  const fetchCategories = useCallback(() => {
     setLoading(true);
-    categoriesApi.getTree() // Assuming backend still serves /categories/tree backward compatible
+    adminApi
+      .getCategories()
       .then((res) => {
-        setCategories(res.data.data || []);
+        setCategories(res.data?.data || []);
       })
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const handleOpenAdd = () => {
+    setEditingCategory(null);
+    reset({ name: "", description: "" });
+    setIsModalOpen(true);
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  const handleOpenEdit = (category: Category) => {
+    setEditingCategory(category);
+    setValue("name", category.name);
+    setValue("description", category.description || "");
+    setIsModalOpen(true);
+  };
 
   const onSubmit = async (data: CategoryFormData) => {
     setActionLoading(true);
     try {
-      if (editingId) {
-        await adminApi.updateCategory(editingId, data);
-        toast({ title: 'Đã cập nhật danh mục' });
+      if (editingCategory) {
+        await adminApi.updateCategory(editingCategory.id, data);
+        toast({ title: "Đã cập nhật danh mục thành công" });
       } else {
         await adminApi.createCategory(data);
-        toast({ title: 'Đã thêm danh mục mới' });
+        toast({ title: "Đã thêm danh mục mới thành công" });
       }
       setIsModalOpen(false);
       reset();
-      setEditingId(null);
+      setEditingCategory(null);
       fetchCategories();
-    } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Có lỗi xảy ra', variant: 'destructive' });
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })
+          ?.response?.data?.error?.message || "Có lỗi xảy ra khi lưu danh mục";
+      toast({
+        title: "Lỗi",
+        description: msg,
+        variant: "destructive",
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) return;
+  const handleConfirmDelete = async () => {
+    if (!deletingId) return;
+    setActionLoading(true);
     try {
-      await adminApi.deleteCategory(id);
-      toast({ title: 'Đã xóa danh mục' });
+      await adminApi.deleteCategory(deletingId);
+      toast({ title: "Đã xóa danh mục thành công" });
+      setDeletingId(null);
       fetchCategories();
-    } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Có lỗi xảy ra', variant: 'destructive' });
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })
+          ?.response?.data?.error?.message || "Không thể xóa danh mục";
+      toast({
+        title: "Lỗi",
+        description: msg,
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const renderCategory = (category: Category): React.ReactNode => {
-    return (
-      <div key={category.id} className="flex items-center gap-2 p-3 hover:bg-muted rounded-lg group border-b last:border-0">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-foreground">{category.name}</span>
-          </div>
-          {category.description && <p className="text-sm text-muted-foreground mt-0.5">{category.description}</p>}
+  const renderCategoryItem = (category: Category) => (
+    <div
+      key={category.id}
+      className="flex items-center justify-between p-4 hover:bg-slate-50/80 transition-colors"
+    >
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 rounded-lg bg-blue-50 p-2 text-blue-600">
+          <FolderTree className="h-4 w-4" />
         </div>
-
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Chỉnh sửa"
-            onClick={() => {
-              setEditingId(category.id);
-              setValue('name', category.name);
-              setValue('description', category.description || '');
-              setIsModalOpen(true);
-            }}
-          >
-            <Edit2 className="w-4 h-4 text-blue-600" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" title="Xóa" onClick={() => handleDelete(category.id)}>
-            <Trash2 className="w-4 h-4" />
-          </Button>
+        <div>
+          <h4 className="font-semibold text-slate-900 text-sm">{category.name}</h4>
+          {category.description ? (
+            <p className="text-xs text-slate-500 mt-0.5">{category.description}</p>
+          ) : (
+            <p className="text-xs text-slate-400 italic mt-0.5">Chưa có mô tả</p>
+          )}
         </div>
       </div>
-    );
-  };
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+          title="Chỉnh sửa"
+          onClick={() => handleOpenEdit(category)}
+        >
+          <Edit2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-slate-600 hover:text-red-600 hover:bg-red-50"
+          title="Xóa"
+          onClick={() => setDeletingId(category.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <AdminPermissionGuard permission={AdminPermission.SERVICE_MODERATE}>
       <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold text-foreground">Quản Lý Danh Mục</h3>
-          <p className="text-muted-foreground mt-1">Quản lý danh sách danh mục dịch vụ</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900">Quản Lý Danh Mục</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Quản lý danh sách danh mục dịch vụ trong hệ thống
+            </p>
+          </div>
+          <Button onClick={handleOpenAdd} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+            <Plus className="h-4 w-4" />
+            Thêm Danh Mục
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            setEditingId(null);
-            reset({ name: '', description: '' });
-            setIsModalOpen(true);
-          }}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4" />
-          Thêm Danh Mục
-        </Button>
+
+        {/* Categories Card */}
+        <Card className="shadow-sm border-slate-200">
+          <CardHeader className="pb-3 border-b border-slate-100">
+            <CardTitle className="text-base font-bold text-slate-800">
+              Danh sách danh mục ({categories.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center p-12 text-slate-400 space-y-2">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <p className="text-sm">Đang tải danh mục...</p>
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500">
+                <AlertCircle className="h-10 w-10 text-slate-400 mb-2" />
+                <p className="font-semibold text-sm">Chưa có danh mục nào</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Nhấn nút &ldquo;Thêm Danh Mục&rdquo; để khởi tạo danh mục đầu tiên
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {categories.map((category) => renderCategoryItem(category))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {loading ? (
-            <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />)}</div>
-          ) : categories.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">Chưa có danh mục nào</p>
-          ) : (
-            <div className="flex flex-col">{categories.map((cat) => renderCategory(cat))}</div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Add / Edit Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingCategory ? "Chỉnh Sửa Danh Mục" : "Thêm Danh Mục Mới"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+            <div>
+              <label className="text-sm font-medium text-slate-700">Tên danh mục *</label>
+              <Input
+                {...register("name")}
+                placeholder="Ví dụ: Sửa chữa điện nước"
+                className="mt-1.5"
+              />
+              {errors.name && (
+                <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
+              )}
+            </div>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="flex flex-row items-center justify-between border-b pb-4 mb-4">
-              <CardTitle>{editingId ? 'Chỉnh Sửa' : 'Thêm'} Danh Mục</CardTitle>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  reset();
-                  setEditingId(null);
-                }}
-                className="p-1 hover:bg-muted rounded"
+            <div>
+              <label className="text-sm font-medium text-slate-700">Mô tả</label>
+              <Textarea
+                {...register("description")}
+                placeholder="Mô tả chi tiết về danh mục dịch vụ này..."
+                className="mt-1.5 min-h-[90px]"
+              />
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+                disabled={actionLoading}
               >
-                <X className="w-5 h-5" />
-              </button>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground/80 mb-1">
-                    Tên Danh Mục
-                  </label>
-                  <Input
-                    placeholder="Nhập tên danh mục"
-                    {...register('name')}
-                    className={errors.name ? 'border-red-500' : ''}
-                  />
-                  {errors.name && (
-                    <p className="text-red-600 text-sm mt-1">{errors.name.message}</p>
-                  )}
-                </div>
+                Hủy
+              </Button>
+              <Button type="submit" disabled={actionLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editingCategory ? "Lưu Thay Đổi" : "Tạo Mới"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground/80 mb-1">
-                    Mô Tả
-                  </label>
-                  <textarea
-                    placeholder="Nhập mô tả danh mục..."
-                    {...register('description')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex gap-2 justify-end pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      reset();
-                      setEditingId(null);
-                    }}
-                  >
-                    Hủy
-                  </Button>
-                  <Button type="submit" disabled={actionLoading} className="bg-blue-600 hover:bg-blue-700">
-                    {editingId ? 'Cập Nhật' : 'Thêm'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      </div>
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog
+        open={deletingId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeletingId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa danh mục</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa danh mục này? Thao tác này không thể hoàn tác nếu danh mục đã chứa dịch vụ liên quan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoading}>Hủy bỏ</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={actionLoading}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Xác nhận xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminPermissionGuard>
   );
 }

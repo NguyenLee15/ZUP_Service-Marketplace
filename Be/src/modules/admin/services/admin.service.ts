@@ -2,8 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { ErrorCodes } from '../../../common/errors/error-codes';
 import { KycService } from '../../users/kyc.service';
 import { BookingDisputeService } from '../../bookings/booking-dispute.service';
 import { BookingLifecycleService } from '../../bookings/booking-lifecycle.service';
@@ -280,7 +282,48 @@ export class AdminService {
     };
   }
 
+  private async checkActiveActor(adminId: number) {
+    const actor = await this.prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true, status: true },
+    });
+    if (!actor || actor.status !== UserStatus.ACTIVE) {
+      throw new ForbiddenException({
+        code: ErrorCodes.ACCOUNT_LOCKED,
+        message: 'Tài khoản người thực hiện đã bị khóa hoặc không hợp lệ',
+      });
+    }
+    return actor;
+  }
+
   async lockUser(adminId: number, id: number, reason: string, ip: string) {
+    if (adminId === id) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Không thể tự khóa tài khoản của chính mình',
+      });
+    }
+
+    const actor = await this.checkActiveActor(adminId);
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, status: true },
+    });
+    if (!targetUser) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Người dùng không tồn tại',
+      });
+    }
+
+    if (targetUser.role === UserRole.ADMIN && actor.role !== UserRole.ADMIN) {
+      throw new ForbiddenException({
+        code: ErrorCodes.FORBIDDEN,
+        message: 'Nhân viên không có quyền khóa tài khoản Quản trị viên',
+      });
+    }
+
     await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id },
@@ -313,6 +356,19 @@ export class AdminService {
   }
 
   async unlockUser(adminId: number, id: number, ip: string) {
+    await this.checkActiveActor(adminId);
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!targetUser) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Người dùng không tồn tại',
+      });
+    }
+
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id },
@@ -332,12 +388,29 @@ export class AdminService {
   }
 
   async deleteUser(adminId: number, id: number, ip: string) {
+    if (adminId === id) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Không thể tự xóa tài khoản của chính mình',
+      });
+    }
+
+    const actor = await this.checkActiveActor(adminId);
+
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user)
+    if (!user) {
       throw new NotFoundException({
-        code: 'NOT_FOUND',
+        code: ErrorCodes.NOT_FOUND,
         message: 'Người dùng không tồn tại',
       });
+    }
+
+    if (user.role === UserRole.ADMIN && actor.role !== UserRole.ADMIN) {
+      throw new ForbiddenException({
+        code: ErrorCodes.FORBIDDEN,
+        message: 'Không thể xóa tài khoản Quản trị viên',
+      });
+    }
 
     const activeBookings = await this.prisma.booking.count({
       where: {
@@ -355,7 +428,7 @@ export class AdminService {
 
     if (activeBookings > 0) {
       throw new BadRequestException({
-        code: 'BOOKING_INVALID_STATE',
+        code: ErrorCodes.BOOKING_INVALID_STATE,
         message: 'Không thể xóa tài khoản khi còn đơn hàng chưa hoàn thành',
       });
     }
