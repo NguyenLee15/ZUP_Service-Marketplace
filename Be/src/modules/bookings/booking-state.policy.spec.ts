@@ -15,11 +15,23 @@ describe('BookingStatePolicy', () => {
     expect(() =>
       policy.assertTransition(BookingStatus.IN_PROGRESS, BookingStatus.DONE),
     ).not.toThrow();
+    expect(() =>
+      policy.assertTransition(BookingStatus.DISPUTED, BookingStatus.DONE),
+    ).not.toThrow();
+    expect(() =>
+      policy.assertTransition(BookingStatus.DISPUTED, BookingStatus.CANCELLED),
+    ).not.toThrow();
   });
 
   it('blocks invalid lifecycle transitions', () => {
     expect(() =>
       policy.assertTransition(BookingStatus.PENDING, BookingStatus.DONE),
+    ).toThrow(BadRequestException);
+    expect(() =>
+      policy.assertTransition(
+        BookingStatus.CANCELLED,
+        BookingStatus.IN_PROGRESS,
+      ),
     ).toThrow(BadRequestException);
   });
 });

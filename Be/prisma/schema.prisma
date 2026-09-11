@@ -326,6 +326,7 @@ model Booking {
   completedAt              DateTime?     @map("completed_at")
   autoCompletedAt          DateTime?     @map("auto_completed_at")
   createdAt                DateTime      @default(now()) @map("created_at")
+  updatedAt                DateTime      @updatedAt @map("updated_at")
 
   customer           User                   @relation("CustomerBooking", fields: [customerId], references: [id])
   provider           User                   @relation("ProviderBooking", fields: [providerId], references: [id])
@@ -356,6 +357,8 @@ model Quotation {
   note                   String?         @db.Text
   type                   String          @default("ORIGINAL") @db.VarChar(20) // ORIGINAL, SUPPLEMENTARY
   status                 String          @default("PENDING") @db.VarChar(20) // ACCEPTED, PENDING, REJECTED
+  createdAt              DateTime        @default(now()) @map("created_at")
+  updatedAt              DateTime        @updatedAt @map("updated_at")
   booking                Booking         @relation(fields: [bookingId], references: [id])
   quotationItems         QuotationItem[]
 
@@ -596,6 +599,8 @@ model AuditLog {
   createdAt   DateTime @default(now()) @map("created_at")
   actor       User     @relation(fields: [actorId], references: [id])
 
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
   @@map("audit_logs")
 }
 

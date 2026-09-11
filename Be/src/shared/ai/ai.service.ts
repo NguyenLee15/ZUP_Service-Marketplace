@@ -35,8 +35,8 @@ export class AiService {
     this.baseUrl =
       this.configService.get<string>('ai.baseUrl') ||
       'https://generativelanguage.googleapis.com/v1beta';
-    this.timeoutMs = this.configService.get<number>('ai.timeoutMs') || 15000;
-    this.retryCount = this.configService.get<number>('ai.retryCount') || 3;
+    this.timeoutMs = this.configService.get<number>('ai.timeoutMs') || 5000;
+    this.retryCount = this.configService.get<number>('ai.retryCount') || 1;
     this.chatModelName =
       this.configService.get<string>('ai.chatModel') || 'gemini-2.0-flash';
     this.embeddingModelName =

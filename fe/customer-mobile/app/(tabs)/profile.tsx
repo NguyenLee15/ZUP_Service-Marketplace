@@ -428,6 +428,17 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     justifyContent: 'center',
     boxShadow: activeColors.elevation,
   },
+  avatarFallback: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 3,
+    borderColor: activeColors.surface,
+    backgroundColor: activeColors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: activeColors.elevation,
+  },
   avatarLetter: { color: activeColors.surface, fontWeight: '900', fontSize: 34 },
   editAvatarBtn: {
     position: 'absolute',

@@ -241,16 +241,16 @@ export class ServiceSearchService {
     if (embedding) {
       const vectorStr = `[${embedding.join(',')}]`;
       try {
-        const rawResults = await this.prisma.$queryRawUnsafe<
+        const rawResults = await this.prisma.$queryRaw<
           { id: number; similarity: number }[]
-        >(`
-          SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
+        >(Prisma.sql`
+          SELECT s.id, 1 - (s.embedding <=> ${vectorStr}::vector) as similarity
           FROM services s
           INNER JOIN users u ON s.provider_id = u.id
           WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
             AND u.status = 'ACTIVE' AND u.is_online = true
-            AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
-          ORDER BY s.embedding <=> '${vectorStr}'::vector
+            AND 1 - (s.embedding <=> ${vectorStr}::vector) > 0.50
+          ORDER BY s.embedding <=> ${vectorStr}::vector
           LIMIT 20
         `);
 
@@ -320,16 +320,16 @@ export class ServiceSearchService {
       const vectorStr = `[${embedding.join(',')}]`;
 
       try {
-        const rawResults = await this.prisma.$queryRawUnsafe<
+        const rawResults = await this.prisma.$queryRaw<
           { id: number; similarity: number }[]
-        >(`
-          SELECT s.id, 1 - (s.embedding <=> '${vectorStr}'::vector) as similarity
+        >(Prisma.sql`
+          SELECT s.id, 1 - (s.embedding <=> ${vectorStr}::vector) as similarity
           FROM services s
           INNER JOIN users u ON s.provider_id = u.id
           WHERE s.status = 'ACTIVE' AND s.is_deleted = false AND s.embedding IS NOT NULL
             AND u.status = 'ACTIVE' AND u.is_online = true
-            AND 1 - (s.embedding <=> '${vectorStr}'::vector) > 0.50
-          ORDER BY s.embedding <=> '${vectorStr}'::vector
+            AND 1 - (s.embedding <=> ${vectorStr}::vector) > 0.50
+          ORDER BY s.embedding <=> ${vectorStr}::vector
           LIMIT 20
         `);
 

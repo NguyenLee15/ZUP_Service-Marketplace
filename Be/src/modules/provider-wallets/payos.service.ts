@@ -7,6 +7,7 @@ import {
 import { PayOS } from '@payos/node';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WalletSharedService } from './wallet-shared.service';
+import { ErrorCodes } from '../../common/errors/error-codes';
 
 @Injectable()
 export class PayosService implements OnModuleInit {
@@ -42,11 +43,17 @@ export class PayosService implements OnModuleInit {
 
   async createDepositRequest(providerId: number, amount: number) {
     if (!this.isEnabled || !this.payos) {
-      throw new BadRequestException('PayOS is not configured on this server');
+      throw new BadRequestException({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: 'Cổng thanh toán PayOS chưa được cấu hình trên máy chủ',
+      });
     }
 
     if (amount < 2000) {
-      throw new BadRequestException('PAYOS_MIN_AMOUNT_2000');
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Số tiền nạp tối thiểu qua PayOS là 2.000₫',
+      });
     }
 
     const wallet = await this.walletShared.getOrCreateWallet(
@@ -68,7 +75,7 @@ export class PayosService implements OnModuleInit {
         amount,
         status: 'PENDING',
         vnpayTxnRef: String(orderCode), // store orderCode here as a string
-        idempotencyKey: `payos_dep_${orderCode}_${Date.now()}`,
+        idempotencyKey: `payos_dep_${orderCode}`,
       },
     });
 
@@ -98,13 +105,19 @@ export class PayosService implements OnModuleInit {
       };
     } catch (error: any) {
       this.logger.error('Error creating PayOS payment link', error);
-      throw new BadRequestException('Failed to create PayOS payment link');
+      throw new BadRequestException({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: 'Không thể tạo liên kết thanh toán PayOS',
+      });
     }
   }
 
   async verifyWebhook(webhookBody: any) {
     if (!this.isEnabled || !this.payos) {
-      throw new BadRequestException('PayOS is not configured');
+      throw new BadRequestException({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: 'Cổng thanh toán PayOS chưa được cấu hình trên máy chủ',
+      });
     }
 
     try {
@@ -119,7 +132,10 @@ export class PayosService implements OnModuleInit {
       return { success: true };
     } catch (e: any) {
       this.logger.error('PayOS Webhook verification failed', e);
-      throw new BadRequestException('Invalid webhook signature');
+      throw new BadRequestException({
+        code: ErrorCodes.PAYMENT_HASH_INVALID,
+        message: 'Chữ ký webhook PayOS không hợp lệ',
+      });
     }
   }
 
@@ -144,18 +160,21 @@ export class PayosService implements OnModuleInit {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      const locked = await tx.walletTransaction.findFirst({
+      // Atomic CAS update: Only proceed if this transaction is still PENDING
+      const updateResult = await tx.walletTransaction.updateMany({
         where: { id: pendingTxn.id, status: 'PENDING' },
-      });
-      if (!locked) return;
-
-      await tx.walletTransaction.update({
-        where: { id: pendingTxn.id },
         data: {
           status: 'SUCCESS',
           processedAt: new Date(),
         },
       });
+
+      if (updateResult.count === 0) {
+        this.logger.warn(
+          `PayOS deposit for orderCode ${orderCodeStr} already processed concurrently.`,
+        );
+        return;
+      }
 
       const updatedWallet = await tx.providerWallet.update({
         where: { id: pendingTxn.walletId },

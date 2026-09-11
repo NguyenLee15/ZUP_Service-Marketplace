@@ -1,11 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, Sparkles, XCircle, Zap } from 'lucide-react';
-import { bookingsApi } from '@/features/auth/services/api';
+import { bookingApi } from '@/features/booking/services/booking.api';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface BookingQuotationTableProps {
   booking: ApiPayload;
@@ -26,6 +34,8 @@ export function BookingQuotationTable({
   handleAction,
   formatPrice,
 }: BookingQuotationTableProps) {
+  const [rejectQuoteId, setRejectQuoteId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
   return (
     <>
       {/* Chi tiết hạng mục yêu cầu đặt lịch ban đầu */}
@@ -229,7 +239,7 @@ export function BookingQuotationTable({
                 <Button
                   onClick={() =>
                     handleAction(
-                      () => bookingsApi.confirmSupplementaryQuote(booking.id, suppQuote.id),
+                      () => bookingApi.confirmSupplementaryQuote(booking.id, suppQuote.id),
                       'Đã đồng ý báo giá phát sinh',
                     )
                   }
@@ -240,18 +250,8 @@ export function BookingQuotationTable({
                 </Button>
                 <Button
                   onClick={() => {
-                    const reason = window.prompt('Lý do từ chối báo giá phát sinh này?');
-                    if (reason) {
-                      handleAction(
-                        () =>
-                          bookingsApi.rejectSupplementaryQuote(
-                            booking.id,
-                            suppQuote.id,
-                            reason,
-                          ),
-                        'Đã từ chối báo giá phát sinh',
-                      );
-                    }
+                    setRejectQuoteId(suppQuote.id);
+                    setRejectReason('');
                   }}
                   variant="outline"
                   disabled={actionLoading}
@@ -264,6 +264,70 @@ export function BookingQuotationTable({
           </CardContent>
         </Card>
       ))}
+
+      {/* Dialog từ chối báo giá phát sinh chuyên nghiệp, thay thế window.prompt */}
+      <Dialog
+        open={rejectQuoteId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRejectQuoteId(null);
+            setRejectReason('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Từ chối báo giá phát sinh</DialogTitle>
+            <DialogDescription>
+              Vui lòng nhập lý do từ chối để thông báo tới thợ kỹ thuật.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <textarea
+              className="w-full min-h-[100px] p-3 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nhập lý do từ chối (ví dụ: Chi phí phát sinh quá cao, không đồng ý phụ tùng thay thế...)"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter className="flex gap-2 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRejectQuoteId(null);
+                setRejectReason('');
+              }}
+              disabled={actionLoading}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={actionLoading || !rejectReason.trim()}
+              onClick={async () => {
+                if (!rejectQuoteId || !rejectReason.trim()) return;
+                const quoteIdToReject = rejectQuoteId;
+                const reasonToSend = rejectReason.trim();
+                setRejectQuoteId(null);
+                setRejectReason('');
+                await handleAction(
+                  () =>
+                    bookingApi.rejectSupplementaryQuote(
+                      booking.id,
+                      quoteIdToReject,
+                      reasonToSend,
+                    ),
+                  'Đã từ chối báo giá phát sinh',
+                );
+              }}
+            >
+              Xác nhận từ chối
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

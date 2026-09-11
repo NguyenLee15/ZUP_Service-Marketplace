@@ -17,6 +17,10 @@ import { TrackingGateway } from './tracking.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BookingStatePolicy } from './booking-state.policy';
+import { BookingCreationService } from './booking-creation.service';
+import { BookingQuotationService } from './booking-quotation.service';
+import { BookingExecutionService } from './booking-execution.service';
+import { BookingCancellationService } from './booking-cancellation.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 import { BookingDisputeService } from './booking-dispute.service';
 import { BookingQueryService } from './booking-query.service';
@@ -58,6 +62,10 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
     BookingSharedService,
     BookingTimeoutService,
     BookingStatePolicy,
+    BookingCreationService,
+    BookingQuotationService,
+    BookingExecutionService,
+    BookingCancellationService,
     BookingLifecycleService,
     BookingDisputeService,
     BookingQueryService,
@@ -69,6 +77,10 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
     ...(isWorkerEnabled() ? [BookingsProcessor, DisputeProcessor] : []),
   ],
   exports: [
+    BookingCreationService,
+    BookingQuotationService,
+    BookingExecutionService,
+    BookingCancellationService,
     BookingLifecycleService,
     BookingDisputeService,
     BookingQueryService,

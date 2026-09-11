@@ -43,35 +43,20 @@ import {
   ProviderStatusChip,
 } from "../../components/provider/provider-ui";
 import { getTrackingSocket } from "../../lib/socket";
+import {
+  ProviderBookingTimeline,
+  getStatusColor,
+  type BookingTimelineItem,
+} from "../../features/booking/components/BookingTimelineSection";
+import { CancelBookingModal } from "../../features/booking/components/CancelBookingModal";
+import { QuotationSheetModal } from "../../features/booking/components/QuotationSheetModal";
+import { SupplementaryQuoteModal } from "../../features/booking/components/SupplementaryQuoteModal";
 
 type ImageSetter = Dispatch<SetStateAction<ImagePicker.ImagePickerAsset[]>>;
 type MessageState = {
   tone: "success" | "warning" | "error" | "info";
   text: string;
 } | null;
-
-type BookingTimelineItem = {
-  id?: number | string;
-  fromStatus?: string | null;
-  toStatus?: string | null;
-  note?: string | null;
-  createdAt?: string | Date | null;
-  changedBy?: number | null;
-};
-
-const getStatusColor = (status: string, activeColors: typeof Colors.light | typeof Colors.dark): string => {
-  const map: Record<string, string> = {
-    PENDING: activeColors.statusPending,
-    ACCEPTED: activeColors.statusPending, // Using same color or statusAccepted if available
-    QUOTED: activeColors.statusQuoted,
-    CONFIRMED: activeColors.statusConfirmed,
-    IN_PROGRESS: activeColors.statusInProgress,
-    DONE: activeColors.statusDone,
-    CANCELLED: activeColors.statusCancelled,
-    DISPUTED: activeColors.statusDisputed,
-  };
-  return map[status] || activeColors.textSecondary;
-};
 
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of the earth in km
@@ -1328,498 +1313,78 @@ export default function ProviderBookingDetailScreen() {
         </View>
       )}
 
-      <Portal>
-        <Modal
-          visible={showQuoteModal}
-          onDismiss={() => {
-            setShowQuoteModal(false);
-            setQuoteError("");
-          }}
-          contentContainerStyle={[
-            styles.modal,
-            { backgroundColor: theme.colors.surface },
-          ]}
-        >
-          <Text variant="titleMedium" style={styles.modalTitle}>
-            Gửi báo giá khảo sát
-          </Text>
-          {quoteError ? (
-            <ProviderInlineMessage tone="error" message={quoteError} />
-          ) : null}
+      <QuotationSheetModal
+        visible={showQuoteModal}
+        quoteError={quoteError}
+        quoteItems={quoteItems}
+        newItemName={newItemName}
+        newItemUnit={newItemUnit}
+        newItemPrice={newItemPrice}
+        newItemQty={newItemQty}
+        quoteEstimatedTime={quoteEstimatedTime}
+        quoteNote={quoteNote}
+        surveyImages={surveyImages}
+        actionLoading={actionLoading}
+        onDismiss={() => {
+          setShowQuoteModal(false);
+          setQuoteError("");
+        }}
+        onUpdateItemQty={handleUpdateItemQty}
+        onRemoveQuoteItem={handleRemoveQuoteItem}
+        onChangeNewItemName={setNewItemName}
+        onChangeNewItemUnit={setNewItemUnit}
+        onChangeNewItemPrice={setNewItemPrice}
+        onChangeNewItemQty={setNewItemQty}
+        onAddNewItem={handleAddNewItem}
+        onChangeEstimatedTime={(v) => {
+          setQuoteEstimatedTime(v);
+          setQuoteError("");
+        }}
+        onChangeNote={setQuoteNote}
+        onPickImages={() => pickImages(setSurveyImages, 5)}
+        onSendQuote={handleSendQuote}
+      />
 
-          {/* Danh sách các hạng mục chi tiết */}
-          <Text
-            variant="labelMedium"
-            style={{
-              color: activeColors.textSecondary,
-              fontWeight: "700",
-              marginTop: 4,
-            }}
-          >
-            Chi tiết hạng mục báo giá:
-          </Text>
-          <ScrollView
-            style={styles.modalItemsScroll}
-            contentContainerStyle={{ gap: 8 }}
-          >
-            {quoteItems.map((item, index) => (
-              <View key={index} style={styles.modalItemRow}>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    variant="bodyMedium"
-                    style={{ fontWeight: "700", color: activeColors.text }}
-                  >
-                    {item.name}
-                  </Text>
-                  <Text
-                    variant="bodySmall"
-                    style={{ color: activeColors.textTertiary }}
-                  >
-                    {formatPrice(item.price)} / {item.unit}
-                  </Text>
-                </View>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-                >
-                  <IconButton
-                    icon="minus-circle-outline"
-                    size={22}
-                    onPress={() =>
-                      handleUpdateItemQty(index, item.quantity - 1)
-                    }
-                    style={{ margin: 0 }}
-                  />
-                  <Text
-                    variant="bodyMedium"
-                    style={{
-                      fontWeight: "700",
-                      minWidth: 20,
-                      textAlign: "center",
-                      color: activeColors.text,
-                    }}
-                  >
-                    {item.quantity}
-                  </Text>
-                  <IconButton
-                    icon="plus-circle-outline"
-                    size={22}
-                    onPress={() =>
-                      handleUpdateItemQty(index, item.quantity + 1)
-                    }
-                    style={{ margin: 0 }}
-                  />
-                  <IconButton
-                    icon="trash-can-outline"
-                    iconColor={activeColors.error}
-                    size={20}
-                    onPress={() => handleRemoveQuoteItem(index)}
-                    style={{ margin: 0 }}
-                  />
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+      <CancelBookingModal
+        visible={showCancelModal}
+        cancelReason={cancelReason}
+        cancelError={cancelError}
+        actionLoading={actionLoading}
+        onChangeReason={(v) => {
+          setCancelReason(v);
+          setCancelError("");
+        }}
+        onDismiss={() => {
+          setShowCancelModal(false);
+          setCancelError("");
+        }}
+        onConfirm={handleCancel}
+      />
 
-          {/* Form thêm hạng mục phát sinh */}
-          <View style={styles.addItemSection}>
-            <Text
-              variant="labelMedium"
-              style={{ color: activeColors.primaryLight, fontWeight: "700" }}
-            >
-              + Thêm hạng mục phát sinh:
-            </Text>
-            <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
-              <TextInput
-                label="Tên hạng mục"
-                value={newItemName}
-                onChangeText={setNewItemName}
-                mode="outlined"
-                style={{ flex: 2 }}
-                dense
-              />
-              <TextInput
-                label="Đơn vị"
-                value={newItemUnit}
-                onChangeText={setNewItemUnit}
-                mode="outlined"
-                style={{ flex: 1 }}
-                dense
-                placeholder="mét, cái"
-              />
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                gap: 6,
-                marginTop: 6,
-                alignItems: "center",
-              }}
-            >
-              <TextInput
-                label="Đơn giá (đ)"
-                value={newItemPrice}
-                onChangeText={setNewItemPrice}
-                mode="outlined"
-                keyboardType="numeric"
-                style={{ flex: 2 }}
-                dense
-              />
-              <TextInput
-                label="Số lượng"
-                value={newItemQty}
-                onChangeText={setNewItemQty}
-                mode="outlined"
-                keyboardType="numeric"
-                style={{ flex: 1 }}
-                dense
-              />
-              <Button
-                mode="contained"
-                onPress={handleAddNewItem}
-                style={{
-                  borderRadius: 8,
-                  height: 40,
-                  justifyContent: "center",
-                }}
-                contentStyle={{ height: 40 }}
-              >
-                Thêm
-              </Button>
-            </View>
-          </View>
-
-          {/* Tổng cộng thực tế */}
-          <View style={styles.modalTotalRow}>
-            <Text variant="bodyMedium" style={styles.mutedText}>
-              Tổng cộng thực tế:
-            </Text>
-            <Text variant="titleMedium" style={styles.modalTotalText}>
-              {formatPrice(
-                quoteItems.reduce(
-                  (sum, item) => sum + item.price * item.quantity,
-                  0,
-                ),
-              )}
-            </Text>
-          </View>
-
-          <TextInput
-            label="Thời gian dự kiến"
-            value={quoteEstimatedTime}
-            onChangeText={(value) => {
-              setQuoteEstimatedTime(value);
-              setQuoteError("");
-            }}
-            mode="outlined"
-            maxLength={100}
-            placeholder="Ví dụ: 2 giờ, 1 ngày"
-            left={
-              <TextInput.Icon
-                icon="timer-outline"
-                accessibilityLabel="Thời gian dự kiến"
-              />
-            }
-          />
-          <TextInput
-            label="Ghi chú thêm"
-            value={quoteNote}
-            onChangeText={setQuoteNote}
-            mode="outlined"
-            multiline
-            numberOfLines={3}
-            left={
-              <TextInput.Icon
-                icon="note-text"
-                accessibilityLabel="Ghi chú báo giá"
-              />
-            }
-          />
-          <Button
-            mode="outlined"
-            icon="image"
-            onPress={() => pickImages(setSurveyImages, 5)}
-            style={styles.primaryButton}
-          >
-            Ảnh khảo sát ({surveyImages.length})
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleSendQuote}
-            loading={actionLoading}
-            disabled={
-              actionLoading ||
-              quoteItems.length === 0 ||
-              !quoteEstimatedTime.trim()
-            }
-            style={styles.primaryButton}
-            contentStyle={styles.actionContent}
-          >
-            {actionLoading ? "Đang gửi…" : "Gửi báo giá"}
-          </Button>
-          <Button mode="text" onPress={() => setShowQuoteModal(false)}>
-            Đóng
-          </Button>
-        </Modal>
-      </Portal>
-
-      <Portal>
-        <Modal
-          visible={showCancelModal}
-          onDismiss={() => {
-            setShowCancelModal(false);
-            setCancelError("");
-          }}
-          contentContainerStyle={[
-            styles.modal,
-            { backgroundColor: theme.colors.surface },
-          ]}
-        >
-          <Text
-            variant="titleMedium"
-            style={[styles.modalTitle, { color: activeColors.error }]}
-          >
-            Hủy đơn hàng
-          </Text>
-          {cancelError ? (
-            <ProviderInlineMessage tone="error" message={cancelError} />
-          ) : null}
-          <TextInput
-            label="Lý do hủy"
-            value={cancelReason}
-            onChangeText={(value) => {
-              setCancelReason(value);
-              setCancelError("");
-            }}
-            mode="outlined"
-            multiline
-            numberOfLines={3}
-            left={
-              <TextInput.Icon
-                icon="alert-circle-outline"
-                accessibilityLabel="Lý do hủy"
-              />
-            }
-          />
-          <Button
-            mode="contained"
-            onPress={handleCancel}
-            loading={actionLoading}
-            disabled={actionLoading || !cancelReason.trim()}
-            style={[
-              styles.primaryButton,
-              { backgroundColor: activeColors.error },
-            ]}
-            contentStyle={styles.actionContent}
-          >
-            {actionLoading ? "Đang xử lý…" : "Xác nhận hủy"}
-          </Button>
-          <Button mode="text" onPress={() => setShowCancelModal(false)}>
-            Đóng
-          </Button>
-        </Modal>
-      </Portal>
-
-      <Portal>
-        <Modal
-          visible={showSuppQuoteModal}
-          onDismiss={() => {
-            setShowSuppQuoteModal(false);
-            setSuppQuoteError("");
-          }}
-          contentContainerStyle={[
-            styles.modal,
-            { backgroundColor: theme.colors.surface },
-          ]}
-        >
-          <Text variant="titleMedium" style={styles.modalTitle}>
-            Gửi báo giá phát sinh
-          </Text>
-          {suppQuoteError ? (
-            <ProviderInlineMessage tone="error" message={suppQuoteError} />
-          ) : null}
-
-          <Text
-            variant="labelMedium"
-            style={{
-              color: activeColors.textSecondary,
-              fontWeight: "700",
-              marginTop: 4,
-            }}
-          >
-            Chi tiết hạng mục bổ sung:
-          </Text>
-          <ScrollView
-            style={styles.modalItemsScroll}
-            contentContainerStyle={{ gap: 8 }}
-          >
-            {suppQuoteItems.map((item, index) => (
-              <View key={index} style={styles.modalItemRow}>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    variant="bodyMedium"
-                    style={{ fontWeight: "700", color: activeColors.text }}
-                  >
-                    {item.name}
-                  </Text>
-                  <Text
-                    variant="bodySmall"
-                    style={{ color: activeColors.textTertiary }}
-                  >
-                    {formatPrice(item.price)} / {item.unit}
-                  </Text>
-                </View>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-                >
-                  <IconButton
-                    icon="minus-circle-outline"
-                    size={22}
-                    onPress={() =>
-                      handleUpdateSuppItemQty(index, item.quantity - 1)
-                    }
-                    style={{ margin: 0 }}
-                  />
-                  <Text
-                    variant="bodyMedium"
-                    style={{
-                      fontWeight: "700",
-                      minWidth: 20,
-                      textAlign: "center",
-                      color: activeColors.text,
-                    }}
-                  >
-                    {item.quantity}
-                  </Text>
-                  <IconButton
-                    icon="plus-circle-outline"
-                    size={22}
-                    onPress={() =>
-                      handleUpdateSuppItemQty(index, item.quantity + 1)
-                    }
-                    style={{ margin: 0 }}
-                  />
-                  <IconButton
-                    icon="trash-can-outline"
-                    iconColor={activeColors.error}
-                    size={20}
-                    onPress={() => handleRemoveSuppQuoteItem(index)}
-                    style={{ margin: 0 }}
-                  />
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-
-          <View style={styles.addItemSection}>
-            <Text
-              variant="labelMedium"
-              style={{ color: activeColors.primaryLight, fontWeight: "700" }}
-            >
-              + Thêm hạng mục:
-            </Text>
-            <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
-              <TextInput
-                label="Tên hạng mục"
-                value={newItemName}
-                onChangeText={setNewItemName}
-                mode="outlined"
-                style={{ flex: 2 }}
-                dense
-              />
-              <TextInput
-                label="Đơn vị"
-                value={newItemUnit}
-                onChangeText={setNewItemUnit}
-                mode="outlined"
-                style={{ flex: 1 }}
-                dense
-                placeholder="mét, cái"
-              />
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                gap: 6,
-                marginTop: 6,
-                alignItems: "center",
-              }}
-            >
-              <TextInput
-                label="Đơn giá (đ)"
-                value={newItemPrice}
-                onChangeText={setNewItemPrice}
-                mode="outlined"
-                keyboardType="numeric"
-                style={{ flex: 2 }}
-                dense
-              />
-              <TextInput
-                label="Số lượng"
-                value={newItemQty}
-                onChangeText={setNewItemQty}
-                mode="outlined"
-                keyboardType="numeric"
-                style={{ flex: 1 }}
-                dense
-              />
-              <Button
-                mode="contained"
-                onPress={handleAddSuppItem}
-                style={{
-                  borderRadius: 8,
-                  height: 40,
-                  justifyContent: "center",
-                }}
-                contentStyle={{ height: 40 }}
-              >
-                Thêm
-              </Button>
-            </View>
-          </View>
-
-          <View style={styles.modalTotalRow}>
-            <Text variant="bodyMedium" style={styles.mutedText}>
-              Tổng cộng phát sinh:
-            </Text>
-            <Text variant="titleMedium" style={styles.modalTotalText}>
-              {formatPrice(
-                suppQuoteItems.reduce(
-                  (sum, item) => sum + item.price * item.quantity,
-                  0,
-                ),
-              )}
-            </Text>
-          </View>
-
-          <TextInput
-            label="Ghi chú thêm"
-            value={suppQuoteNote}
-            onChangeText={setSuppQuoteNote}
-            mode="outlined"
-            multiline
-            numberOfLines={3}
-            left={
-              <TextInput.Icon
-                icon="note-text"
-                accessibilityLabel="Ghi chú"
-              />
-            }
-          />
-          <Button
-            mode="contained"
-            onPress={handleSendSuppQuote}
-            loading={actionLoading}
-            disabled={actionLoading || suppQuoteItems.length === 0}
-            style={styles.primaryButton}
-            contentStyle={styles.actionContent}
-          >
-            {actionLoading ? "Đang gửi…" : "Gửi báo giá bổ sung"}
-          </Button>
-          <Button mode="text" onPress={() => setShowSuppQuoteModal(false)}>
-            Đóng
-          </Button>
-        </Modal>
-      </Portal>
+      <SupplementaryQuoteModal
+        visible={showSuppQuoteModal}
+        suppQuoteError={suppQuoteError}
+        suppQuoteItems={suppQuoteItems}
+        newItemName={newItemName}
+        newItemUnit={newItemUnit}
+        newItemPrice={newItemPrice}
+        newItemQty={newItemQty}
+        suppQuoteNote={suppQuoteNote}
+        actionLoading={actionLoading}
+        onDismiss={() => {
+          setShowSuppQuoteModal(false);
+          setSuppQuoteError("");
+        }}
+        onUpdateSuppItemQty={handleUpdateSuppItemQty}
+        onRemoveSuppQuoteItem={handleRemoveSuppQuoteItem}
+        onChangeNewItemName={setNewItemName}
+        onChangeNewItemUnit={setNewItemUnit}
+        onChangeNewItemPrice={setNewItemPrice}
+        onChangeNewItemQty={setNewItemQty}
+        onAddSuppItem={handleAddSuppItem}
+        onChangeNote={setSuppQuoteNote}
+        onSendSuppQuote={handleSendSuppQuote}
+      />
     </ProviderScreen>
   );
 }
@@ -1849,120 +1414,6 @@ function InfoRow({
         {text}
       </Text>
     </View>
-  );
-}
-
-const timelineStyles = StyleSheet.create({
-  timelineList: {
-    gap: 14,
-    marginTop: 8,
-  },
-  timelineRow: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "flex-start",
-  },
-  timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginTop: 5,
-  },
-  timelineContent: {
-    flex: 1,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-  },
-  timelineHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  timelineTitle: {
-    flex: 1,
-    fontWeight: "800",
-  },
-  timelineTime: {
-  },
-  timelineNote: {
-    marginTop: 4,
-    lineHeight: 18,
-  },
-});
-
-function ProviderBookingTimeline({
-  timeline,
-  fallbackStatus,
-  booking,
-}: {
-  timeline: BookingTimelineItem[];
-  fallbackStatus?: string;
-  booking?: any;
-}) {
-  const theme = useTheme();
-  const activeColors = theme.dark ? Colors.dark : Colors.light;
-  const rows =
-    timeline.length > 0
-      ? timeline
-      : fallbackStatus
-        ? [{ toStatus: fallbackStatus }]
-        : [];
-
-  if (rows.length === 0) return null;
-
-  return (
-    <ProviderCard>
-      <ProviderSectionHeader title="Timeline trạng thái" />
-      <View style={timelineStyles.timelineList}>
-        {rows.map((item, index) => {
-          const status =
-            item.toStatus || item.fromStatus || fallbackStatus || "PENDING";
-          let label = BOOKING_STATUS_LABEL[status as BookingStatus] || status;
-          if (item.note === 'Đã đến nơi') {
-            label = 'Tôi đã đến';
-          }
-          const color = getStatusColor(status, activeColors);
-          const createdAt = item.createdAt
-            ? new Date(item.createdAt).toLocaleString("vi-VN")
-            : "";
-
-          let prefix = '';
-          if (status === 'CANCELLED' && item.changedBy) {
-            if (item.changedBy === booking?.customerId) prefix = 'Khách hàng hủy: ';
-            else if (item.changedBy === booking?.providerId) prefix = 'Bạn đã hủy: ';
-            else prefix = 'Hệ thống hủy: ';
-          } else if (status === 'CANCELLED' && !item.changedBy) {
-            prefix = 'Hệ thống hủy: ';
-          }
-
-          return (
-            <View
-              key={`${status}-${item.id || index}`}
-              style={timelineStyles.timelineRow}
-            >
-              <View style={[timelineStyles.timelineDot, { backgroundColor: color }]} />
-              <View style={[timelineStyles.timelineContent, { borderBottomColor: theme.colors.outlineVariant }]}>
-                <View style={timelineStyles.timelineHeader}>
-                  <Text variant="bodyMedium" style={[timelineStyles.timelineTitle, { color: theme.colors.onSurface }]}>
-                    {label}
-                  </Text>
-                  {createdAt ? (
-                    <Text variant="labelSmall" style={[timelineStyles.timelineTime, { color: theme.colors.onSurfaceVariant }]}>
-                      {createdAt}
-                    </Text>
-                  ) : null}
-                </View>
-                {item.note || prefix ? (
-                  <Text variant="bodySmall" style={[timelineStyles.timelineNote, { color: theme.colors.onSurfaceVariant }]}>
-                    {prefix}{item.note || ''}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-          );
-        })}
-      </View>
-    </ProviderCard>
   );
 }
 

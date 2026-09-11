@@ -17,6 +17,8 @@ const ALLOWED_TRANSITIONS = new Set<Transition>([
   `${BookingStatus.IN_PROGRESS}->${BookingStatus.DONE}`,
   `${BookingStatus.IN_PROGRESS}->${BookingStatus.DISPUTED}`,
   `${BookingStatus.DONE}->${BookingStatus.DISPUTED}`,
+  `${BookingStatus.DISPUTED}->${BookingStatus.DONE}`,
+  `${BookingStatus.DISPUTED}->${BookingStatus.CANCELLED}`,
 ]);
 
 @Injectable()

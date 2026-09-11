@@ -25,20 +25,32 @@ const createSocket = async (namespace: string): Promise<Socket> => {
 };
 
 export const getChatSocket = async (): Promise<Socket> => {
-  if (chatSocket?.connected) return chatSocket;
-  chatSocket = await createSocket('/chat');
+  if (chatSocket && !chatSocket.disconnected) return chatSocket;
+  if (!chatSocket) {
+    chatSocket = await createSocket('/chat');
+  } else if (chatSocket.disconnected) {
+    chatSocket.connect();
+  }
   return chatSocket;
 };
 
 export const getNotifSocket = async (): Promise<Socket> => {
-  if (notifSocket?.connected) return notifSocket;
-  notifSocket = await createSocket('/notifications');
+  if (notifSocket && !notifSocket.disconnected) return notifSocket;
+  if (!notifSocket) {
+    notifSocket = await createSocket('/notifications');
+  } else if (notifSocket.disconnected) {
+    notifSocket.connect();
+  }
   return notifSocket;
 };
 
 export const getTrackingSocket = async (): Promise<Socket> => {
-  if (trackingSocket?.connected) return trackingSocket;
-  trackingSocket = await createSocket('/tracking');
+  if (trackingSocket && !trackingSocket.disconnected) return trackingSocket;
+  if (!trackingSocket) {
+    trackingSocket = await createSocket('/tracking');
+  } else if (trackingSocket.disconnected) {
+    trackingSocket.connect();
+  }
   return trackingSocket;
 };
 

@@ -1,4 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BookingCreationService } from './booking-creation.service';
+import { BookingQuotationService } from './booking-quotation.service';
+import { BookingExecutionService } from './booking-execution.service';
+import { BookingCancellationService } from './booking-cancellation.service';
 import { BookingLifecycleService } from './booking-lifecycle.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BookingStatus } from '@prisma/client';
@@ -112,6 +116,10 @@ describe('BookingLifecycleService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        BookingCreationService,
+        BookingQuotationService,
+        BookingExecutionService,
+        BookingCancellationService,
         BookingLifecycleService,
         BookingSharedService,
         { provide: PrismaService, useValue: mockPrisma },

@@ -152,43 +152,79 @@ export class BookingDisputeService {
       });
 
       if (dto.resolutionAction === 'COMPLETE') {
+        await tx.booking.update({
+          where: { id: dispute.bookingId },
+          data: {
+            status: BookingStatus.DONE,
+            completedAt: dispute.booking.completedAt || new Date(),
+            autoCompletedAt: new Date(),
+          },
+        });
+
         await this.bookingCommissionService.deductCommission(
           dispute.bookingId,
           adminId,
           tx,
         );
-      } else if (dto.resolutionAction === 'PENALIZE' && dto.penaltyAmount) {
-        const wallet = await tx.providerWallet.findUnique({
-          where: { providerId: dispute.booking.providerId },
+
+        await this.shared.addStatusHistory(
+          dispute.bookingId,
+          BookingStatus.DISPUTED,
+          BookingStatus.DONE,
+          adminId,
+          `Phán quyết tranh chấp: Hoàn thành đơn hàng. ${dto.resolutionReason || ''}`.trim(),
+          tx,
+        );
+      } else if (dto.resolutionAction === 'PENALIZE') {
+        await tx.booking.update({
+          where: { id: dispute.bookingId },
+          data: {
+            status: BookingStatus.CANCELLED,
+          },
         });
 
-        if (wallet) {
-          const updatedWallet = await tx.providerWallet.update({
-            where: { id: wallet.id },
-            data: { balance: { decrement: dto.penaltyAmount } },
+        if (dto.penaltyAmount) {
+          const wallet = await tx.providerWallet.findUnique({
+            where: { providerId: dispute.booking.providerId },
           });
 
-          await tx.walletTransaction.create({
-            data: {
-              walletId: wallet.id,
-              amount: -dto.penaltyAmount,
-              type: WalletTransactionType.PENALTY,
-              status: 'SUCCESS',
-              bookingId: dispute.bookingId,
-              disputeId: dispute.id,
-            },
-          });
-
-          if (
-            Number(updatedWallet.balance) < 0 &&
-            !updatedWallet.isRestricted
-          ) {
-            await tx.providerWallet.update({
-              where: { id: updatedWallet.id },
-              data: { isRestricted: true },
+          if (wallet) {
+            const updatedWallet = await tx.providerWallet.update({
+              where: { id: wallet.id },
+              data: { balance: { decrement: dto.penaltyAmount } },
             });
+
+            await tx.walletTransaction.create({
+              data: {
+                walletId: wallet.id,
+                amount: -dto.penaltyAmount,
+                type: WalletTransactionType.PENALTY,
+                status: 'SUCCESS',
+                bookingId: dispute.bookingId,
+                disputeId: dispute.id,
+              },
+            });
+
+            if (
+              Number(updatedWallet.balance) < 0 &&
+              !updatedWallet.isRestricted
+            ) {
+              await tx.providerWallet.update({
+                where: { id: updatedWallet.id },
+                data: { isRestricted: true },
+              });
+            }
           }
         }
+
+        await this.shared.addStatusHistory(
+          dispute.bookingId,
+          BookingStatus.DISPUTED,
+          BookingStatus.CANCELLED,
+          adminId,
+          `Phán quyết tranh chấp: Phạt vi phạm & Hủy đơn. ${dto.resolutionReason || ''}`.trim(),
+          tx,
+        );
       }
 
       await tx.auditLog.create({
@@ -201,15 +237,6 @@ export class BookingDisputeService {
           ipAddress: ipAddress || null,
         },
       });
-
-      await this.shared.addStatusHistory(
-        dispute.bookingId,
-        BookingStatus.DISPUTED,
-        BookingStatus.DISPUTED,
-        adminId,
-        `Phán quyết tranh chấp: ${dto.resolutionAction}. ${dto.resolutionReason || ''}`.trim(),
-        tx,
-      );
     });
 
     const booking = dispute.booking;

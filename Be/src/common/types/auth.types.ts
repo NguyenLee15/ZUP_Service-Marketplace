@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 import type { Socket } from 'socket.io';
-import { UserRole } from '@prisma/client';
+import { UserRole, UserStatus } from '@prisma/client';
 
 export interface JwtTokenPayload {
   sub: number;
@@ -12,6 +12,7 @@ export interface AuthenticatedUserPayload {
   id: number;
   email: string;
   role: UserRole;
+  status?: UserStatus;
 }
 
 export type AuthenticatedRequest = Omit<Request, 'user'> & {

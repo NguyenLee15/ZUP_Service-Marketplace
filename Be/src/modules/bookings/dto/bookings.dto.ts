@@ -10,11 +10,20 @@ import {
   Min,
   MinLength,
   IsNotEmpty,
+  IsIn,
 } from 'class-validator';
-import { Type, Transform, plainToInstance } from 'class-transformer';
+import {
+  Type,
+  Transform,
+  plainToInstance,
+  type ClassConstructor,
+} from 'class-transformer';
 
-function parseJsonArrayValue(value: unknown, classType?: any): unknown {
-  let parsed = value;
+function parseJsonArrayValue<T>(
+  value: unknown,
+  classType?: ClassConstructor<T>,
+): unknown {
+  let parsed: unknown = value;
   if (typeof value === 'string') {
     try {
       parsed = JSON.parse(value);
@@ -23,44 +32,46 @@ function parseJsonArrayValue(value: unknown, classType?: any): unknown {
     }
   }
   if (classType && Array.isArray(parsed)) {
-    return parsed.map((item) => plainToInstance(classType, item));
+    return (parsed as unknown[]).map((item) =>
+      plainToInstance(classType, item),
+    );
   }
   return parsed;
 }
 
 export class CreateBookingItemDto {
   @IsInt()
-  serviceItemId: number;
+  serviceItemId!: number;
 
   @IsInt()
   @Min(1)
-  quantity: number;
+  quantity!: number;
 }
 
 export class CreateBookingDto {
   @IsInt()
-  serviceId: number;
+  serviceId!: number;
 
   @IsString()
-  description: string;
-
-  @IsString()
-  @MaxLength(50)
-  province: string;
+  description!: string;
 
   @IsString()
   @MaxLength(50)
-  district: string;
+  province!: string;
 
   @IsString()
   @MaxLength(50)
-  ward: string;
+  district!: string;
 
   @IsString()
-  addressDetail: string;
+  @MaxLength(50)
+  ward!: string;
+
+  @IsString()
+  addressDetail!: string;
 
   @IsDateString()
-  desiredTime: string;
+  desiredTime!: string;
 
   @IsArray()
   @IsOptional()
@@ -73,34 +84,34 @@ export class CreateBookingDto {
 export class ConfirmSurveyorDto {
   @IsString()
   @MaxLength(100)
-  surveyorName: string;
+  surveyorName!: string;
 
   @IsString()
   @MaxLength(15)
-  surveyorPhone: string;
+  surveyorPhone!: string;
 }
 
 export class CreateQuotationItemDto {
   @IsString()
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @MaxLength(20)
-  unit: string;
+  unit!: string;
 
   @IsNumber()
   @Type(() => Number)
-  price: number;
+  price!: number;
 
   @IsInt()
-  quantity: number;
+  quantity!: number;
 }
 
 export class SendQuoteDto {
   @IsString()
   @MaxLength(100)
-  estimatedTime: string;
+  estimatedTime!: string;
 
   @IsString()
   @IsOptional()
@@ -118,14 +129,14 @@ export class CancelBookingDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  reason: string;
+  reason!: string;
 }
 
 export class RejectQuoteDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  reason: string;
+  reason!: string;
 }
 
 export class SendSupplementaryQuoteDto {
@@ -137,7 +148,7 @@ export class SendSupplementaryQuoteDto {
   @Transform(({ value }) => parseJsonArrayValue(value, CreateQuotationItemDto))
   @ValidateNested({ each: true })
   @Type(() => CreateQuotationItemDto)
-  items: CreateQuotationItemDto[];
+  items!: CreateQuotationItemDto[];
 }
 
 export class ConfirmSupplementaryDto {}
@@ -146,25 +157,27 @@ export class RejectSupplementaryDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  reason: string;
+  reason!: string;
 }
 
 export class DisputeDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  reason: string;
+  reason!: string;
 }
 
 export class ResolveDisputeDto {
-  @IsString()
-  resolutionAction: 'COMPLETE' | 'PENALIZE';
+  @IsIn(['COMPLETE', 'PENALIZE'])
+  resolutionAction!: 'COMPLETE' | 'PENALIZE';
 
   @IsString()
-  resolutionReason: string;
+  @IsNotEmpty()
+  resolutionReason!: string;
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   @Type(() => Number)
   penaltyAmount?: number;
 }
