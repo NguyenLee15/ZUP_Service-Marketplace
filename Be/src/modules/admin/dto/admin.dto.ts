@@ -1,27 +1,40 @@
 import {
   IsArray,
+  IsBoolean,
+  IsDateString,
   IsEmail,
+  IsEnum,
   IsInt,
   IsIn,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  BookingStatus,
+  DisputeStatus,
+  KycStatus,
+  UserRole,
+  UserStatus,
+} from '@prisma/client';
 import { ADMIN_PERMISSION_VALUES } from '../../../common/constants/admin-permissions';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 
 export class AdminUsersQueryDto extends PaginationQueryDto {
-  @IsString()
+  @IsEnum(UserRole)
   @IsOptional()
-  role?: string;
+  role?: UserRole;
 
-  @IsString()
+  @IsEnum(UserStatus)
   @IsOptional()
-  status?: string;
+  status?: UserStatus;
 
   @IsString()
   @IsOptional()
@@ -66,16 +79,31 @@ export class AdminAuditLogsQueryDto extends PaginationQueryDto {
   keyword?: string;
 }
 
+/**
+ * @deprecated Dùng AdminKycQueryDto hoặc AdminDisputesQueryDto tương ứng với domain
+ */
 export class AdminStatusListQueryDto extends PaginationQueryDto {
   @IsString()
   @IsOptional()
   status?: string;
 }
 
-export class AdminBookingsQueryDto extends PaginationQueryDto {
-  @IsString()
+export class AdminKycQueryDto extends PaginationQueryDto {
+  @IsEnum(KycStatus)
   @IsOptional()
-  status?: string;
+  status?: KycStatus;
+}
+
+export class AdminDisputesQueryDto extends PaginationQueryDto {
+  @IsEnum(DisputeStatus)
+  @IsOptional()
+  status?: DisputeStatus;
+}
+
+export class AdminBookingsQueryDto extends PaginationQueryDto {
+  @IsEnum(BookingStatus)
+  @IsOptional()
+  status?: BookingStatus;
 
   @IsString()
   @IsOptional()
@@ -83,21 +111,21 @@ export class AdminBookingsQueryDto extends PaginationQueryDto {
 }
 
 export class AdminDashboardQueryDto {
-  @IsString()
+  @IsDateString()
   @IsOptional()
   from?: string;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
   to?: string;
 
-  @IsString()
+  @IsIn(['day', 'week', 'month'])
   @IsOptional()
   groupBy?: 'day' | 'week' | 'month';
 
-  @IsString()
+  @IsEnum(BookingStatus)
   @IsOptional()
-  status?: string;
+  status?: BookingStatus;
 
   @IsInt()
   @IsOptional()
@@ -117,6 +145,8 @@ export class AdminDashboardQueryDto {
 
 export class AdminReasonDto {
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
   reason: string;
 }
 
@@ -151,9 +181,9 @@ export class UpdateStaffDto {
   @IsOptional()
   phone?: string;
 
-  @IsString()
+  @IsEnum(UserStatus)
   @IsOptional()
-  status?: string;
+  status?: UserStatus;
 
   @IsArray()
   @IsString({ each: true })
@@ -178,6 +208,57 @@ export class UpdateCommissionSettingsDto {
   @Type(() => Number)
   @Min(0)
   maxAmount: number;
+}
+
+export class SocialZaloConfigDto {
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  oaId?: string;
+
+  @IsOptional()
+  @IsString()
+  chatUrl?: string;
+}
+
+export class SocialFacebookConfigDto {
+  @IsOptional()
+  @IsString()
+  pageUrl?: string;
+}
+
+export class SocialTiktokConfigDto {
+  @IsOptional()
+  @IsString()
+  profileUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  videoUrl?: string;
+}
+
+export class UpdateSocialConfigDto {
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SocialZaloConfigDto)
+  zalo?: SocialZaloConfigDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SocialFacebookConfigDto)
+  facebook?: SocialFacebookConfigDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SocialTiktokConfigDto)
+  tiktok?: SocialTiktokConfigDto;
 }
 
 /**

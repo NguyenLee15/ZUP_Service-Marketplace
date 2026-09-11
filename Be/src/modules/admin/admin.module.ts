@@ -13,6 +13,7 @@ import { BookingsModule } from '../bookings/bookings.module';
 import { UsersModule } from '../users/users.module';
 import { AdminService } from './services/admin.service';
 import { AdminDashboardService } from './services/admin-dashboard.service';
+import { AdminDashboardExportService } from './services/admin-dashboard-export.service';
 import { StaffAdminService } from './services/staff-admin.service';
 import { SettingsModule } from '../settings/settings.module';
 import { AdminAuditLogService } from './services/admin-audit-log.service';
@@ -32,6 +33,7 @@ import { AdminAuditLogService } from './services/admin-audit-log.service';
   providers: [
     AdminService,
     AdminDashboardService,
+    AdminDashboardExportService,
     StaffAdminService,
     AdminAuditLogService,
   ],

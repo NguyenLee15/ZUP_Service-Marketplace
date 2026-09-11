@@ -20,8 +20,8 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses } from '../../../common/decorators/api-contract.decorator';
 import { AdminPermission } from '../../../common/constants/admin-permissions';
 import {
+  AdminDisputesQueryDto,
   AdminResolveDisputeDto,
-  AdminStatusListQueryDto,
 } from '../dto/admin.dto';
 import { AdminService } from '../services/admin.service';
 
@@ -37,7 +37,7 @@ export class AdminDisputesController {
   @Get()
   @Permissions(AdminPermission.DISPUTE_VIEW)
   @ApiOperation({ summary: 'List customer/provider disputes' })
-  async getDisputes(@Query() query: AdminStatusListQueryDto) {
+  async getDisputes(@Query() query: AdminDisputesQueryDto) {
     return this.adminService.getDisputes(query.status, query.page, query.limit);
   }
 
