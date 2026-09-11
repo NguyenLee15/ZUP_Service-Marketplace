@@ -17,7 +17,7 @@ import {
   AdminDisputesController,
   BookingsController,
   ProviderBookingsController,
-} from '../src/modules/bookings/bookings.controller';
+} from '../src/modules/bookings/controllers';
 import { BookingDisputeService } from '../src/modules/bookings/booking-dispute.service';
 import { BookingLifecycleService } from '../src/modules/bookings/booking-lifecycle.service';
 import { BookingQueryService } from '../src/modules/bookings/booking-query.service';
@@ -36,7 +36,7 @@ import { PayosService } from '../src/modules/provider-wallets/payos.service';
 import {
   AdminServicesController,
   ServicesController,
-} from '../src/modules/services/services.controller';
+} from '../src/modules/services/controllers';
 import { FeaturedListingsService } from '../src/modules/services/featured-listings.service';
 import { ProviderPublicService } from '../src/modules/services/provider-public.service';
 import { ServiceCommandService } from '../src/modules/services/service-command.service';
@@ -163,13 +163,22 @@ describe('Booking/wallet production flow (e2e)', () => {
         { provide: DepositService, useValue: mocks.deposit },
         { provide: WithdrawalService, useValue: mocks.withdrawal },
         { provide: PaymentCallbackService, useValue: mocks.paymentCallback },
-        { provide: PayosService, useValue: { createDepositRequest: jest.fn(), verifyWebhook: jest.fn() } },
+        {
+          provide: PayosService,
+          useValue: {
+            createDepositRequest: jest.fn(),
+            verifyWebhook: jest.fn(),
+          },
+        },
         { provide: ServiceSearchService, useValue: mocks.serviceSearch },
         { provide: ProviderPublicService, useValue: mocks.providerPublic },
         { provide: ServiceCommandService, useValue: {} },
         { provide: ServiceModerationService, useValue: {} },
         { provide: FeaturedListingsService, useValue: {} },
-        { provide: AiService, useValue: { generateText: jest.fn(), generateEmbedding: jest.fn() } },
+        {
+          provide: AiService,
+          useValue: { generateText: jest.fn(), generateEmbedding: jest.fn() },
+        },
       ],
     })
       .overrideGuard(JwtAuthGuard)

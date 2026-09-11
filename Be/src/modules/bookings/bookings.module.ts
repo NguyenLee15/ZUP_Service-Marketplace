@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import {
   BookingsController,
   ProviderBookingsController,
-  AdminDisputesController,
-} from './bookings.controller';
+} from './controllers';
 import { ProviderDashboardController } from './provider-dashboard.controller';
 import { CloudinaryModule } from '../../shared/cloudinary/cloudinary.module';
 import { BookingsCron } from './bookings.cron';
@@ -55,7 +54,6 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
   controllers: [
     BookingsController,
     ProviderBookingsController,
-    AdminDisputesController,
     ProviderDashboardController,
   ],
   providers: [

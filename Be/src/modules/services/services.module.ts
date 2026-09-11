@@ -5,7 +5,7 @@ import {
   AdminServicesController,
   AdminFeaturedListingsController,
   AdminFeaturedRateController,
-} from './services.controller';
+} from './controllers';
 import { CloudinaryModule } from '../../shared/cloudinary/cloudinary.module';
 import { AiModule } from '../../shared/ai/ai.module';
 import { BullModule } from '@nestjs/bullmq';

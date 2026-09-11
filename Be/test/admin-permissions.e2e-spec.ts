@@ -21,7 +21,7 @@ import { SettingsService } from '../src/modules/settings/settings.service';
 import { AdminAuditLogService } from '../src/modules/admin/services/admin-audit-log.service';
 import { AdminWalletDepositsController } from '../src/modules/provider-wallets/provider-wallets.controller';
 import { DepositService } from '../src/modules/provider-wallets/deposit.service';
-import { AdminServicesController } from '../src/modules/services/services.controller';
+import { AdminServicesController } from '../src/modules/services/controllers';
 import { ServiceModerationService } from '../src/modules/services/service-moderation.service';
 import { BookingQueryService } from '../src/modules/bookings/booking-query.service';
 

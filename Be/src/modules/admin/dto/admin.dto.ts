@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsEmail,
   IsInt,
   IsIn,
   IsNumber,
@@ -7,6 +8,7 @@ import {
   IsString,
   Max,
   Min,
+  MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ADMIN_PERMISSION_VALUES } from '../../../common/constants/admin-permissions';
@@ -122,7 +124,7 @@ export class CreateStaffDto {
   @IsString()
   fullName: string;
 
-  @IsString()
+  @IsEmail()
   email: string;
 
   @IsString()
@@ -130,6 +132,7 @@ export class CreateStaffDto {
   phone?: string;
 
   @IsString()
+  @MinLength(8)
   password: string;
 
   @IsArray()
@@ -163,7 +166,7 @@ export class UpdateCommissionSettingsDto {
   @IsNumber()
   @Type(() => Number)
   @Min(0)
-  @Max(1)
+  @Max(100)
   rate: number;
 
   @IsInt()
@@ -184,6 +187,7 @@ export class UpdateCommissionSettingsDto {
  */
 export class AdminResolveDisputeDto {
   @IsString()
+  @IsIn(['COMPLETE', 'PENALIZE'])
   resolutionAction: 'COMPLETE' | 'PENALIZE';
 
   @IsString()
@@ -192,5 +196,6 @@ export class AdminResolveDisputeDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
+  @Min(0)
   penaltyAmount?: number;
 }

@@ -134,12 +134,8 @@ export class ServiceSearchService {
         },
       },
       orderBy,
-      ...(isLocationSearch
-        ? {}
-        : {
-            skip: (page - 1) * limit,
-            take: limit,
-          }),
+      skip: isLocationSearch ? undefined : (page - 1) * limit,
+      take: isLocationSearch ? 200 : limit,
     });
 
     const totalBeforeLocationFilter = isLocationSearch

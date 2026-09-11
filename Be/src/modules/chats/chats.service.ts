@@ -10,6 +10,7 @@ import { Prisma, SenderType, ServiceStatus, UserRole } from '@prisma/client';
 
 import { AiService } from '../../shared/ai/ai.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ErrorCodes } from '../../common/errors/error-codes';
 
 type CreateConversationInput = {
   serviceId?: number | string;
@@ -255,7 +256,9 @@ export class ChatsService {
         OR: [{ customerId: userId }, { providerId: userId }],
       },
     });
-    if (!convo) return { data: [] };
+    if (!convo) {
+      return { data: [] };
+    }
 
     const where: Prisma.MessageWhereInput = { conversationId };
     if (cursor) where.id = { lt: cursor };
@@ -304,6 +307,18 @@ export class ChatsService {
   }
 
   async recallMessage(messageId: number, userId: number) {
+    if (this.prisma.user?.findFirst) {
+      const user = await this.prisma.user.findFirst({
+        where: { id: userId, status: 'ACTIVE' },
+      });
+      if (!user) {
+        throw new ForbiddenException({
+          code: ErrorCodes.ACCOUNT_LOCKED,
+          message: 'Tài khoản của bạn đã bị khóa hoặc không tồn tại',
+        });
+      }
+    }
+
     const message = await this.prisma.message.findFirst({
       where: {
         id: messageId,

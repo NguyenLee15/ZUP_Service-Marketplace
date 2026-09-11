@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { paginationMeta } from '../../common/dto/pagination.dto';
@@ -10,6 +15,20 @@ export class NotificationsService {
   private readonly logger = new Logger('NotificationsService');
 
   constructor(private prisma: PrismaService) {}
+
+  private async checkActiveUser(userId: number) {
+    if (!this.prisma.user?.findFirst) return null;
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, status: 'ACTIVE' },
+    });
+    if (!user) {
+      throw new ForbiddenException({
+        code: ErrorCodes.ACCOUNT_LOCKED,
+        message: 'Tài khoản của bạn đã bị khóa hoặc không tồn tại',
+      });
+    }
+    return user;
+  }
 
   async create(
     userId: number,
@@ -48,6 +67,7 @@ export class NotificationsService {
   }
 
   async markRead(userId: number, notificationId: number) {
+    await this.checkActiveUser(userId);
     await this.prisma.notification.updateMany({
       where: { id: notificationId, userId },
       data: { isRead: true },
@@ -56,6 +76,7 @@ export class NotificationsService {
   }
 
   async markAllRead(userId: number) {
+    await this.checkActiveUser(userId);
     await this.prisma.notification.updateMany({
       where: { userId, isRead: false },
       data: { isRead: true },
@@ -71,6 +92,7 @@ export class NotificationsService {
   }
 
   async delete(userId: number, notificationId: number) {
+    await this.checkActiveUser(userId);
     const result = await this.prisma.notification.deleteMany({
       where: { id: notificationId, userId },
     });

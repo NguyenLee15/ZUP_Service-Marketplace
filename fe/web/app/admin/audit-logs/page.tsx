@@ -1,407 +1,84 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  Download,
-  Filter,
-  Loader2,
-  RefreshCw,
-  Search,
-  ShieldCheck,
-} from "lucide-react";
-import { adminApi } from "@/features/auth/services/api";
+import React from "react";
+import { Download, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
 import { AdminPermission } from "@/types/admin-permissions";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { useAdminAuditLogsFlow } from "@/features/admin/audit-logs/hooks/useAdminAuditLogsFlow";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AuditLogsFilterCard,
+  AuditLogsTable,
+} from "@/features/admin/audit-logs/components";
 
-type AuditLogActor = {
-  id?: number;
-  email?: string;
-  fullName?: string;
-  role?: string;
-};
+function AuditLogsContent() {
+  const {
+    filters,
+    setFilters,
+    updateFilter,
+    logs,
+    loading,
+    exporting,
+    showAdvanced,
+    setShowAdvanced,
+    totalPages,
+    totalRecords,
+    exportCsv,
+  } = useAdminAuditLogsFlow();
 
-type AuditLog = {
-  id: number;
-  createdAt: string;
-  actor?: AuditLogActor | null;
-  actorId?: number | null;
-  action: string;
-  targetType?: string | null;
-  targetId?: number | string | null;
-  ipAddress?: string | null;
-  description?: string | null;
-};
+  return (
+    <div className="mx-auto max-w-[1600px] space-y-6 pb-10">
+      {/* Page Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-primary" />
+            <span>Nhật Ký Hoạt Động (Audit Logs)</span>
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Theo dõi vết kiểm toán toàn diện về bảo mật, tài chính và thay đổi trạng thái
+          </p>
+        </div>
 
-type AuditFilters = {
-  keyword: string;
-  actorId: string;
-  action: string;
-  targetType: string;
-  targetId: string;
-  from: string;
-  to: string;
-  page: number;
-  limit: number;
-};
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1.5"
+            onClick={exportCsv}
+            disabled={exporting || logs.length === 0}
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{exporting ? "Đang xuất..." : "Xuất file CSV"}</span>
+          </Button>
+        </div>
+      </div>
 
-const initialFilters: AuditFilters = {
-  keyword: "",
-  actorId: "",
-  action: "",
-  targetType: "",
-  targetId: "",
-  from: "",
-  to: "",
-  page: 1,
-  limit: 20,
-};
+      {/* Filter Card */}
+      <AuditLogsFilterCard
+        filters={filters}
+        updateFilter={updateFilter}
+        setFilters={setFilters}
+        showAdvanced={showAdvanced}
+        setShowAdvanced={setShowAdvanced}
+      />
 
-function unwrapList(payload: ApiPayload): { data: AuditLog[]; meta: ApiPayload } {
-  const directData = payload?.data;
-  if (Array.isArray(directData)) {
-    return { data: directData, meta: payload?.meta || {} };
-  }
-  if (Array.isArray(directData?.data)) {
-    return {
-      data: directData.data,
-      meta: directData.meta || payload?.meta || {},
-    };
-  }
-  return { data: [], meta: payload?.meta || directData?.meta || {} };
-}
-
-function compactFilters(filters: AuditFilters) {
-  return {
-    keyword: filters.keyword.trim() || undefined,
-    actorId: filters.actorId ? Number(filters.actorId) : undefined,
-    action: filters.action.trim() || undefined,
-    targetType: filters.targetType.trim() || undefined,
-    targetId: filters.targetId ? Number(filters.targetId) : undefined,
-    from: filters.from || undefined,
-    to: filters.to || undefined,
-    page: filters.page,
-    limit: filters.limit,
-  };
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
+      {/* Audit Log Table */}
+      <AuditLogsTable
+        logs={logs}
+        loading={loading}
+        page={filters.page}
+        totalPages={totalPages}
+        setPage={(newPage) => updateFilter("page", newPage)}
+      />
+    </div>
+  );
 }
 
 export default function AdminAuditLogsPage() {
-  const { toast } = useToast();
-  const [filters, setFilters] = useState<AuditFilters>(initialFilters);
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [meta, setMeta] = useState<ApiPayload>({});
-  const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
-  const queryParams = useMemo(() => compactFilters(filters), [filters]);
-
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const res = await adminApi.getAuditLogs(queryParams);
-      const unwrapped = unwrapList(res.data);
-      setLogs(unwrapped.data);
-      setMeta(unwrapped.meta);
-    } catch (err: ApiPayload) {
-      toast({
-        title: "Không tải được audit logs",
-        description: err.response?.data?.error?.message || err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchLogs();
-  }, [queryParams]);
-
-  const updateFilter = (key: keyof AuditFilters, value: string | number) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      page: key === "page" ? Number(value) : 1,
-    }));
-  };
-
-  const exportCsv = async () => {
-    setExporting(true);
-    try {
-      const res = await adminApi.exportAuditLogs(queryParams);
-      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (err: ApiPayload) {
-      toast({
-        title: "Không thể xuất CSV",
-        description: err.response?.data?.error?.message || err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const totalPages =
-    Number(meta.totalPages) ||
-    Math.max(1, Math.ceil((Number(meta.total) || logs.length) / filters.limit));
-
   return (
     <AdminPermissionGuard permission={AdminPermission.AUDIT_LOG_VIEW}>
-      <div className="mx-auto max-w-[1600px] space-y-6 pb-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Audit logs
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Theo dõi thao tác quản trị, phân quyền và nghiệp vụ nhạy cảm.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={fetchLogs}
-            className="gap-2 rounded-xl"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Làm mới
-          </Button>
-          <Button
-            onClick={exportCsv}
-            disabled={exporting}
-            className="gap-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
-          >
-            {exporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            Export CSV
-          </Button>
-        </div>
-      </div>
-
-      <Card className="rounded-2xl border-slate-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-800">
-            <Filter className="h-4 w-4 text-slate-500" />
-            Bộ lọc
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
-          <div className="relative col-span-1 sm:col-span-2 md:col-span-2 lg:col-span-2">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={filters.keyword}
-              onChange={(event) => updateFilter("keyword", event.target.value)}
-              placeholder="Tìm action, mô tả, actor..."
-              className="pl-9"
-            />
-          </div>
-          <Select
-            value={filters.action}
-            onValueChange={(value) => updateFilter("action", value === "ALL" ? "" : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Tất cả Action" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Tất cả Action</SelectItem>
-              <SelectItem value="APPROVE_KYC">Duyệt KYC</SelectItem>
-              <SelectItem value="SUBMIT_KYC">Nộp KYC</SelectItem>
-              <SelectItem value="REJECT_KYC">Từ chối KYC</SelectItem>
-              <SelectItem value="LOCK_USER">Khóa User</SelectItem>
-              <SelectItem value="UNLOCK_USER">Mở khóa User</SelectItem>
-              <SelectItem value="DEPOSIT_APPROVED">Duyệt nạp tiền</SelectItem>
-              <SelectItem value="WITHDRAWAL_APPROVED">Duyệt rút tiền</SelectItem>
-              <SelectItem value="UPDATE_SYSTEM_SETTING">Sửa cấu hình hệ thống</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select
-            value={filters.targetType}
-            onValueChange={(value) => updateFilter("targetType", value === "ALL" ? "" : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Tất cả Target Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Tất cả Target</SelectItem>
-              <SelectItem value="USER">USER</SelectItem>
-              <SelectItem value="KYC_PROFILE">KYC_PROFILE</SelectItem>
-              <SelectItem value="WALLET">WALLET</SelectItem>
-              <SelectItem value="TRANSACTION">TRANSACTION</SelectItem>
-              <SelectItem value="SYSTEM_SETTING">SYSTEM_SETTING</SelectItem>
-              <SelectItem value="SERVICE">SERVICE</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {showAdvanced && (
-            <>
-              <Input
-                value={filters.actorId}
-                onChange={(event) => updateFilter("actorId", event.target.value)}
-                placeholder="Actor ID"
-                type="number"
-              />
-              <Input
-                value={filters.targetId}
-                onChange={(event) => updateFilter("targetId", event.target.value)}
-                placeholder="Target ID"
-                type="number"
-              />
-            </>
-          )}
-          <Input
-            value={filters.from}
-            onChange={(event) => updateFilter("from", event.target.value)}
-            type="date"
-            aria-label="Từ ngày"
-          />
-          <Input
-            value={filters.to}
-            onChange={(event) => updateFilter("to", event.target.value)}
-            type="date"
-            aria-label="Đến ngày"
-          />
-          <Button
-            variant="ghost"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-slate-500 hover:text-slate-900 col-span-1 sm:col-span-2 md:col-span-4 lg:col-span-6"
-          >
-            {showAdvanced ? "Ẩn bớt bộ lọc" : "Bộ lọc nâng cao (ID)"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="overflow-hidden rounded-2xl border-slate-200 shadow-sm">
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-            </div>
-          ) : logs.length === 0 ? (
-            <div className="py-16 text-center">
-              <ShieldCheck className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-              <p className="text-sm font-semibold text-slate-600">
-                Không có audit log phù hợp bộ lọc
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    <th className="px-4 py-3">Thời gian</th>
-                    <th className="px-4 py-3">Actor</th>
-                    <th className="px-4 py-3">Action</th>
-                    <th className="px-4 py-3">Target</th>
-                    <th className="px-4 py-3">IP</th>
-                    <th className="px-4 py-3">Mô tả</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50/80">
-                      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
-                        {formatDate(log.createdAt)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-800">
-                          {log.actor?.fullName ||
-                            log.actor?.email ||
-                            `Actor #${log.actorId || "-"}`}
-                        </div>
-                        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400">
-                          {log.actor?.email}
-                          {log.actor?.role && (
-                            <Badge className="border-0 bg-slate-100 text-[10px] text-slate-600">
-                              {log.actor.role}
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge className="border-0 bg-blue-50 font-mono text-[10px] text-blue-700">
-                          {log.action}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">
-                        {log.targetType || "-"}
-                        {log.targetId ? (
-                          <span className="ml-1 font-mono text-slate-400">
-                            #{log.targetId}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono text-[11px] text-slate-400">
-                        {log.ipAddress || "-"}
-                      </td>
-                      <td className="max-w-xl px-4 py-3 text-xs text-slate-600">
-                        {log.description || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-between text-sm text-slate-500">
-        <span>
-          Trang {filters.page}/{totalPages} · {meta.total || logs.length} bản
-          ghi
-        </span>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            disabled={filters.page <= 1 || loading}
-            onClick={() => updateFilter("page", filters.page - 1)}
-          >
-            Trước
-          </Button>
-          <Button
-            variant="outline"
-            disabled={filters.page >= totalPages || loading}
-            onClick={() => updateFilter("page", filters.page + 1)}
-          >
-            Sau
-          </Button>
-        </div>
-      </div>
-      </div>
+      <AuditLogsContent />
     </AdminPermissionGuard>
   );
 }

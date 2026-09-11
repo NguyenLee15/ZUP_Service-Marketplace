@@ -4,6 +4,8 @@ import {
   Patch,
   Post,
   Delete,
+  HttpCode,
+  HttpStatus,
   Body,
   Param,
   ParseIntPipe,
@@ -108,6 +110,7 @@ export class UsersController {
 
   /** DELETE /users/addresses/:id */
   @Delete('addresses/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAddress(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) addressId: number,

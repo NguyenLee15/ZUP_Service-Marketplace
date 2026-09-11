@@ -13,7 +13,6 @@ import {
   Delete,
   BadRequestException,
   HttpCode,
-  Ip,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
@@ -23,38 +22,29 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { Permissions } from '../../common/decorators/permissions.decorator';
-import { AdminPermission } from '../../common/constants/admin-permissions';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import {
   ApiErrorResponses,
   ApiSuccessResponse,
-} from '../../common/decorators/api-contract.decorator';
-import { FeaturedListingsService } from './featured-listings.service';
-import { ProviderPublicService } from './provider-public.service';
-import { ServiceCommandService } from './service-command.service';
-import { ServiceModerationService } from './service-moderation.service';
-import { ServiceSearchService } from './service-search.service';
+} from '../../../common/decorators/api-contract.decorator';
+import { FeaturedListingsService } from '../featured-listings.service';
+import { ProviderPublicService } from '../provider-public.service';
+import { ServiceCommandService } from '../service-command.service';
+import { ServiceSearchService } from '../service-search.service';
 import {
   CreateServiceDto,
   UpdateServiceDto,
   SearchServiceDto,
-  AdminRejectDto,
-  AdminHideDto,
   AiSearchDto,
-  AdminServicesQueryDto,
   PublicProviderServicesQueryDto,
   PurchaseFeaturedListingDto,
-  AdminFeaturedListingsQueryDto,
-  UpdateFeaturedRateDto,
   AiGenerateDescriptionDto,
-} from './dto/services.dto';
-import { AiService } from '../../shared/ai/ai.service';
-import { ErrorCodes } from '../../common/errors/error-codes';
+} from '../dto/services.dto';
+import { AiService } from '../../../shared/ai/ai.service';
+import { ErrorCodes } from '../../../common/errors/error-codes';
 
 @Controller('services')
 @ApiTags('services')
@@ -70,7 +60,7 @@ export class ServicesController {
 
   // ===== PUBLIC =====
 
-  /** GET /services/featured â€” danh sÃ¡ch dá»‹ch vá»¥ ná»•i báº­t */
+  /** GET /services/featured — danh sách dịch vụ nổi bật */
   @Get('featured')
   async getFeatured() {
     return this.featuredListingsService.getActiveFeatured(8);
@@ -101,7 +91,7 @@ export class ServicesController {
     return this.searchService.aiSearch(dto.query, dto.lat, dto.lng);
   }
 
-  /** GET /services/:id â€” public detail */
+  /** GET /services/:id — public detail */
   @Get(':id')
   async getPublicDetail(@Param('id', ParseIntPipe) id: number) {
     return this.providerPublicService.getPublicDetail(id);
@@ -123,22 +113,21 @@ export class ServicesController {
     );
   }
 
-  /** GET /services/:id/provider-stats â€” chá»‰ sá»‘ hiá»‡u suáº¥t NCC */
+  /** GET /services/:id/provider-stats — chỉ số hiệu suất NCC */
   @Get(':id/provider-stats')
   async getProviderStats(@Param('id', ParseIntPipe) serviceId: number) {
-    // Láº¥y providerId tá»« service
     const detail = await this.providerPublicService.getPublicDetail(serviceId);
     const providerId = detail.data.providerId;
     return this.providerPublicService.getProviderMetrics(providerId);
   }
 
-  /** GET /services/providers/:id â€” thÃ´ng tin cÃ¡ nhÃ¢n cÃ´ng khai NCC */
+  /** GET /services/providers/:id — thông tin cá nhân công khai NCC */
   @Get('providers/:id')
   async getPublicProviderProfile(@Param('id', ParseIntPipe) id: number) {
     return this.providerPublicService.getPublicProviderProfile(id);
   }
 
-  /** GET /services/providers/:id/services â€” danh sÃ¡ch dá»‹ch vá»¥ cá»§a thá»£ */
+  /** GET /services/providers/:id/services — danh sách dịch vụ của thợ */
   @Get('providers/:id/services')
   async getPublicProviderServices(
     @Param('id', ParseIntPipe) id: number,
@@ -149,7 +138,7 @@ export class ServicesController {
 
   // ===== PROVIDER =====
 
-  /** GET /services/my â€” provider's own services */
+  /** GET /services/my — provider's own services */
   @Get('my/list')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
@@ -160,15 +149,15 @@ export class ServicesController {
     return this.commandService.getMyServices(providerId, status);
   }
 
-  /** POST /services/ai-generate-description - Sinh mÃ´ táº£ dá»‹ch vá»¥ báº±ng AI */
+  /** POST /services/ai-generate-description - Sinh mô tả dịch vụ bằng AI */
   @Post('ai-generate-description')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Provider sinh mÃ´ táº£ dá»‹ch vá»¥ tá»± Ä‘á»™ng báº±ng AI',
+    summary: 'Provider sinh mô tả dịch vụ tự động bằng AI',
   })
-  @ApiSuccessResponse('Sinh mÃ´ táº£ thÃ nh cÃ´ng')
+  @ApiSuccessResponse('Sinh mô tả thành công')
   async generateDescription(@Body() dto: AiGenerateDescriptionDto) {
     const text = await this.aiService.generateServiceDescription(
       dto.name,
@@ -177,13 +166,13 @@ export class ServicesController {
     if (!text) {
       throw new BadRequestException({
         code: ErrorCodes.INTERNAL_ERROR,
-        message: 'Há»‡ thá»‘ng AI Ä‘ang báº­n, vui lÃ²ng thá»­ láº¡i sau',
+        message: 'Hệ thống AI đang bận, vui lòng thử lại sau',
       });
     }
     return { success: true, data: text };
   }
 
-  /** POST /services â€” create service (provider) */
+  /** POST /services — create service (provider) */
   @Post()
   @ApiOperation({ summary: 'Provider creates a service' })
   @ApiBearerAuth()
@@ -216,7 +205,7 @@ export class ServicesController {
     return this.commandService.create(providerId, dto, files);
   }
 
-  /** PATCH /services/:id â€” update service (provider) */
+  /** PATCH /services/:id — update service (provider) */
   @Patch(':id')
   @ApiOperation({ summary: 'Provider updates a service' })
   @ApiBearerAuth()
@@ -249,7 +238,7 @@ export class ServicesController {
     return this.commandService.update(providerId, id, dto, files);
   }
 
-  /** PATCH /services/:id/submit â€” DRAFT â†’ PENDING */
+  /** PATCH /services/:id/submit — DRAFT → PENDING */
   @Patch(':id/submit')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
@@ -260,7 +249,7 @@ export class ServicesController {
     return this.commandService.submit(providerId, id);
   }
 
-  /** PATCH /services/:id/hide â€” ACTIVE â†’ HIDDEN */
+  /** PATCH /services/:id/hide — ACTIVE → HIDDEN */
   @Patch(':id/hide')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
@@ -271,7 +260,7 @@ export class ServicesController {
     return this.commandService.hide(providerId, id);
   }
 
-  /** PATCH /services/:id/show â€” HIDDEN â†’ ACTIVE */
+  /** PATCH /services/:id/show — HIDDEN → ACTIVE */
   @Patch(':id/show')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
@@ -282,7 +271,7 @@ export class ServicesController {
     return this.commandService.show(providerId, id);
   }
 
-  /** DELETE /services/:id â€” UC05.4 Provider xÃ³a dá»‹ch vá»¥ */
+  /** DELETE /services/:id — UC05.4 Provider xóa dịch vụ */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
@@ -293,7 +282,7 @@ export class ServicesController {
     return this.commandService.deleteByProvider(providerId, id);
   }
 
-  /** POST /services/:id/feature â€” NCC mua featured listing */
+  /** POST /services/:id/feature — NCC mua featured listing */
   @Post(':id/feature')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
@@ -309,7 +298,7 @@ export class ServicesController {
     );
   }
 
-  /** GET /services/my/featured â€” NCC xem featured listings cá»§a mÃ¬nh */
+  /** GET /services/my/featured — NCC xem featured listings của mình */
   @Get('my/featured')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
@@ -318,137 +307,3 @@ export class ServicesController {
   }
 }
 
-// ===== Admin Controller â€” /admin/services =====
-
-@Controller('admin/services')
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
-@Roles('ADMIN', 'STAFF')
-@Permissions(AdminPermission.SERVICE_MODERATE)
-@ApiTags('admin-services')
-@ApiBearerAuth()
-@ApiErrorResponses()
-export class AdminServicesController {
-  constructor(private readonly moderationService: ServiceModerationService) {}
-
-  /** GET /admin/services */
-  @Get()
-  @ApiOperation({ summary: 'Admin lists services for moderation' })
-  async getAll(@Query() query: AdminServicesQueryDto) {
-    return this.moderationService.getAll(query);
-  }
-
-  /** PATCH /admin/services/:id/approve */
-  @Patch(':id/approve')
-  async approve(
-    @CurrentUser('id') adminId: number,
-    @Ip() ip: string,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.moderationService.approve(adminId, id, ip);
-  }
-
-  /** PATCH /admin/services/:id/reject */
-  @Patch(':id/reject')
-  async reject(
-    @CurrentUser('id') adminId: number,
-    @Ip() ip: string,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: AdminRejectDto,
-  ) {
-    return this.moderationService.reject(adminId, id, dto.reason, ip);
-  }
-
-  /** PATCH /admin/services/:id/hide */
-  @Patch(':id/hide')
-  async hide(
-    @CurrentUser('id') adminId: number,
-    @Ip() ip: string,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: AdminHideDto,
-  ) {
-    return this.moderationService.hide(adminId, id, dto.reason, ip);
-  }
-
-  /** PATCH /admin/services/:id/show */
-  @Patch(':id/show')
-  async show(
-    @CurrentUser('id') adminId: number,
-    @Ip() ip: string,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.moderationService.show(adminId, id, ip);
-  }
-
-  /** DELETE /admin/services/:id â€” UC05.4 Admin xÃ³a dá»‹ch vá»¥ */
-  @Delete(':id')
-  async deleteByAdmin(
-    @CurrentUser('id') adminId: number,
-    @Ip() ip: string,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.moderationService.delete(adminId, id, ip);
-  }
-}
-
-// ===== Admin Featured Listings â€” /admin/featured-listings =====
-
-@Controller('admin/featured-listings')
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
-@Roles('ADMIN', 'STAFF')
-@Permissions(AdminPermission.SERVICE_MODERATE)
-@ApiTags('admin-featured-listings')
-@ApiBearerAuth()
-@ApiErrorResponses()
-export class AdminFeaturedListingsController {
-  constructor(
-    private readonly featuredListingsService: FeaturedListingsService,
-  ) {}
-
-  @Get()
-  @ApiOperation({ summary: 'Admin lists featured listings' })
-  async getAll(@Query() query: AdminFeaturedListingsQueryDto) {
-    return this.featuredListingsService.adminListFeaturedListings(query);
-  }
-
-  @Patch(':id/cancel')
-  @ApiOperation({ summary: 'Admin cancels an active featured listing' })
-  async cancel(
-    @CurrentUser('id') adminId: number,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.featuredListingsService.adminCancelFeaturedListing(adminId, id);
-  }
-}
-
-// ===== Admin Featured Rate â€” /admin/settings/featured-rate =====
-
-@Controller('admin/settings/featured-rate')
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
-@Roles('ADMIN', 'STAFF')
-@Permissions(AdminPermission.FINANCE_COMMISSION)
-@ApiTags('admin-settings')
-@ApiBearerAuth()
-@ApiErrorResponses()
-export class AdminFeaturedRateController {
-  constructor(
-    private readonly featuredListingsService: FeaturedListingsService,
-  ) {}
-
-  @Get()
-  @ApiOperation({ summary: 'Admin gets featured listing daily rate' })
-  async getFeaturedRate() {
-    return this.featuredListingsService.getFeaturedDailyRate();
-  }
-
-  @Patch()
-  @ApiOperation({ summary: 'Admin updates featured listing daily rate' })
-  async updateFeaturedRate(
-    @CurrentUser('id') adminId: number,
-    @Body() dto: UpdateFeaturedRateDto,
-  ) {
-    return this.featuredListingsService.updateFeaturedDailyRate(
-      adminId,
-      dto.dailyRate,
-    );
-  }
-}
