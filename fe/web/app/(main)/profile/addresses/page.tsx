@@ -112,7 +112,7 @@ export default function AddressesPage() {
           wardField={wardField}
           handleProvinceSelect={handleProvinceSelect}
           onClose={closeModal}
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={onSubmit}
         />
       )}
     </div>
