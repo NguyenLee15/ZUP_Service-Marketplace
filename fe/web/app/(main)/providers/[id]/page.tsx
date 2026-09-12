@@ -22,12 +22,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!provider) {
     return {
-      title: 'Không tìm thấy Nhà cung cấp | Zup',
+      title: 'Không tìm thấy Nhà cung cấp | ZUP',
       description: 'Nhà cung cấp này không tồn tại hoặc tài khoản đã bị khóa.',
     };
   }
 
-  const title = `Hồ sơ Đối tác ${provider.fullName} | Zup`;
+  const title = `Hồ sơ Đối tác ${provider.fullName} | ZUP`;
   const addressStr = provider.address 
     ? `${provider.address.ward}, ${provider.address.district}, ${provider.address.province}`
     : 'đối tác uy tín';
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title,
       description,
       url: `https://zup.vn/providers/${id}`,
-      siteName: 'Zup',
+      siteName: 'ZUP',
       images: [
         {
           url: imageUrl,

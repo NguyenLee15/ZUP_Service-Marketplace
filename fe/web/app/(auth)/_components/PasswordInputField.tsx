@@ -37,7 +37,7 @@ export const PasswordInputField = React.forwardRef<HTMLInputElement, PasswordInp
             aria-invalid={!!error}
             aria-describedby={error ? `${id}-error` : undefined}
             className={cn(
-              'h-11 pl-9.5 pr-11 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-sm focus-visible:ring-sky-500',
+              'h-11 pl-9.5 pr-11 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm focus-visible:ring-sky-500',
               error && 'border-rose-500 focus-visible:ring-rose-400',
               className
             )}
@@ -47,7 +47,7 @@ export const PasswordInputField = React.forwardRef<HTMLInputElement, PasswordInp
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
             aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
-            tabIndex={-1}
+            aria-pressed={showPassword}
             className="absolute right-1 top-1/2 -translate-y-1/2 size-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 cursor-pointer"
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -64,3 +64,4 @@ export const PasswordInputField = React.forwardRef<HTMLInputElement, PasswordInp
 );
 
 PasswordInputField.displayName = 'PasswordInputField';
+

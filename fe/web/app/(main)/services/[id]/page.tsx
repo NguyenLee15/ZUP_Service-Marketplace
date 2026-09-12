@@ -31,15 +31,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!service) {
     return {
-      title: 'Không tìm thấy dịch vụ | Zup',
+      title: 'Không tìm thấy dịch vụ | ZUP',
       description: 'Dịch vụ này không tồn tại hoặc đã bị xóa khỏi hệ thống.',
     };
   }
 
-  const title = `${service.name} - ${service.provider?.fullName} | Zup`;
+  const title = `${service.name} - ${service.provider?.fullName} | ZUP`;
   const description = service.description
     ? `${service.description.substring(0, 150)}…`
-    : 'Khám phá ngay dịch vụ uy tín trên nền tảng Zup.';
+    : 'Khám phá ngay dịch vụ uy tín trên nền tảng ZUP.';
   const defaultImage = '/images/hero_bg.png';
   const imageUrl = getSafeImageSrc(service.images?.[0]?.imageUrl, defaultImage);
 
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title,
       description,
       url: `https://zup.vn/services/${id}`,
-      siteName: 'Zup',
+      siteName: 'ZUP',
       images: [
         {
           url: imageUrl,

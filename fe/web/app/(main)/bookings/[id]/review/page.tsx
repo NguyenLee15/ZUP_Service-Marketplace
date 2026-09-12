@@ -52,7 +52,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const handleAutoSuggest = () => {
     const suggestions = [
       'Dịch vụ rất chuyên nghiệp, thợ đến đúng giờ và xử lý vấn đề rất nhanh gọn. Tôi rất hài lòng!',
-      'Giá cả hợp lý, thợ thân thiện và có tay nghề cao. Sẽ tiếp tục ủng hộ Zup.',
+      'Giá cả hợp lý, thợ thân thiện và có tay nghề cao. Sẽ tiếp tục ủng hộ ZUP.',
       'Hỗ trợ nhiệt tình, quy trình làm việc minh bạch. Đánh giá 5 sao cho chất lượng!',
       'Thợ làm việc rất cẩn thận, dọn dẹp sạch sẽ sau khi hoàn thành. Rất đáng tin cậy.',
     ]

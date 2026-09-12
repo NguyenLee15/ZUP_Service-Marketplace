@@ -15,8 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { AuthCard } from '../_components/AuthCard';
 import { PasswordInputField } from '../_components/PasswordInputField';
 import { SocialAuthGroup } from '../_components/SocialAuthGroup';
-import { DevAccountDrawer } from '../_components/DevAccountDrawer';
-import { type DemoAccount } from '../_components/DemoAccountSelector';
+import { DevAccountDrawer, type DemoAccount } from '../_components/DevAccountDrawer';
 import {
   getAuthErrorCode,
   getAuthErrorMessage,
@@ -164,6 +163,8 @@ export default function LoginPage() {
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
+      const firstKey = Object.keys(errors)[0];
+      document.getElementById(firstKey)?.focus();
       return;
     }
 
@@ -197,7 +198,11 @@ export default function LoginPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {error && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium"
+            >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -222,7 +227,9 @@ export default function LoginPage() {
                   setEmail(e.target.value);
                   validate('email', e.target.value);
                 }}
-                className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-sm focus-visible:ring-sky-500 ${
+                aria-invalid={!!fieldErrors.email}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+                className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm focus-visible:ring-sky-500 ${
                   fieldErrors.email ? 'border-rose-500 focus-visible:ring-rose-400' : ''
                 }`}
                 autoComplete="email"
@@ -231,7 +238,7 @@ export default function LoginPage() {
               />
             </div>
             {fieldErrors.email && (
-              <p className="text-xs text-rose-500 font-medium">{fieldErrors.email}</p>
+              <p id="email-error" className="text-xs text-rose-500 font-medium">{fieldErrors.email}</p>
             )}
           </div>
 

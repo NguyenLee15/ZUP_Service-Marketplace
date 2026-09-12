@@ -110,7 +110,11 @@ export default function RegisterPage() {
     e.preventDefault();
     const errors = getRegisterErrors();
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0) {
+      const firstKey = Object.keys(errors)[0];
+      document.getElementById(firstKey)?.focus();
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -260,7 +264,9 @@ export default function RegisterPage() {
                     setFullName(e.target.value);
                     validate('fullName', e.target.value);
                   }}
-                  className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-sm focus-visible:ring-sky-500 ${
+                  aria-invalid={!!fieldErrors.fullName}
+                  aria-describedby={fieldErrors.fullName ? 'fullName-error' : undefined}
+                  className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm focus-visible:ring-sky-500 ${
                     fieldErrors.fullName ? 'border-rose-500' : ''
                   }`}
                   autoComplete="name"
@@ -268,7 +274,7 @@ export default function RegisterPage() {
                 />
               </div>
               {fieldErrors.fullName && (
-                <p className="text-xs text-rose-500 font-medium">{fieldErrors.fullName}</p>
+                <p id="fullName-error" className="text-xs text-rose-500 font-medium">{fieldErrors.fullName}</p>
               )}
             </div>
 
@@ -290,7 +296,9 @@ export default function RegisterPage() {
                     setPhone(e.target.value);
                     validate('phone', e.target.value);
                   }}
-                  className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-sm focus-visible:ring-sky-500 ${
+                  aria-invalid={!!fieldErrors.phone}
+                  aria-describedby={fieldErrors.phone ? 'phone-error' : undefined}
+                  className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm focus-visible:ring-sky-500 ${
                     fieldErrors.phone ? 'border-rose-500' : ''
                   }`}
                   autoComplete="tel"
@@ -298,7 +306,7 @@ export default function RegisterPage() {
                 />
               </div>
               {fieldErrors.phone && (
-                <p className="text-xs text-rose-500 font-medium">{fieldErrors.phone}</p>
+                <p id="phone-error" className="text-xs text-rose-500 font-medium">{fieldErrors.phone}</p>
               )}
             </div>
           </div>
@@ -322,15 +330,18 @@ export default function RegisterPage() {
                   setEmail(e.target.value);
                   validate('email', e.target.value);
                 }}
-                className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-sm focus-visible:ring-sky-500 ${
+                aria-invalid={!!fieldErrors.email}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+                className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm focus-visible:ring-sky-500 ${
                   fieldErrors.email ? 'border-rose-500' : ''
                 }`}
                 autoComplete="email"
+                spellCheck={false}
                 required
               />
             </div>
             {fieldErrors.email && (
-              <p className="text-xs text-rose-500 font-medium">{fieldErrors.email}</p>
+              <p id="email-error" className="text-xs text-rose-500 font-medium">{fieldErrors.email}</p>
             )}
           </div>
 

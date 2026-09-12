@@ -1,11 +1,11 @@
 {
-  "name": "Zup Marketplace",
-  "short_name": "Zup",
+  "name": "ZUP Marketplace",
+  "short_name": "ZUP",
   "description": "Nền tảng tìm và đặt dịch vụ tại nhà với thông tin rõ ràng",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#8b5cf6",
+  "theme_color": "#0284C7",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",

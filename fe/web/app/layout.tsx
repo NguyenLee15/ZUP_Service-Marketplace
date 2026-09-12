@@ -24,8 +24,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   referrer: 'strict-origin-when-cross-origin',
-  title: 'Zup - Tìm Và Đặt Dịch Vụ Tại Nhà',
-  description: 'Zup giúp bạn tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông tin thợ, giá tham khảo và đánh giá rõ ràng.',
+  title: 'ZUP - Tìm Và Đặt Dịch Vụ Tại Nhà',
+  description: 'ZUP giúp bạn tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông tin thợ, giá tham khảo và đánh giá rõ ràng.',
   alternates: {
     canonical: absoluteUrl('/'),
   },
@@ -35,16 +35,16 @@ export const metadata: Metadata = {
     apple: '/logo.png',
   },
   openGraph: {
-    title: 'Zup - Đặt Dịch Vụ Tại Nhà Rõ Ràng Hơn',
+    title: 'ZUP - Đặt Dịch Vụ Tại Nhà Rõ Ràng Hơn',
     description: 'Tìm dịch vụ, mô tả nhu cầu, nhận báo giá và theo dõi tiến độ trong một nơi.',
     url: absoluteUrl('/'),
-    siteName: 'Zup',
+    siteName: 'ZUP',
     images: [
       {
         url: absoluteUrl('/images/hero_bg.png'),
         width: 1200,
         height: 630,
-        alt: 'Zup Hero Banner',
+        alt: 'ZUP Hero Banner',
       },
     ],
     locale: 'vi_VN',
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Zup - Đặt Dịch Vụ Tại Nhà',
+    title: 'ZUP - Đặt Dịch Vụ Tại Nhà',
     description: 'Tìm dịch vụ tại nhà với thông tin rõ ràng trước khi đặt lịch.',
     images: [absoluteUrl('/images/hero_bg.png')],
   },
@@ -74,14 +74,14 @@ const jsonLdData = {
     {
       '@type': 'Organization',
       '@id': absoluteUrl('/#organization'),
-      'name': 'Zup',
+      'name': 'ZUP',
       'url': absoluteUrl('/'),
       'logo': {
         '@type': 'ImageObject',
         '@id': absoluteUrl('/#logo'),
         'url': absoluteUrl('/icon.svg'),
         'contentUrl': absoluteUrl('/icon.svg'),
-        'caption': 'Zup'
+        'caption': 'ZUP'
       },
       'contactPoint': {
         '@type': 'ContactPoint',
@@ -103,7 +103,7 @@ const jsonLdData = {
     {
       '@type': 'WebSite',
       '@id': absoluteUrl('/#website'),
-      'name': 'Zup',
+      'name': 'ZUP',
       'url': absoluteUrl('/'),
       'publisher': {
         '@id': absoluteUrl('/#organization')
@@ -143,7 +143,7 @@ const jsonLdData = {
       },
       'author': {
         '@type': 'Organization',
-        'name': 'Zup',
+        'name': 'ZUP',
         'url': absoluteUrl('/')
       },
       'datePublished': '2026-05-15T08:00:00+07:00',

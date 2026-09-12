@@ -3,7 +3,52 @@
 import { useState } from 'react';
 import { Sparkles, User, Briefcase, ShieldCheck, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DEMO_ACCOUNTS, type DemoAccount } from './DemoAccountSelector';
+
+export type DemoRoleKey = 'customer' | 'staff' | 'admin';
+
+export interface DemoAccount {
+  key: DemoRoleKey;
+  label: string;
+  badgeLabel: string;
+  email: string;
+  password: string;
+  name: string;
+  roleDescription: string;
+  icon: typeof User;
+}
+
+export const DEMO_ACCOUNTS: DemoAccount[] = [
+  {
+    key: 'customer',
+    label: 'Khách hàng',
+    badgeLabel: 'Customer',
+    email: 'customer@demo.com',
+    password: 'password123',
+    name: 'Nguyễn Văn Khách',
+    roleDescription: 'Đặt dịch vụ, duyệt báo giá & theo dõi thợ',
+    icon: User,
+  },
+  {
+    key: 'staff',
+    label: 'Nhân viên',
+    badgeLabel: 'Staff',
+    email: 'staff@demo.com',
+    password: 'password123',
+    name: 'Nhân viên điều phối',
+    roleDescription: 'Quản lý đơn hàng, điều phối & xử lý tranh chấp',
+    icon: Briefcase,
+  },
+  {
+    key: 'admin',
+    label: 'Quản trị viên',
+    badgeLabel: 'Admin',
+    email: 'admin@system.com',
+    password: 'password123',
+    name: 'Quản trị hệ thống',
+    roleDescription: 'Cấu hình hệ thống, duyệt KYC & xem logs',
+    icon: ShieldCheck,
+  },
+];
 
 interface DevAccountDrawerProps {
   onSelectAccount: (account: DemoAccount) => void;
@@ -117,3 +162,4 @@ export function DevAccountDrawer({ onSelectAccount, currentEmail }: DevAccountDr
     </div>
   );
 }
+

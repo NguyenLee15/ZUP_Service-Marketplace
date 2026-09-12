@@ -52,7 +52,7 @@ export function AdminMobileDrawer({
             </div>
             <div>
               <h1 className="text-sm font-black tracking-[0.08em] text-white uppercase leading-none">
-                Zup Admin
+                ZUP Admin
               </h1>
               <p className="mt-1 font-mono text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 leading-none">
                 {isAdmin ? "Quản trị hệ thống" : "Nhân viên điều phối"}

@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
   "name_for_model": "zup_home_services",
-  "name_for_human": "Zup Marketplace",
+  "name_for_human": "ZUP Marketplace",
   "description_for_model": "Plugin giúp tìm kiếm dịch vụ sửa chữa điện nước, vệ sinh máy lạnh, dọn dẹp nhà cửa và làm đẹp tại nhà với thông tin rõ ràng trước khi đặt.",
   "description_for_human": "Tìm và đặt dịch vụ tại nhà với thông tin rõ ràng hơn.",
   "auth": {

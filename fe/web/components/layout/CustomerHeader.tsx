@@ -258,20 +258,22 @@ export function CustomerHeader() {
                         type="button"
                         onClick={() => setAiMode(!aiMode)}
                         title={aiMode ? 'Đang bật AI Search' : 'Bật AI Search'}
-                        className={`p-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 cursor-pointer ${
+                        aria-label={aiMode ? 'Tắt tìm kiếm bằng trợ lý AI ZUP' : 'Bật tìm kiếm bằng trợ lý AI ZUP'}
+                        aria-pressed={aiMode}
+                        className={`p-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 cursor-pointer ${
                           aiMode
                             ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400'
                             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
                         }`}
                       >
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                       <button
                         type="submit"
-                        aria-label="Tìm kiếm"
-                        className="p-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-full shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 cursor-pointer"
+                        aria-label="Thực hiện tìm kiếm dịch vụ"
+                        className="p-2 bg-sky-600 hover:bg-sky-500 text-white rounded-full shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 cursor-pointer"
                       >
-                        <Search className="w-3 h-3" />
+                        <Search className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                     </div>
                   </div>

@@ -12,10 +12,10 @@ import { homeFaqs } from './homeFaqContent';
 
 export function GlossarySection() {
   return (
-    <section className="pt-6 pb-10 border-t border-slate-800 space-y-5 animate-in fade-in duration-500">
+    <section className="pt-6 pb-10 border-t border-slate-200/80 dark:border-slate-800 space-y-5 animate-in fade-in duration-500">
       <div className="flex items-center gap-2.5">
-        <HelpCircle className="w-5 h-5 text-action-blue shrink-0" />
-        <h2 id="giai-dap-truc-tiep" className="text-lg md:text-xl font-bold text-white">
+        <HelpCircle className="w-5 h-5 text-sky-600 dark:text-sky-400 shrink-0" />
+        <h2 id="giai-dap-truc-tiep" className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100">
           Câu hỏi thường gặp
         </h2>
       </div>
@@ -25,12 +25,12 @@ export function GlossarySection() {
           <AccordionItem
             key={index}
             value={`direct-${index}`}
-            className="surface-card px-4 rounded-xl hover:border-action-blue/20 transition-all border border-slate-800"
+            className="bg-white dark:bg-slate-900 px-4 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:border-sky-500/40 shadow-xs transition-colors"
           >
-            <AccordionTrigger className="text-left font-semibold text-white hover:no-underline py-3.5 text-sm">
+            <AccordionTrigger className="text-left font-semibold text-slate-900 dark:text-slate-100 hover:text-sky-600 dark:hover:text-sky-400 hover:no-underline py-3.5 text-sm">
               {item.q}
             </AccordionTrigger>
-            <AccordionContent className="text-slate-400 pb-4 leading-relaxed text-xs sm:text-sm">
+            <AccordionContent className="text-slate-600 dark:text-slate-400 pb-4 leading-relaxed text-xs sm:text-sm">
               {item.a}
             </AccordionContent>
           </AccordionItem>

@@ -1,9 +1,9 @@
-# Zup - Nền tảng kết nối dịch vụ tại nhà
+# ZUP - Nền tảng kết nối dịch vụ tại nhà
 
 > Nền tảng kết nối thợ gia đình, vệ sinh, sửa chữa, điện nước uy tín và nhanh chóng nhất.
 
 ## Thông tin dự án
-- **Tên nền tảng**: Zup
+- **Tên nền tảng**: ZUP
 - **Website chính thức**: cấu hình theo `NEXT_PUBLIC_APP_URL` của môi trường deploy.
 - **Lĩnh vực hoạt động**: Dịch vụ tiện ích gia đình tại nhà (Home Services Marketplace)
 
@@ -13,7 +13,7 @@
 3. **Chăm sóc cá nhân & Làm đẹp**: Cắt tóc tại nhà, trang điểm đi tiệc, massage trị liệu và chăm sóc cá nhân theo lịch hẹn.
 4. **Hỗ trợ kỹ thuật & Công nghệ**: Lắp đặt camera an ninh, sửa chữa máy tính, bảo trì thiết bị gia đình thông minh.
 
-## Quy trình hoạt động của Zup (3 Bước đơn giản)
+## Quy trình hoạt động của ZUP (3 Bước đơn giản)
 1. **Tìm kiếm & Chọn thợ**: Khách hàng lựa chọn dịch vụ và chọn thợ phù hợp dựa trên hồ sơ, đánh giá và giá cả công khai.
 2. **Đặt lịch & Xác nhận**: Đặt thời gian và địa điểm làm việc trực tiếp trên nền tảng.
 3. **Thanh toán & Đánh giá**: Thanh toán an toàn, bảo vệ người tiêu dùng và phản hồi chất lượng phục vụ sau khi hoàn thành.

@@ -6,10 +6,10 @@ export type HomeFaqItem = {
 export const homeFaqs: HomeFaqItem[] = [
   {
     q: "Giá dịch vụ được tính như thế nào?",
-    a: "Zup hiển thị giá tham khảo khi có dữ liệu. Trước khi làm, bạn nên xác nhận lại hạng mục, vật tư và chi phí phát sinh trong tin nhắn hoặc đơn hàng.",
+    a: "ZUP hiển thị giá tham khảo khi có dữ liệu. Trước khi làm, bạn nên xác nhận lại hạng mục, vật tư và chi phí phát sinh trong tin nhắn hoặc đơn hàng.",
   },
   {
-    q: "Thợ trên Zup được kiểm tra ra sao?",
+    q: "Thợ trên ZUP được kiểm tra ra sao?",
     a: "Hồ sơ nhà cung cấp có thể được yêu cầu bổ sung thông tin định danh, dịch vụ cung cấp và bằng chứng liên quan. Bạn nên xem hồ sơ, đánh giá và trao đổi rõ phạm vi công việc trước khi đặt.",
   },
   {

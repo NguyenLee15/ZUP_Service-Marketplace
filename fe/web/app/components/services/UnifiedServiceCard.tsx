@@ -187,13 +187,13 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onToggleFavorite?.(service);
                 }}
-                className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border-0 p-0 shadow-md backdrop-blur-md transition-[background-color,color,transform] flex items-center justify-center ${
+                className={`h-9 w-9 rounded-full border-0 p-0 shadow-md backdrop-blur-md transition-[background-color,color,transform] flex items-center justify-center ${
                   isFavorite
                     ? 'bg-rose-500 text-white ring-2 ring-rose-300/35'
                     : 'border border-white/20 bg-slate-950/55 text-white hover:bg-sky-600 hover:text-white'
                 }`}
               >
-                <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isFavorite ? 'fill-white' : ''}`} />
+                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-white' : ''}`} />
               </Button>
             )}
             {showCompare && (
@@ -207,7 +207,7 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onAddToComparison?.(service);
                 }}
-                className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border-0 p-0 shadow-md backdrop-blur-md transition-[background-color,color,transform] flex items-center justify-center ${
+                className={`h-9 w-9 rounded-full border-0 p-0 shadow-md backdrop-blur-md transition-[background-color,color,transform] flex items-center justify-center ${
                   isComparing
                     ? 'bg-sky-600 text-white ring-2 ring-sky-300/35'
                     : 'border border-white/20 bg-slate-950/55 text-white hover:bg-sky-600 hover:text-white'
@@ -323,7 +323,7 @@ export function UnifiedServiceCard({
                 handleDetailClick();
                 router.push(detailHref);
               }}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-500 transition-colors hover:bg-sky-500 hover:text-white sm:h-9 sm:w-9 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 transition-colors hover:bg-sky-600 hover:text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               aria-label={`Đặt ngay dịch vụ ${service.name}`}
             >
               <ShoppingBag className="h-4 w-4" />

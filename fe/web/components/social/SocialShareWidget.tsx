@@ -8,7 +8,7 @@ export function SocialShareWidget() {
   const [copied, setCopied] = useState(false);
   const shareUrl =
     typeof window === 'undefined' ? '/' : window.location.origin;
-  const shareTitle = 'Zup - Đặt dịch vụ tại nhà rõ ràng hơn';
+  const shareTitle = 'ZUP - Đặt dịch vụ tại nhà rõ ràng hơn';
 
   const handleCopy = async () => {
     try {
@@ -24,8 +24,8 @@ export function SocialShareWidget() {
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl shadow-lg shadow-sky-950/20 w-full md:max-w-xs xl:max-w-md shrink-0">
       <div className="flex items-center gap-2 mb-3">
-        <Share2 className="w-4 h-4 text-cyan-400" />
-        <div className="text-sm font-bold uppercase tracking-widest text-slate-300">Chia sẻ Zup</div>
+        <Share2 className="w-4 h-4 text-sky-400" />
+        <div className="text-sm font-bold uppercase tracking-widest text-slate-300">Chia sẻ ZUP</div>
       </div>
       <p className="text-xs text-slate-400 leading-relaxed mb-4">
         Giúp bạn bè và gia đình tìm dịch vụ tại nhà với thông tin rõ ràng hơn.

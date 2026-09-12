@@ -21,7 +21,7 @@ export function SocialFloatingWidget() {
   if (loading) return null;
 
   const zaloUrl = config?.enabled ? buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl) : "https://zalo.me/0901234567";
-  const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://facebook.com/Nguyenlee150804";
+  const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://facebook.com/zup.marketplace";
   const tiktokUrl = config?.enabled ? (config.tiktok?.profileUrl || config.tiktok?.videoUrl || "") : "";
 
   const items = [
@@ -32,13 +32,13 @@ export function SocialFloatingWidget() {
       icon: <MessageCircle className="size-5" />,
     },
     facebookUrl && {
-      label: "Facebook Zup",
+      label: "Facebook ZUP",
       href: facebookUrl,
       className: "bg-[#1877f2] text-white hover:bg-[#145dbd]",
       icon: <Facebook className="size-5" />,
     },
     tiktokUrl && {
-      label: "TikTok Zup",
+      label: "TikTok ZUP",
       href: tiktokUrl,
       className: "bg-neutral-950 text-white hover:bg-neutral-800",
       icon: <Play className="size-5" />,
@@ -82,7 +82,7 @@ export function FooterSocialLinks() {
   if (loading) return null;
 
   const zaloUrl = config?.enabled ? buildZaloUrl(config.zalo?.phone, config.zalo?.chatUrl) : "https://zalo.me/0901234567";
-  const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://facebook.com/Nguyenlee150804";
+  const facebookUrl = (config?.enabled && config.facebook?.pageUrl) || "https://facebook.com/zup.marketplace";
   const tiktokUrl = config?.enabled ? (config.tiktok?.profileUrl || config.tiktok?.videoUrl || "") : "";
 
   const links = [
@@ -152,14 +152,14 @@ export function SocialFeedSection() {
           Kết nối cộng đồng
         </p>
         <h3 className="text-lg font-semibold text-midnight-indigo">
-          Theo dõi Zup trên các kênh chính thức
+          Theo dõi ZUP trên các kênh chính thức
         </h3>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {facebookUrl && shouldLoadSDKs && (
           <div className="overflow-hidden rounded-xl bg-white p-3 shadow-[var(--brand-shadow-sm)]">
             <iframe
-              title="Facebook Zup"
+              title="Facebook ZUP"
               src={`https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(facebookUrl)}&tabs=timeline&width=500&height=260&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true`}
               width="100%"
               height="260"
@@ -184,7 +184,7 @@ export function SocialFeedSection() {
                   rel="noopener noreferrer"
                   href={tiktokVideoUrl}
                 >
-                  Xem video TikTok của Zup
+                  Xem video TikTok của ZUP
                 </a>
               </section>
             </blockquote>
@@ -222,7 +222,7 @@ export function SocialFeedSection() {
           <div
             className="zalo-chat-widget"
             data-oaid={config.zalo.oaId}
-            data-welcome-message="Zup sẵn sàng hỗ trợ bạn."
+            data-welcome-message="ZUP sẵn sàng hỗ trợ bạn."
             data-autopopup="0"
             data-width="320"
             data-height="420"

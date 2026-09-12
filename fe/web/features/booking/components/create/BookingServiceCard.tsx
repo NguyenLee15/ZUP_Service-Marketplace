@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Wrench } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatPrice } from '@/features/booking/hooks/useCreateBookingFlow';
 
@@ -22,7 +23,7 @@ export function BookingServiceCard({ service }: BookingServiceCardProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            '🔧'
+            <Wrench className="w-6 h-6 text-slate-400 dark:text-slate-500" />
           )}
         </div>
         <div className="flex-1 min-w-0">

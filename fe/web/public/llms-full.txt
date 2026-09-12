@@ -1,21 +1,21 @@
-# Zup Marketplace - Toàn bộ tài liệu tri thức & Quy chuẩn vận hành
+# ZUP Marketplace - Toàn bộ tài liệu tri thức & Quy chuẩn vận hành
 
 > Bản mô tả chi tiết toàn diện dành cho các mô hình trí tuệ nhân tạo (LLM), tác nhân tự động (AI Agents) và công cụ tìm kiếm thế hệ mới (GEO).
 
 ---
 
-## 1. Giới thiệu tổng quan về Zup
-Zup là nền tảng công nghệ giúp khách hàng tìm, đặt lịch và theo dõi dịch vụ tại nhà tại Việt Nam. Zup ưu tiên thông tin thợ, giá tham khảo, lịch sử đơn và kênh hỗ trợ rõ ràng để người dùng dễ ra quyết định hơn.
+## 1. Giới thiệu tổng quan về ZUP
+ZUP là nền tảng công nghệ giúp khách hàng tìm, đặt lịch và theo dõi dịch vụ tại nhà tại Việt Nam. ZUP ưu tiên thông tin thợ, giá tham khảo, lịch sử đơn và kênh hỗ trợ rõ ràng để người dùng dễ ra quyết định hơn.
 
 ### Thông tin cơ bản:
-- **Tên đầy đủ**: Zup - Nền tảng đặt dịch vụ tại nhà
+- **Tên đầy đủ**: ZUP - Nền tảng đặt dịch vụ tại nhà
 - **Website chính thức**: cấu hình theo `NEXT_PUBLIC_APP_URL` của môi trường deploy.
 - **Cơ chế vận hành**: Marketplace hai chiều giữa khách hàng và nhà cung cấp dịch vụ, có công cụ hỗ trợ tìm kiếm và quản lý đơn.
 
 ---
 
 ## 2. Các nhóm dịch vụ & Danh mục cốt lõi
-Hệ thống Zup cung cấp danh mục dịch vụ đa dạng được chuẩn hóa cao:
+Hệ thống ZUP cung cấp danh mục dịch vụ đa dạng được chuẩn hóa cao:
 
 ### A. Dịch vụ Nhà cửa (Home Services)
 - **Vệ sinh nhà cửa**: Dọn dẹp phòng ốc, lau chùi kính, vệ sinh căn hộ định kỳ hoặc trọn gói.
@@ -35,8 +35,8 @@ Hệ thống Zup cung cấp danh mục dịch vụ đa dạng được chuẩn h
 
 ---
 
-## 3. Từ điển Thuật ngữ Kỹ thuật (Zup Glossary)
-Để đảm bảo sự thống nhất thông tin và độ tin cậy E-E-A-T, dưới đây là định nghĩa chuẩn của các thuật ngữ trên hệ thống Zup:
+## 3. Từ điển Thuật ngữ Kỹ thuật (ZUP Glossary)
+Để đảm bảo sự thống nhất thông tin và độ tin cậy E-E-A-T, dưới đây là định nghĩa chuẩn của các thuật ngữ trên hệ thống ZUP:
 
 - **Dịch vụ tại nhà (Home Services)**: Mô hình cung cấp các tiện ích gia đình như sửa chữa, vệ sinh, lắp đặt hoặc chăm sóc cá nhân tại địa chỉ khách hàng cung cấp.
 - **Thợ xác thực (Verified Providers)**: Nhà cung cấp có hồ sơ và thông tin dịch vụ được hệ thống ghi nhận để khách hàng tham khảo trước khi đặt.
@@ -45,11 +45,11 @@ Hệ thống Zup cung cấp danh mục dịch vụ đa dạng được chuẩn h
 ---
 
 ## 4. Quy định & Cam kết chất lượng (E-E-A-T & Fact-Check)
-Zup tuân thủ các quy tắc chất lượng nghiêm ngặt của ban biên tập dịch vụ:
-- **Minh bạch bảng giá**: Zup hiển thị giá tham khảo khi có dữ liệu và khuyến khích nhà cung cấp gửi báo giá trước khi thực hiện.
+ZUP tuân thủ các quy tắc chất lượng nghiêm ngặt của ban biên tập dịch vụ:
+- **Minh bạch bảng giá**: ZUP hiển thị giá tham khảo khi có dữ liệu và khuyến khích nhà cung cấp gửi báo giá trước khi thực hiện.
 - **Bảo vệ người tiêu dùng**: Lịch sử đơn, tin nhắn và trạng thái xử lý được lưu lại để hỗ trợ đối chiếu khi phát sinh vấn đề.
 - **Quy trình khiếu nại**: Khách hàng có thể gửi khiếu nại từ chi tiết đơn hàng. Đội ngũ hỗ trợ sẽ xem xét thông tin đơn, trao đổi giữa hai bên và đề xuất hướng xử lý phù hợp.
-- **Đội ngũ nội dung**: Nội dung được đội ngũ Zup cập nhật định kỳ để phản ánh đúng cách nền tảng vận hành.
+- **Đội ngũ nội dung**: Nội dung được đội ngũ ZUP cập nhật định kỳ để phản ánh đúng cách nền tảng vận hành.
 
 ---
 

@@ -35,11 +35,11 @@ export function Testimonials() {
   return (
     <section id="danh-gia-khach-hang" className="space-y-8">
       <div className="text-center">
-        <h2 id="y-kien-khach-hang" className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance text-slate-100">
+        <h2 id="y-kien-khach-hang" className="text-2xl md:text-[38px] font-bold brand-heading mb-3 leading-tight text-balance text-slate-900 dark:text-slate-100">
           Khách hàng nói gì?
         </h2>
-        <p className="max-w-2xl mx-auto text-base md:text-lg leading-relaxed text-slate-400">
-          Những phản hồi dưới đây mô tả cách Zup giúp việc đặt dịch vụ tại nhà rõ ràng và dễ theo dõi hơn.
+        <p className="max-w-2xl mx-auto text-base md:text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+          Những phản hồi dưới đây mô tả cách ZUP giúp việc đặt dịch vụ tại nhà rõ ràng và dễ theo dõi hơn.
         </p>
       </div>
 
@@ -49,29 +49,29 @@ export function Testimonials() {
             key={i}
             itemScope
             itemType="https://schema.org/Review"
-            className="surface-card p-5 md:p-6 transition-[box-shadow,transform,border-color] duration-300 hover:-translate-y-1 hover:border-action-blue/25 relative rounded-[20px] overflow-hidden group"
+            className="p-5 md:p-6 transition-[box-shadow,transform,border-color] duration-300 hover:-translate-y-1 hover:border-sky-500/30 relative rounded-2xl overflow-hidden group bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs"
           >
-            <div className="absolute top-0 right-0 w-20 h-20 bg-pale-gray/5 rounded-bl-full -z-10 group-hover:scale-105 transition-transform"></div>
-            <Quote className="absolute top-5 right-5 w-8 h-8 text-slate-700 opacity-20" />
+            <div className="absolute top-0 right-0 w-20 h-20 bg-slate-100/50 dark:bg-slate-800/50 rounded-bl-full -z-10 group-hover:scale-105 transition-transform"></div>
+            <Quote className="absolute top-5 right-5 w-8 h-8 text-slate-400 dark:text-slate-600 opacity-20" />
 
             {/* Schema Rating Metadata — giữ nguyên cho SEO */}
             <div className="flex gap-1 mb-4" itemProp="reviewRating" itemScope itemType="https://schema.org/Rating">
               <meta itemProp="ratingValue" content="5" />
               <meta itemProp="bestRating" content="5" />
-              {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}
+              {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
             </div>
 
-            <p className="text-slate-300 dark:text-slate-200 mb-6 text-sm leading-relaxed" itemProp="reviewBody">
+            <p className="text-slate-600 dark:text-slate-300 mb-6 text-sm leading-relaxed" itemProp="reviewBody">
               {t.content}
             </p>
 
-            <div className="flex items-center gap-3 border-t border-white/5 pt-4" itemProp="author" itemScope itemType="https://schema.org/Person">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-teal-500 flex items-center justify-center text-white font-black text-xs shadow-[0_4px_12px_rgba(2,132,199,0.3)] shrink-0">
+            <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-800 pt-4" itemProp="author" itemScope itemType="https://schema.org/Person">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-sky-600 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
                 {t.initials}
               </div>
               <div>
-                <p className="font-bold text-slate-100 dark:text-white text-sm" itemProp="name">{t.name}</p>
-                <p className="text-[11px] text-slate-400">{t.location}</p>
+                <p className="font-bold text-slate-900 dark:text-white text-sm" itemProp="name">{t.name}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">{t.location}</p>
               </div>
             </div>
           </Card>
@@ -79,11 +79,11 @@ export function Testimonials() {
       </div>
 
       {/* Compact Stats Strip — số liệu tín nhiệm ngắn gọn */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-800/60">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-200/80 dark:border-slate-800">
         {stats.map((s) => (
-          <div key={s.label} className="surface-card p-4 rounded-2xl text-center transition-all hover:-translate-y-0.5 duration-300">
+          <div key={s.label} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs p-4 rounded-xl text-center transition-all hover:-translate-y-0.5 duration-300">
             <span className={`text-2xl md:text-3xl font-extrabold block mb-0.5 ${s.color}`}>{s.value}</span>
-            <p className="text-[11px] uppercase font-bold tracking-widest text-slate-400">{s.label}</p>
+            <p className="text-[11px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400">{s.label}</p>
           </div>
         ))}
       </div>

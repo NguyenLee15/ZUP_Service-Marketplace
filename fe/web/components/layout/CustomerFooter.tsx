@@ -60,7 +60,7 @@ export function CustomerFooter() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Twitter X Zup"
+                aria-label="Twitter X ZUP"
                 className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-neutral-800 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 <svg className="size-4 fill-current" viewBox="0 0 24 24">

@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ListOrdered } from "lucide-react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -315,14 +315,14 @@ export default async function Home() {
           {/* TOC nhanh — thanh anchor gọn */}
           <nav id="toc" aria-label="Mục lục trang chủ">
             <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold">
-              <li className="flex items-center gap-1.5 text-slate-500 font-black uppercase tracking-wider shrink-0">
-                <span className="text-cyan-400">📋</span>
+              <li className="flex items-center gap-1.5 text-slate-500 font-bold uppercase tracking-wider shrink-0">
+                <ListOrdered className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                 <span>Nhanh:</span>
               </li>
               <li>
                 <a
                   href="#danh-muc-dich-vu"
-                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                 >
                   Danh mục
                 </a>
@@ -330,7 +330,7 @@ export default async function Home() {
               <li>
                 <a
                   href="#dich-vu-noi-bat"
-                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                 >
                   Nổi bật
                 </a>
@@ -338,7 +338,7 @@ export default async function Home() {
               <li>
                 <a
                   href="#danh-gia-khach-hang"
-                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                 >
                   Đánh giá
                 </a>
@@ -346,7 +346,7 @@ export default async function Home() {
               <li>
                 <a
                   href="#quy-trinh-hoat-dong"
-                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                 >
                   Quy trình
                 </a>
@@ -354,7 +354,7 @@ export default async function Home() {
               <li>
                 <a
                   href="#giai-dap-truc-tiep"
-                  className="text-slate-400 hover:text-cyan-400 transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                 >
                   Hỏi đáp
                 </a>

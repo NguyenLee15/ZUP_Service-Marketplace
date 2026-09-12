@@ -113,8 +113,8 @@ export function useProviderProfileFlow(provider: ApiPayload) {
     if (navigator.share) {
       navigator
         .share({
-          title: `Hồ sơ Đối tác ${provider.fullName} | Zup`,
-          text: `Xem các dịch vụ chất lượng cao được cung cấp bởi ${provider.fullName} trên Zup.`,
+          title: `Hồ sơ Đối tác ${provider.fullName} | ZUP`,
+          text: `Xem các dịch vụ chất lượng cao được cung cấp bởi ${provider.fullName} trên ZUP.`,
           url: window.location.href,
         })
         .catch(console.error);

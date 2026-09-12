@@ -13,9 +13,9 @@ export function AuthCard({ title, description, children, className }: AuthCardPr
   return (
     <Card className={cn('w-full border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-sm py-0 overflow-hidden', className)}>
       <CardHeader className="p-6 pb-2 text-center space-y-1.5">
-        <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {title}
-        </CardTitle>
+        </h1>
         {description && (
           <CardDescription className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             {description}
@@ -28,3 +28,4 @@ export function AuthCard({ title, description, children, className }: AuthCardPr
     </Card>
   );
 }
+

@@ -137,10 +137,10 @@ function ServicesSearchContent() {
 
               <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto md:items-center">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-10 w-full rounded-xl border-white/10 bg-[#101827] text-slate-100 shadow-sm hover:border-cyan-300/35 focus:ring-cyan-300/30 sm:w-[180px]">
+                  <SelectTrigger className="h-10 w-full rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-xs hover:border-sky-500/40 focus:ring-sky-500/20 sm:w-[180px]">
                     <SelectValue placeholder="Sắp xếp" />
                   </SelectTrigger>
-                  <SelectContent className="border-white/10 bg-[#101827] text-slate-100 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
+                  <SelectContent className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-md">
                     <SelectItem value="newest">Mới nhất</SelectItem>
                     <SelectItem value="price_asc">Giá tăng dần</SelectItem>
                     <SelectItem value="price_desc">Giá giảm dần</SelectItem>
@@ -148,27 +148,27 @@ function ServicesSearchContent() {
                   </SelectContent>
                 </Select>
 
-                <div className="grid w-full grid-cols-2 gap-1 bg-pale-gray p-1 rounded-xl border border-platinum-tint sm:w-auto">
+                <div className="grid w-full grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700 sm:w-auto">
                   <Button
                     variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className={`rounded-lg px-3 h-8 ${
-                      viewMode === 'grid' ? 'bg-white shadow-sm text-action-blue' : 'text-slate-blue'
+                    className={`rounded-lg px-3 h-8 text-xs font-semibold ${
+                      viewMode === 'grid' ? 'bg-white dark:bg-slate-900 shadow-xs text-sky-600 dark:text-sky-400' : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    <LayoutGrid className="w-4 h-4 mr-2" />
+                    <LayoutGrid className="w-4 h-4 mr-1.5" />
                     Lưới
                   </Button>
                   <Button
                     variant={viewMode === 'map' ? 'secondary' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('map')}
-                    className={`rounded-lg px-3 h-8 ${
-                      viewMode === 'map' ? 'bg-white shadow-sm text-action-blue' : 'text-slate-blue'
+                    className={`rounded-lg px-3 h-8 text-xs font-semibold ${
+                      viewMode === 'map' ? 'bg-white dark:bg-slate-900 shadow-xs text-sky-600 dark:text-sky-400' : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    <MapIcon className="w-4 h-4 mr-2" />
+                    <MapIcon className="w-4 h-4 mr-1.5" />
                     Bản đồ
                   </Button>
                 </div>

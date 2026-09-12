@@ -193,14 +193,14 @@ export function Breadcrumbs() {
 
   return (
     <nav
-      className="flex px-4 py-3 bg-white/5 backdrop-blur-sm rounded-[16px] max-w-7xl mx-auto border border-white/10"
+      className="flex px-4 py-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-xl max-w-7xl mx-auto border border-slate-200/70 dark:border-slate-800 shadow-2xs"
       aria-label="Breadcrumb"
     >
-      <ol className="inline-flex items-center space-x-1 md:space-x-2 text-xs font-semibold text-slate-500">
+      <ol className="inline-flex items-center space-x-1 md:space-x-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
         <li className="inline-flex items-center">
           <Link
             href="/"
-            className="inline-flex items-center text-slate-400 hover:text-cyan-300 transition-colors gap-1.5"
+            className="inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors gap-1.5"
           >
             <Home className="w-3.5 h-3.5" />
             <span>Trang chủ</span>
@@ -208,8 +208,8 @@ export function Breadcrumbs() {
         </li>
         {isHome ? (
           <li className="flex items-center">
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500 mx-1 shrink-0" />
-            <span className="text-cyan-400 font-bold">
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 mx-1 shrink-0" />
+            <span className="text-sky-600 dark:text-sky-400 font-bold">
               Tìm kiếm thợ tại nhà
             </span>
           </li>
@@ -225,16 +225,16 @@ export function Breadcrumbs() {
 
             return (
               <li key={path} className="flex items-center">
-                <ChevronRight className="w-3.5 h-3.5 text-slate-500 mx-1 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 mx-1 shrink-0" />
                 {isLast ? (
-                  <span className="text-cyan-400 font-bold truncate max-w-[200px] sm:max-w-none">
+                  <span className="text-slate-900 dark:text-slate-100 font-bold truncate max-w-[200px] sm:max-w-none">
                     {label}
                   </span>
                 ) : (
                   <Link
                     href={href}
                     prefetch={false}
-                    className="text-slate-400 hover:text-cyan-300 transition-colors truncate max-w-[150px] sm:max-w-none"
+                    className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors truncate max-w-[150px] sm:max-w-none"
                   >
                     {label}
                   </Link>

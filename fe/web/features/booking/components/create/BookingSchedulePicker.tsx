@@ -109,7 +109,7 @@ export function BookingSchedulePicker({
               className={
                 fieldErrors.desiredTime
                   ? 'border-red-500'
-                  : 'border-white/10 bg-white/5 h-11 rounded-xl'
+                  : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 h-11 rounded-xl text-slate-900 dark:text-slate-100'
               }
             />
             {fieldErrors.desiredTime && (
@@ -117,15 +117,13 @@ export function BookingSchedulePicker({
             )}
 
             {/* AI Scheduling Hints */}
-            <div className="mt-4 p-4 rounded-[20px] bg-white/5 border border-white/10 relative overflow-hidden group">
+            <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-5 rotate-12 transition-transform group-hover:scale-110">
-                <Sparkles className="w-12 h-12 text-sky-400" />
+                <Sparkles className="w-12 h-12 text-sky-500" />
               </div>
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-sky-400" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-sky-400">
-                  Gợi ý lịch hẹn thông minh (AI)
-                </span>
+                <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Gợi ý lịch thông minh ZUP</p>
               </div>
               <div className="space-y-3">
                 <button
@@ -138,20 +136,20 @@ export function BookingSchedulePicker({
                     setDesiredTime(value);
                     validate('desiredTime', value);
                   }}
-                  className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                  className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl border border-slate-200/80 dark:border-slate-800 cursor-pointer transition-all hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="p-2 bg-green-500/10 text-green-400 rounded-lg shrink-0">
+                    <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-white truncate">Sáng mai, 09:00</p>
-                      <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">
+                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">Sáng mai, 09:00</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 truncate">
                         Khung giờ vàng - Thợ trống lịch gần đây
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-green-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">
+                  <Badge className="bg-emerald-600 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">
                     -10% phí dịch vụ
                   </Badge>
                 </button>
@@ -165,20 +163,20 @@ export function BookingSchedulePicker({
                     setDesiredTime(value);
                     validate('desiredTime', value);
                   }}
-                  className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                  className="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl border border-slate-200/80 dark:border-slate-800 cursor-pointer transition-all hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="p-2 bg-sky-500/10 text-sky-400 rounded-lg shrink-0">
+                    <div className="p-2 bg-sky-500/10 text-sky-600 dark:text-sky-400 rounded-lg shrink-0">
                       <Clock className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-white truncate">Hôm nay, trong 2 giờ tới</p>
-                      <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">
+                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">Hôm nay, trong 2 giờ tới</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 truncate">
                         Hỗ trợ nhận đơn khẩn cấp
                       </p>
                     </div>
                   </div>
-                  <Badge className="bg-sky-500 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">
+                  <Badge className="bg-sky-600 text-white border-0 text-[9px] sm:text-[10px] font-bold uppercase self-start sm:self-auto">
                     Nhận ngay
                   </Badge>
                 </button>
