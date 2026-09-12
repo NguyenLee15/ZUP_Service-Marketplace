@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/features/auth/services/auth.api';
 import { useAuthStore } from '@/store/auth.store';
 import { Role, type User } from '@/types';
@@ -391,10 +391,7 @@ export default function LoginPage() {
               Đang đăng nhập…
             </span>
           ) : (
-            <>
-              <LogIn className="size-4 shrink-0" />
-              <span>Đăng Nhập Vào Hệ Thống</span>
-            </>
+            'Đăng nhập'
           )}
         </Button>
 

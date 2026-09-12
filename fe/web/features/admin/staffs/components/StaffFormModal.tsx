@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { StaffAccount, StaffFormErrors } from '../types/staff.types';
+import type { StaffAccount, StaffFormErrors } from '../types/staff.types';
 
 interface StaffFormModalProps {
   isOpen: boolean;
