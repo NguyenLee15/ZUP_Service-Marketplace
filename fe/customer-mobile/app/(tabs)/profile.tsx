@@ -85,7 +85,7 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     Haptics.selectionAsync().catch(() => {});
-    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất khỏi Zup?', [
+    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất khỏi HomeServe?', [
       { text: 'Đóng', style: 'cancel' },
       {
         text: 'Đăng xuất',
@@ -93,6 +93,7 @@ export default function ProfileScreen() {
         onPress: async () => {
           await authApi.logout().catch(() => {});
           await logout();
+          router.replace('/(auth)/login');
         },
       },
     ]);
@@ -121,12 +122,7 @@ export default function ProfileScreen() {
         />
       ) : (
         <>
-          /* ── Hero Profile Card ── */
           <View style={styles.heroCard}>
-            {/* Decoration bubbles for Glassmorphism effect */}
-            <View style={styles.heroBubble1} />
-            <View style={styles.heroBubble2} />
-            <View style={styles.heroGlassOverlay} />
 
             {/* Avatar */}
             <View style={styles.avatarWrapper}>
@@ -370,42 +366,18 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   // Hero Card
   heroCard: {
     backgroundColor: activeColors.surface,
-    borderRadius: 24,
-    borderWidth: 1.5,
+    borderRadius: 20,
+    borderWidth: 1,
     borderColor: activeColors.border,
     padding: 24,
     alignItems: 'center',
     gap: 8,
     overflow: 'hidden',
-    boxShadow: activeColors.cardShadow,
-  },
-  heroBubble1: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: activeColors.primarySoft,
-    top: -90,
-    right: -70,
-    opacity: 0.9,
-  },
-  heroBubble2: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: activeColors.warningBg, // Warm peach background
-    bottom: -60,
-    left: -45,
-    opacity: 0.8,
-  },
-  heroGlassOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
   },
   avatarWrapper: { position: 'relative', marginBottom: 4 },
   avatarImage: {

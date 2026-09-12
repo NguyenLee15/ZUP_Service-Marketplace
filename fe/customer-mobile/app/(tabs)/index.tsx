@@ -196,8 +196,8 @@ export default function HomeScreen() {
       ListHeaderComponent={
         <View style={styles.headerContent}>
           <CustomerHeader
-            title="Zup"
-            subtitle={`Xin chào, ${user?.fullName || 'khách hàng'} 👋`}
+            title="HomeServe"
+            subtitle={`Xin chào, ${user?.fullName || 'quý khách'}`}
             action={
               <TouchableRipple
                 onPress={() => {
@@ -380,10 +380,6 @@ function HomeHero({
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       {/* Gradient Hero Card: blue primary → secondary teal */}
       <View style={styles.heroCard}>
-        {/* Background decoration */}
-        <View style={styles.heroBubble1} />
-        <View style={styles.heroBubble2} />
-
         {/* Content */}
         <View style={styles.heroContent}>
           <View style={styles.heroIcon}>
@@ -566,24 +562,6 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     gap: 16,
     overflow: 'hidden',
   },
-  heroBubble1: {
-    position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    top: -50,
-    right: -30,
-  },
-  heroBubble2: {
-    position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    bottom: -20,
-    left: 20,
-  },
   heroContent: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
   heroIcon: {
     width: 52,
@@ -653,7 +631,11 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     padding: 12,
     gap: 8,
     justifyContent: 'center',
-    boxShadow: activeColors.cardShadow,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   pressed: { opacity: 0.72 },
 });

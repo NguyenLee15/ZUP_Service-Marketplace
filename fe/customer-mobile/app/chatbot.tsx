@@ -96,17 +96,17 @@ type ChatbotMessage = {
 };
 
 const EMPTY_SUGGESTIONS: ChatbotQuickReply[] = [
-  { label: "⚡ Tìm thợ sửa điện", message: "Tôi cần tìm thợ sửa điện gần nhà" },
+  { label: "Tìm thợ sửa điện", message: "Tôi cần tìm thợ sửa điện gần nhà" },
   {
-    label: "🧼 So sánh vệ sinh",
+    label: "So sánh vệ sinh",
     message: "So sánh các dịch vụ vệ sinh nhà giúp tôi",
   },
   {
-    label: "📦 Kiểm tra đơn hàng",
+    label: "Kiểm tra đơn hàng",
     message: "Kiểm tra tình trạng đơn hàng gần đây của tôi",
   },
   {
-    label: "🔄 Đặt lại dịch vụ",
+    label: "Đặt lại dịch vụ",
     message: "Tôi muốn đặt lại dịch vụ đã dùng trước đó",
   },
 ];

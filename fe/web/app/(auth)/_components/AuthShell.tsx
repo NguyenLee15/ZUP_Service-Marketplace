@@ -29,7 +29,7 @@ const trustItems = [
 ];
 
 export function AuthShell({
-  eyebrow = 'Zup',
+  eyebrow = 'HomeServe',
   title,
   description,
   children,
@@ -38,36 +38,32 @@ export function AuthShell({
 }: AuthShellProps) {
   return (
     <main className="auth-aether min-h-screen text-white relative overflow-hidden flex items-center justify-center">
-      {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-sky-600/15 rounded-full blur-[140px] pointer-events-none" />
-
       <div className="relative z-10 grid min-h-screen w-full items-stretch lg:grid-cols-2">
         
         {/* Left Side: Inspiration Section */}
         <section className="hidden flex-col justify-between p-12 shadow-2xl relative overflow-hidden lg:flex">
-          <div className="absolute inset-0 bg-[url('/images/hero_bg.webp')] bg-cover bg-center opacity-55" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/95 via-slate-950/62 to-slate-950/35" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_32%_36%,rgba(6,182,212,0.22),transparent_24rem)]" />
+          <div className="absolute inset-0 bg-[url('/images/hero_bg.webp')] bg-cover bg-center opacity-40" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/95 via-slate-950/75 to-slate-950/50" />
           
           <Link
             href="/"
             className="relative z-10 inline-flex w-fit items-center gap-3 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
-            aria-label="Về trang chủ Zup"
+            aria-label="Về trang chủ HomeServe"
           >
-            <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 shadow-lg shadow-sky-500/20 shrink-0 flex items-center justify-center bg-slate-950">
+            <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 shadow-md shrink-0 flex items-center justify-center bg-slate-950">
               <Image
                 src="/logo.png"
-                alt="Zup"
+                alt="HomeServe"
                 width={40}
                 height={40}
                 priority
                 className="h-full w-full scale-[1.38] object-cover"
               />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-white select-none">ZUP</span>
+            <span className="text-2xl font-bold tracking-tight text-white select-none">HomeServe</span>
           </Link>
 
-          <div className="relative z-10 max-w-xl space-y-7 rounded-2xl border border-white/10 bg-slate-950/45 p-8 shadow-[0_8px_32px_rgba(2,132,199,0.22)] backdrop-blur-xl">
+          <div className="relative z-10 max-w-xl space-y-7 rounded-2xl border border-white/10 bg-slate-950/60 p-8 shadow-sm backdrop-blur-xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md px-4 py-2 text-sm font-semibold text-cyan-300">
               <ShieldCheck className="size-4 text-cyan-300" />
               Nền tảng dịch vụ tại gia cao cấp

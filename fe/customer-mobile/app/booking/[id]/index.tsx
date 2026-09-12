@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button, Text, TextInput } from "react-native-paper";
 import {
+  BottomActionBar,
   ConfirmSheet,
   CustomerCard,
   EmptyState,
@@ -455,6 +456,70 @@ export default function BookingDetailScreen() {
           onRebook={() => actionMutation.mutate({ type: "rebook" })}
         />
       </ScrollView>
+
+      {status === "QUOTED" ? (
+        <BottomActionBar>
+          <Button
+            mode="outlined"
+            disabled={actionMutation.isPending}
+            onPress={() => setSheet("reject")}
+            style={{ flex: 1, borderRadius: 12 }}
+          >
+            Từ chối
+          </Button>
+          <Button
+            mode="contained"
+            loading={actionMutation.isPending}
+            disabled={actionMutation.isPending}
+            onPress={() => actionMutation.mutate({ type: "confirm" })}
+            style={{ flex: 1, borderRadius: 12 }}
+          >
+            Chấp nhận giá
+          </Button>
+        </BottomActionBar>
+      ) : status === "DONE" ? (
+        <BottomActionBar>
+          <Button
+            mode="outlined"
+            icon="star-outline"
+            onPress={() => router.push(routes.booking.review(String(bookingId)))}
+            style={{ flex: 1, borderRadius: 12 }}
+          >
+            Đánh giá
+          </Button>
+          <Button
+            mode="contained"
+            icon="check-circle-outline"
+            loading={actionMutation.isPending}
+            disabled={actionMutation.isPending}
+            onPress={() => setSheet("accept")}
+            style={{ flex: 1, borderRadius: 12 }}
+          >
+            Hoàn thành
+          </Button>
+        </BottomActionBar>
+      ) : ["CONFIRMED", "IN_PROGRESS"].includes(status) ? (
+        <BottomActionBar>
+          <Button
+            mode="outlined"
+            icon="map-marker-path"
+            onPress={() => router.push(routes.booking.track(String(bookingId)))}
+            style={{ flex: 1, borderRadius: 12 }}
+          >
+            Theo dõi
+          </Button>
+          <Button
+            mode="contained"
+            icon="chat-outline"
+            loading={chatLoading}
+            disabled={chatLoading}
+            onPress={openChat}
+            style={{ flex: 1, borderRadius: 12 }}
+          >
+            Nhắn tin thợ
+          </Button>
+        </BottomActionBar>
+      ) : null}
 
       <ConfirmSheet
         visible={sheet !== null}

@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Avatar, Button, Text, useTheme, Switch } from 'react-native-paper';
+import { Avatar, Button, Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../features/auth/auth.store';
@@ -21,7 +20,6 @@ export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
   const activeColors = theme.dark ? Colors.dark : Colors.light;
 
-
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -29,14 +27,24 @@ export default function ProfileScreen() {
     await logout();
   };
 
-  const menuItems = [
-    { icon: 'account-edit-outline', label: 'Chỉnh sửa hồ sơ', description: 'Tên, số điện thoại và thông tin liên hệ', route: routes.profile.edit },
-    { icon: 'map-marker-radius-outline', label: 'Địa chỉ hoạt động', description: 'Cửa hàng, công ty hoặc nhà riêng để khách liên hệ', route: '/profile/addresses' as any },
-    { icon: 'card-account-details-outline', label: 'Xác thực tài khoản', description: 'CCCD và chân dung để mở đầy đủ tính năng', route: routes.profile.kyc },
-    { icon: 'chart-areaspline', label: 'Hiệu suất & doanh thu', description: 'Theo dõi thu nhập ròng, đánh giá và tỉ lệ chốt đơn', route: routes.profile.analytics },
-    { icon: 'briefcase-outline', label: 'Dịch vụ của tôi', description: 'Quản lý giá, trạng thái và đánh giá', route: routes.services },
-    { icon: 'lock-reset', label: 'Đổi mật khẩu', description: 'Cập nhật mật khẩu đăng nhập', route: routes.profile.changePassword },
-    { icon: 'bell-outline', label: 'Thông báo', description: 'Xem thông báo đơn hàng và hệ thống', route: routes.notifications },
+  const profileSections = [
+    {
+      title: 'Hồ sơ & Chuyên môn',
+      items: [
+        { icon: 'account-edit-outline', label: 'Chỉnh sửa hồ sơ', description: 'Tên, số điện thoại và thông tin liên hệ', route: routes.profile.edit },
+        { icon: 'map-marker-radius-outline', label: 'Địa chỉ hoạt động', description: 'Cửa hàng, công ty hoặc nhà riêng để khách liên hệ', route: '/profile/addresses' as any },
+        { icon: 'card-account-details-outline', label: 'Xác thực tài khoản', description: 'CCCD và chân dung để mở đầy đủ tính năng', route: routes.profile.kyc },
+        { icon: 'briefcase-outline', label: 'Dịch vụ của tôi', description: 'Quản lý giá, trạng thái và đánh giá', route: routes.services },
+        { icon: 'chart-areaspline', label: 'Hiệu suất & doanh thu', description: 'Theo dõi thu nhập ròng, đánh giá và tỉ lệ chốt đơn', route: routes.profile.analytics },
+      ],
+    },
+    {
+      title: 'Hệ thống & Cài đặt',
+      items: [
+        { icon: 'lock-reset', label: 'Đổi mật khẩu', description: 'Cập nhật mật khẩu đăng nhập', route: routes.profile.changePassword },
+        { icon: 'bell-outline', label: 'Thông báo', description: 'Xem thông báo đơn hàng và hệ thống', route: routes.notifications },
+      ],
+    },
   ];
 
   return (
@@ -76,28 +84,42 @@ export default function ProfileScreen() {
         message="Hoàn tất KYC và giữ dịch vụ đang hoạt động để nhận đơn ổn định hơn."
       />
 
-      <View style={styles.menuStack}>
-        {menuItems.map(item => (
-          <ProviderCard key={item.label} onPress={() => router.push(item.route)} accessibilityLabel={item.label}>
-            <View style={styles.menuItem}>
-              <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.primary}12` }]}>
-                <MaterialCommunityIcons name={item.icon as any} size={22} color={theme.colors.primary} />
+      {profileSections.map((section) => (
+        <View key={section.title} style={styles.sectionBlock}>
+          <Text variant="labelLarge" style={[styles.sectionHeading, { color: activeColors.textSecondary }]}>
+            {section.title}
+          </Text>
+          <ProviderCard contentStyle={styles.groupedCardContent}>
+            {section.items.map((item, index) => (
+              <View key={item.label}>
+                <TouchableRipple
+                  onPress={() => router.push(item.route)}
+                  accessibilityLabel={item.label}
+                  style={styles.menuRow}
+                >
+                  <View style={styles.menuItem}>
+                    <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.primary}12` }]}>
+                      <MaterialCommunityIcons name={item.icon as any} size={22} color={theme.colors.primary} />
+                    </View>
+                    <View style={styles.menuText}>
+                      <Text variant="bodyLarge" style={[styles.menuLabel, { color: activeColors.text }]}>
+                        {item.label}
+                      </Text>
+                      <Text variant="bodySmall" style={[styles.menuDescription, { color: activeColors.textSecondary }]} numberOfLines={1}>
+                        {item.description}
+                      </Text>
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={22} color={activeColors.textSecondary} />
+                  </View>
+                </TouchableRipple>
+                {index < section.items.length - 1 && (
+                  <View style={[styles.hairlineDivider, { backgroundColor: theme.colors.outlineVariant }]} />
+                )}
               </View>
-              <View style={styles.menuText}>
-                <Text variant="bodyLarge" style={[styles.menuLabel, { color: activeColors.text }]}>
-                  {item.label}
-                </Text>
-                <Text variant="bodySmall" style={[styles.menuDescription, { color: activeColors.textSecondary }]} numberOfLines={2}>
-                  {item.description}
-                </Text>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color={activeColors.textSecondary} />
-            </View>
+            ))}
           </ProviderCard>
-        ))}
-      </View>
-
-
+        </View>
+      ))}
 
       <Button
         mode="outlined"
@@ -115,7 +137,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    gap: 14,
+    gap: 16,
   },
   accountCard: {
     flexDirection: 'row',
@@ -134,8 +156,21 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 10,
   },
-  menuStack: {
-    gap: 10,
+  sectionBlock: {
+    gap: 8,
+  },
+  sectionHeading: {
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 0.3,
+    marginLeft: 4,
+  },
+  groupedCardContent: {
+    padding: 0,
+  },
+  menuRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   menuItem: {
     flexDirection: 'row',
@@ -155,6 +190,10 @@ const styles = StyleSheet.create({
   },
   menuLabel: { fontWeight: '700' },
   menuDescription: { marginTop: 2, lineHeight: 18 },
+  hairlineDivider: {
+    height: 1,
+    marginLeft: 68,
+  },
   logoutButton: {
     borderRadius: 12,
     marginTop: 8,

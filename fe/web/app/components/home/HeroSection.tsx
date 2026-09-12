@@ -1,90 +1,63 @@
 import Image from 'next/image';
-
-const TRUST_BADGE_USERS = [
-  { text: 'T', bg: 'bg-gradient-to-tr from-orange-400 to-amber-500' },
-  { text: 'M', bg: 'bg-gradient-to-tr from-pink-500 to-rose-400' },
-  { text: 'K', bg: 'bg-gradient-to-tr from-emerald-400 to-teal-500' },
-  { text: 'A', bg: 'bg-gradient-to-tr from-blue-500 to-indigo-400' },
-];
+import { ShieldCheck, ArrowRight, Compass } from 'lucide-react';
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[420px] sm:min-h-[460px] lg:min-h-[500px] flex items-center justify-center text-white overflow-hidden bg-[#101415]">
+    <section className="relative min-h-[440px] sm:min-h-[480px] lg:min-h-[520px] flex items-center justify-center text-white overflow-hidden bg-slate-950">
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/hero_bg.webp"
-          alt="Nền tảng kết nối dịch vụ tiện ích tại nhà ZUP uy tín"
+          alt="Nền tảng kết nối dịch vụ tiện ích tại nhà HomeServe uy tín"
           fill
           priority
           fetchPriority="high"
           sizes="100vw"
-          className="object-cover opacity-30 select-none pointer-events-none"
+          className="object-cover opacity-25 select-none pointer-events-none"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#101415]/60 via-[#101415]/85 to-[#101415]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(2,132,199,0.22),transparent_34rem),radial-gradient(circle_at_72%_28%,rgba(6,182,212,0.14),transparent_22rem)]" />
-        <div className="absolute left-1/2 top-1/2 h-3/4 w-3/4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-600/15 blur-[110px] pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#101415] to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/90 to-slate-950" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950 to-transparent" />
       </div>
 
-      <div className="relative z-10 px-4 md:px-6 max-w-6xl w-full mx-auto flex flex-col items-center text-center pt-6 pb-8 lg:pt-8 lg:pb-10">
-        <div className="mobile-safe-max flex items-center gap-2 mb-5 bg-white/10 backdrop-blur-md border border-white/10 px-3.5 py-1.5 rounded-full shadow-lg shadow-slate-950/20">
-          <div className="flex -space-x-2">
-            {TRUST_BADGE_USERS.map((user) => (
-              <div
-                key={user.text}
-                className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-action-blue ${user.bg} text-[10px] font-black text-white shadow-sm select-none`}
-                aria-hidden="true"
-              >
-                {user.text}.
-              </div>
-            ))}
-          </div>
-          <span className="text-xs sm:text-sm font-semibold text-white/90 ml-1 truncate">
-            <span className="hidden sm:inline">
-              Đặt dịch vụ rõ thông tin, dễ theo dõi.
-            </span>
-            <span className="sm:hidden">
-              Đặt dịch vụ rõ ràng.
-            </span>
+      <div className="relative z-10 px-4 md:px-6 max-w-5xl w-full mx-auto flex flex-col items-center text-center pt-8 pb-10 lg:pt-12 lg:pb-14">
+        {/* Subtle Trust Badge */}
+        <div className="inline-flex items-center gap-2 mb-6 bg-white/[0.07] border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-md shadow-sm">
+          <ShieldCheck className="w-4 h-4 text-sky-400 shrink-0" aria-hidden="true" />
+          <span className="text-xs sm:text-sm font-medium text-slate-200">
+            Dịch vụ tại nhà minh bạch, thợ xác thực lý lịch
           </span>
         </div>
 
-        <h1 className="mx-auto max-w-[360px] sm:max-w-none text-[2.2rem] min-[420px]:text-4xl sm:text-6xl md:text-7xl lg:text-[72px] font-extrabold mb-5 sm:mb-6 text-white drop-shadow-2xl tracking-normal leading-[1.1] text-balance">
-          Tìm dịch vụ tại nhà, <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-teal-400">
-            rõ ràng từ lúc đặt lịch.
+        <h1 className="max-w-3xl text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-5 leading-[1.15] text-balance">
+          Tìm dịch vụ sửa chữa tại nhà, <br className="hidden sm:block" />
+          <span className="text-sky-400">
+            minh bạch từ lúc đặt lịch.
           </span>
         </h1>
-        <p className="text-base sm:text-lg md:text-xl text-white/95 mb-6 max-w-2xl drop-shadow-md font-medium text-balance leading-relaxed">
-          Zup giúp bạn tìm và đặt <strong>dịch vụ tại nhà</strong> nhanh hơn, với thông tin thợ, giá tham khảo và đánh giá rõ ràng.
+
+        <p className="text-base sm:text-lg text-slate-300 mb-8 max-w-2xl leading-relaxed text-balance">
+          HomeServe giúp bạn tìm thợ lành nghề, khảo sát báo giá rõ ràng và theo dõi tiến độ công việc an tâm ngay trên ứng dụng.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-          <div className="relative group/cta active:scale-95 transition-transform duration-200">
-            {/* Glowing ring pulse background plane */}
-            <span className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 opacity-55 blur-md group-hover/cta:opacity-85 group-hover/cta:blur-lg transition duration-1000 group-hover/cta:duration-200 animate-[pulse_2s_infinite]" suppressHydrationWarning />
-            <a
-              href="/services"
-              role="button"
-              aria-label="Đặt lịch dịch vụ tại nhà ngay cùng ZUP"
-              className="relative inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base shadow-xl group overflow-hidden transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-            >
-              <span className="absolute inset-0 bg-white/25 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-              <span className="relative z-10">Đặt lịch dịch vụ ngay</span>
-              <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </a>
-          </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto">
+          <a
+            href="/services"
+            role="button"
+            aria-label="Đặt lịch dịch vụ tại nhà ngay cùng HomeServe"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm sm:text-base shadow-sm transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          >
+            <span>Đặt lịch dịch vụ ngay</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </a>
+
           <a
             href="#danh-muc-dich-vu"
             role="button"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-cyan-300 hover:text-white font-bold text-sm sm:text-base hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-slate-200 hover:text-white font-semibold text-sm sm:text-base transition-all duration-150 active:scale-[0.98]"
           >
+            <Compass className="w-4 h-4 text-slate-400" aria-hidden="true" />
             <span>Khám phá danh mục</span>
           </a>
         </div>
-
       </div>
     </section>
   );

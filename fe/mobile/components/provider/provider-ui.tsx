@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Card, Text, Button, Chip, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
+import { Colors, CardElevation } from '../../constants/colors';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 type Tone = 'info' | 'success' | 'warning' | 'error' | 'neutral';
@@ -100,7 +100,7 @@ export function ProviderCard({
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.outlineVariant,
-          boxShadow: activeColors.cardShadow,
+          ...(theme.dark ? CardElevation.dark : CardElevation.light),
         },
         style,
       ]}

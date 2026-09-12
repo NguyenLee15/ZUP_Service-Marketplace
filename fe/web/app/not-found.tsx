@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { Home, Search } from 'lucide-react';
@@ -14,11 +14,11 @@ export default function NotFound() {
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-2xl w-full text-center space-y-8">
           <div className="relative">
-            <h1 className="text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 drop-shadow-sm select-none">
+            <h1 className="text-9xl font-extrabold text-slate-800 dark:text-slate-100 drop-shadow-sm select-none tracking-tight">
               404
             </h1>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full flex items-center justify-center opacity-10 pointer-events-none">
-              <Search className="w-64 h-64 text-blue-900" />
+              <Search className="w-64 h-64 text-slate-700 dark:text-slate-300" />
             </div>
           </div>
 

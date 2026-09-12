@@ -29,7 +29,7 @@ export default function AdminLayout({
 
   if (!_hasHydrated || !user || !isAuthorized) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[var(--admin-canvas)]">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--admin-canvas)]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-transparent" />
           <p className="text-sm font-medium text-slate-500">Đang tải...</p>
@@ -40,7 +40,7 @@ export default function AdminLayout({
 
   return (
     <>
-      <div className="flex min-h-screen bg-[var(--admin-canvas)] text-slate-800">
+      <div className="flex min-h-[100dvh] bg-[var(--admin-canvas)] text-slate-800">
         <AdminMobileDrawer
           isOpen={mobileDrawerOpen}
           onClose={() => setMobileDrawerOpen(false)}
@@ -60,7 +60,7 @@ export default function AdminLayout({
         />
 
         <main
-          className={`flex-grow overflow-auto transition-[margin-left] duration-300 flex flex-col h-screen ${
+          className={`flex-grow overflow-auto transition-[margin-left] duration-300 flex flex-col h-[100dvh] ${
             sidebarOpen ? "md:ml-64" : "md:ml-20"
           }`}
         >

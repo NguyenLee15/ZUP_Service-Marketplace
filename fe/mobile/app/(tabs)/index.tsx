@@ -22,7 +22,7 @@ import {
 } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LineChart, PieChart } from "react-native-chart-kit";
+import { LineChart } from "react-native-chart-kit";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -185,7 +185,7 @@ function createProviderReportPdfFallback({
   </style>
 </head>
 <body>
-  <h1>Zup Đối Tác</h1>
+  <h1>HomeServe Đối Tác</h1>
   <div class="muted">${escapeHtml(reportLabel)} · ${escapeHtml(reportSummary)}<br/>Xuất lúc ${escapeHtml(new Date().toLocaleString("vi-VN"))}</div>
   <h2>Chỉ số chính</h2>
   <table>

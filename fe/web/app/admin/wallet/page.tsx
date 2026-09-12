@@ -26,6 +26,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { adminApi } from "@/features/admin/services/admin.api";
 import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
 import { AdminPermission } from "@/types/admin-permissions";
@@ -207,107 +215,105 @@ function AdminWalletContent() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50/80 text-xs text-slate-500 uppercase font-semibold border-b border-slate-100">
-                  <tr>
-                    <th className="px-5 py-3.5">Mã</th>
-                    <th className="px-5 py-3.5">Thợ đối tác</th>
-                    <th className="px-5 py-3.5">Số tiền rút</th>
-                    <th className="px-5 py-3.5">Tài khoản nhận</th>
-                    <th className="px-5 py-3.5">Thời gian gửi</th>
-                    <th className="px-5 py-3.5">Trạng thái</th>
-                    <th className="px-5 py-3.5 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {withdrawals.map((item) => {
-                    const statusInfo = statusConfig[item.status] || {
-                      label: item.status,
-                      className: "bg-slate-100 text-slate-700",
-                      icon: null,
-                    };
+            <Table>
+              <TableHeader className="bg-slate-50/80">
+                <TableRow>
+                  <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Mã</TableHead>
+                  <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Thợ đối tác</TableHead>
+                  <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Số tiền rút</TableHead>
+                  <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Tài khoản nhận</TableHead>
+                  <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Thời gian gửi</TableHead>
+                  <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Trạng thái</TableHead>
+                  <TableHead className="px-5 py-3.5 text-right text-xs text-slate-500 uppercase font-semibold">Thao tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-slate-100 text-slate-700">
+                {withdrawals.map((item) => {
+                  const statusInfo = statusConfig[item.status] || {
+                    label: item.status,
+                    className: "bg-slate-100 text-slate-700",
+                    icon: null,
+                  };
 
-                    return (
-                      <tr
-                        key={item.id}
-                        className="hover:bg-slate-50/80 transition-colors"
-                      >
-                        <td className="px-5 py-4 font-mono font-medium text-slate-900">
-                          #{item.id}
-                        </td>
-                        <td className="px-5 py-4 font-medium text-slate-900">
-                          {item.provider?.fullName || `Thợ #${item.providerId}`}
-                          <div className="text-xs text-slate-400 font-normal">
-                            {item.provider?.phone ||
-                              item.provider?.email ||
-                              "Chưa có liên hệ"}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 font-bold text-slate-900">
-                          {formatCurrency(item.amount)}
-                        </td>
-                        <td className="px-5 py-4 text-xs text-slate-600">
-                          {item.bankName ? (
-                            <div>
-                              <div className="font-semibold text-slate-800">
-                                {item.bankName}
-                              </div>
-                              <div className="font-mono text-slate-500">
-                                {item.bankAccountNumber}
-                              </div>
-                              <div className="text-slate-400 uppercase">
-                                {item.bankAccountHolder}
-                              </div>
+                  return (
+                    <TableRow
+                      key={item.id}
+                      className="hover:bg-slate-50/80 transition-colors"
+                    >
+                      <TableCell className="px-5 py-4 font-mono font-medium text-slate-900 tabular-nums">
+                        #{item.id}
+                      </TableCell>
+                      <TableCell className="px-5 py-4 font-medium text-slate-900">
+                        {item.provider?.fullName || `Thợ #${item.providerId}`}
+                        <div className="text-xs text-slate-400 font-normal">
+                          {item.provider?.phone ||
+                            item.provider?.email ||
+                            "Chưa có liên hệ"}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-5 py-4 font-bold text-slate-900 tabular-nums">
+                        {formatCurrency(item.amount)}
+                      </TableCell>
+                      <TableCell className="px-5 py-4 text-xs text-slate-600">
+                        {item.bankName ? (
+                          <div>
+                            <div className="font-semibold text-slate-800">
+                              {item.bankName}
                             </div>
-                          ) : (
-                            <span className="text-slate-400 italic">
-                              Chưa cung cấp
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-5 py-4 text-xs text-slate-500">
-                          {new Date(item.createdAt).toLocaleDateString("vi-VN", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </td>
-                        <td className="px-5 py-4">
-                          <Badge
-                            variant="outline"
-                            className={`gap-1.5 px-2.5 py-0.5 text-xs font-semibold ${statusInfo.className}`}
+                            <div className="font-mono text-slate-500 tabular-nums">
+                              {item.bankAccountNumber}
+                            </div>
+                            <div className="text-slate-400 uppercase">
+                              {item.bankAccountHolder}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">
+                            Chưa cung cấp
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-5 py-4 text-xs text-slate-500 tabular-nums">
+                        {new Date(item.createdAt).toLocaleDateString("vi-VN", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </TableCell>
+                      <TableCell className="px-5 py-4">
+                        <Badge
+                          variant="outline"
+                          className={`gap-1.5 px-2.5 py-0.5 text-xs font-semibold ${statusInfo.className}`}
+                        >
+                          {statusInfo.icon}
+                          <span>{statusInfo.label}</span>
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-5 py-4 text-right">
+                        {item.status === "PENDING" ? (
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                            onClick={() => {
+                              setSelected(item);
+                              setNote("");
+                            }}
                           >
-                            {statusInfo.icon}
-                            <span>{statusInfo.label}</span>
-                          </Badge>
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          {item.status === "PENDING" ? (
-                            <Button
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
-                              onClick={() => {
-                                setSelected(item);
-                                setNote("");
-                              }}
-                            >
-                              Xử lý
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-slate-400 italic">
-                              Đã đóng
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                            Xử lý
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">
+                            Đã đóng
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
 
           {totalPages > 1 && (

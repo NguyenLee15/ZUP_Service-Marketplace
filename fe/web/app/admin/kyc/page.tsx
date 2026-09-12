@@ -16,6 +16,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { adminApi } from "@/features/admin/services/admin.api";
 import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
 import { AdminPermission } from "@/types/admin-permissions";
@@ -169,83 +177,81 @@ export default function KYCPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50/80 text-xs text-slate-500 uppercase font-semibold border-b border-slate-100">
-                    <tr>
-                      <th className="px-5 py-3.5">Mã hồ sơ</th>
-                      <th className="px-5 py-3.5">Thợ yêu cầu</th>
-                      <th className="px-5 py-3.5">Liên hệ</th>
-                      <th className="px-5 py-3.5">Thời gian nộp</th>
-                      <th className="px-5 py-3.5">Trạng thái</th>
-                      <th className="px-5 py-3.5 text-right">Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {filteredKycList.map((item) => {
-                      const status = statusConfig[item.status] || {
-                        label: item.status,
-                        className: "bg-slate-100 text-slate-700",
-                        icon: null,
-                      };
-                      const dateStr = item.submittedAt || item.createdAt;
-                      const dateFormatted = dateStr
-                        ? new Date(dateStr).toLocaleDateString("vi-VN", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "---";
+              <Table>
+                <TableHeader className="bg-slate-50/80">
+                  <TableRow>
+                    <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Mã hồ sơ</TableHead>
+                    <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Thợ yêu cầu</TableHead>
+                    <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Liên hệ</TableHead>
+                    <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Thời gian nộp</TableHead>
+                    <TableHead className="px-5 py-3.5 text-xs text-slate-500 uppercase font-semibold">Trạng thái</TableHead>
+                    <TableHead className="px-5 py-3.5 text-right text-xs text-slate-500 uppercase font-semibold">Thao tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-slate-100 text-slate-700">
+                  {filteredKycList.map((item) => {
+                    const status = statusConfig[item.status] || {
+                      label: item.status,
+                      className: "bg-slate-100 text-slate-700",
+                      icon: null,
+                    };
+                    const dateStr = item.submittedAt || item.createdAt;
+                    const dateFormatted = dateStr
+                      ? new Date(dateStr).toLocaleDateString("vi-VN", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "---";
 
-                      return (
-                        <tr
-                          key={item.id}
-                          className="hover:bg-slate-50/80 transition-colors"
-                        >
-                          <td className="px-5 py-4 font-mono font-medium text-slate-900">
-                            #{item.id}
-                          </td>
-                          <td className="px-5 py-4 font-medium text-slate-900">
-                            {item.provider?.fullName || `Thợ #${item.providerId}`}
-                          </td>
-                          <td className="px-5 py-4 text-xs text-slate-500">
-                            <div>{item.provider?.email || "Chưa có email"}</div>
-                            <div className="text-slate-400 mt-0.5">
-                              {item.provider?.phone || "Chưa có SĐT"}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 text-xs text-slate-500">
-                            {dateFormatted}
-                          </td>
-                          <td className="px-5 py-4">
-                            <Badge
+                    return (
+                      <TableRow
+                        key={item.id}
+                        className="hover:bg-slate-50/80 transition-colors"
+                      >
+                        <TableCell className="px-5 py-4 font-mono font-medium text-slate-900 tabular-nums">
+                          #{item.id}
+                        </TableCell>
+                        <TableCell className="px-5 py-4 font-medium text-slate-900">
+                          {item.provider?.fullName || `Thợ #${item.providerId}`}
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-xs text-slate-500">
+                          <div>{item.provider?.email || "Chưa có email"}</div>
+                          <div className="text-slate-400 mt-0.5 tabular-nums">
+                            {item.provider?.phone || "Chưa có SĐT"}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-xs text-slate-500 tabular-nums">
+                          {dateFormatted}
+                        </TableCell>
+                        <TableCell className="px-5 py-4">
+                          <Badge
+                            variant="outline"
+                            className={`gap-1.5 px-2.5 py-0.5 text-xs font-semibold ${status.className}`}
+                          >
+                            {status.icon}
+                            <span>{status.label}</span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-5 py-4 text-right">
+                          <Link href={`/admin/kyc/${item.id}`}>
+                            <Button
                               variant="outline"
-                              className={`gap-1.5 px-2.5 py-0.5 text-xs font-semibold ${status.className}`}
+                              size="sm"
+                              className="gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                             >
-                              {status.icon}
-                              <span>{status.label}</span>
-                            </Badge>
-                          </td>
-                          <td className="px-5 py-4 text-right">
-                            <Link href={`/admin/kyc/${item.id}`}>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
-                              >
-                                <span>Xem hồ sơ</span>
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </Button>
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              <span>Xem hồ sơ</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>

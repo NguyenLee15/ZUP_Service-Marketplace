@@ -64,3 +64,21 @@ export const Colors = {
 } as const;
 
 export type ColorScheme = typeof Colors.light;
+
+export const CardElevation = {
+  light: {
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  dark: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+} as const;
+

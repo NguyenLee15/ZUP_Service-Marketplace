@@ -15,6 +15,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
 import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
@@ -154,72 +169,70 @@ export default function AdminServicesPage() {
           ) : services.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">Không có dịch vụ nào</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-border bg-gray-50">
-                  <tr>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Tên Dịch Vụ</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Nhà Cung Cấp</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Giá từ</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Trạng Thái</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Rating</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Hành Động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredServices.map((service: ApiPayload) => {
-                    const sc = statusConfig[service.status] || statusConfig.DRAFT;
-                    const StatusIcon = sc.icon;
-                    return (
-                      <tr key={service.id} className="border-b border-border hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div>
-                              <p className="font-medium text-foreground">{service.name}</p>
-                              <p className="text-xs text-muted-foreground">{service.category?.name}</p>
-                            </div>
-                            {service.isSensitive && (
-                              <Badge className="bg-rose-100 text-rose-700 border-0 hover:bg-rose-100/80 font-bold text-[10px] flex items-center gap-1 px-1.5 py-0.5 shrink-0 animate-pulse">
-                                <AlertTriangle className="w-3 h-3" /> AI Warning
-                              </Badge>
-                            )}
+            <Table>
+              <TableHeader className="bg-slate-50/80">
+                <TableRow>
+                  <TableHead className="text-left py-3 px-4 font-semibold text-xs uppercase text-slate-500">Tên Dịch Vụ</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-semibold text-xs uppercase text-slate-500">Nhà Cung Cấp</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-semibold text-xs uppercase text-slate-500">Giá từ</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-semibold text-xs uppercase text-slate-500">Trạng Thái</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-semibold text-xs uppercase text-slate-500">Rating</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-semibold text-xs uppercase text-slate-500">Hành Động</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredServices.map((service: ApiPayload) => {
+                  const sc = statusConfig[service.status] || statusConfig.DRAFT;
+                  const StatusIcon = sc.icon;
+                  return (
+                    <TableRow key={service.id} className="hover:bg-slate-50/80 transition-colors">
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <p className="font-medium text-foreground">{service.name}</p>
+                            <p className="text-xs text-muted-foreground">{service.category?.name}</p>
                           </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">{service.provider?.fullName}</td>
-                        <td className="py-3 px-4 font-medium text-foreground">{formatPrice(Number(service.referencePrice))}</td>
-                        <td className="py-3 px-4">
-                          <Badge className={`${sc.color} border-0 text-xs`}>
-                            <StatusIcon className="w-3 h-3 mr-1" /> {sc.label}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          {Number(service.avgRating) > 0 ? (
-                            <span className="font-medium">{Number(service.avgRating).toFixed(1)}</span>
-                          ) : <span className="text-muted-foreground">—</span>}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => { setSelectedService(service); setShowModal(true); }}>
-                              <Eye className="w-4 h-4 text-blue-600" />
+                          {service.isSensitive && (
+                            <Badge className="bg-rose-100 text-rose-700 border-0 hover:bg-rose-100/80 font-bold text-[10px] flex items-center gap-1 px-1.5 py-0.5 shrink-0 animate-pulse">
+                              <AlertTriangle className="w-3 h-3" /> Cần xem xét
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-gray-700">{service.provider?.fullName}</TableCell>
+                      <TableCell className="py-3 px-4 font-medium text-foreground tabular-nums">{formatPrice(Number(service.referencePrice))}</TableCell>
+                      <TableCell className="py-3 px-4">
+                        <Badge className={`${sc.color} border-0 text-xs`}>
+                          <StatusIcon className="w-3 h-3 mr-1" /> {sc.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 tabular-nums">
+                        {Number(service.avgRating) > 0 ? (
+                          <span className="font-medium">{Number(service.avgRating).toFixed(1)}</span>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => { setSelectedService(service); setShowModal(true); }}>
+                            <Eye className="w-4 h-4 text-blue-600" />
+                          </Button>
+                          {service.status === 'ACTIVE' && (
+                            <Button variant="ghost" size="sm" onClick={() => handleHide(service.id)} title="Ẩn dịch vụ">
+                              <XCircle className="w-4 h-4 text-orange-500" />
                             </Button>
-                            {service.status === 'ACTIVE' && (
-                              <Button variant="ghost" size="sm" onClick={() => handleHide(service.id)} title="Ẩn dịch vụ">
-                                <XCircle className="w-4 h-4 text-orange-500" />
-                              </Button>
-                            )}
-                            {service.status === 'HIDDEN' && (
-                              <Button variant="ghost" size="sm" onClick={() => handleShow(service.id)} title="Mở ẩn dịch vụ">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          )}
+                          {service.status === 'HIDDEN' && (
+                            <Button variant="ghost" size="sm" onClick={() => handleShow(service.id)} title="Mở ẩn dịch vụ">
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
           
           {!loading && services.length > 0 && (
@@ -240,102 +253,108 @@ export default function AdminServicesPage() {
         </CardContent>
       </Card>
 
-      {/* Detail Modal */}
-      {showModal && selectedService && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>{selectedService.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {selectedService.isSensitive && (
-                <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 text-sm text-rose-800 animate-pulse">
-                  <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h5 className="font-bold">Nội Dung Nhạy Cảm (AI Auto-Flagged)</h5>
-                    <p className="text-xs text-rose-600 mt-1 leading-relaxed">
-                      Gemini phát hiện dịch vụ này chứa các từ khóa nghi ngờ lừa đảo, nhạy cảm hoặc vi phạm điều khoản của Zup. Nhân viên cần rà soát kỹ lưỡng.
-                    </p>
+      {/* Detail Dialog */}
+      <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) setRejectReason(''); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedService && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedService.name}</DialogTitle>
+                <DialogDescription>
+                  Chi tiết dịch vụ và thông tin nhà cung cấp
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 pt-2">
+                {selectedService.isSensitive && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 text-sm text-rose-800">
+                    <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h5 className="font-bold">Nội Dung Cần Lưu Ý (Kiểm Duyệt Tự Động)</h5>
+                      <p className="text-xs text-rose-600 mt-1 leading-relaxed">
+                        Hệ thống kiểm duyệt tự động phát hiện dịch vụ này chứa từ khóa cần xác minh theo quy chuẩn HomeServe. Vui lòng rà soát kỹ lưỡng trước khi phê duyệt.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Nhà Cung Cấp</p>
-                  <p className="font-medium">{selectedService.provider?.fullName}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Giá từ</p>
-                  <p className="font-medium">{formatPrice(Number(selectedService.referencePrice))}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Danh Mục</p>
-                  <p className="font-medium">{selectedService.category?.name}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Ngày Tạo</p>
-                  <p className="font-medium">{selectedService.createdAt ? new Date(selectedService.createdAt).toLocaleDateString('vi-VN') : '—'}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-muted-foreground text-sm mb-1">Mô Tả</p>
-                <p className="text-sm text-foreground/80 whitespace-pre-line">{selectedService.description}</p>
-              </div>
-
-              {selectedService.images?.length > 0 && (
-                <div>
-                  <p className="text-muted-foreground text-sm mb-2">Hình Ảnh</p>
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {selectedService.images.map((img: any) => (
-                      <img key={img.id} src={img.imageUrl} alt="service image" className="w-24 h-24 object-cover rounded-md flex-shrink-0" />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedService.items?.length > 0 && (
-                <div>
-                  <p className="text-muted-foreground text-sm mb-2">Các Hạng Mục Dịch Vụ</p>
-                  <div className="bg-muted p-3 rounded-lg space-y-2">
-                    {selectedService.items.map((item: any) => (
-                      <div key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-200">
-                        <span>{item.name}</span>
-                        <span className="font-medium">{formatPrice(Number(item.price))}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedService.status === 'PENDING' && (
-                <div className="space-y-3 border-t pt-4">
-                  <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
-                    placeholder="Lý do từ chối (nếu từ chối)..." rows={2} />
-                </div>
-              )}
-
-              <div className="flex gap-2 justify-end pt-4 border-t">
-                <Button variant="outline" onClick={() => { setShowModal(false); setRejectReason(''); }}>
-                  Đóng
-                </Button>
-                {selectedService.status === 'PENDING' && (
-                  <>
-                    <Button className="bg-green-600 hover:bg-green-700" disabled={actionLoading}
-                      onClick={() => handleApprove(selectedService.id)}>
-                      <CheckCircle className="w-4 h-4 mr-1" /> Duyệt
-                    </Button>
-                    <Button variant="destructive" disabled={!rejectReason || actionLoading}
-                      onClick={() => handleReject(selectedService.id)}>
-                      <XCircle className="w-4 h-4 mr-1" /> Từ Chối
-                    </Button>
-                  </>
                 )}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Nhà Cung Cấp</p>
+                    <p className="font-medium">{selectedService.provider?.fullName}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Giá từ</p>
+                    <p className="font-medium tabular-nums">{formatPrice(Number(selectedService.referencePrice))}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Danh Mục</p>
+                    <p className="font-medium">{selectedService.category?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Ngày Tạo</p>
+                    <p className="font-medium tabular-nums">{selectedService.createdAt ? new Date(selectedService.createdAt).toLocaleDateString('vi-VN') : '—'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-muted-foreground text-sm mb-1">Mô Tả</p>
+                  <p className="text-sm text-foreground/80 whitespace-pre-line">{selectedService.description}</p>
+                </div>
+
+                {selectedService.images?.length > 0 && (
+                  <div>
+                    <p className="text-muted-foreground text-sm mb-2">Hình Ảnh</p>
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {selectedService.images.map((img: any) => (
+                        <img key={img.id} src={img.imageUrl} alt="service image" className="w-24 h-24 object-cover rounded-md flex-shrink-0" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedService.items?.length > 0 && (
+                  <div>
+                    <p className="text-muted-foreground text-sm mb-2">Các Hạng Mục Dịch Vụ</p>
+                    <div className="bg-muted p-3 rounded-lg space-y-2">
+                      {selectedService.items.map((item: any) => (
+                        <div key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-200">
+                          <span>{item.name}</span>
+                          <span className="font-medium tabular-nums">{formatPrice(Number(item.price))}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedService.status === 'PENDING' && (
+                  <div className="space-y-3 border-t pt-4">
+                    <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Lý do từ chối (nếu từ chối)..." rows={2} />
+                  </div>
+                )}
+
+                <div className="flex gap-2 justify-end pt-4 border-t">
+                  <Button variant="outline" onClick={() => { setShowModal(false); setRejectReason(''); }}>
+                    Đóng
+                  </Button>
+                  {selectedService.status === 'PENDING' && (
+                    <>
+                      <Button className="bg-green-600 hover:bg-green-700" disabled={actionLoading}
+                        onClick={() => handleApprove(selectedService.id)}>
+                        <CheckCircle className="w-4 h-4 mr-1" /> Duyệt
+                      </Button>
+                      <Button variant="destructive" disabled={!rejectReason || actionLoading}
+                        onClick={() => handleReject(selectedService.id)}>
+                        <XCircle className="w-4 h-4 mr-1" /> Từ Chối
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
       </div>
     </AdminPermissionGuard>
   );
