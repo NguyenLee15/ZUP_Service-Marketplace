@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import dynamic from "next/dynamic";
 import { BookingStatus } from "@/types";
 import { BackButton } from "@/components/navigation/BackButton";
@@ -31,6 +31,7 @@ export default function TrackingPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const [recenterTrigger, setRecenterTrigger] = useState(0);
   const {
     booking,
     loading,
@@ -156,13 +157,14 @@ export default function TrackingPage({
           providerLocation={providerLoc}
           customerLocation={customerLoc}
           trail={trail}
+          recenterTrigger={recenterTrigger}
         />
 
         {/* Floating Back Button */}
         <div className="absolute top-4 left-4 z-[1000]">
           <BackButton
             fallbackHref={`/bookings/${id}`}
-            className="glass-panel rounded-full px-4 py-2 shadow-lg hover:shadow-xl transition-shadow"
+            className="rounded-full px-4 py-2 bg-background/90 border border-border shadow-md hover:bg-muted transition-colors text-foreground"
           />
         </div>
 
@@ -175,11 +177,12 @@ export default function TrackingPage({
 
         {/* Re-center Button */}
         <button
-          onClick={() => {}}
-          className="absolute bottom-48 right-4 z-[1000] w-10 h-10 glass-panel rounded-full flex items-center justify-center shadow-lg hover:bg-action-blue/10 transition-colors"
+          type="button"
+          onClick={() => setRecenterTrigger((c) => c + 1)}
+          className="absolute bottom-48 right-4 z-[1000] w-10 h-10 rounded-full border border-border bg-background/90 text-foreground flex items-center justify-center shadow-lg hover:bg-muted transition-colors cursor-pointer"
           aria-label="Về vị trí của tôi"
         >
-          <Locate className="w-5 h-5 text-action-blue" />
+          <Locate className="w-5 h-5 text-sky-600 dark:text-sky-400" />
         </button>
       </div>
 

@@ -130,32 +130,19 @@ export function UnifiedServiceCard({
     onRecentlyViewed?.(service);
   };
 
-  useEffect(() => {
-    if (!useImageCarousel || !isHovered || images.length <= 1) {
-      setActiveImageIndex(0);
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      setActiveImageIndex((prev) => (prev + 1) % images.length);
-    }, 1600);
-
-    return () => window.clearInterval(interval);
-  }, [images.length, isHovered, useImageCarousel]);
+  // Use single primary image to ensure zero-jank 60fps scrolling and eliminate interval re-renders
 
   return (
     <Card
-      className="glass-panel glow-hover group relative flex h-full cursor-pointer flex-col gap-0 overflow-hidden rounded-2xl py-0 hover:-translate-y-1"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="glass-panel group relative flex h-full flex-col gap-0 overflow-hidden rounded-2xl py-0 border border-border/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-border"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-        <div 
-          onClick={() => {
-            handleDetailClick();
-            router.push(detailHref);
-          }} 
+        <Link 
+          href={detailHref}
+          prefetch={false}
+          onClick={handleDetailClick}
           className="block h-full w-full cursor-pointer"
+          aria-label={`Xem chi tiết dịch vụ ${service.name}`}
         >
           {imageUrl ? (
             <Image
@@ -166,43 +153,29 @@ export function UnifiedServiceCard({
               sizes="(max-width: 640px) 45vw, (max-width: 1024px) 45vw, 22vw"
               priority={priority}
               quality={65}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Wrench className="h-10 w-10 text-muted-foreground/30" />
             </div>
           )}
-        </div>
+        </Link>
 
-        {useImageCarousel && images.length > 1 && (
-          <div className="absolute bottom-2 left-0 right-0 z-10 flex justify-center gap-1">
-            {images.map((_, index) => (
-              <span
-                key={index}
-                className={`h-1 w-1 rounded-full transition-[background-color,transform] duration-300 ${
-                  index === activeImageIndex % images.length ? 'scale-125 bg-white' : 'bg-white/45'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex max-w-[calc(100%-3.5rem)] flex-col items-start gap-1">
+        <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex max-w-[calc(100%-4rem)] flex-col items-start gap-1">
           {showSponsoredBadge && (
-            <Badge className="border-0 bg-amber-pop text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-midnight-indigo shadow-md px-1.5 sm:px-2 py-0.5">
+            <Badge className="border-0 bg-amber-500 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-slate-950 shadow-sm px-1.5 sm:px-2 py-0.5">
               <Sparkles className="mr-1 h-2.5 w-2.5" />
               Tài trợ
             </Badge>
           )}
-          <Badge className="max-w-full truncate border-0 bg-midnight-indigo/70 px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
+          <Badge className="max-w-full truncate border-0 bg-slate-950/75 px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
             {service.category?.name || 'Dịch vụ'}
           </Badge>
         </div>
 
         {(showFavorite || showCompare) && (
-          <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 flex flex-col gap-1">
+          <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 flex flex-col gap-1.5">
             {showFavorite && (
               <Button
                 type="button"
@@ -214,13 +187,13 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onToggleFavorite?.(service);
                 }}
-                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
+                className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border-0 p-0 shadow-md backdrop-blur-md transition-[background-color,color,transform] flex items-center justify-center ${
                   isFavorite
                     ? 'bg-rose-500 text-white ring-2 ring-rose-300/35'
                     : 'border border-white/20 bg-slate-950/55 text-white hover:bg-sky-600 hover:text-white'
                 }`}
               >
-                <Heart className={`h-3.5 w-3.5 ${isFavorite ? 'fill-white' : ''}`} />
+                <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isFavorite ? 'fill-white' : ''}`} />
               </Button>
             )}
             {showCompare && (
@@ -234,27 +207,27 @@ export function UnifiedServiceCard({
                   event.stopPropagation();
                   onAddToComparison?.(service);
                 }}
-                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full border-0 p-0 shadow-lg backdrop-blur-md transition-[background-color,color,transform] ${
+                className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border-0 p-0 shadow-md backdrop-blur-md transition-[background-color,color,transform] flex items-center justify-center ${
                   isComparing
                     ? 'bg-sky-600 text-white ring-2 ring-sky-300/35'
                     : 'border border-white/20 bg-slate-950/55 text-white hover:bg-sky-600 hover:text-white'
                 }`}
               >
-                <GitCompare className="h-3 w-3" />
+                <GitCompare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             )}
           </div>
         )}
 
         {(service.distanceKm ?? service.distance) !== undefined && (
-          <Badge className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 border-0 bg-midnight-indigo/70 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
+          <Badge className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 border-0 bg-slate-950/75 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-white backdrop-blur-md">
             {(service.distanceKm ?? service.distance)?.toFixed(1)} km
           </Badge>
         )}
 
         {showTrustBadges && (
-          <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex items-center gap-1 rounded-full border border-white/20 bg-midnight-indigo/65 px-1.5 py-0.5 text-white backdrop-blur-md">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+          <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/75 px-1.5 py-0.5 text-white backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest">Đang hoạt động</span>
           </div>
         )}
@@ -269,7 +242,7 @@ export function UnifiedServiceCard({
                 event.stopPropagation();
                 onQuickView(service);
               }}
-              className="rounded-full border border-white/30 bg-white/20 px-6 font-bold text-white backdrop-blur-md transition-[background-color,color] duration-200 hover:bg-white hover:text-midnight-indigo"
+              className="rounded-full border border-white/30 bg-white/20 px-6 font-bold text-white backdrop-blur-md transition-[background-color,color] duration-200 hover:bg-white hover:text-slate-900"
             >
               <Eye className="mr-2 h-4 w-4" />
               Xem nhanh
@@ -283,8 +256,7 @@ export function UnifiedServiceCard({
           <Link href={detailHref} prefetch={false} onClick={handleDetailClick} className="block">
             <h3
               title={service.name}
-              className="line-clamp-2 min-h-[2.35rem] text-sm sm:text-[15px] font-bold text-midnight-indigo text-pretty transition-colors group-hover:text-action-blue leading-tight break-words [overflow-wrap:anywhere]"
-
+              className="line-clamp-2 min-h-[2.35rem] text-sm sm:text-[15px] font-bold text-slate-900 dark:text-slate-100 text-pretty transition-colors group-hover:text-sky-600 dark:group-hover:text-sky-400 leading-tight break-words [overflow-wrap:anywhere]"
             >
               {service.name}
             </h3>
@@ -301,7 +273,7 @@ export function UnifiedServiceCard({
                 onClick={(e) => e.stopPropagation()}
                 title={`Xem hồ sơ của ${service.provider.fullName}`}
                 aria-label={`Xem hồ sơ của ${service.provider.fullName} cung cấp dịch vụ ${service.name}`}
-                className="min-w-0 flex-1 truncate font-medium text-foreground/75 hover:text-action-blue hover:underline transition-colors"
+                className="min-w-0 flex-1 truncate font-medium text-foreground/75 hover:text-sky-600 dark:hover:text-sky-400 hover:underline transition-colors"
               >
                 {service.provider.fullName}
               </Link>
@@ -314,7 +286,7 @@ export function UnifiedServiceCard({
               </p>
             )}
             {showTrustBadges && (
-              <span className="shrink-0 rounded-full bg-pale-gray px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-glacier-blue">
+              <span className="shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold text-slate-700 dark:text-slate-300">
                 Uy tín
               </span>
             )}

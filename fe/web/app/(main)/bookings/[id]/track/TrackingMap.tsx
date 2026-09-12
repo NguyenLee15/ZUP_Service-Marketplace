@@ -52,29 +52,49 @@ function MapUpdater({
   providerLng,
   customerLat,
   customerLng,
+  recenterTrigger,
 }: {
-  providerLat: number;
-  providerLng: number;
+  providerLat?: number;
+  providerLng?: number;
   customerLat: number;
   customerLng: number;
+  recenterTrigger?: number;
 }) {
   const map = useMap();
   const hasInitialized = useRef(false);
+  const prevRecenter = useRef(recenterTrigger);
 
   useEffect(() => {
     if (!hasInitialized.current) {
-      // Fit both markers on first render
-      const bounds = L.latLngBounds(
-        [providerLat, providerLng],
-        [customerLat, customerLng],
-      );
-      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+      if (providerLat !== undefined && providerLng !== undefined) {
+        const bounds = L.latLngBounds(
+          [providerLat, providerLng],
+          [customerLat, customerLng],
+        );
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+      } else {
+        map.setView([customerLat, customerLng], 15);
+      }
       hasInitialized.current = true;
-    } else {
-      // Smoothly follow provider
+    } else if (providerLat !== undefined && providerLng !== undefined) {
       map.panTo([providerLat, providerLng], { animate: true, duration: 1 });
     }
   }, [providerLat, providerLng, customerLat, customerLng, map]);
+
+  useEffect(() => {
+    if (recenterTrigger && recenterTrigger !== prevRecenter.current) {
+      prevRecenter.current = recenterTrigger;
+      if (providerLat !== undefined && providerLng !== undefined) {
+        const bounds = L.latLngBounds(
+          [providerLat, providerLng],
+          [customerLat, customerLng],
+        );
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+      } else {
+        map.setView([customerLat, customerLng], 16, { animate: true });
+      }
+    }
+  }, [recenterTrigger, providerLat, providerLng, customerLat, customerLng, map]);
 
   return null;
 }
@@ -89,12 +109,14 @@ interface TrackingMapProps {
   } | null;
   customerLocation: { lat: number; lng: number };
   trail: [number, number][];
+  recenterTrigger?: number;
 }
 
 export default function TrackingMap({
   providerLocation,
   customerLocation,
   trail,
+  recenterTrigger,
 }: TrackingMapProps) {
   const center: [number, number] = providerLocation
     ? [providerLocation.lat, providerLocation.lng]
@@ -204,8 +226,17 @@ export default function TrackingMap({
             providerLng={providerLocation.lng}
             customerLat={customerLocation.lat}
             customerLng={customerLocation.lng}
+            recenterTrigger={recenterTrigger}
           />
         </>
+      )}
+
+      {!providerLocation && (
+        <MapUpdater
+          customerLat={customerLocation.lat}
+          customerLng={customerLocation.lng}
+          recenterTrigger={recenterTrigger}
+        />
       )}
     </MapContainer>
   );

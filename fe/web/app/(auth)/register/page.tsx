@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/features/auth/services/auth.api';
 import { useAuthStore } from '@/store/auth.store';
 import { Role } from '@/types';
@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { AuthDivider, AuthMessage, AuthShell } from '../_components/AuthShell';
 import { PasswordStrength } from '../_components/PasswordStrength';
+import { RegisterOtpStep } from '../_components/RegisterOtpStep';
 import {
   getAuthErrorMessage,
   getGoogleIdentity,
@@ -41,9 +42,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState('');
   const [countdown, setCountdown] = useState(0);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [gsiReady, setGsiReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
@@ -98,42 +98,30 @@ export default function RegisterPage() {
 
   const getRegisterErrors = () => {
     const errors: Record<string, string> = {};
-    if (!fullName.trim()) errors.fullName = 'Họ tên không được để trống';
+    if (!fullName) errors.fullName = 'Họ tên không được để trống';
     else if (fullName.trim().length < 2) errors.fullName = 'Họ tên quá ngắn';
 
-    if (!email.trim()) errors.email = 'Email không được để trống';
+    if (!email) errors.email = 'Email không được để trống';
     else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Email không hợp lệ';
 
-    if (!phone.trim()) errors.phone = 'Số điện thoại không được để trống';
-    else if (!/^0\d{9}$/.test(phone.trim())) errors.phone = 'Số điện thoại phải là 10 chữ số bắt đầu bằng 0';
+    if (!phone) errors.phone = 'Số điện thoại không được để trống';
+    else if (!/^0\d{9}$/.test(phone)) errors.phone = 'Số điện thoại phải là 10 chữ số bắt đầu bằng 0';
 
     if (!password) errors.password = 'Mật khẩu không được để trống';
     else if (password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
 
-    if (!confirmPassword) errors.confirmPassword = 'Vui lòng nhập lại mật khẩu';
-    else if (password !== confirmPassword) errors.confirmPassword = 'Mật khẩu xác nhận không khớp';
-
+    if (password !== confirmPassword) errors.confirmPassword = 'Mật khẩu xác nhận không khớp';
     return errors;
-  };
-
-  const focusFirstError = (errors: Record<string, string>) => {
-    const firstField = Object.keys(errors)[0];
-    if (!firstField) return;
-    window.setTimeout(() => document.getElementById(firstField)?.focus(), 0);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
     const errors = getRegisterErrors();
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      focusFirstError(errors);
-      return;
-    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
+    setError('');
     try {
       await authApi.register({
         fullName: fullName.trim(),
@@ -144,8 +132,10 @@ export default function RegisterPage() {
       });
       setStep('otp');
       setCountdown(60);
-      toast({ title: 'Đã gửi OTP', description: 'Vui lòng kiểm tra email của bạn.' });
-      window.setTimeout(() => otpRefs.current[0]?.focus(), 80);
+      toast({
+        title: 'Mã xác thực đã được gửi',
+        description: `Vui lòng kiểm tra hộp thư ${email.trim()}`,
+      });
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err, 'Đăng ký thất bại'));
     } finally {
@@ -153,61 +143,34 @@ export default function RegisterPage() {
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) {
-      const digits = value.replace(/\D/g, '').slice(0, 6).split('');
-      const newOtp = [...otp];
-      digits.forEach((digit, digitIndex) => {
-        if (index + digitIndex < 6) newOtp[index + digitIndex] = digit;
-      });
-      setOtp(newOtp);
-      const nextIndex = Math.min(index + digits.length, 5);
-      otpRefs.current[nextIndex]?.focus();
-      return;
-    }
-
-    const digit = value.replace(/\D/g, '');
-    const newOtp = [...otp];
-    newOtp[index] = digit;
-    setOtp(newOtp);
-
-    if (digit && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-  };
-
   const handleVerifyOtp = async () => {
-    const otpCode = otp.join('');
-    if (otpCode.length !== 6) return;
+    if (otp.length !== 6) return;
 
     setLoading(true);
     setError('');
     try {
-      const res = await authApi.verifyOtp({ email, otp: otpCode });
-      const { accessToken, refreshToken, user } = res.data.data;
-
-      setTokens(accessToken, refreshToken);
-      setUser(user);
-      toast({ title: 'Xác thực thành công' });
-
-      if (user.role === Role.PROVIDER) {
-        useAuthStore.getState().logout();
+      const res = await authApi.verifyOtp({
+        email: email.trim(),
+        otp,
+      });
+      const data = res.data?.data;
+      if (data?.accessToken && data?.user) {
+        setTokens(data.accessToken, data.refreshToken);
+        setUser(data.user);
         toast({
-          title: 'Từ chối truy cập',
-          description: 'Vui lòng sử dụng Mobile App dành cho Thợ.',
-          variant: 'destructive',
+          title: 'Đăng ký thành công',
+          description: `Chào mừng ${data.user.fullName || 'bạn'} đến với HomeServe!`,
         });
-      } else {
         router.push('/');
+      } else {
+        toast({
+          title: 'Đăng ký thành công',
+          description: 'Vui lòng đăng nhập vào tài khoản của bạn.',
+        });
+        router.push('/login');
       }
     } catch (err: unknown) {
-      setError(getAuthErrorMessage(err, 'Mã OTP không chính xác'));
+      setError(getAuthErrorMessage(err, 'Xác thực OTP thất bại'));
     } finally {
       setLoading(false);
     }
@@ -217,38 +180,51 @@ export default function RegisterPage() {
     if (countdown > 0) return;
     setError('');
     try {
-      await authApi.resendOtp(email);
+      await authApi.resendOtp(email.trim());
       setCountdown(60);
-      toast({ title: 'Đã gửi lại OTP' });
+      toast({
+        title: 'Đã gửi lại mã OTP',
+        description: `Mã mới đã được gửi tới ${email.trim()}`,
+      });
     } catch (err: unknown) {
-      setError(getAuthErrorMessage(err, 'Không thể gửi lại OTP'));
+      setError(getAuthErrorMessage(err, 'Gửi lại OTP thất bại'));
     }
   };
 
   const handleGoogleResponse = useCallback(
     async (response: GoogleCredentialResponse) => {
+      if (!response.credential) {
+        setError('Không nhận được thông tin xác thực từ Google.');
+        return;
+      }
+
       setLoading(true);
       setError('');
       try {
         const res = await authApi.googleAuth(response.credential);
-        const { accessToken, refreshToken, user } = res.data.data;
+        const data = res.data?.data;
+        const user = data?.user;
+        const accessToken = data?.accessToken;
+        const refreshToken = data?.refreshToken;
 
-        setTokens(accessToken, refreshToken);
-        setUser(user);
-        toast({
-          title: 'Đăng ký thành công',
-          description: `Xin chào ${user.fullName || 'bạn'}`,
-        });
-
-        if (user.role === Role.PROVIDER) {
-          useAuthStore.getState().logout();
+        if (accessToken && user) {
+          setTokens(accessToken, refreshToken || '');
+          setUser(user);
           toast({
-            title: 'Từ chối truy cập',
-            description: 'Vui lòng sử dụng Mobile App dành cho Thợ.',
-            variant: 'destructive',
+            title: 'Đăng ký Google thành công',
+            description: `Xin chào ${user.fullName || 'bạn'}`,
           });
-        } else {
-          router.push('/');
+
+          if (user.role === Role.PROVIDER) {
+            useAuthStore.getState().logout();
+            toast({
+              title: 'Từ chối truy cập',
+              description: 'Vui lòng sử dụng Mobile App dành cho Thợ.',
+              variant: 'destructive',
+            });
+          } else {
+            router.push('/');
+          }
         }
       } catch (err: unknown) {
         setError(getAuthErrorMessage(err, 'Đăng ký Google thất bại'));
@@ -284,11 +260,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     const google = getGoogleIdentity();
-    if (!gsiReady || !googleBtnRef.current || !google) return;
-
-    if (!googleClientId) {
-      return;
-    }
+    if (!gsiReady || !googleBtnRef.current || !google || !googleClientId) return;
 
     const timer = setTimeout(() => {
       if (!googleBtnRef.current) return;
@@ -334,7 +306,7 @@ export default function RegisterPage() {
       }
     >
       {step === 'form' ? (
-        <form onSubmit={handleRegister} className="space-y-5" noValidate>
+        <form onSubmit={handleRegister} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label htmlFor="fullName" className="font-semibold text-midnight-indigo">
               Họ và tên
@@ -354,6 +326,7 @@ export default function RegisterPage() {
               className="h-12 rounded-xl border-platinum-tint bg-cloud-mist/70 px-4 text-midnight-indigo placeholder:text-slate-blue transition-[color,box-shadow,border-color] focus-visible:border-action-blue"
               placeholder="Nguyễn Văn A"
               autoComplete="name"
+              required
             />
             {fieldErrors.fullName && (
               <p id="fullName-error" className="text-xs font-medium text-red-600">
@@ -381,7 +354,7 @@ export default function RegisterPage() {
               className="h-12 rounded-xl border-platinum-tint bg-cloud-mist/70 px-4 text-midnight-indigo placeholder:text-slate-blue transition-[color,box-shadow,border-color] focus-visible:border-action-blue"
               placeholder="you@example.com"
               autoComplete="email"
-              spellCheck={false}
+              required
             />
             {fieldErrors.email && (
               <p id="email-error" className="text-xs font-medium text-red-600">
@@ -398,7 +371,6 @@ export default function RegisterPage() {
               id="phone"
               name="phone"
               type="tel"
-              inputMode="tel"
               aria-label="Số điện thoại"
               aria-invalid={Boolean(fieldErrors.phone)}
               aria-describedby={fieldErrors.phone ? 'phone-error' : undefined}
@@ -408,8 +380,9 @@ export default function RegisterPage() {
                 validate('phone', e.target.value);
               }}
               className="h-12 rounded-xl border-platinum-tint bg-cloud-mist/70 px-4 text-midnight-indigo placeholder:text-slate-blue transition-[color,box-shadow,border-color] focus-visible:border-action-blue"
-              placeholder="0901234567"
+              placeholder="0912345678"
               autoComplete="tel"
+              required
             />
             {fieldErrors.phone && (
               <p id="phone-error" className="text-xs font-medium text-red-600">
@@ -438,22 +411,23 @@ export default function RegisterPage() {
                 className="h-12 rounded-xl border-platinum-tint bg-cloud-mist/70 px-4 pr-11 text-midnight-indigo placeholder:text-slate-blue transition-[color,box-shadow,border-color] focus-visible:border-action-blue"
                 placeholder="Tối thiểu 6 ký tự"
                 autoComplete="new-password"
+                required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                className="absolute right-3 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-blue transition-colors hover:bg-pale-gray hover:text-midnight-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-blue transition-colors hover:text-midnight-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
-            <PasswordStrength password={password} />
             {fieldErrors.password && (
               <p id="password-error" className="text-xs font-medium text-red-600">
                 {fieldErrors.password}
               </p>
             )}
+            <PasswordStrength password={password} />
           </div>
 
           <div className="space-y-2">
@@ -467,9 +441,7 @@ export default function RegisterPage() {
                 type={showConfirmPassword ? 'text' : 'password'}
                 aria-label="Xác nhận mật khẩu"
                 aria-invalid={Boolean(fieldErrors.confirmPassword)}
-                aria-describedby={
-                  fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined
-                }
+                aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
@@ -478,12 +450,13 @@ export default function RegisterPage() {
                 className="h-12 rounded-xl border-platinum-tint bg-cloud-mist/70 px-4 pr-11 text-midnight-indigo placeholder:text-slate-blue transition-[color,box-shadow,border-color] focus-visible:border-action-blue"
                 placeholder="Nhập lại mật khẩu"
                 autoComplete="new-password"
+                required
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
-                className="absolute right-3 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-blue transition-colors hover:bg-pale-gray hover:text-midnight-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                aria-label={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-blue transition-colors hover:text-midnight-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -500,7 +473,7 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue"
+            className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,transform] hover:bg-glacier-blue active:scale-[0.99] disabled:opacity-50"
           >
             {loading ? 'Đang xử lý…' : 'Đăng ký'}
           </Button>
@@ -510,15 +483,21 @@ export default function RegisterPage() {
           <div
             ref={googleBtnRef}
             id="google-register-btn"
-            className="flex min-h-11 w-full items-center justify-center rounded-xl border border-platinum-tint bg-white"
+            className="flex min-h-12 w-full items-center justify-center rounded-xl overflow-hidden"
             aria-label="Đăng ký bằng Google"
           >
             <button
               type="button"
               onClick={handleGoogleFallbackClick}
-              className="flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-midnight-indigo transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+              className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:bg-slate-100 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
             >
-              {googleClientId ? 'Đăng ký với Google' : 'Google chưa được cấu hình'}
+              <svg className="size-4.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z" />
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24Z" />
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15Z" />
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z" />
+              </svg>
+              <span>{googleClientId ? 'Đăng ký với Google' : 'Google chưa được cấu hình'}</span>
             </button>
           </div>
           {!googleClientId && (
@@ -528,78 +507,25 @@ export default function RegisterPage() {
           )}
 
           <p className="text-center text-xs leading-5 text-slate-blue">
-            Bằng việc đăng ký, bạn đồng ý với điều khoản dịch vụ của Zup.
+            Bằng việc đăng ký, bạn đồng ý với điều khoản dịch vụ của HomeServe.
           </p>
         </form>
       ) : (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-platinum-tint bg-cloud-mist/70 px-4 py-3 text-sm leading-6 text-slate-blue">
-            Mã OTP có hiệu lực trong 10 phút. Nếu nhập sai quá nhiều lần, bạn cần gửi
-            lại mã mới.
-          </div>
-
-          <div className="flex justify-center gap-2" role="group" aria-label="Mã OTP 6 chữ số">
-            {otp.map((digit, index) => (
-              <input
-                key={index}
-                ref={(el) => {
-                  otpRefs.current[index] = el;
-                }}
-                name={`otp-${index + 1}`}
-                aria-label={`Số OTP thứ ${index + 1}`}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete={index === 0 ? 'one-time-code' : 'off'}
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleOtpChange(index, e.target.value)}
-                onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                className="h-14 w-11 rounded-xl border border-platinum-tint bg-cloud-mist/70 text-center text-xl font-bold text-midnight-indigo shadow-xs transition-[color,box-shadow,border-color] focus:border-action-blue focus:outline-none focus:ring-2 focus:ring-action-blue/30 sm:w-12"
-              />
-            ))}
-          </div>
-
-          {error && <AuthMessage className="text-center">{error}</AuthMessage>}
-
-          <Button
-            type="button"
-            onClick={handleVerifyOtp}
-            disabled={otp.join('').length !== 6 || loading}
-            className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue"
-          >
-            {loading ? 'Đang xác thực…' : 'Xác thực OTP'}
-          </Button>
-
-          <div className="flex flex-col items-center justify-center gap-3 text-sm text-slate-blue sm:flex-row sm:justify-between">
-            <button
-              type="button"
-              onClick={() => {
-                setStep('form');
-                setError('');
-                setOtp(['', '', '', '', '', '']);
-              }}
-              className="inline-flex items-center gap-1 font-semibold text-action-blue transition-colors hover:text-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-4 focus-visible:ring-offset-white"
-            >
-              <ArrowLeft className="size-4" />
-              Đổi email
-            </button>
-
-            {countdown > 0 ? (
-              <span>
-                Gửi lại sau <span className="font-mono font-bold text-midnight-indigo">{countdown}s</span>
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                className="font-semibold text-action-blue transition-colors hover:text-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-4 focus-visible:ring-offset-white"
-              >
-                Gửi lại mã OTP
-              </button>
-            )}
-          </div>
-        </div>
+        <RegisterOtpStep
+          email={email}
+          otp={otp}
+          setOtp={setOtp}
+          loading={loading}
+          error={error}
+          countdown={countdown}
+          onVerify={handleVerifyOtp}
+          onBack={() => {
+            setStep('form');
+            setError('');
+            setOtp('');
+          }}
+          onResend={handleResendOtp}
+        />
       )}
 
       <Script

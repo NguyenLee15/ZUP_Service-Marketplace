@@ -51,14 +51,14 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
           </Link>
         </div>
  
-        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-4 gap-2.5 md:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
           {displayCategories.map((cat, idx) => {
             const IconComponent = cat.icon;
             const isFeatured = idx === 0;
 
             return (
               <Link
-                key={idx}
+                key={cat.categoryId || idx}
                 href={`/services?categoryIds=${cat.categoryId}`}
                 prefetch={false}
                 aria-label={`Xem dịch vụ ${cat.label}`}

@@ -106,9 +106,8 @@ export function HeroSearchForm() {
 
         <button
           type="submit"
-          className="group relative justify-center px-6 py-3.5 rounded-lg bg-sky-600 font-bold text-white shadow-[0_0_18px_rgba(2,132,199,0.45)] hover:bg-cyan-500 hover:-translate-y-0.5 transition-[background-color,box-shadow,transform] overflow-hidden flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          className="group relative justify-center px-6 py-3.5 rounded-xl bg-sky-600 font-semibold text-white shadow-sm hover:bg-sky-500 active:scale-[0.98] transition-all overflow-hidden flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
         >
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
           <SearchIcon className="w-5 h-5 relative z-10" />
           <span className="relative z-10">Tìm dịch vụ</span>
         </button>

@@ -37,8 +37,8 @@ export function AuthShell({
   className,
 }: AuthShellProps) {
   return (
-    <main className="auth-aether min-h-screen text-white relative overflow-hidden flex items-center justify-center">
-      <div className="relative z-10 grid min-h-screen w-full items-stretch lg:grid-cols-2">
+    <main className="auth-aether min-h-[100dvh] text-white relative overflow-hidden flex items-center justify-center">
+      <div className="relative z-10 grid min-h-[100dvh] w-full items-stretch lg:grid-cols-2">
         
         {/* Left Side: Inspiration Section */}
         <section className="hidden flex-col justify-between p-12 shadow-2xl relative overflow-hidden lg:flex">
@@ -66,14 +66,14 @@ export function AuthShell({
           <div className="relative z-10 max-w-xl space-y-7 rounded-2xl border border-white/10 bg-slate-950/60 p-8 shadow-sm backdrop-blur-xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md px-4 py-2 text-sm font-semibold text-cyan-300">
               <ShieldCheck className="size-4 text-cyan-300" />
-              Nền tảng dịch vụ tại gia cao cấp
+              Nền tảng dịch vụ gia đình cao cấp
             </div>
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight tracking-normal text-white">
                 Đăng nhập nhanh, đặt dịch vụ gọn hơn.
               </h1>
               <p className="max-w-lg text-base leading-relaxed text-slate-300">
-                Quản lý lịch hẹn, theo dõi thợ di chuyển thời gian thực và lưu trữ dịch vụ yêu thích trong một tài khoản thống nhất.
+                Quản lý lịch hẹn, theo dõi thợ di chuyển thời gian thực và trải nghiệm dịch vụ tiện ích chuẩn mực trong một tài khoản thống nhất.
               </p>
             </div>
 
@@ -99,25 +99,25 @@ export function AuthShell({
 
         {/* Right Side: Form Container */}
         <div className="relative flex w-full items-center justify-center overflow-y-auto px-4 py-8 sm:px-8 lg:px-16">
-          <div className="absolute right-1/4 top-1/4 h-96 w-96 rounded-full bg-sky-600/10 blur-3xl" />
-          <div className="absolute bottom-0 left-1/4 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="absolute right-1/4 top-1/4 h-96 w-96 rounded-full bg-sky-600/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/4 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 mx-auto w-full max-w-[480px]">
           <div className="mb-6 flex justify-center lg:hidden">
             <Link
               href="/"
               className="inline-flex items-center gap-2.5 rounded-full text-white transition-all hover:scale-105 active:scale-95 duration-200"
-              aria-label="Về trang chủ Zup"
+              aria-label="Về trang chủ HomeServe"
             >
               <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 shrink-0 flex items-center justify-center bg-slate-950">
                 <Image
                   src="/logo.png"
-                  alt="ZUP Logo Mobile - Ứng dụng đặt thợ tại gia"
+                  alt="HomeServe Logo Mobile"
                   width={36}
                   height={36}
                   className="h-full w-full scale-[1.38] object-cover"
                 />
               </div>
-              <span className="font-bold text-lg select-none text-white">ZUP</span>
+              <span className="font-bold text-lg select-none text-white">HomeServe</span>
             </Link>
           </div>
 
@@ -130,11 +130,11 @@ export function AuthShell({
             <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-transparent z-0 pointer-events-none" />
             
             <CardHeader className="relative z-10 space-y-3 px-6 pb-4 pt-7 text-center sm:px-8">
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-sky-600/15 border border-sky-400/20 text-cyan-300 shrink-0">
+              <div className="mx-auto hidden sm:flex size-14 items-center justify-center rounded-2xl bg-sky-600/15 border border-sky-400/20 text-cyan-300 shrink-0">
                 <div className="w-10 h-10 overflow-hidden rounded-lg flex items-center justify-center bg-slate-950">
                   <Image
                     src="/logo.png"
-                    alt="ZUP Logo Icon - Đăng ký tài khoản ZUP"
+                    alt="HomeServe Logo Icon"
                     width={40}
                     height={40}
                     className="h-full w-full scale-[1.38] object-cover"

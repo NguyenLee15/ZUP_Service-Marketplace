@@ -293,16 +293,16 @@ export function CustomerHeader() {
                     {accountMenuOpen && (
                       <div
                         role="menu"
-                        className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-xl border border-platinum-tint bg-white p-1.5 shadow-[var(--brand-shadow-card)]"
+                        className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-xl border border-slate-800 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-md"
                       >
                         <div className="space-y-1 px-3 py-2">
-                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Đang đăng nhập</p>
-                          <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                          <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Đang đăng nhập</p>
+                          <p className="text-sm font-semibold text-white truncate">{displayName}</p>
                           {user?.email && user?.fullName && (
-                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                            <p className="text-xs text-slate-400 truncate">{user.email}</p>
                           )}
                         </div>
-                        <div className="my-1 h-px bg-platinum-tint" />
+                        <div className="my-1 h-px bg-slate-800" />
                         {isAdminOrStaff && (
                           <>
                             <Link
@@ -310,12 +310,12 @@ export function CustomerHeader() {
                               prefetch={false}
                               role="menuitem"
                               onClick={() => setAccountMenuOpen(false)}
-                              className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-sky-600 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                              className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-sky-400 hover:bg-sky-950/50 hover:text-sky-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                             >
                               <LayoutDashboard className="w-4 h-4" />
                               Trang quản trị (Admin)
                             </Link>
-                            <div className="my-1 h-px bg-platinum-tint" />
+                            <div className="my-1 h-px bg-slate-800" />
                           </>
                         )}
                         <Link
@@ -323,10 +323,10 @@ export function CustomerHeader() {
                           prefetch={false}
                           role="menuitem"
                           onClick={() => setAccountMenuOpen(false)}
-                          className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                          className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/80 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
                         >
-                          <User className="w-4 h-4" />
-                          Hồ sơ
+                          <User className="w-4 h-4 text-slate-400" />
+                          Hồ sơ cá nhân
                         </Link>
                         <button
                           type="button"
@@ -335,7 +335,7 @@ export function CustomerHeader() {
                             setAccountMenuOpen(false);
                             void handleLogout();
                           }}
-                          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                         >
                           <LogOut className="w-4 h-4" />
                           Đăng xuất
@@ -381,14 +381,19 @@ export function CustomerHeader() {
       </header>
 
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-midnight-indigo/20 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
+        <div className="md:hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm">
+          <button
+            type="button"
+            className="absolute inset-0 w-full h-full cursor-default"
+            aria-label="Đóng menu"
+            onClick={() => setMobileMenuOpen(false)}
+          />
           <div
             id="customer-mobile-menu"
-            className="absolute top-[72px] left-0 right-0 max-h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain bg-card border-b border-platinum-tint px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2 shadow-[var(--brand-shadow-card)] animate-in slide-in-from-top-4"
-            onClick={(event) => event.stopPropagation()}
+            className="relative z-10 top-[72px] left-0 right-0 max-h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain bg-slate-900 border-b border-slate-800 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2 shadow-2xl animate-in slide-in-from-top-4"
           >
-            <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-foreground/80 hover:bg-pale-gray rounded-xl font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
-              <Search className="w-5 h-5" /> Tìm dịch vụ
+            <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-200 hover:bg-slate-800/80 rounded-xl font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue">
+              <Search className="w-5 h-5 text-slate-400" /> Tìm dịch vụ
             </Link>
             {mounted && isAuthenticated() ? (
               <>

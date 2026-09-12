@@ -9,6 +9,7 @@ import { authApi } from '@/features/auth/services/auth.api';
 import { useAuthStore } from '@/store/auth.store';
 import { Role, type User } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
@@ -349,7 +350,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              className="absolute right-3 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-blue transition-colors hover:bg-pale-gray hover:text-midnight-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+              className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-blue transition-colors hover:text-midnight-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
@@ -363,16 +364,14 @@ export default function LoginPage() {
 
         {/* Checkbox Ghi nhớ đăng nhập */}
         <div className="flex items-center space-x-2 pt-1">
-          <input
+          <Checkbox
             id="remember-me"
-            type="checkbox"
             checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            className="size-4 rounded border-slate-300 bg-white text-action-blue focus:ring-action-blue cursor-pointer"
+            onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
           />
           <label
             htmlFor="remember-me"
-            className="text-xs font-medium text-slate-600 cursor-pointer select-none"
+            className="text-xs font-medium text-slate-300 cursor-pointer select-none"
           >
             Ghi nhớ đăng nhập
           </label>
@@ -383,7 +382,7 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-all hover:bg-glacier-blue flex items-center justify-center gap-2 active:scale-[0.99]"
+          className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,transform] hover:bg-glacier-blue flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -400,15 +399,21 @@ export default function LoginPage() {
         <div
           ref={googleBtnRef}
           id="google-login-btn"
-          className="flex min-h-11 w-full items-center justify-center rounded-xl border border-platinum-tint bg-white"
+          className="flex min-h-12 w-full items-center justify-center rounded-xl overflow-hidden"
           aria-label="Đăng nhập bằng Google"
         >
           <button
             type="button"
             onClick={handleGoogleFallbackClick}
-            className="flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-midnight-indigo transition-colors hover:bg-pale-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+            className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:bg-slate-100 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
           >
-            {googleClientId ? 'Đăng nhập với Google' : 'Google chưa được cấu hình'}
+            <svg className="size-4.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z" />
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24Z" />
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15Z" />
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z" />
+            </svg>
+            <span>{googleClientId ? 'Đăng nhập với Google' : 'Google chưa được cấu hình'}</span>
           </button>
         </div>
         {!googleClientId && (

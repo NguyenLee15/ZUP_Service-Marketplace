@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Phone, MapPin, Facebook, Play } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Play, ShieldCheck, CreditCard, Headphones } from "lucide-react";
 import {
   DeferredSocialFeedSection,
 } from "@/components/social/DeferredSocialWidgets";
@@ -16,21 +16,21 @@ export function CustomerFooter() {
               prefetch={false}
               className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue group active:scale-95 transition-transform duration-200"
             >
-              <div className="w-8 h-8 overflow-hidden rounded-xl border border-white/10 shadow-[0_0_12px_rgba(2,132,199,0.3)] shrink-0 flex items-center justify-center bg-slate-950">
+              <div className="w-8 h-8 overflow-hidden rounded-xl border border-white/10 shadow-sm shrink-0 flex items-center justify-center bg-slate-950">
                 <Image
                   src="/logo.png"
-                  alt="Zup"
+                  alt="HomeServe"
                   width={32}
                   height={32}
                   className="h-full w-full scale-[1.38] object-cover group-hover:scale-110 transition-transform duration-300"
                 />
               </div>
               <span className="font-sans text-xl font-bold tracking-tight text-white select-none">
-                ZUP
+                HomeServe
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mt-4">
-              Zup giúp bạn tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông
+              HomeServe giúp bạn tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông
               tin rõ ràng hơn trước khi xác nhận.
             </p>
             <div className="flex items-center gap-3 pt-2">
@@ -38,7 +38,7 @@ export function CustomerFooter() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Facebook Zup"
+                aria-label="Facebook HomeServe"
                 className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-sky-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 <Facebook className="size-5" />
@@ -47,7 +47,7 @@ export function CustomerFooter() {
                 href="https://youtube.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="YouTube Zup"
+                aria-label="YouTube HomeServe"
                 className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-rose-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 <Play className="size-5" />
@@ -56,7 +56,7 @@ export function CustomerFooter() {
                 href="https://tiktok.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="TikTok Zup"
+                aria-label="TikTok HomeServe"
                 className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-neutral-800 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
               >
                 <svg className="size-5 fill-current" viewBox="0 0 24 24">
@@ -215,44 +215,42 @@ export function CustomerFooter() {
         {/* Security & Payment Trust Badges */}
         <div className="pt-6 pb-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-col gap-1.5 text-left">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">An toàn & Thanh toán</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">An toàn & Bảo mật</span>
             <div className="flex items-center gap-3">
               <span
-                className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-emerald-400 shadow-sm hover:border-emerald-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-400 shadow-sm transition-colors"
                 title="Thông tin đặt lịch được bảo vệ qua kết nối HTTPS"
               >
-                <span className="text-[9px]">🛡️</span> Kết nối bảo mật
+                <ShieldCheck className="size-3.5 text-emerald-400" /> Kết nối bảo mật SSL
               </span>
               <span
-                className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-sky-400 shadow-sm hover:border-sky-500 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                title="VNPay đang chạy ở môi trường sandbox cho bản thử nghiệm"
+                className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-medium text-sky-400 shadow-sm transition-colors"
+                title="Cổng thanh toán điện tử PayOS tích hợp mã VietQR tự động"
               >
-                <span className="text-[9px]">💳</span> VNPay Sandbox
+                <CreditCard className="size-3.5 text-sky-400" /> Thanh toán số PayOS
               </span>
               <span
-                className="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-black text-amber-500 shadow-sm hover:border-amber-600 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
-                title="Có lịch sử đơn hàng và kênh hỗ trợ khi phát sinh vấn đề"
+                className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-400 shadow-sm transition-colors"
+                title="Đội ngũ hỗ trợ giải quyết yêu cầu và đơn hàng nhanh chóng"
               >
-                <span className="text-[9px]">⭐</span> Có hỗ trợ đơn hàng
+                <Headphones className="size-3.5 text-amber-400" /> Hỗ trợ khách hàng
               </span>
             </div>
           </div>
           <div className="flex flex-col gap-1.5 text-left sm:text-right">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Thanh toán thử nghiệm</span>
-            <div className="flex items-center gap-2">
-              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-bold text-slate-300">VNPay Sandbox</span>
-              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-bold text-slate-300">ATM thử nghiệm</span>
-              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-[10px] font-bold text-slate-300">Không thu tiền thật</span>
-            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Chuẩn mực chất lượng</span>
+            <p className="text-xs text-slate-400">
+              Thợ xác thực danh tính · Báo giá minh bạch · Nghiệm thu trước khi hoàn tất
+            </p>
           </div>
         </div>
 
         <DeferredSocialFeedSection />
 
-        <div className="pt-6 sm:pt-8 border-t border-platinum-tint flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
+        <div className="pt-6 sm:pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              © {new Date().getFullYear()} Zup Marketplace. Mọi quyền được bảo lưu.
+              © {new Date().getFullYear()} HomeServe. Mọi quyền được bảo lưu.
             </p>
             <p className="text-[11px] text-slate-600" suppressHydrationWarning>
               Thông tin dịch vụ và chính sách có thể thay đổi theo khu vực. Cập nhật lần cuối: 28/05/2026.
