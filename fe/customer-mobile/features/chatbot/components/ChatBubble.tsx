@@ -180,7 +180,7 @@ export function ChatbotServiceCard({
             {service.name || 'Dịch vụ'}
           </Text>
           <Text variant="bodySmall" style={styles.subtitle} numberOfLines={1}>
-            {service.providerName || service.categoryName || 'Zup'}
+            {service.providerName || service.categoryName || 'HomeServe'}
           </Text>
           <View style={styles.metaRow}>
             <View style={styles.ratingBadge}>

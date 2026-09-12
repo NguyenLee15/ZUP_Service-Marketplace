@@ -17,6 +17,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { StaffAccount, AdminPermissionGroup } from '../types/staff.types';
 
 interface StaffPermissionsModalProps {
@@ -38,13 +45,12 @@ const PERMISSION_GROUP_VISUALS: Record<
 > = {
   'Người dùng': { icon: Users, color: 'text-sky-600', bgColor: 'bg-sky-50' },
   'Nhân viên': { icon: Shield, color: 'text-purple-600', bgColor: 'bg-purple-50' },
-  KYC: { icon: ShieldCheck, color: 'text-blue-600', bgColor: 'bg-blue-50' },
-  'Đơn hàng': { icon: ListChecks, color: 'text-indigo-600', bgColor: 'bg-indigo-50' },
-  'Khiếu nại': { icon: Gavel, color: 'text-rose-600', bgColor: 'bg-rose-50' },
-  'Dịch vụ': { icon: FolderTree, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-  Ví: { icon: Wallet, color: 'text-amber-600', bgColor: 'bg-amber-50' },
-  'Tài chính': { icon: Percent, color: 'text-orange-600', bgColor: 'bg-orange-50' },
-  'Cài đặt & Audit': { icon: Settings2, color: 'text-slate-600', bgColor: 'bg-slate-100' },
+  'Dịch vụ': { icon: FolderTree, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+  'Đơn đặt & Báo giá': { icon: ListChecks, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+  'Ví & Tài chính': { icon: Wallet, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+  'Hoa hồng': { icon: Percent, color: 'text-rose-600', bgColor: 'bg-rose-50' },
+  'Tranh chấp': { icon: Gavel, color: 'text-red-600', bgColor: 'bg-red-50' },
+  'Hệ thống': { icon: ShieldCheck, color: 'text-slate-600', bgColor: 'bg-slate-100' },
 };
 
 export function StaffPermissionsModal({
@@ -59,7 +65,7 @@ export function StaffPermissionsModal({
   onSave,
   onClose,
 }: StaffPermissionsModalProps) {
-  if (!isOpen || !staff) return null;
+  if (!staff) return null;
 
   const activePermsCount = Object.values(permState).filter(Boolean).length;
   const totalPermsCount = permissionGroups.reduce(
@@ -69,33 +75,24 @@ export function StaffPermissionsModal({
   const isAllSelected = activePermsCount > 0 && activePermsCount === totalPermsCount;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="w-full max-w-2xl p-0 overflow-hidden border border-slate-200 bg-white">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <DialogHeader className="px-6 py-4 border-b border-slate-100 flex flex-row items-center justify-between space-y-0 pr-12">
           <div>
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Settings2 className="w-5 h-5 text-purple-600" />
+            <DialogTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-slate-700" />
               Phân quyền chi tiết
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-400 mt-0.5">
               Cấp quyền truy cập module cho{' '}
               <strong className="text-slate-600">{staff.fullName}</strong>
-            </p>
+            </DialogDescription>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge className="bg-purple-100 text-purple-700 border-0 text-[10px] font-bold">
-              {activePermsCount}/{totalPermsCount} quyền
-            </Badge>
-            <button
-              onClick={onClose}
-              aria-label="Đóng"
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+          <Badge className="bg-slate-100 text-slate-700 border-0 text-[10px] font-bold">
+            {activePermsCount}/{totalPermsCount} quyền
+          </Badge>
+        </DialogHeader>
 
         {/* Global Toolbar */}
         <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
@@ -210,7 +207,7 @@ export function StaffPermissionsModal({
             <Button
               onClick={onSave}
               disabled={permSaving}
-              className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
+              className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white"
             >
               {permSaving && (
                 <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
@@ -219,8 +216,8 @@ export function StaffPermissionsModal({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

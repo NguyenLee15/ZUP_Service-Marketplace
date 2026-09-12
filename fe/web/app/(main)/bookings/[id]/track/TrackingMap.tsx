@@ -150,7 +150,7 @@ export default function TrackingMap({
       >
         <Popup>
           <div className="text-center p-1">
-            <p className="font-bold text-sm">📍 Địa chỉ của bạn</p>
+            <p className="font-bold text-sm">Địa chỉ của bạn</p>
             <p className="text-xs text-gray-500 mt-1">Điểm đến của thợ</p>
           </div>
         </Popup>
@@ -178,7 +178,7 @@ export default function TrackingMap({
           >
             <Popup>
               <div className="text-center p-1">
-                <p className="font-bold text-sm">🔧 Thợ đang di chuyển</p>
+                <p className="font-bold text-sm">Thợ đang di chuyển</p>
                 <p className="text-xs text-gray-500 mt-1">
                   Tốc độ: {Math.round(providerLocation.speed)} km/h
                 </p>

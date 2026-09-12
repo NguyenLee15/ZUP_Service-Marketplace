@@ -181,7 +181,7 @@ export default function ProviderAnalyticsScreen() {
       <ProviderPageHeader
         title="Hiệu suất & doanh thu"
         subtitle="Theo dõi doanh thu ròng, đánh giá và cơ hội nhận thêm đơn."
-        action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+        onBack={() => router.back()}
       />
 
       {error ? <ProviderInlineMessage tone="error" message={error} /> : null}

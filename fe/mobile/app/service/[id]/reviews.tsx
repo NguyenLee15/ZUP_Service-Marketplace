@@ -3,7 +3,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Avatar, IconButton, Text, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Text, useTheme } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
@@ -108,7 +108,7 @@ export default function ServiceReviewsScreen() {
                   ? `Trung bình ${service.averageRating?.toFixed?.(1) || '0.0'} sao từ ${service.reviewCount || 0} đánh giá.`
                   : 'Theo dõi phản hồi của khách hàng.'
               }
-              action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+              onBack={() => router.back()}
             />
             {message && <ProviderInlineMessage tone="error" message={message} />}
           </View>

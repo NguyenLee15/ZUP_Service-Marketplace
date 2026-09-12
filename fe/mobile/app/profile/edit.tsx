@@ -3,7 +3,7 @@
  */
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert } from 'react-native';
-import { Avatar, Button, IconButton, TextInput, useTheme } from 'react-native-paper';
+import { Avatar, Button, TextInput, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -119,7 +119,7 @@ export default function ProfileEditScreen() {
         <ProviderPageHeader
           title="Chỉnh sửa hồ sơ"
           subtitle="Cập nhật thông tin liên hệ hiển thị cho khách hàng."
-          action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+          onBack={() => router.back()}
         />
 
         {message && <ProviderInlineMessage tone={message.tone} message={message.text} />}

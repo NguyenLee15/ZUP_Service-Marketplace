@@ -4,6 +4,14 @@ import React from "react";
 import { Loader2, AlertCircle, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 import { AuditLogItem } from "../types/audit-log.types";
 
 interface AuditLogsTableProps {
@@ -56,28 +64,28 @@ export function AuditLogsTable({
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
-        <table className="w-full text-left text-sm text-slate-600">
-          <thead className="border-b bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-4 py-3.5">Thời gian</th>
-              <th className="px-4 py-3.5">Người thực hiện</th>
-              <th className="px-4 py-3.5">Hành động</th>
-              <th className="px-4 py-3.5">Đối tượng</th>
-              <th className="px-4 py-3.5">Chi tiết mô tả</th>
-              <th className="px-4 py-3.5">Địa chỉ IP</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+        <Table className="w-full text-left text-sm text-slate-600">
+          <TableHeader className="bg-slate-50">
+            <TableRow className="border-b border-slate-100">
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Thời gian</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Người thực hiện</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Hành động</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Đối tượng</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Chi tiết mô tả</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Địa chỉ IP</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-slate-100">
             {logs.map((log) => {
               const badgeClass =
                 actionBadgeColors[log.action] ||
                 "bg-slate-100 text-slate-700 border-slate-200";
               return (
-                <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-500 whitespace-nowrap">
+                <TableRow key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                  <TableCell className="px-4 py-3 font-mono text-xs tabular-nums text-slate-500 whitespace-nowrap">
                     {new Date(log.createdAt).toLocaleString("vi-VN")}
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
                     {log.actor ? (
                       <div>
                         <p className="font-semibold text-slate-900 text-xs">
@@ -92,31 +100,31 @@ export function AuditLogsTable({
                         {log.actorId ? `User #${log.actorId}` : "Hệ thống (System)"}
                       </span>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
                     <Badge variant="outline" className={`text-xs ${badgeClass}`}>
                       {log.action}
                     </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-xs">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-xs">
                     <span className="font-medium text-slate-700">
                       {log.targetType || "—"}
                     </span>
                     {log.targetId && (
                       <span className="text-slate-400 ml-1">#{log.targetId}</span>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-700 max-w-xs truncate" title={log.description || ""}>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-xs text-slate-700 max-w-xs truncate" title={log.description || ""}>
                     {log.description || "—"}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 font-mono text-xs tabular-nums text-slate-500">
                     {log.ipAddress || "—"}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}

@@ -113,10 +113,10 @@ export default function AdminDisputesPage() {
           ))}
         </div>
       ) : disputes.length === 0 ? (
-        <div className="text-center py-16 rounded-3xl bg-white border border-slate-200 shadow-[var(--brand-shadow-sm)]">
-          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-500" />
-          <p className="font-semibold text-slate-800 text-sm">Tuyệt vời! Không có tranh chấp nào</p>
-          <p className="text-xs text-slate-400 mt-1">Hệ thống đang vận hành hoàn toàn ổn định.</p>
+        <div className="text-center py-16 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <CheckCircle className="w-10 h-10 mx-auto mb-3 text-slate-400" />
+          <p className="font-semibold text-slate-800 text-sm">Hiện không có khiếu nại hoặc tranh chấp nào</p>
+          <p className="text-xs text-slate-400 mt-1">Tất cả các đơn đặt dịch vụ đang diễn ra bình thường.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

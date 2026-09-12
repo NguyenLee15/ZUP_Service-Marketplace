@@ -4,6 +4,14 @@ import React from "react";
 import { Lock, Unlock, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 import { AdminUserItem } from "../types/admin-user.types";
 
 interface AdminUserTableProps {
@@ -66,54 +74,54 @@ export function AdminUserTable({
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
-        <table className="w-full text-left text-sm text-slate-600">
-          <thead className="border-b bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-4 py-3.5">Người dùng</th>
-              <th className="px-4 py-3.5">Liên hệ</th>
-              <th className="px-4 py-3.5">Vai trò</th>
-              <th className="px-4 py-3.5">Trạng thái</th>
-              <th className="px-4 py-3.5">Ngày tham gia</th>
-              <th className="px-4 py-3.5 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+        <Table className="w-full text-left text-sm text-slate-600">
+          <TableHeader className="bg-slate-50">
+            <TableRow className="border-b border-slate-100">
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Người dùng</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Liên hệ</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Vai trò</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Trạng thái</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">Ngày tham gia</TableHead>
+              <TableHead className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Thao tác</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-slate-100">
             {users.map((user) => {
               const status = statusBadgeConfig[user.status] || {
                 label: user.status,
                 className: "border-slate-200 bg-slate-50 text-slate-600",
               };
               return (
-                <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-4 py-3">
+                <TableRow key={user.id} className="hover:bg-slate-50/80 transition-colors">
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 font-bold text-white text-xs shrink-0">
                         {user.fullName?.charAt(0)?.toUpperCase() || "U"}
                       </div>
                       <div>
                         <p className="font-semibold text-slate-900">{user.fullName}</p>
-                        <p className="text-xs text-slate-400">ID: {user.id}</p>
+                        <p className="text-xs text-slate-400 font-mono tabular-nums">ID: {user.id}</p>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
                     <p className="text-slate-800 font-medium">{user.email}</p>
-                    <p className="text-xs text-slate-500">{user.phone || "Chưa có SĐT"}</p>
-                  </td>
-                  <td className="px-4 py-3">
+                    <p className="text-xs text-slate-500 font-mono tabular-nums">{user.phone || "Chưa có SĐT"}</p>
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
                     <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                       {user.role === "PROVIDER" ? "Thợ đối tác" : "Khách hàng"}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
                     <Badge variant="outline" className={`text-xs ${status.className}`}>
                       {status.label}
                     </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-500">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-xs tabular-nums text-slate-500">
                     {new Date(user.createdAt).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right">
                     {user.status === "LOCKED" ? (
                       <Button
                         variant="outline"
@@ -137,12 +145,12 @@ export function AdminUserTable({
                         <span>Khóa</span>
                       </Button>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}

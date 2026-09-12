@@ -113,7 +113,7 @@ function AppBootScreen() {
       <View style={[styles.bootMark, { backgroundColor: theme.colors.primary }]}>
         <Text style={styles.bootInitial}>Z</Text>
       </View>
-      <Text style={[styles.bootTitle, { color: theme.colors.onSurface }]}>Zup</Text>
+      <Text style={[styles.bootTitle, { color: theme.colors.onSurface }]}>HomeServe</Text>
       <Text style={[styles.bootSubtitle, { color: theme.colors.onSurfaceVariant }]}>Đang chuẩn bị ứng dụng</Text>
       <ActivityIndicator color={theme.colors.primary} style={styles.bootSpinner} />
     </View>

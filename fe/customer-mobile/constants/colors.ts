@@ -25,9 +25,12 @@ export const Colors = {
     infoBg: '#EFF6FF',
     statusPending: '#F59E0B',
     statusAccepted: '#2563EB',
-    statusInProgress: '#7C3AED',
-    statusDone: '#16A34A',
+    statusQuoted: '#7C3AED',
+    statusConfirmed: '#0284C7',
+    statusInProgress: '#EA580C',
+    statusDone: '#059669',
     statusCancelled: '#DC2626',
+    statusDisputed: '#DC2626',
     cardShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
   },
   dark: {
@@ -55,15 +58,18 @@ export const Colors = {
     info: '#60A5FA',
     infoBg: 'rgba(96, 165, 250, 0.16)',
     statusPending: '#F59E0B',
-    statusAccepted: '#60A5FA',
-    statusInProgress: '#A78BFA',
+    statusAccepted: '#3B82F6',
+    statusQuoted: '#A78BFA',
+    statusConfirmed: '#60A5FA',
+    statusInProgress: '#FB923C',
     statusDone: '#34D399',
     statusCancelled: '#F87171',
+    statusDisputed: '#EF4444',
     cardShadow: '0 8px 22px rgba(0, 0, 0, 0.28)',
   },
 } as const;
 
-export type ColorScheme = typeof Colors.light;
+export type ColorScheme = typeof Colors.light | typeof Colors.dark;
 
 export const CardElevation = {
   light: {
@@ -81,4 +87,3 @@ export const CardElevation = {
     elevation: 3,
   },
 } as const;
-

@@ -12,7 +12,7 @@ import {
   InlineMessage,
   BookingCard,
 } from '../../components/customer/customer-ui';
-import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../constants/booking-status';
+import { BOOKING_STATUS_LABEL, getBookingStatusColor } from '../../constants/booking-status';
 import { Colors } from '../../constants/colors';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { stableKey, toRouteId, routes } from '../../lib/route-utils';
@@ -189,7 +189,7 @@ function StatusFilters({
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
       {FILTERS.map((item) => {
         const selected = status === item;
-        const color = item === 'ALL' ? activeColors.primary : BOOKING_STATUS_COLOR[item] || activeColors.primary;
+        const color = item === 'ALL' ? activeColors.primary : getBookingStatusColor(item, activeColors);
         return (
           <Chip
             key={item}

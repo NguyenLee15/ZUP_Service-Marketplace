@@ -3,7 +3,7 @@
  */
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
-import { Button, IconButton, TextInput, useTheme } from 'react-native-paper';
+import { Button, TextInput, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authApi } from '../../features/auth/auth.api';
@@ -63,7 +63,7 @@ export default function ChangePasswordScreen() {
         <ProviderPageHeader
           title="Đổi mật khẩu"
           subtitle="Dùng mật khẩu mạnh để bảo vệ tài khoản provider."
-          action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+          onBack={() => router.back()}
         />
 
         {message && <ProviderInlineMessage tone={message.tone} message={message.text} />}

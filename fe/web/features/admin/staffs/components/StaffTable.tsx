@@ -12,6 +12,15 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 import { Role } from '@/types';
 import { StaffAccount } from '../types/staff.types';
 
@@ -37,7 +46,7 @@ export function StaffTable({
   onDelete,
 }: StaffTableProps) {
   return (
-    <Card className="border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
+    <Card className="border-slate-200/80 shadow-sm rounded-xl overflow-hidden">
       <CardContent className="p-0">
         {loading ? (
           <div className="space-y-3 p-6">
@@ -50,7 +59,7 @@ export function StaffTable({
           </div>
         ) : staffs.length === 0 ? (
           <div className="text-center py-16 px-4">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
               <Users className="w-6 h-6" />
             </div>
             <p className="text-sm font-medium text-slate-600">
@@ -62,33 +71,33 @@ export function StaffTable({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <th className="py-3 px-4 text-left">#</th>
-                  <th className="py-3 px-4 text-left">Nhân viên</th>
-                  <th className="py-3 px-4 text-left">Vai trò</th>
-                  <th className="py-3 px-4 text-left">Liên hệ</th>
-                  <th className="py-3 px-4 text-center">Trạng thái</th>
-                  <th className="py-3 px-4 text-left">Ngày tạo</th>
-                  <th className="py-3 px-4 text-center">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table className="w-full text-sm">
+              <TableHeader>
+                <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
+                  <TableHead className="py-3 px-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">#</TableHead>
+                  <TableHead className="py-3 px-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">Nhân viên</TableHead>
+                  <TableHead className="py-3 px-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">Vai trò</TableHead>
+                  <TableHead className="py-3 px-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">Liên hệ</TableHead>
+                  <TableHead className="py-3 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500">Trạng thái</TableHead>
+                  <TableHead className="py-3 px-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">Ngày tạo</TableHead>
+                  <TableHead className="py-3 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500">Thao tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-slate-100">
                 {staffs.map((staff, idx) => {
                   const isLocked = staff.status === 'LOCKED';
                   const isAdminRole = staff.role === Role.ADMIN;
                   return (
-                    <tr
+                    <TableRow
                       key={staff.id}
                       className={`group hover:bg-slate-50/80 transition-colors ${
                         isLocked ? 'opacity-60' : ''
                       }`}
                     >
-                      <td className="py-3 px-4 text-slate-400 font-mono text-xs">
+                      <TableCell className="py-3 px-4 text-slate-400 font-mono text-xs tabular-nums">
                         {idx + 1}
-                      </td>
-                      <td className="py-3 px-4">
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="relative">
                             <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-sm overflow-hidden border border-slate-200">
@@ -114,13 +123,13 @@ export function StaffTable({
                             <p className="font-semibold text-slate-800 text-sm">
                               {staff.fullName}
                             </p>
-                            <p className="text-[11px] text-slate-400 font-mono">
+                            <p className="text-[11px] text-slate-400 font-mono tabular-nums">
                               ID: {staff.id}
                             </p>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-3 px-4">
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
                         <Badge
                           className={`border-0 text-[10px] font-bold ${
                             isAdminRole
@@ -130,8 +139,8 @@ export function StaffTable({
                         >
                           {isAdminRole ? 'Admin' : 'Nhân viên'}
                         </Badge>
-                      </td>
-                      <td className="py-3 px-4">
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
                         <div className="space-y-0.5">
                           <p className="text-xs text-slate-600 flex items-center gap-1.5">
                             <Mail className="w-3 h-3 text-slate-400 shrink-0" />
@@ -142,9 +151,10 @@ export function StaffTable({
                             {staff.phone || '—'}
                           </p>
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-center">
                         <button
+                          type="button"
                           onClick={() => !isAdminRole && onToggleStatus(staff)}
                           className={isAdminRole ? '' : 'cursor-pointer'}
                           disabled={isAdminRole}
@@ -170,47 +180,53 @@ export function StaffTable({
                             )}
                           </Badge>
                         </button>
-                      </td>
-                      <td className="py-3 px-4 text-xs text-slate-400">
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-xs tabular-nums text-slate-400">
                         {new Date(staff.createdAt).toLocaleDateString('vi-VN')}
-                      </td>
-                      <td className="py-3 px-4">
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
                         <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onEdit(staff)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="h-7 w-7 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
                             title="Chỉnh sửa thông tin"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                           {!isAdminRole && (
                             <>
-                              <button
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => onOpenPerms(staff)}
                                 disabled={
                                   permissionsLoading || Boolean(permissionsError)
                                 }
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                                className="h-7 w-7 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50"
                                 title={permissionsError || 'Phân quyền module'}
                               >
                                 <Settings2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => onDelete(staff)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
                                 title="Xóa nhân viên"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              </Button>
                             </>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </CardContent>

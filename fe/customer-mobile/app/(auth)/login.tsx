@@ -1,5 +1,5 @@
 /**
- * Login screen — Zup Customer (E-commerce Style)
+ * Login screen — HomeServe Customer (E-commerce Style)
  */
 import { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image, Pressable } from 'react-native';

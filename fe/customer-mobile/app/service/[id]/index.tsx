@@ -311,7 +311,7 @@ export default function ServiceDetailScreen() {
             {service.name || 'Dịch vụ'}
           </Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
-            {service.category?.name || 'Zup'}
+            {service.category?.name || 'HomeServe'}
           </Text>
         </View>
 
@@ -530,7 +530,7 @@ function ProviderCard({
             </View>
           </View>
           <Text variant="bodySmall" style={styles.subtitle} numberOfLines={1}>
-            {provider?.phone || 'Đã xác minh trên Zup'}
+            {provider?.phone || 'Đã xác minh trên HomeServe'}
           </Text>
 
           <View style={styles.divider} />

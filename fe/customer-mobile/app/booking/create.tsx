@@ -12,7 +12,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
 import {
   CustomerCard,
-  CustomerHeader,
   CustomerScreen,
   EmptyState,
   InlineMessage,
@@ -316,7 +315,6 @@ export default function CreateBookingScreen() {
 
   return (
     <CustomerScreen>
-      <CustomerHeader title="Đặt dịch vụ" subtitle="Mô tả nhu cầu, địa chỉ và khung giờ" />
       {addressOptionsLoading ? <InlineMessage message="Đang tải danh sách địa chỉ hành chính..." /> : null}
       {fallback ? <InlineMessage tone="warning" message="Tạm dùng danh sách tỉnh/phường rút gọn." /> : null}
       {serviceQuery.isError ? <InlineMessage tone="error" message="Không thể tải thông tin dịch vụ." /> : null}
@@ -332,7 +330,7 @@ export default function CreateBookingScreen() {
                   {service.name || 'Dịch vụ'}
                 </Text>
                 <Text variant="bodySmall" style={styles.subtitle}>
-                  {service.provider?.fullName || service.category?.name || 'Zup'}
+                  {service.provider?.fullName || service.category?.name || 'HomeServe'}
                 </Text>
                 {service.referencePrice ? (
                   <Text variant="titleSmall" style={styles.priceText}>

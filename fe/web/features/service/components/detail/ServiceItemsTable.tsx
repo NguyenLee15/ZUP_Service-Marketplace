@@ -1,8 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Diamond } from 'lucide-react';
+import { Tag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 
 interface ServiceItemsTableProps {
   items: ApiPayload[];
@@ -19,37 +27,36 @@ export function ServiceItemsTable({
     <>
       <div>
         <h2 className="text-lg font-semibold mb-3 text-foreground flex items-center gap-2">
-          <Diamond className="w-4 h-4 text-action-blue fill-action-blue/20" />
+          <Tag className="w-4 h-4 text-primary" />
           Bảng giá chi tiết từng hạng mục
         </h2>
-        <div className="rounded-[16px] border border-white/10 bg-white/5 overflow-hidden shadow-sm">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="bg-white/10 text-slate-200 border-b border-white/10">
-                <th className="p-3 font-semibold">Tên hạng mục dịch vụ</th>
-                <th className="p-3 font-semibold w-24">Đơn vị</th>
-                <th className="p-3 font-semibold text-right w-32">Đơn giá</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+          <Table className="w-full text-left text-sm">
+            <TableHeader>
+              <TableRow className="bg-muted/40 border-b border-border">
+                <TableHead className="p-3 font-semibold text-foreground">Tên hạng mục dịch vụ</TableHead>
+                <TableHead className="p-3 font-semibold w-24 text-foreground">Đơn vị</TableHead>
+                <TableHead className="p-3 font-semibold text-right w-32 text-foreground">Đơn giá</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {items.map((item: ApiPayload) => (
-                <tr
+                <TableRow
                   key={item.id}
-                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                  className="border-b border-border hover:bg-muted/30 transition-colors"
                 >
-                  <td className="p-3 text-slate-100 font-medium">{item.name}</td>
-                  <td className="p-3 text-slate-300">{item.unit}</td>
-                  <td className="p-3 text-action-blue font-bold text-right">
+                  <TableCell className="p-3 text-foreground font-medium">{item.name}</TableCell>
+                  <TableCell className="p-3 text-muted-foreground">{item.unit}</TableCell>
+                  <TableCell className="p-3 text-primary font-bold font-mono tabular-nums text-right">
                     {formatPrice(Number(item.price))}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
       <Separator />
     </>
   );
 }
-

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { IconButton, Text, useTheme } from 'react-native-paper';
 import { Spacing } from '../../constants/spacing';
 
 const styles = StyleSheet.create({
@@ -13,15 +13,26 @@ export function CustomerHeader({
   title,
   subtitle,
   action,
+  onBack,
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
+  onBack?: () => void;
 }) {
   const theme = useTheme();
 
   return (
     <View style={styles.header}>
+      {onBack && (
+        <IconButton
+          icon="arrow-left"
+          size={24}
+          onPress={onBack}
+          style={{ margin: 0, marginRight: 4, marginLeft: -4 }}
+          accessibilityLabel="Quay lại"
+        />
+      )}
       <View style={{ flex: 1 }}>
         <Text variant="headlineSmall" style={[styles.title, { color: theme.colors.onSurface }]}>
           {title}

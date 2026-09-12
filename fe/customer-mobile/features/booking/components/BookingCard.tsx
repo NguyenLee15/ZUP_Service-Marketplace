@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Card, Chip, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../../constants/colors';
-import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../../constants/booking-status';
+import { BOOKING_STATUS_LABEL, getBookingStatusColor } from '../../../constants/booking-status';
 import { formatCurrency, formatDateTime } from '../../../lib/format';
 
 type BookingListItem = {
@@ -87,7 +87,7 @@ type CtaConfig = {
 function getCtaConfig(status?: string | null, activeColors?: any): CtaConfig {
   switch (status) {
     case 'QUOTED':
-      return { icon: 'check-circle-outline', label: 'Xem & xác nhận báo giá', bgColor: `${BOOKING_STATUS_COLOR['QUOTED']}18`, textColor: BOOKING_STATUS_COLOR['QUOTED'] };
+      return { icon: 'check-circle-outline', label: 'Xem & xác nhận báo giá', bgColor: `${getBookingStatusColor('QUOTED', activeColors)}18`, textColor: getBookingStatusColor('QUOTED', activeColors) };
     case 'IN_PROGRESS':
       return { icon: 'progress-wrench', label: 'Đang thực hiện', bgColor: `${activeColors.success}15`, textColor: activeColors.success };
     case 'DONE':
@@ -99,7 +99,7 @@ function getCtaConfig(status?: string | null, activeColors?: any): CtaConfig {
     case 'PENDING':
       return { icon: 'clock-outline', label: 'Chờ nhà cung cấp xác nhận', bgColor: `${activeColors.warning}15`, textColor: activeColors.warning };
     case 'CONFIRMED':
-      return { icon: 'calendar-check-outline', label: 'Lịch hẹn đã chốt', bgColor: `${BOOKING_STATUS_COLOR['CONFIRMED']}15`, textColor: BOOKING_STATUS_COLOR['CONFIRMED'] };
+      return { icon: 'calendar-check-outline', label: 'Lịch hẹn đã chốt', bgColor: `${getBookingStatusColor('CONFIRMED', activeColors)}15`, textColor: getBookingStatusColor('CONFIRMED', activeColors) };
     default:
       return { icon: 'arrow-right-circle-outline', label: 'Xem chi tiết đơn hàng', bgColor: activeColors.surfaceVariant, textColor: activeColors.textSecondary };
   }
@@ -115,7 +115,7 @@ export function BookingCard({
   const activeColors = useActiveColors();
   const styles = getStyles(activeColors);
   const status = booking.status || 'PENDING';
-  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
+  const statusColor = getBookingStatusColor(status, activeColors);
   const price = getBookingPrice(booking);
   const address = [booking.addressDetail, booking.ward, booking.province].filter(Boolean).filter(p => p !== 'Không áp dụng').join(', ');
   const cta = getCtaConfig(status, activeColors);

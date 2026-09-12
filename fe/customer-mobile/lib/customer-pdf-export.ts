@@ -95,7 +95,7 @@ function pdfShell(title: string, body: string) {
   </style>
 </head>
 <body>
-  <h1>Zup</h1>
+  <h1>HomeServe</h1>
   <div class="muted">${escapeHtml(title)}<br/>Xuất lúc ${escapeHtml(new Date().toLocaleString('vi-VN'))}</div>
   ${body}
 </body>
@@ -145,7 +145,7 @@ export function createBookingReceiptPdfFallback(booking: PdfBooking) {
         )
         .join('')}</tbody>
     </table>
-    <p class="note">Biên nhận này được tạo từ dữ liệu đơn hàng trên Zup. Chi phí thực tế phụ thuộc báo giá và xác nhận giữa hai bên.</p>
+    <p class="note">Biên nhận này được tạo từ dữ liệu đơn hàng trên HomeServe. Chi phí thực tế phụ thuộc báo giá và xác nhận giữa hai bên.</p>
   `,
   );
 }
@@ -231,7 +231,7 @@ async function downloadServerPdf(path: string, fileName: string) {
 
 export async function exportBookingReceiptPdf(booking: PdfBooking) {
   const bookingId = booking.id;
-  const fileName = `zup-bien-nhan-${booking.bookingCode || bookingId || Date.now()}.pdf`;
+  const fileName = `homeserve-bien-nhan-${booking.bookingCode || bookingId || Date.now()}.pdf`;
   if (bookingId) {
     try {
       return await downloadServerPdf(`/bookings/${bookingId}/receipt-pdf`, fileName);
@@ -260,7 +260,7 @@ export async function exportBookingHistoryPdf({
   try {
     return await downloadServerPdf(
       `/bookings/export-pdf${query ? `?${query}` : ''}`,
-      `zup-lich-su-dat-dich-vu-${Date.now()}.pdf`,
+      `homeserve-lich-su-dat-dich-vu-${Date.now()}.pdf`,
     );
   } catch {
     return sharePdfFromHtml(

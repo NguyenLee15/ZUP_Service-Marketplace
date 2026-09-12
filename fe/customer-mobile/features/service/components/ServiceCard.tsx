@@ -67,7 +67,7 @@ export function ServiceCard({ service, onPress }: { service: any; onPress: () =>
               {service?.name || 'Dịch vụ'}
             </Text>
             <Text variant="bodySmall" style={styles.subtitle} numberOfLines={1}>
-              {service?.provider?.fullName || service?.category?.name || 'Zup'}
+              {service?.provider?.fullName || service?.category?.name || 'HomeServe'}
             </Text>
             <View style={styles.metaRow}>
               <MaterialCommunityIcons name="star" size={15} color="#FBBF24" />

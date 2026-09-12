@@ -40,7 +40,7 @@ export default function AdminLayout({
 
   return (
     <>
-      <div className="flex min-h-[100dvh] bg-[var(--admin-canvas)] text-slate-800">
+      <div className="admin-shell flex min-h-[100dvh] bg-[var(--admin-canvas)] text-slate-800">
         <AdminMobileDrawer
           isOpen={mobileDrawerOpen}
           onClose={() => setMobileDrawerOpen(false)}

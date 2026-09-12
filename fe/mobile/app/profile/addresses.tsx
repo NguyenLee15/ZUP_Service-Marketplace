@@ -254,15 +254,11 @@ export default function AddressesScreen() {
   const addresses = addressesQuery.data || [];
 
   return (
-    <ProviderScreen>
+    <ProviderScreen scroll>
       <ProviderPageHeader 
         title="Địa chỉ hoạt động" 
         subtitle="Quản lý địa chỉ để khách hàng có thể xem." 
-        action={
-          <Button mode="text" onPress={() => router.back()} textColor={activeColors.primary}>
-            Đóng
-          </Button>
-        }
+        onBack={() => router.back()}
       />
       
       {message ? <ProviderInlineMessage tone={messageTone} message={message} /> : null}

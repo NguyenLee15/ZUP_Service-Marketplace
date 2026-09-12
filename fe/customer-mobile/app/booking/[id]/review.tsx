@@ -21,7 +21,7 @@ import {
   LoadingState,
   StatusChip,
 } from '../../../components/customer/customer-ui';
-import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../../constants/booking-status';
+import { BOOKING_STATUS_LABEL, getBookingStatusColor } from '../../../constants/booking-status';
 import { Colors } from '../../../constants/colors';
 import { bookingApi } from '../../../features/booking/booking.api';
 import { reviewApi } from '../../../features/review/review.api';
@@ -404,7 +404,7 @@ function BookingSummary({ booking }: { booking: ReviewBooking }) {
   const activeColors = useActiveColors();
   const styles = getStyles(activeColors);
   const status = booking.status || 'DONE';
-  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
+  const statusColor = getBookingStatusColor(status, activeColors);
   const completedAt = booking.autoCompletedAt || booking.completedAt;
 
   return (

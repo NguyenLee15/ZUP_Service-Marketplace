@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { CustomerCard, CustomerHeader, CustomerScreen, InlineMessage } from '../../components/customer/customer-ui';
+import { CustomerCard, CustomerScreen, InlineMessage } from '../../components/customer/customer-ui';
 import { Colors } from '../../constants/colors';
 import { userApi } from '../../features/user/user.api';
 import { getApiErrorMessage } from '../../lib/api-response';
@@ -85,7 +85,6 @@ export default function ChangePasswordScreen() {
 
   return (
     <CustomerScreen>
-      <CustomerHeader title="Đổi mật khẩu" subtitle="Dùng mật khẩu mạnh và không trùng mật khẩu cũ" />
       {message ? <InlineMessage tone={messageTone} message={message} /> : null}
 
       <View style={styles.securityHeaderContainer}>

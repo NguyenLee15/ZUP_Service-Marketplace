@@ -12,9 +12,12 @@ import {
   Tag,
   DollarSign,
   AlertTriangle,
-  ArrowRight,
   Bot,
   Lightbulb,
+  ClipboardList,
+  FolderOpen,
+  Wrench,
+  ArrowRight,
 } from 'lucide-react';
 
 interface IntentResult {
@@ -115,7 +118,7 @@ export function SmartBookingInput({ onIntentExtracted, onServiceSelected }: Smar
         </div>
         <div>
           <h3 className="text-sm font-bold text-foreground">Mô tả sự cố bằng ngôn ngữ tự nhiên</h3>
-          <p className="text-[10px] text-muted-foreground">AI sẽ phân tích và gợi ý dịch vụ phù hợp nhất cho bạn</p>
+          <p className="text-[10px] text-muted-foreground">AI phân tích ngữ cảnh và gợi ý dịch vụ tương ứng</p>
         </div>
         <Badge className="ml-auto border-0 bg-action-blue/15 text-action-blue text-[9px] font-bold uppercase tracking-widest">
           <Sparkles className="w-3 h-3 mr-1" /> AI
@@ -196,7 +199,10 @@ export function SmartBookingInput({ onIntentExtracted, onServiceSelected }: Smar
           <div className="p-4 rounded-2xl bg-gradient-to-br from-action-blue/10 to-glacier-blue/5 border border-action-blue/20">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-foreground mb-1">📋 Tóm tắt sự cố</p>
+                <p className="text-xs font-bold text-foreground mb-1 flex items-center gap-1.5">
+                  <ClipboardList className="w-3.5 h-3.5 text-action-blue" />
+                  Tóm tắt sự cố
+                </p>
                 <p className="text-sm text-foreground/90">{result.intent.summary}</p>
               </div>
               {urgencyInfo && UrgencyIcon && (
@@ -218,8 +224,9 @@ export function SmartBookingInput({ onIntentExtracted, onServiceSelected }: Smar
 
             <div className="flex items-center gap-4 text-[11px]">
               {result.matchedCategory && (
-                <span className="text-action-blue font-bold">
-                  📂 {result.matchedCategory.name}
+                <span className="text-action-blue font-bold flex items-center gap-1">
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  {result.matchedCategory.name}
                 </span>
               )}
               {(result.intent.estimatedBudgetMin || result.intent.estimatedBudgetMax) && (
@@ -241,7 +248,10 @@ export function SmartBookingInput({ onIntentExtracted, onServiceSelected }: Smar
           {/* Suggested services */}
           {result.suggestedServices.length > 0 && (
             <div>
-              <p className="text-xs font-bold text-foreground mb-2">🔧 Dịch vụ phù hợp</p>
+              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
+                <Wrench className="w-3.5 h-3.5 text-action-blue" />
+                Dịch vụ gợi ý
+              </p>
               <div className="space-y-2">
                 {result.suggestedServices.map((svc) => (
                   <button

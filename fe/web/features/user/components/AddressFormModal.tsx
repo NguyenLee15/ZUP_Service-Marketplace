@@ -9,6 +9,13 @@ import dynamic from 'next/dynamic';
 import { UseFormReturn } from 'react-hook-form';
 import { AddressFormData } from '../hooks/useAddressManagementFlow';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
 const MapPicker = dynamic(
   () => import('@/components/customer/address-map-picker'),
   {
@@ -51,21 +58,13 @@ export function AddressFormModal({
   onSubmit,
 }: AddressFormModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-midnight-indigo/45 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-2xl overflow-hidden rounded-[20px] border border-platinum-tint bg-white shadow-[var(--brand-shadow-card)]">
-        <div className="sticky top-0 flex items-center justify-between border-b border-platinum-tint bg-white p-6">
-          <h2 className="text-xl font-semibold text-foreground">
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden border border-border bg-card">
+        <DialogHeader className="p-6 pb-4 border-b border-border">
+          <DialogTitle className="text-xl font-semibold text-foreground">
             Thêm địa chỉ mới
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng"
-            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-pale-gray hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="max-h-[75vh] overflow-y-auto p-6">
           <div className="mb-6 space-y-3">
@@ -292,8 +291,8 @@ export function AddressFormModal({
             </div>
           </form>
         </div>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -7,7 +7,6 @@ import { Button, Searchbar, Text, TextInput, Switch } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   CustomerCard,
-  CustomerHeader,
   CustomerScreen,
   EmptyState,
   InlineMessage,
@@ -226,7 +225,6 @@ export default function AddressesScreen() {
 
   return (
     <CustomerScreen>
-      <CustomerHeader title="Địa chỉ của tôi" subtitle="Quản lý địa chỉ dùng khi đặt dịch vụ" />
       {message ? <InlineMessage tone={messageTone} message={message} /> : null}
       {optionsLoading ? <InlineMessage message="Đang tải danh sách tỉnh/phường..." /> : null}
       {fallback ? <InlineMessage tone="warning" message="Đang dùng danh sách địa chỉ dự phòng." /> : null}

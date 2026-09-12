@@ -5,6 +5,12 @@ import Image from "next/image";
 import { ZoomIn, ZoomOut, RotateCw, Maximize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { KycDocument } from "../types/kyc.types";
 
 interface KycImageViewerProps {
@@ -143,35 +149,25 @@ export function KycImageViewer({
       </Card>
 
       {/* Fullscreen Lightbox Modal */}
-      {lightboxOpen && selectedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 backdrop-blur-sm"
-          onClick={() => setLightboxOpen(false)}
-        >
-          <div
-            className="relative max-w-5xl max-h-[90vh] flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between w-full mb-3 text-white">
-              <span className="font-semibold text-sm">{selectedLabel}</span>
-              <button
-                onClick={() => setLightboxOpen(false)}
-                className="p-1 rounded-full bg-white/20 hover:bg-white/30 text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <Dialog open={lightboxOpen && !!selectedImage} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-5xl bg-black/95 border-neutral-800 p-4 text-white">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-sm font-semibold text-white">
+              {selectedLabel}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center max-h-[80vh]">
             <Image
               src={selectedImage}
               alt={selectedLabel}
               width={1000}
               height={700}
               unoptimized
-              className="max-h-[80vh] w-auto object-contain rounded-lg"
+              className="max-h-[75vh] w-auto object-contain rounded-lg"
             />
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

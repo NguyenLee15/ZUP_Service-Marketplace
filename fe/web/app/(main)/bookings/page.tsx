@@ -84,17 +84,17 @@ export default function BookingsPage() {
            {[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-xl animate-pulse" />)}
         </div>
       ) : bookings.length === 0 ? (
-        <div className="glass-panel text-center py-20 px-4 rounded-[20px] mt-8 text-white shadow-xl animate-in fade-in zoom-in-95 duration-500">
-          <div className="w-24 h-24 mx-auto mb-6 bg-white/5 border border-white/10 rounded-full flex items-center justify-center shadow-md">
-            <Package className="w-10 h-10 text-action-blue" />
+        <div className="rounded-xl border border-border bg-card text-center py-16 px-4 mt-6 shadow-sm">
+          <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+            <Package className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Bạn chưa có đơn hàng nào</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto mb-8 leading-relaxed">
-            Hàng ngàn chuyên gia đang sẵn sàng giúp đỡ bạn. Đặt dịch vụ đầu tiên ngay hôm nay.
+          <h3 className="text-lg font-bold text-foreground mb-1.5">Bạn chưa có đơn đặt dịch vụ nào</h3>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-6 leading-relaxed">
+            Bạn chưa tạo yêu cầu dịch vụ nào trong mục này. Khám phá các dịch vụ gia đình để đặt lịch thợ nhanh chóng.
           </p>
           <Link href="/services">
-            <Button className="bg-action-blue hover:bg-glacier-blue text-white rounded-xl px-8 py-6 font-bold shadow-[var(--brand-shadow-button)] transition-[background-color,box-shadow,transform] hover:-translate-y-0.5">
-              Khám phá dịch vụ ngay
+            <Button className="rounded-lg px-6 font-medium">
+              Khám phá dịch vụ
             </Button>
           </Link>
         </div>

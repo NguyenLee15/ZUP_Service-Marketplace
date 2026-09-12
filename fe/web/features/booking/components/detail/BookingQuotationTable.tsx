@@ -7,6 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, Sparkles, XCircle, Zap } from 'lucide-react';
 import { bookingApi } from '@/features/booking/services/booking.api';
 import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -40,37 +48,37 @@ export function BookingQuotationTable({
     <>
       {/* Chi tiết hạng mục yêu cầu đặt lịch ban đầu */}
       {booking.bookingItems && booking.bookingItems.length > 0 && (
-        <Card className="glass-panel glow-hover rounded-2xl border-0">
+        <Card className="rounded-xl border border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-action-blue flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
+            <CardTitle className="text-sm font-semibold text-primary flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
               Chi tiết các hạng mục yêu cầu đặt lịch
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-2">
-            <div className="rounded-xl border border-white/5 bg-white/5 overflow-hidden">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-white/5 text-muted-foreground border-b border-white/10">
-                    <th className="p-2.5 font-semibold">Tên hạng mục dịch vụ</th>
-                    <th className="p-2.5 font-semibold text-center w-24">Số lượng</th>
-                    <th className="p-2.5 font-semibold text-right w-24">Tạm tính</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table className="w-full text-left text-xs">
+                <TableHeader>
+                  <TableRow className="bg-muted/40 border-b border-border">
+                    <TableHead className="p-2.5 font-semibold text-muted-foreground">Tên hạng mục dịch vụ</TableHead>
+                    <TableHead className="p-2.5 font-semibold text-center w-24 text-muted-foreground">Số lượng</TableHead>
+                    <TableHead className="p-2.5 font-semibold text-right w-24 text-muted-foreground">Tạm tính</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {booking.bookingItems.map((item: ApiPayload) => (
-                    <tr key={item.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="p-2.5 text-foreground font-medium">{item.name}</td>
-                      <td className="p-2.5 text-center text-foreground/80">
+                    <TableRow key={item.id} className="border-b border-border hover:bg-muted/30">
+                      <TableCell className="p-2.5 text-foreground font-medium">{item.name}</TableCell>
+                      <TableCell className="p-2.5 text-center text-foreground/80 font-mono tabular-nums">
                         {item.quantity} {item.unit}
-                      </td>
-                      <td className="p-2.5 text-right text-foreground font-bold">
+                      </TableCell>
+                      <TableCell className="p-2.5 text-right text-foreground font-bold font-mono tabular-nums">
                         {formatPrice(Number(item.priceSnapshot) * item.quantity)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
@@ -78,66 +86,65 @@ export function BookingQuotationTable({
 
       {/* Báo giá và các hạng mục chi tiết sau khảo sát */}
       {originalQuote && (
-        <Card className="glass-panel rounded-2xl border-0 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-action-blue/10 via-transparent to-transparent pointer-events-none" />
+        <Card className="rounded-xl border border-border bg-card shadow-sm relative overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-action-blue flex items-center gap-2 font-bold">
-              <Zap className="w-4 h-4 text-cyan-300 fill-cyan-300/20" />
+            <CardTitle className="text-sm text-primary flex items-center gap-2 font-bold">
+              <Zap className="w-4 h-4 text-primary" />
               Bảng báo giá thực tế sau khảo sát
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3 text-sm">
             {originalQuote.quotationItems && originalQuote.quotationItems.length > 0 ? (
-              <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-white/10 text-slate-900 dark:text-white/80 border-b border-white/15">
-                      <th className="p-2.5 font-semibold">Chi tiết hạng mục sửa chữa thực tế</th>
-                      <th className="p-2.5 font-semibold text-center w-24">Số lượng</th>
-                      <th className="p-2.5 font-semibold text-right w-24">Thành tiền</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <div className="rounded-lg border border-border overflow-hidden">
+                <Table className="w-full text-left text-xs">
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 border-b border-border">
+                      <TableHead className="p-2.5 font-semibold text-foreground">Chi tiết hạng mục sửa chữa thực tế</TableHead>
+                      <TableHead className="p-2.5 font-semibold text-center w-24 text-foreground">Số lượng</TableHead>
+                      <TableHead className="p-2.5 font-semibold text-right w-24 text-foreground">Thành tiền</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {originalQuote.quotationItems.map((item: ApiPayload) => {
                       const originallyOrdered = booking.bookingItems?.some(
                         (bItem: ApiPayload) =>
                           bItem.name.toLowerCase().trim() === item.name.toLowerCase().trim(),
                       );
                       return (
-                        <tr
+                        <TableRow
                           key={item.id}
-                          className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
+                          className={`border-b border-border hover:bg-muted/30 transition-colors ${
                             !originallyOrdered
-                              ? 'bg-amber-500/10 text-amber-500 border-l-2 border-l-amber-500'
+                              ? 'bg-amber-500/5 text-amber-700 dark:text-amber-300 border-l-2 border-l-amber-500'
                               : ''
                           }`}
                         >
-                          <td className="p-2.5 font-medium">
+                          <TableCell className="p-2.5 font-medium">
                             {item.name}
                             {!originallyOrdered && (
-                              <span className="ml-1.5 inline-block text-[9px] px-1 py-0.2 bg-amber-500/20 rounded font-bold uppercase tracking-wider">
+                              <span className="ml-1.5 inline-block text-[9px] px-1.5 py-0.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 rounded font-semibold uppercase tracking-wider">
                                 Thay đổi
                               </span>
                             )}
-                          </td>
-                          <td className="p-2.5 text-center">
+                          </TableCell>
+                          <TableCell className="p-2.5 text-center font-mono tabular-nums">
                             {item.quantity} {item.unit}
-                          </td>
-                          <td className="p-2.5 text-right font-bold text-action-blue">
+                          </TableCell>
+                          <TableCell className="p-2.5 text-right font-bold text-primary font-mono tabular-nums">
                             {formatPrice(Number(item.price) * item.quantity)}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             ) : null}
 
-            <div className="space-y-2 mt-4 pt-2 border-t border-white/10">
+            <div className="space-y-2 mt-4 pt-2 border-t border-border">
               <div className="flex justify-between items-center py-1">
                 <span className="text-muted-foreground text-xs">Tổng chi phí thực tế:</span>
-                <span className="font-extrabold text-xl text-action-blue">
+                <span className="font-extrabold text-xl text-primary font-mono tabular-nums">
                   {formatPrice(Number(originalQuote.actualPrice))}
                 </span>
               </div>
@@ -150,9 +157,9 @@ export function BookingQuotationTable({
             </div>
 
             {originalQuote.note && (
-              <div className="text-muted-foreground mt-2 text-xs bg-pale-gray/40 dark:bg-white/5 p-3 rounded-xl border border-white/5">
+              <div className="text-muted-foreground mt-2 text-xs bg-muted/40 p-3 rounded-xl border border-border">
                 <span className="font-semibold text-foreground block mb-1">
-                  💬 Ghi chú từ thợ:
+                  Ghi chú từ thợ:
                 </span>
                 {originalQuote.note}
               </div>
@@ -165,7 +172,7 @@ export function BookingQuotationTable({
       {supplementaryQuotes.map((suppQuote: ApiPayload, index: number) => (
         <Card
           key={suppQuote.id}
-          className="glass-panel rounded-2xl border-amber-500/50 border-l-4 relative overflow-hidden mt-4"
+          className="rounded-xl border border-amber-500/30 bg-card border-l-4 border-l-amber-500 relative overflow-hidden mt-4 shadow-sm"
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-amber-600 flex items-center justify-between gap-2 font-bold">
@@ -174,17 +181,17 @@ export function BookingQuotationTable({
                 Báo giá phát sinh #{index + 1}
               </div>
               {suppQuote.status === 'PENDING' && (
-                <Badge variant="outline" className="text-amber-500 border-amber-500 bg-amber-50">
+                <Badge variant="outline" className="text-amber-600 border-amber-500 bg-amber-50 dark:bg-amber-950/40">
                   Đang chờ duyệt
                 </Badge>
               )}
               {suppQuote.status === 'ACCEPTED' && (
-                <Badge variant="outline" className="text-green-500 border-green-500 bg-green-50">
+                <Badge variant="outline" className="text-emerald-600 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40">
                   Đã đồng ý
                 </Badge>
               )}
               {suppQuote.status === 'REJECTED' && (
-                <Badge variant="outline" className="text-red-500 border-red-500 bg-red-50">
+                <Badge variant="outline" className="text-rose-600 border-rose-500 bg-rose-50 dark:bg-rose-950/40">
                   Đã từ chối
                 </Badge>
               )}
@@ -192,43 +199,43 @@ export function BookingQuotationTable({
           </CardHeader>
           <CardContent className="p-4 space-y-3 text-sm">
             {suppQuote.quotationItems && suppQuote.quotationItems.length > 0 ? (
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 overflow-hidden">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-amber-500/10 text-amber-900 dark:text-amber-100 border-b border-amber-500/20">
-                      <th className="p-2.5 font-semibold">Hạng mục phát sinh</th>
-                      <th className="p-2.5 font-semibold text-center w-24">Số lượng</th>
-                      <th className="p-2.5 font-semibold text-right w-24">Thành tiền</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 overflow-hidden">
+                <Table className="w-full text-left text-xs">
+                  <TableHeader>
+                    <TableRow className="bg-amber-500/10 border-b border-amber-500/20">
+                      <TableHead className="p-2.5 font-semibold text-amber-900 dark:text-amber-100">Hạng mục phát sinh</TableHead>
+                      <TableHead className="p-2.5 font-semibold text-center w-24 text-amber-900 dark:text-amber-100">Số lượng</TableHead>
+                      <TableHead className="p-2.5 font-semibold text-right w-24 text-amber-900 dark:text-amber-100">Thành tiền</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {suppQuote.quotationItems.map((item: ApiPayload) => (
-                      <tr key={item.id} className="border-b border-amber-500/10">
-                        <td className="p-2.5 font-medium">{item.name}</td>
-                        <td className="p-2.5 text-center">
+                      <TableRow key={item.id} className="border-b border-amber-500/10">
+                        <TableCell className="p-2.5 font-medium">{item.name}</TableCell>
+                        <TableCell className="p-2.5 text-center font-mono tabular-nums">
                           {item.quantity} {item.unit}
-                        </td>
-                        <td className="p-2.5 text-right font-bold text-amber-700 dark:text-amber-300">
+                        </TableCell>
+                        <TableCell className="p-2.5 text-right font-bold text-amber-700 dark:text-amber-300 font-mono tabular-nums">
                           {formatPrice(Number(item.price) * item.quantity)}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             ) : null}
 
             <div className="flex justify-between items-center py-1 mt-2 border-t border-amber-500/20 pt-2">
               <span className="text-muted-foreground text-xs">Tổng phát sinh:</span>
-              <span className="font-extrabold text-lg text-amber-600">
+              <span className="font-extrabold text-lg text-amber-600 font-mono tabular-nums">
                 {formatPrice(Number(suppQuote.actualPrice))}
               </span>
             </div>
 
             {suppQuote.note && (
               <div className="text-muted-foreground mt-2 text-xs bg-amber-500/5 p-3 rounded-xl border border-amber-500/10">
-                <span className="font-semibold text-amber-800 block mb-1">
-                  💬 Lý do phát sinh:
+                <span className="font-semibold text-amber-800 dark:text-amber-200 block mb-1">
+                  Lý do phát sinh:
                 </span>
                 {suppQuote.note}
               </div>

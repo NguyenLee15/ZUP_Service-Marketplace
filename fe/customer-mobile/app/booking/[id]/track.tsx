@@ -15,7 +15,7 @@ import {
   StatusChip,
   Timeline,
 } from '../../../components/customer/customer-ui';
-import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../../constants/booking-status';
+import { BOOKING_STATUS_LABEL, getBookingStatusColor } from '../../../constants/booking-status';
 import { Colors } from '../../../constants/colors';
 import { WS_URL } from '../../../constants/api';
 import { bookingApi } from '../../../features/booking/booking.api';
@@ -369,7 +369,7 @@ export default function TrackingScreen() {
     );
   }
 
-  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
+  const statusColor = getBookingStatusColor(status, activeColors);
   const timelineSteps = getTrackingSteps(status, booking?.providerArrivedAt);
 
   return (

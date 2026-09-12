@@ -4,6 +4,13 @@ import React from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { StaffAccount, StaffFormErrors } from '../types/staff.types';
 
 interface StaffFormModalProps {
@@ -41,30 +48,19 @@ export function StaffFormModal({
   onSubmit,
   onClose,
 }: StaffFormModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">
-              {editingStaff ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {editingStaff
-                ? `ID: ${editingStaff.id}`
-                : 'Nhân viên mới sẽ có vai trò STAFF'}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="w-full max-w-md p-0 overflow-hidden border border-slate-200 bg-white">
+        <DialogHeader className="px-6 py-4 border-b border-slate-100 pr-12">
+          <DialogTitle className="text-lg font-bold text-slate-800">
+            {editingStaff ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-400 mt-0.5">
+            {editingStaff
+              ? `ID: ${editingStaff.id}`
+              : 'Nhân viên mới sẽ có vai trò STAFF'}
+          </DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={onSubmit} className="p-6 space-y-4">
           <div>
@@ -181,8 +177,8 @@ export function StaffFormModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

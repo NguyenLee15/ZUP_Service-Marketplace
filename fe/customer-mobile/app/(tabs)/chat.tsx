@@ -13,7 +13,7 @@ import {
   InlineMessage,
   StatusChip,
 } from '../../components/customer/customer-ui';
-import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../constants/booking-status';
+import { BOOKING_STATUS_LABEL, getBookingStatusColor } from '../../constants/booking-status';
 import { Colors } from '../../constants/colors';
 import { chatApi } from '../../features/chat/chat.api';
 import { normalizeList } from '../../lib/api-response';
@@ -192,7 +192,7 @@ function ConversationCard({
   const unread = isUnread(conversation);
   const unreadCount = getUnreadCount(conversation);
   const status = conversation.booking?.status || '';
-  const statusColor = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
+  const statusColor = getBookingStatusColor(status, activeColors);
   const preview = getLastMessagePreview(conversation);
   const lastAt = conversation.lastMessage?.createdAt || conversation.updatedAt;
   const avatarColor = getAvatarColor(title);

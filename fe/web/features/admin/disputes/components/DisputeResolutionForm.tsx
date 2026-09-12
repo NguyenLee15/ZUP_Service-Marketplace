@@ -224,7 +224,15 @@ export function DisputeResolutionForm({
                     : 'bg-red-100 text-red-700'
                 }`}
               >
-                {dispute.resolutionAction === 'COMPLETE' ? '✅ Hoàn thành' : '⚖️ Phạt NCC'}
+                {dispute.resolutionAction === 'COMPLETE' ? (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Hoàn thành
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <Gavel className="w-3 h-3" /> Phạt NCC
+                  </span>
+                )}
               </Badge>
             </div>
           </div>

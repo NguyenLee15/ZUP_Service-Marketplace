@@ -26,7 +26,7 @@ export function BottomActionBar({ children }: { children: ReactNode }) {
         {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.outlineVariant,
-          paddingBottom: 10 + Math.min(Math.max(insets.bottom, 6), 18),
+          paddingBottom: 10 + Math.max(insets.bottom, 12),
         },
       ]}
     >

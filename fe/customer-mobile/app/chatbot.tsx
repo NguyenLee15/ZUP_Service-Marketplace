@@ -442,7 +442,7 @@ export default function ChatbotScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.headerWrap}>
-            <CustomerHeader title="AI tư vấn" subtitle={subtitle} />
+            <CustomerHeader title="AI tư vấn" subtitle={subtitle} onBack={() => router.back()} />
             {sessionsQuery.data?.length ? (
               <SessionStrip
                 sessions={sessionsQuery.data}

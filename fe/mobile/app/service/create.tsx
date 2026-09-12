@@ -222,7 +222,7 @@ export default function ServiceFormScreen() {
         <ProviderPageHeader
           title={isEditing ? 'Sửa dịch vụ' : 'Tạo dịch vụ'}
           subtitle="Điền thông tin rõ ràng để khách dễ hiểu phạm vi và giá dự kiến."
-          action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+          onBack={() => router.back()}
         />
 
         {message && <ProviderInlineMessage tone={message.tone} message={message.text} />}

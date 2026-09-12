@@ -9,7 +9,7 @@ import { useGlobalNotificationSocket } from '../../hooks/useGlobalNotificationSo
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const bottomInset = Math.min(Math.max(insets.bottom, 6), 18);
+  const bottomInset = Math.max(insets.bottom, 12) + 8;
   const queryClient = useQueryClient();
 
   useGlobalNotificationSocket(() => {

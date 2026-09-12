@@ -21,7 +21,7 @@ import { useAuthStore } from '../../features/auth/auth.store';
 import { bookingApi } from '../../features/booking/booking.api';
 import { normalizeList } from '../../lib/api-response';
 import { formatDateTime } from '../../lib/format';
-import { BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from '../../constants/booking-status';
+import { BOOKING_STATUS_LABEL, getBookingStatusColor } from '../../constants/booking-status';
 import { stableKey, toRouteId, routes } from '../../lib/route-utils';
 
 type RecentBooking = {
@@ -195,7 +195,7 @@ export default function ProfileScreen() {
             <View style={styles.recentList}>
               {recentBookings.map((booking, index) => {
                 const status = booking.status || 'PENDING';
-                const color = BOOKING_STATUS_COLOR[status] || activeColors.textSecondary;
+                const color = getBookingStatusColor(status, activeColors);
                 const bookingId = toRouteId(booking.id);
                 return (
                   <CustomerCard

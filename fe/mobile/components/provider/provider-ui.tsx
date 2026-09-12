@@ -8,8 +8,9 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Card, Text, Button, Chip, useTheme } from 'react-native-paper';
+import { Card, Text, Button, Chip, IconButton, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, CardElevation } from '../../constants/colors';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -22,18 +23,22 @@ export function ProviderScreen({
   children,
   scroll = false,
   contentStyle,
+  applyTopInset = true,
 }: {
   children: ReactNode;
   scroll?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
+  applyTopInset?: boolean;
 }) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const topInset = applyTopInset ? insets.top : 0;
 
   if (scroll) {
     return (
       <ScrollView
         style={[styles.screen, { backgroundColor: theme.colors.background }]}
-        contentContainerStyle={[styles.scrollContent, contentStyle]}
+        contentContainerStyle={[{ paddingTop: topInset }, styles.scrollContent, contentStyle]}
         contentInsetAdjustmentBehavior="automatic"
       >
         {children}
@@ -42,7 +47,7 @@ export function ProviderScreen({
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.colors.background }, contentStyle]}>
+    <View style={[styles.screen, { backgroundColor: theme.colors.background, paddingTop: topInset }, contentStyle]}>
       {children}
     </View>
   );
@@ -52,14 +57,25 @@ export function ProviderPageHeader({
   title,
   subtitle,
   action,
+  onBack,
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
+  onBack?: () => void;
 }) {
   const theme = useTheme();
   return (
     <View style={styles.pageHeader}>
+      {onBack && (
+        <IconButton
+          icon="arrow-left"
+          size={24}
+          onPress={onBack}
+          style={{ margin: 0, marginRight: 4, marginLeft: -4 }}
+          accessibilityLabel="Quay lại"
+        />
+      )}
       <View style={{ flex: 1 }}>
         <Text variant="headlineSmall" style={[styles.pageTitle, { color: theme.colors.onSurface }]} selectable>
           {title}

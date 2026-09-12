@@ -440,6 +440,7 @@ export default function NotificationsScreen() {
                 ? `${unreadCount} thông báo chưa đọc`
                 : "Bạn đã đọc hết thông báo"
             }
+            onBack={() => router.back()}
             action={
               <Button
                 mode="text"

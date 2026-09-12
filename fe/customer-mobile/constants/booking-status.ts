@@ -9,13 +9,20 @@ export const BOOKING_STATUS_LABEL: Record<string, string> = {
   DISPUTED: 'Tranh chấp',
 };
 
-export const BOOKING_STATUS_COLOR: Record<string, string> = {
-  PENDING: '#F59E0B',
-  ACCEPTED: '#2563EB',
-  QUOTED: '#7C3AED',
-  CONFIRMED: '#2563EB',
-  IN_PROGRESS: '#7C3AED',
-  DONE: '#16A34A',
-  CANCELLED: '#DC2626',
-  DISPUTED: '#EA580C',
+import type { ColorScheme } from './colors';
+
+export const BOOKING_STATUS_COLOR_KEY: Record<string, keyof ColorScheme> = {
+  PENDING: 'statusPending',
+  ACCEPTED: 'statusAccepted',
+  QUOTED: 'statusQuoted',
+  CONFIRMED: 'statusConfirmed',
+  IN_PROGRESS: 'statusInProgress',
+  DONE: 'statusDone',
+  CANCELLED: 'statusCancelled',
+  DISPUTED: 'statusDisputed',
 };
+
+export function getBookingStatusColor(status: string | null | undefined, colors: ColorScheme) {
+  const key = status ? BOOKING_STATUS_COLOR_KEY[status] : undefined;
+  return key ? colors[key] : colors.textSecondary;
+}

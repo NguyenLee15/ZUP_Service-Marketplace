@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { CustomerCard, CustomerHeader, CustomerScreen, InlineMessage } from '../../components/customer/customer-ui';
+import { CustomerCard, CustomerScreen, InlineMessage } from '../../components/customer/customer-ui';
 import { Colors } from '../../constants/colors';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { userApi } from '../../features/user/user.api';
@@ -159,7 +159,6 @@ export default function EditProfileScreen() {
 
   return (
     <CustomerScreen>
-      <CustomerHeader title="Cập nhật hồ sơ" subtitle="Thông tin này dùng khi đặt dịch vụ và liên hệ nhà cung cấp" />
       {message ? <InlineMessage tone={messageTone} message={message} /> : null}
 
       <CustomerCard style={styles.avatarCard}>

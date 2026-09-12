@@ -96,8 +96,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                       <Star
                         className={`w-12 h-12 transition-all duration-200 ${
                           isFilled
-                            ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]'
-                            : 'text-platinum-tint hover:text-yellow-200'
+                            ? 'fill-amber-400 text-amber-400'
+                            : 'text-muted-foreground/30 hover:text-amber-200'
                         }`}
                       />
                     </button>
@@ -105,12 +105,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                 })}
               </div>
               {rating > 0 && (
-                <div className="inline-flex items-center px-3 py-1 rounded-full glass-panel text-sm font-semibold text-action-blue">
-                  {rating === 5 && '⭐ Tuyệt vời'}
-                  {rating === 4 && '👍 Rất tốt'}
-                  {rating === 3 && '😐 Bình thường'}
-                  {rating === 2 && '😕 Chưa tốt'}
-                  {rating === 1 && '😞 Rất không hài lòng'}
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+                  {rating === 5 && 'Tuyệt vời'}
+                  {rating === 4 && 'Rất tốt'}
+                  {rating === 3 && 'Bình thường'}
+                  {rating === 2 && 'Chưa tốt'}
+                  {rating === 1 && 'Rất không hài lòng'}
                 </div>
               )}
             </div>

@@ -252,7 +252,7 @@ export default function KycScreen() {
       <ProviderPageHeader
         title="Xác thực tài khoản"
         subtitle="Tải ảnh CCCD và chân dung rõ nét để hoàn tất KYC."
-        action={<IconButton icon="arrow-left" mode="contained-tonal" onPress={() => router.back()} accessibilityLabel="Quay lại" />}
+        onBack={() => router.back()}
       />
 
       {message && <ProviderInlineMessage tone={message.tone} message={message.text} />}
