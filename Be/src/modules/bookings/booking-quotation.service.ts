@@ -166,6 +166,11 @@ export class BookingQuotationService {
         data: { status: BookingStatus.CONFIRMED },
       });
 
+      await tx.quotation.updateMany({
+        where: { bookingId, type: 'ORIGINAL', status: 'PENDING' },
+        data: { status: 'ACCEPTED' },
+      });
+
       await this.shared.addStatusHistory(
         bookingId,
         'QUOTED',

@@ -22,7 +22,7 @@ type FeaturedPrismaMock = {
 };
 
 type FeaturedTransactionMock = {
-  providerWallet: { update: jest.Mock };
+  providerWallet: { updateMany: jest.Mock };
   walletTransaction: { create: jest.Mock };
   featuredListing: { create: jest.Mock; update: jest.Mock };
   auditLog: { create: jest.Mock };
@@ -37,7 +37,7 @@ describe('FeaturedListingsService', () => {
 
   beforeEach(() => {
     tx = {
-      providerWallet: { update: jest.fn() },
+      providerWallet: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
       walletTransaction: { create: jest.fn().mockResolvedValue({ id: 55 }) },
       featuredListing: {
         create: jest.fn().mockResolvedValue({ id: 1, serviceId: 99 }),
@@ -123,8 +123,8 @@ describe('FeaturedListingsService', () => {
   it('creates ledger and featured listing when purchase succeeds', async () => {
     const result = await service.purchaseFeaturedListing(10, 99, 3);
 
-    expect(tx.providerWallet.update).toHaveBeenCalledWith({
-      where: { providerId: 10 },
+    expect(tx.providerWallet.updateMany).toHaveBeenCalledWith({
+      where: { providerId: 10, balance: { gte: 150000 } },
       data: { balance: { decrement: 150000 } },
     });
     expect(tx.walletTransaction.create).toHaveBeenCalledWith({
@@ -137,6 +137,16 @@ describe('FeaturedListingsService', () => {
     });
     expect(tx.featuredListing.create).toHaveBeenCalledTimes(1);
     expect(result.message).toContain('3 ngày');
+  });
+
+  it('does not create a listing when the atomic wallet debit fails', async () => {
+    tx.providerWallet.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.purchaseFeaturedListing(10, 99, 3),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(tx.walletTransaction.create).not.toHaveBeenCalled();
+    expect(tx.featuredListing.create).not.toHaveBeenCalled();
   });
 
   it('rejects admin cancel when featured listing is missing', async () => {

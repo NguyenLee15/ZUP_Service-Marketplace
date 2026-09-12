@@ -416,17 +416,13 @@ export default function DashboardScreen() {
     }).format(amount || 0);
 
   const chartWidth = Math.max(width - 32, 280);
-  const revenueSeries = todayStats?.revenueData?.length
-    ? todayStats.revenueData.map((item) => Math.max(0, item.revenue))
-    : [
-        (todayStats?.totalRevenue || 0) * 0.1,
-        (todayStats?.totalRevenue || 0) * 0.3,
-        (todayStats?.totalRevenue || 0) * 0.2,
-        (todayStats?.totalRevenue || 0) * 0.4,
-      ];
-  const revenueLabels = todayStats?.revenueData?.length
-    ? todayStats.revenueData.map((item) => item.period)
-    : ["T1", "T2", "T3", "T4"];
+  const hasRevenueData = Boolean(todayStats?.revenueData && todayStats.revenueData.length > 0);
+  const revenueSeries = hasRevenueData
+    ? todayStats!.revenueData!.map((item) => Math.max(0, item.revenue))
+    : [0];
+  const revenueLabels = hasRevenueData
+    ? todayStats!.revenueData!.map((item) => item.period)
+    : ["Chưa có dữ liệu"];
   const statusChartData = [
     {
       name: "Chờ xác nhận",
@@ -602,31 +598,41 @@ export default function DashboardScreen() {
         </View>
       </ProviderCard>
       <ProviderSectionHeader title="Xu hướng doanh thu" />
-      <ProviderCard contentStyle={styles.chartCard}>
-        <LineChart
-          data={{
-            labels: revenueLabels.slice(-6),
-            datasets: [
-              {
-                data: revenueSeries.length ? revenueSeries.slice(-6).map((value: number) => Math.max(value, 0)) : [0],
-              },
-            ],
-          }}
-          width={chartWidth}
-          height={220}
-          chartConfig={{
-            backgroundColor: activeColors.surface,
-            backgroundGradientFrom: activeColors.surface,
-            backgroundGradientTo: activeColors.surface,
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
-            labelColor: () => activeColors.textSecondary,
-            propsForDots: { r: "3" },
-          }}
-          bezier
-          style={styles.chart}
-        />
-      </ProviderCard>
+      {hasRevenueData ? (
+        <ProviderCard contentStyle={styles.chartCard}>
+          <LineChart
+            data={{
+              labels: revenueLabels.slice(-6),
+              datasets: [
+                {
+                  data: revenueSeries.length ? revenueSeries.slice(-6).map((value: number) => Math.max(value, 0)) : [0],
+                },
+              ],
+            }}
+            width={chartWidth}
+            height={220}
+            chartConfig={{
+              backgroundColor: activeColors.surface,
+              backgroundGradientFrom: activeColors.surface,
+              backgroundGradientTo: activeColors.surface,
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+              labelColor: () => activeColors.textSecondary,
+              propsForDots: { r: "3" },
+            }}
+            bezier
+            style={styles.chart}
+          />
+        </ProviderCard>
+      ) : (
+        <ProviderCard>
+          <ProviderEmptyState
+            icon="chart-line"
+            title="Chưa có dữ liệu doanh thu"
+            description="Biểu đồ doanh thu sẽ hiển thị khi bạn hoàn thành các đơn hàng đầu tiên."
+          />
+        </ProviderCard>
+      )}
 
       <ProviderSectionHeader title="Đơn mới cần xử lý" />
       {recentBookings.length === 0 ? (

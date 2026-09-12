@@ -13,8 +13,7 @@ type MockPrisma = {
 
 type MockTxClient = {
   walletTransaction: {
-    findFirst: jest.Mock;
-    update: jest.Mock;
+    updateMany: jest.Mock;
   };
   providerWallet: {
     update: jest.Mock;
@@ -44,8 +43,7 @@ describe('PaymentCallbackService', () => {
   const createPrisma = () => {
     const txClient: MockTxClient = {
       walletTransaction: {
-        findFirst: jest.fn(),
-        update: jest.fn(),
+        updateMany: jest.fn(),
       },
       providerWallet: {
         update: jest.fn(),
@@ -147,5 +145,29 @@ describe('PaymentCallbackService', () => {
     const updateArg = updateMock.mock.calls[0]?.[0];
     expect(updateArg.where).toEqual({ id: 1 });
     expect(updateArg.data.status).toBe('FAILED');
+  });
+
+  it('does not credit the wallet after another callback claims the transaction', async () => {
+    const { prisma, txClient } = createPrisma();
+    mockVnpay.verifyIpn.mockReturnValue({
+      isValid: true,
+      txnRef: 'ref-1',
+      amount: 10000,
+      responseCode: '00',
+    });
+    prisma.walletTransaction.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 1, walletId: 2, amount: 10000 });
+    txClient.walletTransaction.updateMany.mockResolvedValue({ count: 0 });
+    const service = new PaymentCallbackService(
+      prisma as unknown as PrismaService,
+      mockVnpay as unknown as VnpayService,
+    );
+
+    await expect(service.handleVnpayIpn({})).resolves.toEqual({
+      RspCode: '00',
+      Message: 'Already processed',
+    });
+    expect(txClient.providerWallet.update).not.toHaveBeenCalled();
   });
 });

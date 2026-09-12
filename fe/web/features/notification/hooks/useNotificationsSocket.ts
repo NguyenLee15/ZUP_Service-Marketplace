@@ -11,6 +11,8 @@ type NotificationPayload = {
 
 export const useNotificationsSocket = (onNotificationReceived: (notification: NotificationPayload) => void) => {
   const socketRef = useRef<Socket | null>(null);
+  const handlerRef = useRef(onNotificationReceived);
+  handlerRef.current = onNotificationReceived;
   const { accessToken, user } = useAuthStore();
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export const useNotificationsSocket = (onNotificationReceived: (notification: No
       });
 
       socket.on('new_notification', (notification) => {
-        onNotificationReceived(notification);
+        handlerRef.current(notification);
       });
 
       socketRef.current = socket;
@@ -49,7 +51,7 @@ export const useNotificationsSocket = (onNotificationReceived: (notification: No
       socket?.disconnect();
       socketRef.current = null;
     };
-  }, [accessToken, user, onNotificationReceived]);
+  }, [accessToken, user]);
 
   return socketRef.current;
 };

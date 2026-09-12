@@ -7,7 +7,9 @@ import {
 import { Server } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UserStatus } from '@prisma/client';
 import { OnEvent } from '@nestjs/event-emitter';
+import { PrismaService } from '../../prisma/prisma.service';
 import { resolveWebsocketCorsOrigin } from '../../config/websocket-cors.config';
 import {
   extractSocketToken,
@@ -32,7 +34,10 @@ export class NotificationsGateway
   private readonly logger = new Logger('NotificationsGateway');
   private connectedUsers = new Map<number, string>(); // userId → socketId
 
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private prisma: PrismaService,
+  ) {}
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
@@ -44,6 +49,15 @@ export class NotificationsGateway
       const payload = this.jwtService.verify<Record<string, unknown>>(token);
       if (!isJwtTokenPayload(payload)) {
         client.disconnect();
+        return;
+      }
+
+      const account = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { status: true },
+      });
+      if (!account || account.status === UserStatus.LOCKED) {
+        client.disconnect(true);
         return;
       }
 

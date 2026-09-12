@@ -45,35 +45,40 @@ export class WithdrawalService {
       'Tên chủ tài khoản',
     );
 
-    const wallet = await this.shared.getWalletOrThrow(providerId);
-    if (wallet.isRestricted || Number(wallet.balance) <= 0) {
-      throw new BadRequestException({
-        code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Ví đang bị giới hạn hoặc không có số dư để rút',
+    const request = await this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.providerWallet.findUnique({
+        where: { providerId },
       });
-    }
+      if (!wallet) {
+        throw new NotFoundException({
+          code: ErrorCodes.NOT_FOUND,
+          message: 'Ví không tồn tại',
+        });
+      }
+      if (wallet.isRestricted) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Ví đang bị giới hạn hoặc không có số dư để rút',
+        });
+      }
 
-    const pending = await this.prisma.withdrawalRequest.aggregate({
-      where: { providerId, status: 'PENDING' },
-      _sum: { amount: true },
-    });
-    const lockedAmount = Number(pending._sum.amount || 0);
-    const availableBalance = Number(wallet.balance) - lockedAmount;
-    if (amount > availableBalance) {
-      throw new BadRequestException({
-        code: ErrorCodes.VALIDATION_ERROR,
-        message: `Số dư khả dụng không đủ. Khả dụng: ${availableBalance.toLocaleString('vi-VN')}đ`,
+      const debited = await tx.providerWallet.updateMany({
+        where: { providerId, balance: { gte: amount } },
+        data: { balance: { decrement: amount } },
       });
-    }
+      if (debited.count === 0) {
+        throw new BadRequestException('Số dư ví không đủ để rút tiền');
+      }
 
-    const request = await this.prisma.withdrawalRequest.create({
-      data: {
-        providerId,
-        amount,
-        bankName,
-        bankAccountNumber,
-        bankAccountHolder,
-      },
+      return tx.withdrawalRequest.create({
+        data: {
+          providerId,
+          amount,
+          bankName,
+          bankAccountNumber,
+          bankAccountHolder,
+        },
+      });
     });
 
     return {
@@ -170,8 +175,9 @@ export class WithdrawalService {
         });
       }
 
-      const wallet = await tx.providerWallet.findUnique({
+      const wallet = await tx.providerWallet.update({
         where: { providerId: request.providerId },
+        data: { balance: { increment: request.amount } },
       });
       if (!wallet) {
         throw new NotFoundException({
@@ -260,6 +266,11 @@ export class WithdrawalService {
           message: 'Yêu cầu này đã được xử lý',
         });
       }
+
+      await tx.providerWallet.update({
+        where: { providerId: request.providerId },
+        data: { balance: { increment: request.amount } },
+      });
 
       const rejected = await tx.withdrawalRequest.findUniqueOrThrow({
         where: { id },

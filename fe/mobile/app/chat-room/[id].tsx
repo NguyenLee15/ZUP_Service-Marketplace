@@ -109,12 +109,15 @@ export default function ChatRoomScreen() {
     return () => {
       mounted = false;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      if (activeSocket && (activeSocket as any)._chatRoomHandlers) {
-        const { handleNewMessage, handleTypingEvent, handleMessageRecalled } = (activeSocket as any)._chatRoomHandlers;
-        activeSocket.off('newMessage', handleNewMessage);
-        activeSocket.off('typing', handleTypingEvent);
-        activeSocket.off('messageRecalled', handleMessageRecalled);
-        delete (activeSocket as any)._chatRoomHandlers;
+      if (activeSocket) {
+        activeSocket.emit('leaveConversation', { conversationId: Number(id) });
+        if ((activeSocket as any)._chatRoomHandlers) {
+          const { handleNewMessage, handleTypingEvent, handleMessageRecalled } = (activeSocket as any)._chatRoomHandlers;
+          activeSocket.off('newMessage', handleNewMessage);
+          activeSocket.off('typing', handleTypingEvent);
+          activeSocket.off('messageRecalled', handleMessageRecalled);
+          delete (activeSocket as any)._chatRoomHandlers;
+        }
       }
     };
   }, [id]);

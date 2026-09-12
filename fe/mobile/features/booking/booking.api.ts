@@ -20,15 +20,15 @@ export const bookingApi = {
   /** PATCH /provider/bookings/:id/accept — Nhận đơn mới */
   acceptBooking: (id: number) => api.patch(`/provider/bookings/${id}/accept`),
 
-  /** PATCH /provider/bookings/:id/decline — Từ chối đơn mới */
+  /** PATCH /provider/bookings/:id/reject — Từ chối đơn mới */
   declineBooking: (id: number, data: { reason: string }) =>
-    api.patch(`/provider/bookings/${id}/decline`, data),
+    api.patch(`/provider/bookings/${id}/reject`, data),
 
-  /** PATCH /provider/bookings/:id/surveyor — Xác nhận thợ khảo sát */
+  /** PATCH /provider/bookings/:id/confirm-surveyor — Xác nhận thợ khảo sát */
   confirmSurveyor: (
     id: number,
     data: { surveyorName: string; surveyorPhone: string },
-  ) => api.patch(`/provider/bookings/${id}/surveyor`, data),
+  ) => api.patch(`/provider/bookings/${id}/confirm-surveyor`, data),
 
   /** POST /provider/bookings/:id/quote — Gửi báo giá */
   sendQuote: (id: number, formData: FormData) =>

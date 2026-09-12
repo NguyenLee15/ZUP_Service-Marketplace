@@ -8,9 +8,12 @@ type MockTransaction = {
     findUnique: jest.Mock;
     updateMany: jest.Mock;
     findUniqueOrThrow: jest.Mock;
+    create: jest.Mock;
   };
   providerWallet: {
     findUnique: jest.Mock;
+    update: jest.Mock;
+    updateMany: jest.Mock;
   };
   notification: {
     create: jest.Mock;
@@ -32,9 +35,12 @@ describe('WithdrawalService admin processing', () => {
         findUnique: jest.fn(),
         updateMany: jest.fn(),
         findUniqueOrThrow: jest.fn(),
+        create: jest.fn(),
       },
       providerWallet: {
         findUnique: jest.fn(),
+        update: jest.fn(),
+        updateMany: jest.fn(),
       },
       notification: {
         create: jest.fn(),
@@ -66,7 +72,7 @@ describe('WithdrawalService admin processing', () => {
       status: 'PENDING',
     });
     tx.withdrawalRequest.updateMany.mockResolvedValue({ count: 1 });
-    tx.providerWallet.findUnique.mockResolvedValue({
+    tx.providerWallet.update.mockResolvedValue({
       id: 3,
       providerId: 2,
       balance: 100000,
@@ -110,5 +116,67 @@ describe('WithdrawalService admin processing', () => {
     );
 
     expect(ledger.debitWallet).not.toHaveBeenCalled();
+  });
+
+  it('atomically reserves balance when creating a withdrawal request', async () => {
+    const shared = {
+      assertAmount: jest.fn().mockReturnValue(50000),
+      assertText: jest.fn((value: string) => value),
+    };
+    service = new WithdrawalService(
+      prisma as never,
+      ledger as unknown as WalletLedgerService,
+      shared as unknown as WalletSharedService,
+    );
+    tx.providerWallet.findUnique.mockResolvedValue({
+      id: 3,
+      providerId: 2,
+      balance: 100000,
+      isRestricted: false,
+    });
+    tx.providerWallet.updateMany.mockResolvedValue({ count: 1 });
+    tx.withdrawalRequest.create.mockResolvedValue({ id: 8 });
+
+    await service.createWithdrawalRequest(2, {
+      amount: 50000,
+      bankName: 'Bank',
+      bankAccountNumber: '123',
+      bankAccountHolder: 'Owner',
+    });
+
+    expect(tx.providerWallet.updateMany).toHaveBeenCalledWith({
+      where: { providerId: 2, balance: { gte: 50000 } },
+      data: { balance: { decrement: 50000 } },
+    });
+    expect(tx.withdrawalRequest.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects withdrawal when atomic balance reservation loses the race', async () => {
+    const shared = {
+      assertAmount: jest.fn().mockReturnValue(50000),
+      assertText: jest.fn((value: string) => value),
+    };
+    service = new WithdrawalService(
+      prisma as never,
+      ledger as unknown as WalletLedgerService,
+      shared as unknown as WalletSharedService,
+    );
+    tx.providerWallet.findUnique.mockResolvedValue({
+      id: 3,
+      providerId: 2,
+      balance: 100000,
+      isRestricted: false,
+    });
+    tx.providerWallet.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.createWithdrawalRequest(2, {
+        amount: 50000,
+        bankName: 'Bank',
+        bankAccountNumber: '123',
+        bankAccountHolder: 'Owner',
+      }),
+    ).rejects.toThrow('Số dư ví không đủ để rút tiền');
+    expect(tx.withdrawalRequest.create).not.toHaveBeenCalled();
   });
 });

@@ -36,6 +36,9 @@ type MockPrisma = {
   user: {
     findUnique: jest.Mock;
   };
+  quotation: {
+    updateMany: jest.Mock;
+  };
   $transaction: jest.Mock;
 };
 
@@ -68,6 +71,9 @@ describe('BookingLifecycleService', () => {
     },
     user: {
       findUnique: jest.fn(),
+    },
+    quotation: {
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     $transaction: jest.fn((cb: (tx: MockPrisma) => unknown) => cb(mockPrisma)),
   };

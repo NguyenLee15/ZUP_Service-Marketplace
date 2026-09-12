@@ -232,19 +232,42 @@ export function QuotationSheetModal({
           </View>
         </View>
 
-        <View style={styles.modalTotalRow}>
-          <Text variant="bodyMedium" style={styles.mutedText}>
-            Tổng cộng thực tế:
-          </Text>
-          <Text variant="titleMedium" style={styles.modalTotalText}>
-            {formatPrice(
-              quoteItems.reduce(
-                (sum, item) => sum + item.price * item.quantity,
-                0,
-              ),
-            )}
-          </Text>
-        </View>
+        {(() => {
+          const totalRawPrice = quoteItems.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0,
+          );
+          const estimatedCommission = Math.round(totalRawPrice * 0.1);
+          const estimatedNetEarnings = totalRawPrice - estimatedCommission;
+          return (
+            <View style={styles.calculationCard}>
+              <View style={styles.modalTotalRow}>
+                <Text variant="bodySmall" style={styles.mutedText}>
+                  Tổng giá dịch vụ:
+                </Text>
+                <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
+                  {formatPrice(totalRawPrice)}
+                </Text>
+              </View>
+              <View style={[styles.modalTotalRow, { borderTopWidth: 0, paddingTop: 2 }]}>
+                <Text variant="bodySmall" style={{ color: "#d97706" }}>
+                  Phí hoa hồng sàn (~10%):
+                </Text>
+                <Text variant="bodySmall" style={{ color: "#d97706", fontWeight: "600" }}>
+                  -{formatPrice(estimatedCommission)}
+                </Text>
+              </View>
+              <View style={[styles.modalTotalRow, { paddingTop: 6, marginTop: 4, borderTopColor: "rgba(0,0,0,0.08)" }]}>
+                <Text variant="bodyMedium" style={{ fontWeight: "700", color: activeColors.text }}>
+                  Thực nhận ước tính:
+                </Text>
+                <Text variant="titleMedium" style={{ fontWeight: "800", color: "#16a34a" }}>
+                  {formatPrice(estimatedNetEarnings)}
+                </Text>
+              </View>
+            </View>
+          );
+        })()}
 
         <TextInput
           label="Thời gian dự kiến"
@@ -332,6 +355,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.02)",
     padding: 8,
     borderRadius: 8,
+    marginVertical: 4,
+  },
+  calculationCard: {
+    backgroundColor: "rgba(0,0,0,0.03)",
+    borderRadius: 8,
+    padding: 10,
     marginVertical: 4,
   },
   modalTotalRow: {

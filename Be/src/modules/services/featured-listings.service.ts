@@ -125,12 +125,18 @@ export class FeaturedListingsService {
 
     const result = await this.prisma.$transaction(async (tx) => {
       // Trừ tiền ví
-      await tx.providerWallet.update({
-        where: { providerId },
+      const debited = await tx.providerWallet.updateMany({
+        where: { providerId, balance: { gte: totalCost } },
         data: {
           balance: { decrement: totalCost },
         },
       });
+      if (debited.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.WALLET_INSUFFICIENT,
+          message: 'Số dư không đủ để mua đẩy Top',
+        });
+      }
 
       // Tạo giao dịch ví
       const txn = await tx.walletTransaction.create({

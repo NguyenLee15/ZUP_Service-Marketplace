@@ -57,22 +57,18 @@ export class PaymentCallbackService {
       return { RspCode: '00', Message: 'Confirm Success' };
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      const locked = await tx.walletTransaction.findFirst({
+    const processed = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.walletTransaction.updateMany({
         where: { id: pending.id, status: 'PENDING' },
-      });
-      if (!locked) return;
-
-      const updatedTxn = await tx.walletTransaction.update({
-        where: { id: locked.id },
         data: {
           status: 'SUCCESS',
           processedAt: new Date(),
         },
       });
+      if (updated.count === 0) return false;
 
       const wallet = await tx.providerWallet.update({
-        where: { id: updatedTxn.walletId },
+        where: { id: pending.walletId },
         data: { balance: { increment: result.amount } },
       });
 
@@ -89,7 +85,7 @@ export class PaymentCallbackService {
           type: 'DEPOSIT_SUCCESS',
           title: 'Nạp tiền thành công',
           content: `Bạn đã nạp thành công ${result.amount.toLocaleString('vi-VN')}₫ vào ví`,
-          referenceId: updatedTxn.id,
+          referenceId: pending.id,
         },
       });
 
@@ -98,12 +94,18 @@ export class PaymentCallbackService {
           actorId: wallet.providerId,
           action: 'VNPAY_DEPOSIT_SUCCESS',
           targetType: 'WALLET',
-          targetId: updatedTxn.id,
+          targetId: pending.id,
           description: `Nạp thành công ${result.amount.toLocaleString('vi-VN')}₫ vào ví. Ref: ${result.txnRef}`,
           ipAddress: 'System',
         },
       });
+
+      return true;
     });
+
+    if (!processed) {
+      return { RspCode: '00', Message: 'Already processed' };
+    }
 
     this.logger.log(
       `IPN processed: ${result.txnRef}, amount: ${result.amount}`,

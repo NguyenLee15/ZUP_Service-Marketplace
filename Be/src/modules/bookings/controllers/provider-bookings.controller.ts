@@ -77,6 +77,7 @@ export class ProviderBookingsController {
   }
 
   /** PATCH /provider/bookings/:id/reject — Thợ từ chối đơn */
+  @Patch(':id/decline')
   @Patch(':id/reject')
   async providerReject(
     @CurrentUser('id') userId: number,
@@ -89,6 +90,7 @@ export class ProviderBookingsController {
   }
 
   /** PATCH /provider/bookings/:id/confirm-surveyor — Thá»£ cá»­ ngÆ°á» i kháº£o sÃ¡t */
+  @Patch(':id/surveyor')
   @Patch(':id/confirm-surveyor')
   async confirmSurveyor(
     @CurrentUser('id') userId: number,
