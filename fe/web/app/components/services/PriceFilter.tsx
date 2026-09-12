@@ -33,7 +33,7 @@ export function PriceFilter({ sliderValue, minPrice, maxPrice, onSliderChange, o
               aria-label="Giá tối thiểu"
               autoComplete="off"
               value={minPrice} onChange={(e) => onPriceChange('min', e.target.value)}
-              className="h-10 border-white/10 bg-white/[0.06] pl-10 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300 focus:ring-cyan-300/20" 
+              className="h-10 border-slate-200 bg-slate-100 pl-10 text-sm text-slate-700 placeholder:text-slate-500 focus:border-sky-600 focus:ring-sky-600/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
             />
           </div>
           <span className="text-slate-500">—</span>
@@ -45,7 +45,7 @@ export function PriceFilter({ sliderValue, minPrice, maxPrice, onSliderChange, o
               aria-label="Giá tối đa"
               autoComplete="off"
               value={maxPrice} onChange={(e) => onPriceChange('max', e.target.value)}
-              className="h-10 border-white/10 bg-white/[0.06] pl-10 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300 focus:ring-cyan-300/20" 
+              className="h-10 border-slate-200 bg-slate-100 pl-10 text-sm text-slate-700 placeholder:text-slate-500 focus:border-sky-600 focus:ring-sky-600/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
             />
           </div>
         </div>
@@ -54,7 +54,7 @@ export function PriceFilter({ sliderValue, minPrice, maxPrice, onSliderChange, o
             <button
               key={p}
               type="button"
-              className="inline-flex items-center rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-300 shadow-sm transition-colors hover:bg-cyan-300/18 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+              className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-sky-50 hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               onClick={() => onPriceChange('max', p)}
             >
               &lt; {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumSignificantDigits: 3 }).format(parseInt(p))}

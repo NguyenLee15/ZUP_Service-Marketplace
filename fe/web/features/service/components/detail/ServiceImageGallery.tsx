@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
 
 interface ServiceImageGalleryProps {
   images: Array<{ imageUrl: string }>;
@@ -19,8 +19,8 @@ export function ServiceImageGallery({
 }: ServiceImageGalleryProps) {
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-[16/9] rounded-[20px] bg-pale-gray flex items-center justify-center text-6xl text-slate-blue mb-6 border border-platinum-tint">
-        🔧
+      <div className="aspect-[16/9] rounded-[20px] bg-pale-gray flex items-center justify-center mb-6 border border-platinum-tint">
+        <Wrench className="w-12 h-12 text-slate-400" />
       </div>
     );
   }
@@ -46,7 +46,7 @@ export function ServiceImageGallery({
                 currentImage === 0 ? images.length - 1 : currentImage - 1,
               )
             }
-            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 p-2 sm:p-2 bg-midnight-indigo/55 hover:bg-midnight-indigo/75 rounded-full text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border border-slate-200/80 bg-white/90 p-2 text-slate-800 shadow-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 sm:left-3 sm:p-2"
           >
             <ChevronLeft className="w-5 h-5 sm:w-5 sm:h-5" />
           </button>
@@ -57,7 +57,7 @@ export function ServiceImageGallery({
                 currentImage === images.length - 1 ? 0 : currentImage + 1,
               )
             }
-            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-2 sm:p-2 bg-midnight-indigo/55 hover:bg-midnight-indigo/75 rounded-full text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-slate-200/80 bg-white/90 p-2 text-slate-800 shadow-md transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 sm:right-3 sm:p-2"
           >
             <ChevronRight className="w-5 h-5 sm:w-5 sm:h-5" />
           </button>

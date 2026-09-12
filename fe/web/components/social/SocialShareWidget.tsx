@@ -22,12 +22,12 @@ export function SocialShareWidget() {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl shadow-lg shadow-sky-950/20 w-full md:max-w-xs xl:max-w-md shrink-0">
+    <div className="w-full shrink-0 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 md:max-w-xs xl:max-w-md">
       <div className="flex items-center gap-2 mb-3">
         <Share2 className="w-4 h-4 text-sky-400" />
-        <div className="text-sm font-bold uppercase tracking-widest text-slate-300">Chia sẻ ZUP</div>
+        <div className="text-sm font-bold uppercase tracking-widest text-slate-900 dark:text-white">Chia sẻ ZUP</div>
       </div>
-      <p className="text-xs text-slate-400 leading-relaxed mb-4">
+      <p className="mb-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
         Giúp bạn bè và gia đình tìm dịch vụ tại nhà với thông tin rõ ràng hơn.
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -35,7 +35,7 @@ export function SocialShareWidget() {
           href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-sky-600/15 border border-sky-500/20 px-3 text-xs font-semibold text-cyan-300 hover:bg-sky-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          className="inline-flex h-9 items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 text-xs font-semibold text-sky-700 transition-all duration-300 hover:bg-sky-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
           aria-label="Chia sẻ lên Facebook"
         >
           <Facebook className="w-3.5 h-3.5" />
@@ -45,7 +45,7 @@ export function SocialShareWidget() {
           href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-slate-800/80 border border-slate-700/50 px-3 text-xs font-semibold text-slate-200 hover:bg-white hover:text-slate-950 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-semibold text-slate-700 transition-all duration-300 hover:bg-slate-900 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           aria-label="Chia sẻ lên Twitter/X"
         >
           <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ export function SocialShareWidget() {
           href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-700/15 border border-blue-600/20 px-3 text-xs font-semibold text-blue-400 hover:bg-blue-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="inline-flex h-9 items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 text-xs font-semibold text-sky-700 transition-all duration-300 hover:bg-sky-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
           aria-label="Chia sẻ lên LinkedIn"
         >
           <Linkedin className="w-3.5 h-3.5" />
@@ -66,7 +66,7 @@ export function SocialShareWidget() {
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-slate-800/80 border border-slate-700/50 px-3 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue cursor-pointer"
+          className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-semibold text-slate-700 transition-all duration-300 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           aria-label="Sao chép liên kết"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}

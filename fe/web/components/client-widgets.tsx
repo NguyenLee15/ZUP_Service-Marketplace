@@ -141,10 +141,10 @@ export function ClientWidgets() {
 
       {/* Auto-suggesting AI Chatbot Tooltip speech bubble */}
       {showTooltip && !ChatWidget && (
-        <div className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] right-[calc(1rem_+_env(safe-area-inset-right))] z-50 sm:bottom-24 sm:right-6 animate-[bounce_2s_infinite] max-w-[240px] bg-slate-900/95 backdrop-blur-md border border-cyan-400/35 p-3.5 rounded-2xl shadow-2xl text-xs text-white select-none">
+        <div className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] right-[calc(1rem_+_env(safe-area-inset-right))] z-50 max-w-[240px] select-none rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 text-xs text-slate-800 shadow-xl backdrop-blur-md animate-[bounce_2s_infinite] dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100 sm:bottom-24 sm:right-6">
           <button
             onClick={() => setShowTooltip(false)}
-            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-slate-400 hover:text-white rounded-full p-1 border border-white/10 flex items-center justify-center transition-colors focus-visible:outline-none"
+            className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full border border-slate-200 bg-slate-100 p-1 text-slate-500 transition-colors hover:text-slate-900 focus-visible:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white"
             aria-label="Tắt gợi ý"
           >
             <svg
@@ -163,7 +163,7 @@ export function ClientWidgets() {
           </button>
           <div
             onClick={loadChatWidget}
-            className="cursor-pointer font-bold leading-relaxed text-slate-100 hover:text-cyan-300 transition-colors"
+            className="cursor-pointer font-bold leading-relaxed text-slate-800 transition-colors hover:text-sky-600 dark:text-slate-100 dark:hover:text-sky-400"
           >
             Chào bạn! Bạn cần tìm thợ gì hôm nay? Để tôi hỗ trợ gợi ý nhé! 🤖
           </div>

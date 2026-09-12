@@ -141,10 +141,10 @@ export function ServicesSearchBar({
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[min(22rem,calc(100vw_-_1rem))] border-l border-white/10 bg-slate-950/95 p-0 text-white shadow-[0_18px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+                className="w-[min(22rem,calc(100vw_-_1rem))] border-l border-slate-200 bg-white p-0 text-slate-900 shadow-2xl dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               >
-                <SheetHeader className="border-b border-white/10 bg-white/[0.03] p-5">
-                  <SheetTitle className="text-left text-lg font-bold tracking-tight text-white">
+                <SheetHeader className="border-b border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-800/50">
+                  <SheetTitle className="text-left text-lg font-bold tracking-tight text-slate-900 dark:text-white">
                     Bộ lọc tìm kiếm
                   </SheetTitle>
                 </SheetHeader>
@@ -171,4 +171,3 @@ export function ServicesSearchBar({
     </div>
   );
 }
-

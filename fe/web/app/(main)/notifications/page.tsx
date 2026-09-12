@@ -171,14 +171,14 @@ export default function NotificationsPage() {
             variant="outline"
             size="sm"
             onClick={handleMarkAllAsRead}
-            className="border-white/15 bg-white/5 text-cyan-200 hover:bg-cyan-400/10 shrink-0"
+            className="shrink-0 border-slate-200 bg-white text-slate-800 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
           >
             <CheckCircle2 className="w-4 h-4 mr-2" /> Đánh dấu tất cả đã đọc
           </Button>
         )}
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {[
             { key: "all", label: "Tất cả" },
@@ -194,7 +194,7 @@ export default function NotificationsPage() {
               className={
                 readFilter === item.key
                   ? "bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                  : "border-white/15 bg-white/5 text-cyan-200 hover:bg-cyan-400/10"
+                  : "border-slate-200 bg-white text-slate-800 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
               }
             >
               {item.label}
@@ -205,7 +205,7 @@ export default function NotificationsPage() {
           value={typeFilter}
           onChange={(event) => setTypeFilter(event.target.value)}
           placeholder="Lọc theo type, ví dụ BOOKING"
-          className="h-9 rounded-lg border border-white/10 bg-slate-950/50 px-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-300/60 sm:w-64"
+          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none placeholder:text-slate-500 focus:border-sky-600/60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 sm:w-64"
         />
       </div>
 

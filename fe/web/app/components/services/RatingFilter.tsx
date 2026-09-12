@@ -15,7 +15,7 @@ export function RatingFilter({ minRating, onRatingChange }: RatingFilterProps) {
         {[5, 4, 3].map((star) => (
           <div 
             key={star} 
-            className={`flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors ${minRating === star ? 'bg-yellow-400/10' : 'hover:bg-white/8'}`}
+            className={`flex cursor-pointer items-center gap-3 rounded-lg p-2 text-slate-700 transition-colors dark:text-slate-300 ${minRating === star ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             onClick={() => onRatingChange(star)}
           >
             <div className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${minRating === star ? 'border-yellow-400 bg-yellow-400' : 'border-slate-500'}`}>

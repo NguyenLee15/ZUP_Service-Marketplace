@@ -70,12 +70,12 @@ export function ServiceFilterSidebar({
   };
 
   return (
-    <aside className="max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain scroll-smooth [scrollbar-gutter:stable] space-y-6 bg-transparent p-5 text-white">
+    <aside className="max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain scroll-smooth [scrollbar-gutter:stable] space-y-6 bg-transparent p-5 text-slate-900 dark:text-slate-100">
       <div>
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-cyan-300" />
-            <h2 className="font-bold text-base text-white">Bộ lọc</h2>
+            <Filter className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            <h2 className="font-bold text-base text-slate-900 dark:text-white">Bộ lọc</h2>
             {activeFilterCount > 0 && (
               <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1.5 text-[11px] font-bold text-white">
                 {activeFilterCount}
@@ -84,7 +84,7 @@ export function ServiceFilterSidebar({
           </div>
           <Button 
             variant="ghost" size="sm" onClick={onClear} aria-label="Xóa tất cả bộ lọc"
-            className="h-8 px-2 text-xs text-slate-400 hover:bg-white/10 hover:text-cyan-300"
+            className="h-8 px-2 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             Xóa tất cả
           </Button>

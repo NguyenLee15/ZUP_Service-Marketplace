@@ -38,7 +38,7 @@ export function CategoryFilter({ categories, selectedIds, onToggle }: CategoryFi
         key={`select-${category.id}`}
         onClick={() => onToggle(category.id.toString())}
         aria-pressed={isSelected}
-        className={`w-full cursor-pointer rounded-md p-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${isSelected ? 'bg-sky-600/18 font-bold text-cyan-300' : 'text-slate-300 hover:bg-white/8 hover:text-white'}`}
+        className={`w-full cursor-pointer rounded-md p-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 ${isSelected ? 'bg-sky-50 text-sky-700 font-bold dark:bg-sky-950/50 dark:text-sky-400' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/60'}`}
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
       >
         {labelPrefix}{category.name}
@@ -57,9 +57,9 @@ export function CategoryFilter({ categories, selectedIds, onToggle }: CategoryFi
     return (
       <Accordion type="multiple" className="w-full" key={category.id}>
         <AccordionItem value={`cat-${category.id}`} className="border-none">
-          <AccordionTrigger className={`py-2 text-slate-200 hover:no-underline group/trigger ${isSelected ? 'text-cyan-300' : ''}`}>
+          <AccordionTrigger className={`py-2 text-slate-800 hover:no-underline group/trigger dark:text-slate-200 ${isSelected ? 'text-sky-600 dark:text-sky-400' : ''}`}>
             <div className="flex min-w-0 items-center space-x-3">
-              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[background-color,color,box-shadow] ${isSelected ? 'bg-sky-600 text-white shadow-[0_0_14px_rgba(2,132,199,0.3)]' : 'bg-white/8 text-slate-400 group-hover/trigger:bg-white/12 group-hover/trigger:text-cyan-300'}`}>
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[background-color,color,box-shadow] ${isSelected ? 'bg-sky-600 text-white shadow-[0_0_14px_rgba(2,132,199,0.3)]' : 'bg-slate-100 text-slate-600 group-hover/trigger:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:group-hover/trigger:bg-slate-700'}`}>
                 {category.iconUrl ? <Image src={category.iconUrl} alt={category.name} width={16} height={16} className="w-4 h-4 object-contain" /> : getCategoryIcon(category.name)}
               </div>
               <span className="truncate text-sm font-bold">{category.name}</span>
