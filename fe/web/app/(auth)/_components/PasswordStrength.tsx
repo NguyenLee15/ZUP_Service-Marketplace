@@ -21,28 +21,46 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
 
   const score = getPasswordScore(password);
   const label =
-    score <= 1 ? 'Mật khẩu yếu' : score === 2 ? 'Mật khẩu ổn' : 'Mật khẩu mạnh';
+    score <= 1
+      ? 'Mật khẩu yếu'
+      : score === 2
+        ? 'Mật khẩu trung bình'
+        : score === 3
+          ? 'Mật khẩu khá'
+          : 'Mật khẩu rất mạnh';
+
   const color =
     score <= 1
-      ? 'bg-red-500'
+      ? 'bg-rose-500'
       : score === 2
-        ? 'bg-amber-pop'
-        : 'bg-action-blue';
+        ? 'bg-amber-500'
+        : score === 3
+          ? 'bg-sky-500'
+          : 'bg-emerald-500';
+
+  const textColor =
+    score <= 1
+      ? 'text-rose-600 dark:text-rose-400'
+      : score === 2
+        ? 'text-amber-600 dark:text-amber-400'
+        : score === 3
+          ? 'text-sky-600 dark:text-sky-400'
+          : 'text-emerald-600 dark:text-emerald-400';
 
   return (
-    <div className="space-y-2" aria-live="polite">
-      <div className="grid grid-cols-4 gap-2" aria-hidden="true">
+    <div className="space-y-1.5 pt-1" aria-live="polite">
+      <div className="grid grid-cols-4 gap-1.5" aria-hidden="true">
         {[0, 1, 2, 3].map((index) => (
           <span
             key={index}
             className={cn(
-              'h-1.5 rounded-full bg-pale-gray transition-colors',
-              index < score && color,
+              'h-1 rounded-full transition-all duration-300',
+              index < score ? color : 'bg-slate-200 dark:bg-slate-800',
             )}
           />
         ))}
       </div>
-      <p className="text-xs font-medium text-slate-blue">{label}</p>
+      <p className={cn('text-[11px] font-medium transition-colors', textColor)}>{label}</p>
     </div>
   );
 }

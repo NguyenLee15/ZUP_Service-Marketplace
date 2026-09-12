@@ -18,23 +18,23 @@ export default function OfflinePage() {
   };
 
   return (
-    <div className="aether-page min-h-screen flex flex-col items-center justify-center p-4 bg-[#101415] text-[#e0e3e5]">
-      <main className="max-w-md w-full glass-panel border border-white/10 rounded-[2rem] shadow-2xl p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
-        <div className="w-20 h-20 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-          <WifiOff className="w-10 h-10 text-cyan-400" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
+      <main className="max-w-md w-full border border-border rounded-2xl bg-card shadow-sm p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+        <div className="w-16 h-16 bg-sky-50 dark:bg-sky-950/50 rounded-full flex items-center justify-center mx-auto mb-2">
+          <WifiOff className="w-8 h-8 text-sky-600 dark:text-sky-400" />
         </div>
 
-        <div className="space-y-3">
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <div className="space-y-2">
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             Mất Kết Nối Mạng
           </h1>
-          <p className="text-sm text-[#bfc7d2] leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Thiết bị của bạn hiện không có kết nối Internet. Vui lòng kiểm tra lại đường truyền Wi-Fi hoặc dữ liệu di động (3G/4G).
           </p>
         </div>
 
-        <div className="bg-[#1d2022] rounded-xl px-4 py-3 text-xs text-[#bfc7d2]/80 border border-white/5">
-          <span>PWA/offline đang tắt cho bản release này. Vui lòng tải lại trang khi kết nối mạng được khôi phục.</span>
+        <div className="bg-muted/40 rounded-xl px-4 py-3 text-xs text-muted-foreground border border-border">
+          <span>Hệ thống sẽ tự động kết nối lại khi có mạng. Vui lòng thử lại.</span>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">

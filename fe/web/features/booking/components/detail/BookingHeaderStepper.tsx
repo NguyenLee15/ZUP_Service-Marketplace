@@ -60,7 +60,7 @@ export function BookingHeaderStepper({ booking, timeLeft }: BookingHeaderStepper
       </div>
 
       {/* Stepper Timeline */}
-      <div className="glass-panel glow-hover rounded-2xl p-2 overflow-hidden">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs p-3 sm:p-4 overflow-hidden">
         <BookingStepper currentStatus={booking.status} />
       </div>
 
@@ -68,7 +68,7 @@ export function BookingHeaderStepper({ booking, timeLeft }: BookingHeaderStepper
       {booking.status === BookingStatus.DONE &&
         !booking.autoCompletedAt &&
         timeLeft && (
-          <div className="glass-panel rounded-xl p-4 flex items-center gap-3 border-l-4 border-action-blue">
+          <div className="rounded-xl border border-sky-200 dark:border-sky-800/80 bg-sky-50/70 dark:bg-sky-950/40 p-4 flex items-center gap-3 border-l-4 border-l-sky-600">
             <div className="w-10 h-10 rounded-full bg-action-blue/10 flex items-center justify-center">
               <Timer className="w-5 h-5 text-action-blue" />
             </div>

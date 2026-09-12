@@ -88,8 +88,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
         {/* Back Button */}
         <BackButton fallbackHref={`/bookings/${id}`} className="mb-6" />
 
-        {/* Dispute Card */}
-        <Card className="glass-panel glow-hover rounded-2xl p-6 md:p-8 border-0">
+        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 md:p-8">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.3)]">

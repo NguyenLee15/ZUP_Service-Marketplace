@@ -20,8 +20,8 @@ export function ServiceProviderInfoCard({
   onStartChat,
 }: ServiceProviderInfoCardProps) {
   return (
-    <Card className="glass-panel glow-hover rounded-[20px] border-white/10 py-0">
-      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4 text-white">
+    <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs py-0">
+      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4 text-slate-700 dark:text-slate-300">
         <div className="flex items-center gap-3">
           {provider?.id ? (
             <Link

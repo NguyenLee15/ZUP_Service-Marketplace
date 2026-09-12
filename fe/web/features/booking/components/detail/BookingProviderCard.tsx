@@ -13,7 +13,7 @@ export function BookingProviderCard({ booking }: BookingProviderCardProps) {
   const router = useRouter();
 
   return (
-    <Card className="glass-panel glow-hover rounded-2xl py-0 border-0">
+    <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs py-0">
       <CardContent className="p-5 flex items-start gap-4">
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-action-blue to-glacier-blue flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden shadow-[0_0_15px_rgba(0,107,255,0.3)]">
           {booking.provider?.avatarUrl ? (

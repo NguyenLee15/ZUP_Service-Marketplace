@@ -1,56 +1,15 @@
 import Link from 'next/link';
+import { Search, MapPin } from 'lucide-react';
 
-const QUICK_SEARCHES = ['Vệ sinh máy lạnh', 'Sửa điện nước', 'Dọn dẹp nhà'];
-const SEARCH_PLACEHOLDER = 'Sửa máy lạnh chảy nước…';
+const QUICK_SEARCHES = ['Vệ sinh máy lạnh', 'Sửa điện nước', 'Dọn dẹp nhà', 'Thông tắc bồn cầu'];
+const SEARCH_PLACEHOLDER = 'Bạn cần sửa chữa hay vệ sinh thiết bị gì?…';
 const DEFAULT_LOCATION = '';
-
-type IconProps = {
-  className?: string;
-};
-
-function SearchIcon({ className }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="m21 21-4.34-4.34" />
-      <circle cx="11" cy="11" r="8" />
-    </svg>
-  );
-}
-
-function MapPinIcon({ className }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
-}
 
 function getQuickSearchHref(keyword: string) {
   const params = new URLSearchParams({ keyword });
-
   if (DEFAULT_LOCATION) {
     params.set('location', DEFAULT_LOCATION);
   }
-
   return `/services?${params.toString()}`;
 }
 
@@ -61,56 +20,58 @@ export function HeroSearchForm() {
       method="get"
       role="search"
       id="hero-search-form"
-      className="mobile-viewport-width glass-panel rounded-xl p-2.5 sm:p-3 max-w-3xl transition-[background-color,box-shadow] duration-300 group/form"
+      className="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-2 sm:p-2.5 shadow-lg shadow-slate-200/50 dark:shadow-none transition-all duration-200"
     >
-      <div className="grid md:grid-cols-[1fr_13rem] gap-2 sm:gap-3">
-        <div className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 border border-white/10 group focus-within:ring-4 focus-within:ring-cyan-300/15 focus-within:border-cyan-300/50 transition-[box-shadow,border-color]">
-          <SearchIcon className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300 group-focus-within:scale-105 transition-transform" />
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_13rem_auto] gap-2 items-center">
+        {/* Keyword Search Field */}
+        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl px-3.5 py-2.5 border border-slate-200/80 dark:border-slate-700/80 focus-within:border-sky-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
+          <Search className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
           <input
             type="text"
             name="keyword"
-            aria-label="Tìm kiếm dịch vụ"
+            aria-label="Tìm kiếm dịch vụ trên ZUP"
             autoComplete="off"
             placeholder={SEARCH_PLACEHOLDER}
-            className="min-w-0 flex-1 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40 rounded-lg text-white placeholder:text-slate-400 text-base sm:text-lg font-semibold"
+            className="min-w-0 flex-1 bg-transparent outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 text-sm sm:text-base font-medium"
           />
         </div>
 
-        <div className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-3 border border-white/10 group focus-within:ring-4 focus-within:ring-cyan-300/15 focus-within:border-cyan-300/50 transition-[box-shadow,border-color]">
-          <MapPinIcon className="w-5 h-5 text-cyan-300 group-focus-within:scale-105 transition-transform" />
+        {/* Location Field */}
+        <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl px-3.5 py-2.5 border border-slate-200/80 dark:border-slate-700/80 focus-within:border-sky-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
+          <MapPin className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500 shrink-0" />
           <input
             type="text"
             name="location"
-            aria-label="Vị trí tìm kiếm"
+            aria-label="Khu vực dịch vụ"
             autoComplete="street-address"
-            placeholder="Vị trí…"
+            placeholder="Khu vực (tùy chọn)…"
             defaultValue={DEFAULT_LOCATION}
-            className="min-w-0 flex-1 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40 rounded-lg text-white placeholder:text-slate-400 text-base sm:text-lg font-semibold"
+            className="min-w-0 flex-1 bg-transparent outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 text-sm sm:text-base font-medium"
           />
         </div>
-      </div>
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-4 w-full">
-        <div className="grid w-full grid-cols-1 items-center gap-2 min-[480px]:grid-cols-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-center md:justify-start">
-          <span className="text-center text-xs font-bold text-slate-400 uppercase tracking-[0.16em] min-[480px]:col-span-2 sm:col-span-1 sm:text-left">Gợi ý:</span>
-          {QUICK_SEARCHES.map((tag) => (
-            <Link
-              key={tag}
-              href={getQuickSearchHref(tag)}
-              className="inline-flex items-center justify-center px-3 sm:px-4 py-2 rounded-full bg-white/5 hover:bg-sky-600 border border-white/10 text-cyan-300 hover:text-white text-xs sm:text-sm font-bold transition-[background-color,color,box-shadow,transform] hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-            >
-              {tag}
-            </Link>
-          ))}
-        </div>
-
+        {/* Search Submit Button */}
         <button
           type="submit"
-          className="group relative justify-center px-6 py-3.5 rounded-xl bg-sky-600 font-semibold text-white shadow-sm hover:bg-sky-500 active:scale-[0.98] transition-all overflow-hidden flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          className="h-11 sm:h-auto py-3 px-6 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm sm:text-base shadow-sm hover:shadow transition-all active:scale-[0.98] flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 cursor-pointer"
         >
-          <SearchIcon className="w-5 h-5 relative z-10" />
-          <span className="relative z-10">Tìm dịch vụ</span>
+          <Search className="w-4 h-4 shrink-0" />
+          <span>Tìm thợ</span>
         </button>
+      </div>
+
+      {/* Quick Search Chips */}
+      <div className="flex flex-wrap items-center gap-2 pt-2.5 px-1 sm:px-1.5">
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Gợi ý phổ biến:</span>
+        {QUICK_SEARCHES.map((tag) => (
+          <Link
+            key={tag}
+            href={getQuickSearchHref(tag)}
+            className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-950 hover:text-sky-600 dark:hover:text-sky-400 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 transition-colors"
+          >
+            {tag}
+          </Link>
+        ))}
       </div>
     </form>
   );

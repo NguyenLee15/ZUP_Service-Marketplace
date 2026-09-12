@@ -14,8 +14,7 @@ import {
 import { GlossarySection } from "@/app/components/home/GlossarySection";
 import { Testimonials } from "@/app/components/home/Testimonials";
 import { CustomerFooter } from "@/components/layout/CustomerFooter";
-
-import { HomeHeader } from "@/components/layout/HomeHeader";
+import { CustomerHeader } from "@/components/layout/CustomerHeader";
 import type { Category, Service } from "@/types";
 
 export const revalidate = 60;
@@ -280,8 +279,8 @@ export default async function Home() {
         );
 
   return (
-    <div className="aether-page min-h-screen bg-background flex flex-col">
-      <HomeHeader />
+    <div className="min-h-screen bg-background flex flex-col">
+      <CustomerHeader />
 
       <main id="main-content" className="flex-1">
         {/* Next.js 16 / React 19 Compliant JSON-LD Schema.org Metadata - Secure Plaintext Template */}
@@ -289,12 +288,12 @@ export default async function Home() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebPage",
-            name: "Zup - Nền tảng đặt dịch vụ tại nhà",
+            name: "ZUP - Nền tảng đặt dịch vụ tại nhà",
             description:
-              "Zup giúp khách hàng tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông tin thợ, giá tham khảo và đánh giá rõ ràng.",
+              "ZUP giúp khách hàng tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông tin thợ, giá tham khảo và đánh giá rõ ràng.",
             publisher: {
               "@type": "Organization",
-              name: "Zup",
+              name: "ZUP",
               url: APP_URL,
               logo: {
                 "@type": "ImageObject",
@@ -303,7 +302,7 @@ export default async function Home() {
             },
             author: {
               "@type": "Organization",
-              name: "Zup",
+              name: "ZUP",
             },
             datePublished: "2026-01-15T08:00:00+07:00",
             dateModified: "2026-05-29T08:00:00+07:00",

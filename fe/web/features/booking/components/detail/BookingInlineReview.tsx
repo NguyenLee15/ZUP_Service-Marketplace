@@ -132,7 +132,7 @@ export function BookingInlineReview({
                 type="button"
                 onClick={() => {
                   setComment(
-                    'Dịch vụ rất chuyên nghiệp, thợ đến đúng giờ và xử lý vấn đề cẩn thận. Rất hài lòng với chất lượng của HomeServe!',
+                    'Dịch vụ rất chuyên nghiệp, thợ đến đúng giờ và xử lý vấn đề cẩn thận. Rất hài lòng với chất lượng của ZUP!',
                   );
                 }}
                 className="absolute right-2.5 bottom-2.5 text-[11px] font-medium text-muted-foreground hover:text-sky-600 dark:hover:text-sky-400 transition-colors px-2 py-1 rounded bg-muted/70 hover:bg-muted cursor-pointer"

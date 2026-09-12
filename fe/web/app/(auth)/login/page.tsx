@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Script from 'next/script';
-import { Eye, EyeOff } from 'lucide-react';
+import { Mail, Loader2, AlertCircle } from 'lucide-react';
 import { authApi } from '@/features/auth/services/auth.api';
 import { useAuthStore } from '@/store/auth.store';
 import { Role, type User } from '@/types';
@@ -13,12 +12,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { AuthDivider, AuthMessage, AuthShell } from '../_components/AuthShell';
-import { DemoAccountSelector, type DemoAccount } from '../_components/DemoAccountSelector';
+import { AuthCard } from '../_components/AuthCard';
+import { PasswordInputField } from '../_components/PasswordInputField';
+import { SocialAuthGroup } from '../_components/SocialAuthGroup';
+import { DevAccountDrawer } from '../_components/DevAccountDrawer';
+import { type DemoAccount } from '../_components/DemoAccountSelector';
 import {
   getAuthErrorCode,
   getAuthErrorMessage,
-  getGoogleIdentity,
   type GoogleCredentialResponse,
 } from '../_components/auth-utils';
 
@@ -34,7 +35,7 @@ function normalizeLoginPayload(payload: unknown): LoginPayload {
     try {
       parsed = JSON.parse(payload) as unknown;
     } catch {
-      throw new Error('Server đăng nhập trả về dữ liệu không hợp lệ. Vui lòng thử lại sau khi tải lại trang.');
+      throw new Error('Máy chủ phản hồi dữ liệu không hợp lệ. Vui lòng tải lại trang.');
     }
   }
   const root = parsed as { data?: unknown };
@@ -48,7 +49,7 @@ function normalizeLoginPayload(payload: unknown): LoginPayload {
     !data.user ||
     typeof data.user !== 'object'
   ) {
-    throw new Error('Phản hồi đăng nhập không hợp lệ. Vui lòng tải lại trang và thử lại.');
+    throw new Error('Phản hồi đăng nhập không hợp lệ. Vui lòng thử lại.');
   }
 
   return {
@@ -63,17 +64,14 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { setTokens, setUser, user, _hasHydrated } = useAuthStore();
 
-  const [email, setEmail] = useState('customer@demo.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [gsiReady, setGsiReady] = useState(false);
-  const googleBtnRef = useRef<HTMLDivElement>(null);
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
+  // Auto redirect if already logged in
   useEffect(() => {
     if (_hasHydrated && user) {
       if (user.role === Role.ADMIN || user.role === Role.STAFF) {
@@ -91,20 +89,14 @@ export default function LoginPage() {
     setError('');
   }, []);
 
-  useEffect(() => {
-    if (getGoogleIdentity()) {
-      setGsiReady(true);
-    }
-  }, []);
-
   const routeAfterAuth = useCallback(
-    (user: { role: Role; fullName?: string }) => {
+    (authenticatedUser: { role: Role; fullName?: string }) => {
       toast({
         title: 'Đăng nhập thành công',
-        description: `Xin chào ${user.fullName || 'bạn'}`,
+        description: `Chào mừng ${authenticatedUser.fullName || 'bạn'} quay trở lại ZUP`,
       });
 
-      switch (user.role) {
+      switch (authenticatedUser.role) {
         case Role.ADMIN:
         case Role.STAFF:
           router.push('/admin/dashboard');
@@ -112,8 +104,8 @@ export default function LoginPage() {
         case Role.PROVIDER:
           useAuthStore.getState().logout();
           toast({
-            title: 'Từ chối truy cập',
-            description: 'Vui lòng sử dụng Mobile App dành cho Thợ.',
+            title: 'Từ chối truy cập trên trình duyệt',
+            description: 'Tài khoản Thợ vui lòng đăng nhập trên ứng dụng di động ZUP Thợ.',
             variant: 'destructive',
           });
           break;
@@ -121,88 +113,34 @@ export default function LoginPage() {
           router.push('/');
       }
     },
-    [router, toast],
+    [router, toast]
   );
 
-  const handleGoogleResponse = useCallback(
+  const handleGoogleSuccess = useCallback(
     async (response: GoogleCredentialResponse) => {
       setLoading(true);
       setError('');
       try {
         const res = await authApi.googleAuth(response.credential);
-        const { accessToken, refreshToken, user } = normalizeLoginPayload(res.data);
+        const { accessToken, refreshToken, user: authUser } = normalizeLoginPayload(res.data);
 
         setTokens(accessToken, refreshToken);
-        setUser(user);
-        routeAfterAuth(user);
+        setUser(authUser);
+        routeAfterAuth(authUser);
       } catch (err: unknown) {
-        setError(getAuthErrorMessage(err, 'Đăng nhập Google thất bại'));
+        setError(getAuthErrorMessage(err, 'Đăng nhập Google thất bại. Vui lòng thử lại.'));
       } finally {
         setLoading(false);
       }
     },
-    [routeAfterAuth, setTokens, setUser],
+    [routeAfterAuth, setTokens, setUser]
   );
-
-  const handleGoogleFallbackClick = useCallback(() => {
-    if (!googleClientId) {
-      setError('Chưa cấu hình đăng nhập Google. Vui lòng đăng nhập bằng email.');
-      return;
-    }
-
-    const google = getGoogleIdentity();
-    if (!google) {
-      setError('Google chưa tải xong. Vui lòng thử lại sau vài giây.');
-      return;
-    }
-
-    try {
-      google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleGoogleResponse,
-      });
-      google.accounts.id.prompt();
-    } catch {
-      setError('Không thể mở đăng nhập Google. Vui lòng thử email và mật khẩu.');
-    }
-  }, [googleClientId, handleGoogleResponse]);
-
-  useEffect(() => {
-    const google = getGoogleIdentity();
-    if (!gsiReady || !googleBtnRef.current || !google) return;
-
-    if (!googleClientId) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      if (!googleBtnRef.current) return;
-      try {
-        googleBtnRef.current.innerHTML = '';
-        google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: handleGoogleResponse,
-        });
-        google.accounts.id.renderButton(googleBtnRef.current, {
-          theme: 'outline',
-          size: 'large',
-          width: googleBtnRef.current.offsetWidth || 360,
-          text: 'signin_with',
-          shape: 'rectangular',
-        });
-      } catch {
-        setError('Không thể tải đăng nhập Google. Vui lòng thử email và mật khẩu.');
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [gsiReady, googleClientId, handleGoogleResponse]);
 
   const validate = (name: string, value: string) => {
     const newErrors = { ...fieldErrors };
     if (name === 'email') {
-      if (!value) newErrors.email = 'Email không được để trống';
-      else if (!/\S+@\S+\.\S+/.test(value)) newErrors.email = 'Email không hợp lệ';
+      if (!value.trim()) newErrors.email = 'Email không được để trống';
+      else if (!/\S+@\S+\.\S+/.test(value.trim())) newErrors.email = 'Email không đúng định dạng';
       else delete newErrors.email;
     }
     if (name === 'password') {
@@ -213,51 +151,36 @@ export default function LoginPage() {
     setFieldErrors(newErrors);
   };
 
-  const getLoginErrors = () => {
-    const errors: Record<string, string> = {};
-    if (!email.trim()) errors.email = 'Email không được để trống';
-    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Email không hợp lệ';
-
-    if (!password) errors.password = 'Mật khẩu không được để trống';
-    else if (password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-
-    return errors;
-  };
-
-  const focusFirstError = (errors: Record<string, string>) => {
-    const firstField = Object.keys(errors)[0];
-    if (!firstField) return;
-    window.setTimeout(() => document.getElementById(firstField)?.focus(), 0);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const errors = getLoginErrors();
+    const errors: Record<string, string> = {};
+    if (!email.trim()) errors.email = 'Email không được để trống';
+    else if (!/\S+@\S+\.\S+/.test(email.trim())) errors.email = 'Email không đúng định dạng';
+
+    if (!password) errors.password = 'Mật khẩu không được để trống';
+    else if (password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      focusFirstError(errors);
       return;
     }
 
     setLoading(true);
-
     try {
-      const res = await authApi.login({ email, password });
-      const { accessToken, refreshToken, user } = normalizeLoginPayload(res.data);
+      const res = await authApi.login({ email: email.trim(), password });
+      const { accessToken, refreshToken, user: authUser } = normalizeLoginPayload(res.data);
 
       setTokens(accessToken, refreshToken);
-      setUser(user);
-      routeAfterAuth(user);
+      setUser(authUser);
+      routeAfterAuth(authUser);
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
-      const message = getAuthErrorMessage(err, 'Đã xảy ra lỗi. Vui lòng thử lại.');
+      const message = getAuthErrorMessage(err, 'Email hoặc mật khẩu không chính xác');
 
       if (code === 'ACCOUNT_LOCKED') {
-        setError('Tài khoản tạm khóa do nhập sai quá nhiều lần. Vui lòng thử lại sau 15 phút.');
-      } else if (code === 'UNAUTHORIZED') {
-        setError(message || 'Email hoặc mật khẩu không chính xác');
+        setError('Tài khoản đã bị tạm khóa do nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.');
       } else {
         setError(message);
       }
@@ -267,171 +190,130 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell
-      title="Đăng nhập"
-      description="Tiếp tục quản lý lịch hẹn, địa chỉ và dịch vụ yêu thích của bạn."
-      footer={
-        <>
-          Chưa có tài khoản?{' '}
-          <Link
-            href="/register"
-            className="font-semibold text-action-blue transition-colors hover:text-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-4 focus-visible:ring-offset-cloud-mist"
-          >
-            Đăng ký
-          </Link>
-        </>
-      }
-    >
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        {/* Bộ chọn tài khoản Demo theo vai trò */}
-        <DemoAccountSelector
-          onSelectAccount={handleSelectDemoAccount}
-          currentEmail={email}
-        />
-
-        <div className="space-y-2">
-          <Label htmlFor="email" className="font-semibold text-midnight-indigo">
-            Email / Tên đăng nhập *
-          </Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            aria-label="Email"
-            aria-invalid={Boolean(fieldErrors.email)}
-            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              validate('email', e.target.value);
-            }}
-            className="h-12 rounded-xl border-platinum-tint bg-cloud-mist/70 px-4 text-midnight-indigo placeholder:text-slate-blue transition-[color,box-shadow,border-color] focus-visible:border-action-blue"
-            autoComplete="email"
-            spellCheck={false}
-          />
-          {fieldErrors.email && (
-            <p id="email-error" className="text-xs font-medium text-red-600">
-              {fieldErrors.email}
-            </p>
+    <>
+      <AuthCard
+        title="Đăng nhập ZUP"
+        description="Chào mừng bạn quay lại. Đăng nhập để tiếp tục quản lý lịch hẹn và dịch vụ."
+      >
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {error && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
           )}
-        </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-4">
-            <Label htmlFor="password" className="font-semibold text-midnight-indigo">
-              Mật khẩu *
+          {/* Email input */}
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
+              Địa chỉ Email
             </Label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <Mail className="w-4 h-4" />
+              </div>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  validate('email', e.target.value);
+                }}
+                className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-sm focus-visible:ring-sky-500 ${
+                  fieldErrors.email ? 'border-rose-500 focus-visible:ring-rose-400' : ''
+                }`}
+                autoComplete="email"
+                spellCheck={false}
+                autoFocus
+              />
+            </div>
+            {fieldErrors.email && (
+              <p className="text-xs text-rose-500 font-medium">{fieldErrors.email}</p>
+            )}
+          </div>
+
+          {/* Password input */}
+          <PasswordInputField
+            id="password"
+            label="Mật khẩu"
+            placeholder="Nhập mật khẩu của bạn"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              validate('password', e.target.value);
+            }}
+            error={fieldErrors.password}
+            autoComplete="current-password"
+          />
+
+          {/* Remember me & Forgot password */}
+          <div className="flex items-center justify-between pt-0.5">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+              />
+              <label
+                htmlFor="rememberMe"
+                className="text-xs font-medium text-slate-600 dark:text-slate-400 cursor-pointer select-none"
+              >
+                Ghi nhớ đăng nhập
+              </label>
+            </div>
             <Link
               href="/forgot-password"
-              className="text-sm font-semibold text-action-blue transition-colors hover:text-glacier-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-4 focus-visible:ring-offset-white"
+              className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors"
             >
               Quên mật khẩu?
             </Link>
           </div>
-          <div className="relative">
-            <Input
-              id="password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              aria-label="Mật khẩu"
-              aria-invalid={Boolean(fieldErrors.password)}
-              aria-describedby={fieldErrors.password ? 'password-error' : undefined}
-              placeholder="Nhập mật khẩu"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                validate('password', e.target.value);
-              }}
-              className="h-12 rounded-xl border-platinum-tint bg-cloud-mist/70 px-4 pr-11 text-midnight-indigo placeholder:text-slate-blue transition-[color,box-shadow,border-color] focus-visible:border-action-blue"
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-blue transition-colors hover:text-midnight-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
-          {fieldErrors.password && (
-            <p id="password-error" className="text-xs font-medium text-red-600">
-              {fieldErrors.password}
-            </p>
-          )}
-        </div>
 
-        {/* Checkbox Ghi nhớ đăng nhập */}
-        <div className="flex items-center space-x-2 pt-1">
-          <Checkbox
-            id="remember-me"
-            checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+          {/* Submit button */}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Đang đăng nhập…
+              </span>
+            ) : (
+              'Đăng nhập'
+            )}
+          </Button>
+
+          {/* Google SSO */}
+          <SocialAuthGroup
+            mode="signin"
+            disabled={loading}
+            onGoogleSuccess={handleGoogleSuccess}
+            onError={(msg) => setError(msg)}
           />
-          <label
-            htmlFor="remember-me"
-            className="text-xs font-medium text-slate-300 cursor-pointer select-none"
-          >
-            Ghi nhớ đăng nhập
-          </label>
-        </div>
 
-        {error && <AuthMessage>{error}</AuthMessage>}
+          {/* Register switch link */}
+          <div className="pt-2 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Chưa có tài khoản ZUP?{' '}
+            <Link
+              href="/register"
+              className="font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors"
+            >
+              Đăng ký ngay
+            </Link>
+          </div>
+        </form>
+      </AuthCard>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="h-12 w-full rounded-xl bg-action-blue text-base font-semibold text-white shadow-[var(--brand-shadow-button)] transition-[background-color,transform] hover:bg-glacier-blue flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <span className="size-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              Đang đăng nhập…
-            </span>
-          ) : (
-            'Đăng nhập'
-          )}
-        </Button>
-
-        <AuthDivider />
-
-        <div
-          ref={googleBtnRef}
-          id="google-login-btn"
-          className="flex min-h-12 w-full items-center justify-center rounded-xl overflow-hidden"
-          aria-label="Đăng nhập bằng Google"
-        >
-          <button
-            type="button"
-            onClick={handleGoogleFallbackClick}
-            className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:bg-slate-100 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
-          >
-            <svg className="size-4.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z" />
-              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24Z" />
-              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15Z" />
-              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z" />
-            </svg>
-            <span>{googleClientId ? 'Đăng nhập với Google' : 'Google chưa được cấu hình'}</span>
-          </button>
-        </div>
-        {!googleClientId && (
-          <p className="text-center text-xs leading-5 text-slate-blue">
-            Hiện có thể đăng nhập bằng email. Google sẽ bật sau khi cấu hình OAuth.
-          </p>
-        )}
-
-        <p className="text-center text-xs leading-5 text-slate-blue">
-          Thông tin đăng nhập được bảo vệ theo phiên làm việc của bạn.
-        </p>
-      </form>
-
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onReady={() => setGsiReady(true)}
+      {/* Floating dev account selector for test convenience */}
+      <DevAccountDrawer
+        currentEmail={email}
+        onSelectAccount={handleSelectDemoAccount}
       />
-    </AuthShell>
+    </>
   );
 }

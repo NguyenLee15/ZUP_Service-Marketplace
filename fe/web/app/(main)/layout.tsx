@@ -41,7 +41,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <SocketProvider>
-      <div className="aether-page themed-shell min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <CustomerHeader />
 
         {/* Main Content */}

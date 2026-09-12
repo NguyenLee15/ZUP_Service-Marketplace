@@ -152,7 +152,7 @@ export function DemoAccountSelector({
           </div>
 
           <p className="text-[10.5px] text-slate-400 text-center pt-1 italic">
-            * Thợ đối tác đăng nhập trên ứng dụng HomeServe Mobile.
+            * Thợ đối tác đăng nhập trên ứng dụng ZUP Thợ Mobile.
           </p>
         </div>
       )}

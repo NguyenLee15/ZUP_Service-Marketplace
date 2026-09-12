@@ -14,32 +14,25 @@ export function CustomerFooter() {
             <Link
               href="/"
               prefetch={false}
-              className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue group active:scale-95 transition-transform duration-200"
+              className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 group active:scale-95 transition-transform duration-200"
             >
-              <div className="w-8 h-8 overflow-hidden rounded-xl border border-white/10 shadow-sm shrink-0 flex items-center justify-center bg-slate-950">
-                <Image
-                  src="/logo.png"
-                  alt="HomeServe"
-                  width={32}
-                  height={32}
-                  className="h-full w-full scale-[1.38] object-cover group-hover:scale-110 transition-transform duration-300"
-                />
+              <div className="w-8 h-8 rounded-xl bg-sky-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
+                Z
               </div>
               <span className="font-sans text-xl font-bold tracking-tight text-white select-none">
-                HomeServe
+                ZUP
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed mt-4">
-              HomeServe giúp bạn tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông
-              tin rõ ràng hơn trước khi xác nhận.
+            <p className="text-sm text-slate-400 leading-relaxed mt-4">
+              ZUP giúp bạn tìm, đặt lịch và theo dõi dịch vụ tại nhà với thông tin rõ ràng và thợ lành nghề tận tâm.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Facebook HomeServe"
-                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-sky-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                aria-label="Facebook ZUP"
+                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-sky-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               >
                 <Facebook className="size-5" />
               </a>
@@ -47,8 +40,8 @@ export function CustomerFooter() {
                 href="https://youtube.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="YouTube HomeServe"
-                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-rose-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                aria-label="YouTube ZUP"
+                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-rose-600 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               >
                 <Play className="size-5" />
               </a>
@@ -56,8 +49,8 @@ export function CustomerFooter() {
                 href="https://tiktok.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="TikTok HomeServe"
-                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-neutral-800 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue"
+                aria-label="TikTok ZUP"
+                className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-neutral-800 hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               >
                 <svg className="size-5 fill-current" viewBox="0 0 24 24">
                   <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.89-.74-3.99-1.72-.08-.07-.15-.15-.22-.23v6.52c-.04 2.87-1.43 5.72-3.93 7.15-2.52 1.45-5.91 1.45-8.43-.01-2.49-1.44-3.87-4.29-3.9-7.17-.03-2.88 1.36-5.73 3.86-7.17 2.1-1.21 4.75-1.39 6.99-.48v4.11c-1.57-.71-3.52-.45-4.79.68-1.28 1.13-1.63 3.09-.85 4.62.77 1.53 2.53 2.44 4.24 2.22 1.71-.22 3.03-1.64 3.07-3.37v-13.9c.01-.15.01-.3.01-.45z"/>
@@ -249,11 +242,11 @@ export function CustomerFooter() {
 
         <div className="pt-6 sm:pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              © {new Date().getFullYear()} HomeServe. Mọi quyền được bảo lưu.
+            <p className="text-sm text-slate-400" suppressHydrationWarning>
+              © {new Date().getFullYear()} ZUP Platform. Mọi quyền được bảo lưu.
             </p>
-            <p className="text-[11px] text-slate-600" suppressHydrationWarning>
-              Thông tin dịch vụ và chính sách có thể thay đổi theo khu vực. Cập nhật lần cuối: 28/05/2026.
+            <p className="text-[11px] text-slate-500" suppressHydrationWarning>
+              Thông tin dịch vụ và chính sách có thể thay đổi theo khu vực.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">

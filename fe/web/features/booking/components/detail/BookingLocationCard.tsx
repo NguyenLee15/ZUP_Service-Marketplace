@@ -24,7 +24,7 @@ export function BookingLocationCard({
     .join(', ');
 
   return (
-    <Card className="glass-panel glow-hover rounded-2xl border-0">
+    <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs py-0">
       <CardContent className="p-5 space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="w-4 h-4 text-action-blue shrink-0" />

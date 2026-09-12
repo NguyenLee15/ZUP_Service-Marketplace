@@ -272,7 +272,7 @@ export default function AdminServicesPage() {
                     <div>
                       <h5 className="font-bold">Nội Dung Cần Lưu Ý (Kiểm Duyệt Tự Động)</h5>
                       <p className="text-xs text-rose-600 mt-1 leading-relaxed">
-                        Hệ thống kiểm duyệt tự động phát hiện dịch vụ này chứa từ khóa cần xác minh theo quy chuẩn HomeServe. Vui lòng rà soát kỹ lưỡng trước khi phê duyệt.
+                        Hệ thống kiểm duyệt tự động phát hiện dịch vụ này chứa từ khóa cần xác minh theo quy chuẩn ZUP. Vui lòng rà soát kỹ lưỡng trước khi phê duyệt.
                       </p>
                     </div>
                   </div>

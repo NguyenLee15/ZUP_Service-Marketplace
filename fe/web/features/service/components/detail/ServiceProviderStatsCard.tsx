@@ -15,8 +15,8 @@ export function ServiceProviderStatsCard({
   avgRating,
 }: ServiceProviderStatsCardProps) {
   return (
-    <Card className="glass-panel glow-hover overflow-hidden rounded-[20px] mb-8 py-0">
-      <CardContent className="p-4 sm:p-6 text-white">
+    <Card className="overflow-hidden rounded-2xl mb-8 py-0 border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+      <CardContent className="p-4 sm:p-6 text-slate-700 dark:text-slate-300">
         <div className="flex items-center gap-2 mb-4 sm:mb-5">
           <div className="p-1.5 rounded-lg bg-white/5 text-sky-400">
             <BarChart3 className="w-4 h-4" />

@@ -42,7 +42,7 @@ export function BookingItemsSelector({
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* AI Smart Booking Input */}
       {showSmartInput && (
-        <div className="glass-panel glow-hover space-y-2 p-4 sm:p-6 rounded-[20px] text-white shadow-xl">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-2 p-4 sm:p-6">
           <SmartBookingInput
             onIntentExtracted={(result) => {
               setAiIntentResult(result);
@@ -72,7 +72,7 @@ export function BookingItemsSelector({
 
       {/* Traditional DynamicQuestionnaire (visible when serviceId exists and smart input is hidden) */}
       {(!showSmartInput || serviceId) && !showSmartInput && (
-        <div className="glass-panel glow-hover space-y-2 p-4 sm:p-6 rounded-[20px] text-white shadow-xl">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-2 p-4 sm:p-6">
           <DynamicQuestionnaire
             serviceName={service?.name || ''}
             description={description}
@@ -87,13 +87,13 @@ export function BookingItemsSelector({
 
       {/* Service items selection */}
       {service?.items && service.items.length > 0 && (
-        <div className="glass-panel glow-hover space-y-3 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3 p-4 sm:p-6">
           <div>
-            <Label className="font-semibold text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-action-blue" />
+            <Label className="font-semibold text-sm flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               Chọn hạng mục dịch vụ cần làm (nếu có)
             </Label>
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
               Tích chọn những hạng mục bạn cần thợ thực hiện. Có thể tùy chỉnh số lượng.
             </p>
           </div>
@@ -107,8 +107,8 @@ export function BookingItemsSelector({
                   key={item.id}
                   className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
                     isSelected
-                      ? 'border-action-blue bg-action-blue/10'
-                      : 'border-white/10 bg-white/5 hover:bg-white/10'
+                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/40'
+                      : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                   }`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -160,8 +160,8 @@ export function BookingItemsSelector({
                         });
                       }}
                     >
-                      <p className="text-xs font-semibold text-white truncate">{item.name}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">{item.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                         {formatPrice(Number(item.price))} / {item.unit}
                       </p>
                     </div>
@@ -180,11 +180,11 @@ export function BookingItemsSelector({
                             },
                           }));
                         }}
-                        className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors"
+                        className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-bold text-slate-800 dark:text-slate-100 transition-colors"
                       >
                         -
                       </button>
-                      <span className="text-xs font-bold w-6 text-center text-white">{qty}</span>
+                      <span className="text-xs font-bold w-6 text-center text-slate-900 dark:text-slate-100">{qty}</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -196,7 +196,7 @@ export function BookingItemsSelector({
                             },
                           }));
                         }}
-                        className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors"
+                        className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-bold text-slate-800 dark:text-slate-100 transition-colors"
                       >
                         +
                       </button>
@@ -208,9 +208,9 @@ export function BookingItemsSelector({
           </div>
 
           {Object.keys(selectedItems).length > 0 && (
-            <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground font-semibold">Tạm tính hạng mục phát sinh:</span>
-              <span className="text-sm font-bold text-cyan-300">
+            <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs">
+              <span className="text-slate-600 dark:text-slate-400 font-semibold">Tạm tính hạng mục phát sinh:</span>
+              <span className="text-sm font-bold text-sky-600 dark:text-sky-400">
                 {formatPrice(
                   Object.values(selectedItems).reduce((sum, it) => sum + it.price * it.quantity, 0)
                 )}

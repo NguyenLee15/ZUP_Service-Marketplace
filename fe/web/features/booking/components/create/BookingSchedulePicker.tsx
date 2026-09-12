@@ -39,8 +39,10 @@ export function BookingSchedulePicker({
 }: BookingSchedulePickerProps) {
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
-      <div className="glass-panel glow-hover space-y-4 rounded-[20px] p-4 sm:p-6 text-white shadow-xl">
-        <Label className="font-semibold text-sm">Thời gian mong muốn thực hiện *</Label>
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-xs space-y-4">
+        <Label className="font-semibold text-sm text-slate-900 dark:text-slate-100">
+          Thời gian mong muốn thực hiện *
+        </Label>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <button
@@ -53,25 +55,19 @@ export function BookingSchedulePicker({
                 return next;
               });
             }}
-            className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all ${
+            className={`flex flex-col items-center justify-center gap-1.5 p-3 sm:p-4 rounded-xl border transition-all cursor-pointer ${
               timeMode === 'now'
-                ? 'border-action-blue bg-action-blue/10 shadow-[0_0_15px_rgba(0,107,255,0.2)]'
-                : 'border-white/10 bg-white/5 hover:bg-white/10'
+                ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400'
+                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400'
             }`}
           >
             <TrendingUp
-              className={`w-5 h-5 sm:w-6 sm:h-6 ${
-                timeMode === 'now' ? 'text-action-blue' : 'text-muted-foreground'
+              className={`w-5 h-5 ${
+                timeMode === 'now' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400'
               }`}
             />
-            <span
-              className={`text-xs sm:text-sm font-bold ${
-                timeMode === 'now' ? 'text-action-blue' : 'text-muted-foreground'
-              }`}
-            >
-              Đặt ngay
-            </span>
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
+            <span className="text-xs sm:text-sm font-bold">Đặt ngay</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 text-center">
               Thợ đến càng sớm càng tốt
             </span>
           </button>
@@ -79,25 +75,19 @@ export function BookingSchedulePicker({
           <button
             type="button"
             onClick={() => setTimeMode('scheduled')}
-            className={`flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all ${
+            className={`flex flex-col items-center justify-center gap-1.5 p-3 sm:p-4 rounded-xl border transition-all cursor-pointer ${
               timeMode === 'scheduled'
-                ? 'border-action-blue bg-action-blue/10 shadow-[0_0_15px_rgba(0,107,255,0.2)]'
-                : 'border-white/10 bg-white/5 hover:bg-white/10'
+                ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400'
+                : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400'
             }`}
           >
             <Clock
-              className={`w-5 h-5 sm:w-6 sm:h-6 ${
-                timeMode === 'scheduled' ? 'text-action-blue' : 'text-muted-foreground'
+              className={`w-5 h-5 ${
+                timeMode === 'scheduled' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400'
               }`}
             />
-            <span
-              className={`text-xs sm:text-sm font-bold ${
-                timeMode === 'scheduled' ? 'text-action-blue' : 'text-muted-foreground'
-              }`}
-            >
-              Hẹn giờ
-            </span>
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
+            <span className="text-xs sm:text-sm font-bold">Hẹn giờ</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 text-center">
               Chọn thời gian cụ thể
             </span>
           </button>
@@ -199,28 +189,28 @@ export function BookingSchedulePicker({
       </div>
 
       {/* Order Summary Card */}
-      <div className="glass-panel rounded-[20px] p-5 border border-white/10 bg-white/5 space-y-4">
-        <h4 className="text-sm font-bold text-white flex items-center gap-1.5 border-b border-white/10 pb-3">
-          <Sparkles className="w-4 h-4 text-action-blue" />
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-xs space-y-3">
+        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+          <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400" />
           Tóm tắt yêu cầu đặt lịch
         </h4>
 
-        <div className="space-y-2.5 text-xs text-muted-foreground">
-          <div className="flex justify-between items-start">
+        <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex justify-between items-start gap-2">
             <span>Dịch vụ chính:</span>
-            <span className="font-semibold text-white text-right max-w-[180px] truncate">
+            <span className="font-semibold text-slate-800 dark:text-slate-200 text-right max-w-[200px] truncate">
               {service?.name}
             </span>
           </div>
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start gap-2">
             <span>Địa điểm thực hiện:</span>
-            <span className="font-semibold text-white text-right max-w-[200px] truncate">
+            <span className="font-semibold text-slate-800 dark:text-slate-200 text-right max-w-[220px] truncate">
               {addressDetail ? `${addressDetail}, ${ward}` : 'Chưa điền'}
             </span>
           </div>
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start gap-2">
             <span>Thời gian mong muốn:</span>
-            <span className="font-semibold text-white text-right">
+            <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">
               {timeMode === 'now'
                 ? 'Làm ngay'
                 : desiredTime
@@ -230,16 +220,16 @@ export function BookingSchedulePicker({
           </div>
 
           {Object.keys(selectedItems).length > 0 && (
-            <div className="space-y-1.5 pt-2.5 border-t border-white/5">
-              <span className="block font-semibold text-foreground text-[10px] uppercase tracking-wider mb-1">
-                Hạng mục con đã chọn:
+            <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="block font-semibold text-slate-700 dark:text-slate-300 text-[10px] uppercase tracking-wider mb-0.5">
+                Hạng mục phát sinh:
               </span>
               {Object.values(selectedItems).map((it) => (
                 <div key={it.serviceItemId} className="flex justify-between items-center text-[11px]">
-                  <span className="max-w-[200px] truncate">
+                  <span className="max-w-[200px] truncate text-slate-600 dark:text-slate-400">
                     • {it.name} (x{it.quantity})
                   </span>
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-slate-800 dark:text-slate-200">
                     {formatPrice(it.price * it.quantity)}
                   </span>
                 </div>
@@ -248,9 +238,11 @@ export function BookingSchedulePicker({
           )}
         </div>
 
-        <div className="pt-3 border-t border-white/10 flex justify-between items-center">
-          <span className="text-sm font-semibold text-foreground">Tổng chi phí tạm tính:</span>
-          <span className="text-lg font-extrabold text-cyan-300">
+        <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+          <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+            Tổng chi phí tạm tính:
+          </span>
+          <span className="text-base sm:text-lg font-extrabold text-sky-600 dark:text-sky-400">
             {formatPrice(
               Number(service?.referencePrice || 0) +
                 Object.values(selectedItems).reduce(

@@ -37,17 +37,21 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
           <div className="max-w-3xl">
-            <h2 id="danh-muc-dich-vu" className="text-xl md:text-2xl font-bold brand-heading mb-1.5 leading-tight text-balance">
+            <h2 id="danh-muc-dich-vu" className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1.5 leading-tight text-balance">
               Bạn cần trợ giúp gì <br />
-              <span className="text-action-blue">ngay hôm nay?</span>
+              <span className="text-sky-600 dark:text-sky-400">ngay hôm nay?</span>
             </h2>
-            <p className="text-slate-blue text-sm font-medium leading-relaxed max-w-2xl">
+            <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed max-w-2xl">
               Chọn nhanh nhóm dịch vụ phổ biến để xem thợ phù hợp, giá tham khảo và đánh giá từ khách hàng.
             </p>
           </div>
-          <Link href="/services" prefetch={false} className="text-glacier-blue font-bold text-sm inline-flex items-center justify-center gap-2 group px-3.5 py-2 bg-pale-gray rounded-lg hover:bg-action-blue hover:text-white transition-[background-color,color,box-shadow] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue md:shrink-0">
-            Khám phá tất cả dịch vụ
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          <Link
+            href="/services"
+            prefetch={false}
+            className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-sky-600 hover:text-white transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 md:shrink-0"
+          >
+            <span>Khám phá tất cả dịch vụ</span>
+            <span>→</span>
           </Link>
         </div>
  

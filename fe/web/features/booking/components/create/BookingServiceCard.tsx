@@ -12,9 +12,9 @@ export function BookingServiceCard({ service }: BookingServiceCardProps) {
   if (!service) return null;
 
   return (
-    <Card className="glass-panel glow-hover mb-6 rounded-[20px] py-0 text-white">
+    <Card className="mb-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs py-0">
       <CardContent className="p-4 flex items-center gap-4">
-        <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl shrink-0 overflow-hidden shadow-sm">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 overflow-hidden shadow-xs">
           {service.images?.[0]?.imageUrl ? (
             <img
               src={service.images[0].imageUrl}
@@ -26,9 +26,9 @@ export function BookingServiceCard({ service }: BookingServiceCardProps) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground truncate">{service.name}</h3>
-          <p className="text-sm text-muted-foreground">{service.provider?.fullName}</p>
-          <p className="text-sm font-semibold text-action-blue mt-0.5">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{service.name}</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{service.provider?.fullName}</p>
+          <p className="text-sm font-semibold text-sky-600 dark:text-sky-400 mt-0.5">
             Giá tham khảo: {formatPrice(Number(service.referencePrice))}
           </p>
         </div>
@@ -36,4 +36,3 @@ export function BookingServiceCard({ service }: BookingServiceCardProps) {
     </Card>
   );
 }
-
