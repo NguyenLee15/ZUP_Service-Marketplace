@@ -20,7 +20,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           sizes="58vw"
           className="object-cover opacity-55"
         />
-        <div className="absolute inset-0 bg-slate-950/65" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-slate-900/50" aria-hidden="true" />
         <div className="relative z-10 flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-sky-600 text-lg font-extrabold shadow-sm">Z</div>
           <div>
@@ -40,6 +40,15 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             <div><div className="font-semibold">Đặt lịch</div><div className="mt-1 text-xs text-slate-300">Theo nhu cầu</div></div>
             <div><div className="font-semibold">Báo giá</div><div className="mt-1 text-xs text-slate-300">Trước khi duyệt</div></div>
             <div><div className="font-semibold">Theo dõi</div><div className="mt-1 text-xs text-slate-300">Từng trạng thái</div></div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xs">
+            <p className="text-xs italic text-slate-200 leading-relaxed">
+              &ldquo;Đặt thợ qua ZUP giúp gia đình tôi hoàn toàn yên tâm. Thợ lịch sự, kiểm tra kỹ lưỡng, báo giá minh bạch trước khi làm.&rdquo;
+            </p>
+            <p className="mt-2 text-[11px] font-semibold text-sky-300">
+              Chị Ngọc Lan — Khách hàng tại TP. Hồ Chí Minh (5.0 ★)
+            </p>
           </div>
         </div>
       </aside>

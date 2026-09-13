@@ -1,17 +1,15 @@
-'use client';
-
-import { Star, Quote } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card } from "@/components/ui/card";
+import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Hoàng Anh",
+    name: "Lê Minh Tuấn",
     location: "Khách hàng tại Hà Nội",
-    initials: "HA",
-    content: "Tôi đặt sửa máy giặt và nhận được báo giá trước khi thợ đến. Lịch hẹn, tin nhắn và trạng thái đơn đều nằm trong một chỗ nên dễ theo dõi.",
+    initials: "LT",
+    content: "Đặt thợ sửa máy lạnh qua ZUP rất tiện. Thợ liên hệ xác nhận nhanh, báo giá rõ ràng rồi mới làm, không bị tình trạng vẽ thêm chi phí.",
   },
   {
-    name: "Minh Thư",
+    name: "Nguyễn Mai Trang",
     location: "Khách hàng tại Đà Nẵng",
     initials: "MT",
     content: "Tôi thích nhất là có thể xem thông tin dịch vụ và đánh giá trước khi đặt. Khi cần đổi lịch, tôi nhắn trực tiếp trong đơn nên không bị rối.",
@@ -25,10 +23,10 @@ const testimonials = [
 ];
 
 const stats = [
-  { value: 'Rõ giá', label: 'Báo giá trước khi làm', color: 'text-cyan-400' },
-  { value: 'Có hồ sơ', label: 'Thông tin thợ để so sánh', color: 'text-emerald-400' },
-  { value: 'Theo dõi', label: 'Lịch sử đơn và tin nhắn', color: 'text-blue-400' },
-  { value: 'Hỗ trợ', label: 'Kênh xử lý khi phát sinh', color: 'text-amber-400' },
+  { value: 'Rõ giá', label: 'Báo giá trước khi làm', color: 'text-sky-700 dark:text-sky-400' },
+  { value: 'Có hồ sơ', label: 'Thông tin thợ để so sánh', color: 'text-emerald-700 dark:text-emerald-400' },
+  { value: 'Theo dõi', label: 'Lịch sử đơn và tin nhắn', color: 'text-indigo-700 dark:text-indigo-400' },
+  { value: 'Hỗ trợ', label: 'Kênh xử lý khi phát sinh', color: 'text-amber-700 dark:text-amber-400' },
 ];
 
 export function Testimonials() {
@@ -78,7 +76,7 @@ export function Testimonials() {
         ))}
       </div>
 
-      {/* Compact Stats Strip — số liệu tín nhiệm ngắn gọn */}
+      {/* Compact Stats Strip — số liệu tín nhiệm rõ nét đạt chuẩn WCAG AA */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-200/80 dark:border-slate-800">
         {stats.map((s) => (
           <div key={s.label} className="rounded-xl border border-slate-200/80 bg-white p-4 text-center shadow-xs transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-sky-200 dark:border-slate-800 dark:bg-slate-900">

@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
-import { Sparkles, ListOrdered } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -161,7 +161,7 @@ function getCategorySectionDescription(categoryName: string) {
   return "Một số dịch vụ đang hoạt động trong nhóm danh mục này để bạn chọn nhanh.";
 }
 
-function getCategorySectionActionLabel(categoryName: string) {
+function getCategorySectionActionLabel(_categoryName: string) {
   return "Xem thêm";
 }
 
@@ -312,68 +312,31 @@ export default async function Home() {
 
         <HeroSection />
 
-        <section className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pt-6 md:flex-row md:items-center md:justify-between md:px-6" aria-label="Lối tắt khách hàng">
-          <div>
-            <p className="text-sm font-semibold text-foreground">Bạn đã đặt dịch vụ trước đó?</p>
-            <p className="text-sm text-muted-foreground">Theo dõi tiến độ hoặc đặt lại chỉ với một chạm.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/bookings" className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Xem đơn của tôi</Link>
-            <Link href="/services" className="inline-flex min-h-11 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Tìm dịch vụ</Link>
-          </div>
-        </section>
+        {token ? (
+          <section className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pt-6 md:flex-row md:items-center md:justify-between md:px-6" aria-label="Lối tắt khách hàng">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Bạn đã đặt dịch vụ trước đó?</p>
+              <p className="text-sm text-muted-foreground">Theo dõi tiến độ hoặc đặt lại chỉ với một chạm.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/bookings" className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Xem đơn của tôi</Link>
+              <Link href="/services" className="inline-flex min-h-11 items-center rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-sky-500">Tìm dịch vụ</Link>
+            </div>
+          </section>
+        ) : (
+          <section className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pt-6 md:flex-row md:items-center md:justify-between md:px-6" aria-label="Chào mừng khách hàng">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Tiện ích gia đình chuẩn mực &amp; An tâm tuyệt đối</p>
+              <p className="text-sm text-muted-foreground">Kết nối thợ chuyên nghiệp, báo giá minh bạch, nghiệm thu hài lòng mới trả phí.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/services" className="inline-flex min-h-11 items-center rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-sky-500">Khám phá dịch vụ</Link>
+              <Link href="/register" className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Đăng ký thành viên</Link>
+            </div>
+          </section>
+        )}
 
-        <div className="px-4 md:px-6 py-8 md:py-10 max-w-7xl mx-auto space-y-10 md:space-y-12">
-          {/* TOC nhanh — thanh anchor gọn */}
-          <nav id="toc" aria-label="Mục lục trang chủ">
-            <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold">
-              <li className="flex items-center gap-1.5 text-slate-500 font-bold uppercase tracking-wider shrink-0">
-                <ListOrdered className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                <span>Nhanh:</span>
-              </li>
-              <li>
-                <a
-                  href="#danh-muc-dich-vu"
-                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                >
-                  Danh mục
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#dich-vu-noi-bat"
-                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                >
-                  Nổi bật
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#danh-gia-khach-hang"
-                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                >
-                  Đánh giá
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#quy-trinh-hoat-dong"
-                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                >
-                  Quy trình
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#giai-dap-truc-tiep"
-                  className="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                >
-                  Hỏi đáp
-                </a>
-              </li>
-            </ul>
-          </nav>
-
+        <div className="px-4 md:px-6 py-8 md:py-10 max-w-7xl mx-auto space-y-12 md:space-y-16">
           <CategoryGrid categories={categories} />
 
           {(sponsoredServices.length > 0 || featuredServices.length > 0) && (

@@ -313,14 +313,24 @@ export default function LoginPage() {
               Đăng ký ngay
             </Link>
           </div>
+
+          {/* Provider Guidance Notice */}
+          <div className="mt-4 rounded-xl border border-sky-100 bg-sky-50/70 p-3 text-center text-xs text-slate-600 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-slate-300">
+            <p className="font-semibold text-sky-800 dark:text-sky-300">Bạn là Đối tác Thợ ZUP?</p>
+            <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+              Vui lòng đăng nhập trên ứng dụng <span className="font-medium text-slate-700 dark:text-slate-200">ZUP Thợ (Mobile App)</span> để nhận việc và gửi báo giá.
+            </p>
+          </div>
         </form>
       </AuthCard>
 
-      {/* Floating dev account selector for test convenience */}
-      <DevAccountDrawer
-        currentEmail={email}
-        onSelectAccount={handleSelectDemoAccount}
-      />
+      {/* Floating dev account selector (strictly for local development) */}
+      {process.env.NODE_ENV === 'development' && (
+        <DevAccountDrawer
+          currentEmail={email}
+          onSelectAccount={handleSelectDemoAccount}
+        />
+      )}
     </>
   );
 }
