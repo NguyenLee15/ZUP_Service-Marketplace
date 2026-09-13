@@ -6,7 +6,7 @@ import { Search, MapPin } from 'lucide-react';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 
 const QUICK_SEARCHES = ['Vệ sinh máy lạnh', 'Sửa điện nước', 'Dọn dẹp nhà', 'Thông tắc bồn cầu'];
-const SEARCH_PLACEHOLDER = 'Bạn cần sửa chữa hay vệ sinh thiết bị gì?…';
+const SEARCH_PLACEHOLDER = 'Bạn cần tìm dịch vụ gì?';
 const DEFAULT_LOCATION = '';
 
 function getQuickSearchHref(keyword: string) {

@@ -76,7 +76,6 @@ export function ClientWidgets() {
   const [ChatWidget, setChatWidget] = useState<ChatComponent | null>(null);
   const [BackToTop, setBackToTop] = useState<SimpleComponent | null>(null);
   const [chatRequested, setChatRequested] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
 
   // Không hiển thị widget trên các trang Auth hoặc Admin
   const isAuthPage = [
@@ -91,7 +90,6 @@ export function ClientWidgets() {
 
   const loadChatWidget = useCallback(() => {
     setChatRequested(true);
-    setShowTooltip(false);
 
     if (ChatWidget) return;
 
@@ -101,17 +99,6 @@ export function ClientWidgets() {
       });
     });
   }, [ChatWidget]);
-
-  // Set timeout to show speech bubble tooltip after 3 seconds if chatbot is not open
-  useEffect(() => {
-    if (hidden || ChatWidget) return;
-
-    const timer = setTimeout(() => {
-      setShowTooltip(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [ChatWidget, hidden]);
 
   useEffect(() => {
     if (hidden || BackToTop) return;
@@ -138,40 +125,6 @@ export function ClientWidgets() {
   return (
     <>
       {BackToTop && <BackToTop />}
-
-      {/* Auto-suggesting AI Chatbot Tooltip speech bubble */}
-      {showTooltip && !ChatWidget && (
-        <div className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] right-[calc(1rem_+_env(safe-area-inset-right))] z-50 max-w-[240px] select-none rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 text-xs text-slate-800 shadow-xl backdrop-blur-md animate-[bounce_2s_infinite] dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100 sm:bottom-24 sm:right-6">
-          <button
-            onClick={() => setShowTooltip(false)}
-            className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full border border-slate-200 bg-slate-100 p-1 text-slate-500 transition-colors hover:text-slate-900 focus-visible:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white"
-            aria-label="Tắt gợi ý"
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          <div
-            onClick={loadChatWidget}
-            className="cursor-pointer font-bold leading-relaxed text-slate-800 transition-colors hover:text-sky-600 dark:text-slate-100 dark:hover:text-sky-400"
-          >
-            Chào bạn! Bạn cần tìm thợ gì hôm nay? Để tôi hỗ trợ gợi ý nhé! 🤖
-          </div>
-          {/* Triangular speech bubble tip */}
-          <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-slate-900/95" />
-          <div className="absolute -bottom-[9px] right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-cyan-400/35 -z-10" />
-        </div>
-      )}
 
       {ChatWidget ? (
         <ChatWidget initialOpen={chatRequested} />
