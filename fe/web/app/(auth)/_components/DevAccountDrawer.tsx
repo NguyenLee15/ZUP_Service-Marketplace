@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, User, Briefcase, ShieldCheck, Check, X } from 'lucide-react';
+import { Sparkles, User, Briefcase, ShieldCheck, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type DemoRoleKey = 'customer' | 'staff' | 'admin';
@@ -52,111 +52,168 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
 
 interface DevAccountDrawerProps {
   onSelectAccount: (account: DemoAccount) => void;
+  onFastLogin?: (account: DemoAccount) => Promise<void>;
   currentEmail?: string;
+  isLoggingIn?: boolean;
 }
 
-export function DevAccountDrawer({ onSelectAccount, currentEmail }: DevAccountDrawerProps) {
+export function DevAccountDrawer({
+  onSelectAccount,
+  onFastLogin,
+  currentEmail,
+  isLoggingIn = false,
+}: DevAccountDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
 
   // Demo credentials are intentionally public; deployments can opt out.
   if (process.env.NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS === 'false') {
     return null;
   }
 
-  const handleSelect = (account: DemoAccount) => {
+  const handleFastLoginClick = async (account: DemoAccount) => {
+    if (isLoggingIn || loadingKey) return;
+    setLoadingKey(account.key);
+    try {
+      if (onFastLogin) {
+        await onFastLogin(account);
+      } else {
+        onSelectAccount(account);
+        setIsOpen(false);
+      }
+    } catch {
+      // Error handled by parent
+    } finally {
+      setLoadingKey(null);
+    }
+  };
+
+  const handleFillOnly = (e: React.MouseEvent, account: DemoAccount) => {
+    e.stopPropagation();
     onSelectAccount(account);
-    setSelectedKey(account.key);
-    setTimeout(() => {
-      setSelectedKey(null);
-      setIsOpen(false);
-    }, 400);
   };
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
       {isOpen ? (
-        <div className="w-80 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-3.5 space-y-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Tài khoản thử nghiệm nhanh (Dev)</span>
+        <div 
+          role="dialog"
+          aria-label="Tài khoản Demo Hội đồng & Tuyển dụng"
+          className="w-88 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
+        >
+          <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🔑</span>
+              <div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                  Tài khoản Demo Đồ án
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Dành cho Hội đồng &amp; Tuyển dụng (1-Click Login)
+                </p>
+              </div>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="size-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Đóng bảng tài khoản demo"
+              className="size-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {DEMO_ACCOUNTS.map((acc) => {
               const isCurrent = acc.email === currentEmail;
-              const isPicked = selectedKey === acc.key;
+              const isCurrentLoading = loadingKey === acc.key && isLoggingIn;
               const Icon = acc.icon;
 
               return (
-                <button
+                <div
                   key={acc.key}
-                  type="button"
-                  onClick={() => handleSelect(acc)}
                   className={cn(
-                    'w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors text-xs cursor-pointer',
+                    'p-2.5 rounded-xl border transition-all',
                     isCurrent
-                      ? 'bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 border border-transparent'
+                      ? 'bg-sky-50/80 dark:bg-sky-950/40 border-sky-300 dark:border-sky-800'
+                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
                   )}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={cn(
-                      'size-7 rounded-lg flex items-center justify-center shrink-0',
-                      isCurrent
-                        ? 'bg-sky-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                    )}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
-                        {acc.label}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className={cn(
+                          'size-7 rounded-lg flex items-center justify-center shrink-0',
+                          isCurrent
+                            ? 'bg-sky-600 text-white'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                        )}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        {acc.email}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                            {acc.label}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">
+                            {acc.badgeLabel}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                          {acc.email}
+                        </p>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleFillOnly(e, acc)}
+                      className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline underline-offset-2 shrink-0 cursor-pointer pt-0.5"
+                    >
+                      Điền form
+                    </button>
                   </div>
 
-                  <div className="shrink-0 pl-2">
-                    {isPicked ? (
-                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-                        <Check className="w-3 h-3" />
-                        Đã điền
-                      </span>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5 leading-snug">
+                    {acc.roleDescription}
+                  </p>
+
+                  <button
+                    type="button"
+                    disabled={isLoggingIn}
+                    onClick={() => handleFastLoginClick(acc)}
+                    className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                  >
+                    {isCurrentLoading ? (
+                      <>
+                        <span className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Đang đăng nhập…</span>
+                      </>
                     ) : (
-                      <span className="text-[11px] font-medium text-sky-600 dark:text-sky-400">
-                        Chọn
-                      </span>
+                      <>
+                        <Sparkles className="w-3 h-3 text-amber-300" />
+                        <span>1-Click Đăng nhập ngay</span>
+                      </>
                     )}
-                  </div>
-                </button>
+                  </button>
+                </div>
               );
             })}
           </div>
 
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center pt-1 border-t border-slate-100 dark:border-slate-800">
-            * Thợ đối tác đăng nhập trên ứng dụng di động ZUP Thợ.
-          </p>
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 text-center leading-relaxed">
+            💡 Tài khoản <span className="font-semibold text-slate-700 dark:text-slate-300">Thợ đối tác</span> đăng nhập trực tiếp qua ứng dụng di động <span className="font-medium text-sky-600 dark:text-sky-400">ZUP Thợ (Expo App)</span>.
+          </div>
         </div>
       ) : (
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-md text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95 cursor-pointer"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-sky-300 dark:border-sky-800 bg-white/95 dark:bg-slate-900/95 text-sky-700 dark:text-sky-300 backdrop-blur-md shadow-lg hover:shadow-xl hover:bg-sky-50/80 dark:hover:bg-slate-800 text-xs font-bold transition-all active:scale-95 cursor-pointer"
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>Demo Accounts</span>
+          <span className="text-sm">🔑</span>
+          <span>Tài khoản Demo (Tuyển dụng &amp; Hội đồng)</span>
         </button>
       )}
     </div>

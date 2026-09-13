@@ -150,6 +150,48 @@ export default function LoginPage() {
     setFieldErrors(newErrors);
   };
 
+  const handlePerformLogin = useCallback(
+    async (credentials: { email: string; password: string }) => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await authApi.login(
+          { email: credentials.email.trim(), password: credentials.password },
+          rememberMe
+        );
+        const { accessToken, refreshToken, user: authUser } = normalizeLoginPayload(res.data);
+
+        setTokens(accessToken, refreshToken);
+        setUser(authUser);
+        routeAfterAuth(authUser);
+      } catch (err: unknown) {
+        const code = getAuthErrorCode(err);
+        const message = getAuthErrorMessage(err, 'Email hoặc mật khẩu không chính xác');
+
+        if (code === 'ACCOUNT_LOCKED') {
+          setError('Tài khoản đã bị tạm khóa do nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.');
+        } else {
+          setError(message);
+        }
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [rememberMe, routeAfterAuth, setTokens, setUser]
+  );
+
+  const handleFastDemoLogin = useCallback(
+    async (account: DemoAccount) => {
+      setEmail(account.email);
+      setPassword(account.password);
+      setFieldErrors({});
+      setError('');
+      await handlePerformLogin({ email: account.email, password: account.password });
+    },
+    [handlePerformLogin]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -168,25 +210,10 @@ export default function LoginPage() {
       return;
     }
 
-    setLoading(true);
     try {
-      const res = await authApi.login({ email: email.trim(), password }, rememberMe);
-      const { accessToken, refreshToken, user: authUser } = normalizeLoginPayload(res.data);
-
-      setTokens(accessToken, refreshToken);
-      setUser(authUser);
-      routeAfterAuth(authUser);
-    } catch (err: unknown) {
-      const code = getAuthErrorCode(err);
-      const message = getAuthErrorMessage(err, 'Email hoặc mật khẩu không chính xác');
-
-      if (code === 'ACCOUNT_LOCKED') {
-        setError('Tài khoản đã bị tạm khóa do nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.');
-      } else {
-        setError(message);
-      }
-    } finally {
-      setLoading(false);
+      await handlePerformLogin({ email: email.trim(), password });
+    } catch {
+      // Error handled in handlePerformLogin
     }
   };
 
@@ -324,13 +351,13 @@ export default function LoginPage() {
         </form>
       </AuthCard>
 
-      {/* Floating dev account selector (strictly for local development) */}
-      {process.env.NODE_ENV === 'development' && (
-        <DevAccountDrawer
-          currentEmail={email}
-          onSelectAccount={handleSelectDemoAccount}
-        />
-      )}
+      {/* Floating demo account drawer (Recruiters & Thesis Committee) */}
+      <DevAccountDrawer
+        currentEmail={email}
+        onSelectAccount={handleSelectDemoAccount}
+        onFastLogin={handleFastDemoLogin}
+        isLoggingIn={loading}
+      />
     </>
   );
 }
