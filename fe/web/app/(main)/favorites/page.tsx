@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Service } from '@/types';
 import { useServiceStore } from '@/store/service.store';
 import { UnifiedServiceCard, UnifiedServiceCardSkeleton } from '@/app/components/services/UnifiedServiceCard';
+import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
 export default function FavoritesPage() {
   const {
@@ -89,10 +90,11 @@ export default function FavoritesPage() {
             </div>
             <p className="text-sm font-bold text-muted-foreground">Bộ sưu tập của bạn</p>
           </div>
-          <h1 className="text-3xl font-bold brand-heading">Dịch vụ yêu thích</h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Lưu lại các dịch vụ bạn quan tâm để so sánh, xem lại và đặt lịch nhanh hơn.
-          </p>
+          <CustomerPageHeader
+            eyebrow="Bộ sưu tập của bạn"
+            title="Dịch vụ yêu thích"
+            description="Lưu lại các dịch vụ bạn quan tâm để so sánh, xem lại và đặt lịch nhanh hơn."
+          />
         </div>
         <Link href="/services">
           <Button className="rounded-xl bg-action-blue px-6 font-bold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue">

@@ -14,6 +14,7 @@ import { notificationsApi } from "@/features/auth/services/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNotificationStore } from "@/store/notification.store";
+import { CustomerPageHeader } from "@/components/customer/CustomerPageHeader";
 
 type CustomerNotification = {
   id: number;
@@ -158,12 +159,11 @@ export default function NotificationsPage() {
     <div className="max-w-3xl mx-auto p-4 md:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Bell className="w-6 h-6 text-action-blue" /> Thông báo của bạn
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Cập nhật những thông tin mới nhất về dịch vụ và đơn hàng
-          </p>
+          <CustomerPageHeader
+            eyebrow="Cập nhật mới"
+            title="Thông báo của bạn"
+            description="Cập nhật những thông tin mới nhất về dịch vụ và đơn hàng."
+          />
         </div>
 
         {notifications.some((n) => !n.isRead) && (

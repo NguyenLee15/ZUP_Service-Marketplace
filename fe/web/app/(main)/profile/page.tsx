@@ -14,6 +14,7 @@ import { authApi } from '@/features/auth/services/auth.api'
 import { useAuthStore } from '@/store/auth.store'
 import Link from 'next/link'
 import Image from 'next/image'
+import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader'
 
 // Validation schemas
 const profileSchema = z.object({
@@ -147,8 +148,11 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold text-foreground text-pretty">Hồ sơ cá nhân</h1>
-          <p className="text-muted-foreground mt-1">Quản lý thông tin tài khoản của bạn</p>
+          <CustomerPageHeader
+            eyebrow="Tài khoản của bạn"
+            title="Hồ sơ cá nhân"
+            description="Quản lý thông tin tài khoản, địa chỉ và bảo mật của bạn."
+          />
         </div>
         <Link href="/profile/addresses">
           <Button variant="outline" className="gap-2">

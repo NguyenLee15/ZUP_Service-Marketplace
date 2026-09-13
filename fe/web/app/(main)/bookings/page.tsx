@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Booking } from '@/types';
+import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   PENDING: { label: 'Chờ xử lý', color: 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300', icon: Clock },
@@ -62,7 +63,11 @@ export default function BookingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">Đơn hàng của tôi</h1>
+      <CustomerPageHeader
+        eyebrow="Theo dõi dịch vụ"
+        title="Đơn hàng của tôi"
+        description="Xem trạng thái, báo giá và bước tiếp theo của từng lịch hẹn."
+      />
 
       <Tabs value={status} onValueChange={setStatus}>
         <TabsList className="w-full justify-start overflow-x-auto mb-4 bg-muted p-1 rounded-lg">

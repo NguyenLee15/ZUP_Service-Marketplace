@@ -19,13 +19,13 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { BackButton } from '@/components/navigation/BackButton';
 import { UnifiedServiceCard, UnifiedServiceCardSkeleton } from '@/app/components/services/UnifiedServiceCard';
 import { useProviderProfileFlow } from '@/features/provider/hooks/useProviderProfileFlow';
+import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
 interface ProviderProfileClientProps {
   provider: ApiPayload;
@@ -57,13 +57,13 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
       <BackButton fallbackHref="/services" className="mb-6" />
 
       {/* 1. SHOP CARD (Shopee-like Profile Section) */}
-      <Card className="overflow-hidden border border-platinum-tint shadow-[var(--brand-shadow-card)] rounded-[24px] py-0 bg-gradient-to-br from-midnight-indigo via-midnight-indigo/95 to-slate-blue text-white mb-8">
+      <Card className="overflow-hidden border border-border shadow-sm rounded-2xl py-0 bg-card text-foreground mb-8">
         <CardContent className="p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
           
           {/* Cột 1: Thông tin cơ bản (Avatar & Name & Buttons) */}
           <div className="flex-1 flex gap-4 md:gap-6 items-center w-full md:max-w-md">
             <div className="relative shrink-0">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/20 bg-action-blue flex items-center justify-center text-white text-2xl md:text-3xl font-extrabold shadow-lg overflow-hidden">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-primary/20 bg-primary/10 flex items-center justify-center text-primary text-2xl md:text-3xl font-extrabold shadow-sm overflow-hidden">
                 {provider.avatarUrl ? (
                   <Image
                     src={provider.avatarUrl}
@@ -90,34 +90,34 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
                 </div>
               </div>
               
-              <div className="mt-2 space-y-1 text-xs md:text-sm text-white/80">
+              <div className="mt-2 space-y-1 text-xs md:text-sm text-muted-foreground">
                 {provider.address && (
                   <p className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 shrink-0 text-white/60" />
+                    <MapPin className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                     <span className="truncate">{provider.address.addressDetail}, {provider.address.ward}, {provider.address.district}, {provider.address.province}</span>
                   </p>
                 )}
                 <p className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 shrink-0 text-white/60" />
+                  <Calendar className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                   Tham gia: {formatDate(provider.createdAt)}
                 </p>
                 
                 {/* Số điện thoại & Email (Ẩn nếu chưa đăng nhập) */}
                 <div className="pt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] md:text-xs">
                   <p className="flex items-center gap-1">
-                    <Phone className="w-3 h-3 text-white/60" />
+                    <Phone className="w-3 h-3 text-muted-foreground" />
                     {isAuthenticated() ? (
                       <span>{provider.phone}</span>
                     ) : (
-                      <span className="text-white/50">{provider.phone ? provider.phone.slice(0, 4) + '****' + provider.phone.slice(-2) : 'N/A'} (Đăng nhập để xem)</span>
+                      <span className="text-muted-foreground">{provider.phone ? provider.phone.slice(0, 4) + '****' + provider.phone.slice(-2) : 'N/A'} (Đăng nhập để xem)</span>
                     )}
                   </p>
                   <p className="flex items-center gap-1">
-                    <Mail className="w-3 h-3 text-white/60" />
+                    <Mail className="w-3 h-3 text-muted-foreground" />
                     {isAuthenticated() ? (
                       <span>{provider.email}</span>
                     ) : (
-                      <span className="text-white/50">Che giấu (Đăng nhập để xem)</span>
+                      <span className="text-muted-foreground">Che giấu (Đăng nhập để xem)</span>
                     )}
                   </p>
                 </div>
@@ -128,7 +128,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
                 <Button
                   onClick={handleStartChat}
                   disabled={chatLoading}
-                  className="bg-white hover:bg-white/90 text-midnight-indigo font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 h-9"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 h-10"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   {chatLoading ? 'Đang kết nối...' : 'Chat Ngay'}
@@ -136,7 +136,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="bg-white/10 hover:bg-white/25 border border-white/30 text-white rounded-full h-9 w-9 flex items-center justify-center transition-all duration-300 active:scale-95 backdrop-blur-sm shrink-0 shadow-sm"
+                  className="bg-muted hover:bg-muted/80 border border-border text-foreground rounded-full h-10 w-10 flex items-center justify-center transition-colors shrink-0 shadow-sm"
                   title="Chia sẻ hồ sơ"
                 >
                   <Share2 className="w-4 h-4 text-white" />
@@ -146,22 +146,22 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
 
           </div>
 
-          <Separator className="bg-white/10 md:hidden w-full" />
-          <div className="hidden md:block h-20 w-[1px] bg-white/10" />
+          <Separator className="bg-border md:hidden w-full" />
+          <div className="hidden md:block h-20 w-[1px] bg-border" />
 
           {/* Cột 2: Chỉ số đánh giá & Hiệu suất (Shopee Metrics) */}
           <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-4">
             
             {/* Đánh giá */}
             <div className="flex items-start gap-2.5">
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-yellow-400">
+              <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600">
                 <Star className="w-4 h-4 fill-yellow-400" />
               </div>
               <div>
                 <p className="text-lg md:text-xl font-bold leading-tight">
                   {Number(provider.stats.avgRating).toFixed(1)} / 5.0
                 </p>
-                <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider mt-0.5">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
                   Đánh giá ({provider.stats.totalReviews})
                 </p>
               </div>
@@ -169,7 +169,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
 
             {/* Hoàn thành */}
             <div className="flex items-start gap-2.5">
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-emerald-400">
+              <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <div>
@@ -178,7 +178,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
                     ? `${provider.metrics.completionRate}%`
                     : 'N/A'}
                 </p>
-                <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider mt-0.5">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
                   Tỷ lệ hoàn thành
                 </p>
               </div>
@@ -186,7 +186,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
 
             {/* Phản hồi */}
             <div className="flex items-start gap-2.5">
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-action-blue">
+              <div className="p-2 rounded-xl bg-primary/10 border border-primary/20 text-primary">
                 <Clock className="w-4 h-4" />
               </div>
               <div>
@@ -195,7 +195,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
                     ? `~${provider.metrics.avgResponseHours}h`
                     : 'N/A'}
                 </p>
-                <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider mt-0.5">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
                   Phản hồi TB
                 </p>
               </div>
@@ -203,14 +203,14 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
 
             {/* Dịch vụ */}
             <div className="flex items-start gap-2.5">
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-amber-400">
+              <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600">
                 <Award className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-lg md:text-xl font-bold leading-tight">
                   {provider.stats.totalServices}
                 </p>
-                <p className="text-[10px] text-white/60 font-medium uppercase tracking-wider mt-0.5">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
                   Tổng dịch vụ
                 </p>
               </div>
@@ -226,13 +226,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
         {/* Tiêu đề & Search/Filters */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-midnight-indigo flex items-center gap-2">
-              Danh sách Dịch vụ
-              <Badge variant="outline" className="bg-pale-gray text-midnight-indigo font-bold text-xs px-2 py-0.5 rounded-full border-platinum-tint">
-                {totalServicesCount}
-              </Badge>
-            </h2>
-            <p className="text-muted-foreground text-xs md:text-sm mt-0.5">Các dịch vụ đang hoạt động được ủy quyền bởi {provider.fullName}.</p>
+            <CustomerPageHeader eyebrow="Hồ sơ nhà cung cấp" title={`Dịch vụ của ${provider.fullName}`} description={`Các dịch vụ đang hoạt động · ${totalServicesCount} lựa chọn`} />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -244,7 +238,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
                 placeholder="Tìm dịch vụ tại cửa hàng..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-10 w-full rounded-xl border-platinum-tint bg-white focus-visible:ring-action-blue"
+                className="pl-9 h-10 w-full rounded-xl border-border bg-background focus-visible:ring-primary"
               />
               {searchTerm && (
                 <button
@@ -257,7 +251,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
             </div>
 
             {/* Sắp xếp dropdown */}
-            <div className="flex items-center gap-2 bg-white border border-platinum-tint rounded-xl px-3 h-10 shrink-0">
+            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 h-10 shrink-0">
               <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
               <select
                 value={sortBy}

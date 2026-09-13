@@ -17,6 +17,7 @@ export default async function PaymentReturnPage({
   const isVnpaySuccess = vnpResponseCode === '00';
   const isPayosSuccess = payosCode === '00';
   const isSuccess = isVnpaySuccess || isPayosSuccess;
+  const isPending = !vnpResponseCode && !payosCode;
 
   // Manual IPN fallback: If the VNPay server webhook hasn't reached our backend yet,
   // we trigger the IPN verification manually from the frontend.
@@ -33,28 +34,32 @@ export default async function PaymentReturnPage({
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-lg dark:bg-slate-900">
-        {isSuccess ? (
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+        {isPending ? (
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 text-3xl">…</div>
+        ) : isSuccess ? (
           <CheckCircle2 className="mx-auto h-20 w-20 text-emerald-500" />
         ) : (
           <XCircle className="mx-auto h-20 w-20 text-rose-500" />
         )}
         
         <h1 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">
-          {isSuccess ? 'Giao dịch thành công!' : 'Giao dịch thất bại'}
+          {isPending ? 'Đang xác nhận giao dịch' : isSuccess ? 'Giao dịch thành công!' : 'Giao dịch thất bại'}
         </h1>
         
         <p className="mt-2 text-slate-500 dark:text-slate-400">
-          {isSuccess 
+          {isPending
+            ? 'Hệ thống đang chờ kết quả đối soát. Vui lòng kiểm tra lại sau ít phút.'
+            : isSuccess
             ? amount > 0 
               ? `Bạn đã nạp thành công ${amount.toLocaleString('vi-VN')}đ vào ví.`
               : 'Bạn đã nạp tiền thành công vào ví.'
             : 'Đã có lỗi xảy ra hoặc bạn đã hủy giao dịch.'}
         </p>
 
-        <div className="mt-8 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
+        <div className="mt-8 rounded-xl bg-muted p-4">
           <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-            Bạn có thể đóng cửa sổ này và quay lại ứng dụng.
+            {isPending ? 'Bạn có thể quay lại trang chủ và kiểm tra lịch sử giao dịch sau.' : 'Bạn có thể đóng cửa sổ này và quay lại ứng dụng.'}
           </p>
         </div>
 

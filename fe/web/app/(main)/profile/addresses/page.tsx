@@ -7,6 +7,7 @@ import { AlertCircle, Check, MapPin, Plus } from 'lucide-react';
 import { useAddressManagementFlow } from '@/features/user/hooks/useAddressManagementFlow';
 import { AddressCard } from '@/features/user/components/AddressCard';
 import { AddressFormModal } from '@/features/user/components/AddressFormModal';
+import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
 export default function AddressesPage() {
   const {
@@ -36,6 +37,7 @@ export default function AddressesPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <CustomerPageHeader eyebrow="Tài khoản" title="Quản lý địa chỉ" description="Lưu địa chỉ thường dùng để đặt dịch vụ nhanh hơn." />
         <div>
           <h1 className="text-3xl font-bold brand-heading">Quản lý địa chỉ</h1>
           <p className="text-muted-foreground mt-1">

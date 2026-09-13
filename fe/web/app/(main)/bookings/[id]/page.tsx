@@ -42,7 +42,7 @@ export default function BookingDetailPage() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <div className="h-96 glass-panel rounded-2xl animate-pulse" />
+        <div className="h-96 rounded-2xl border border-border bg-muted/60 animate-pulse" />
       </div>
     );
   }

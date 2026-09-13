@@ -59,7 +59,7 @@ export function ServicesSearchBar({
   const isAiMode = searchParams.get('ai') === 'true';
 
   return (
-    <div className="bg-white border-b border-platinum-tint">
+    <div className="sticky top-16 z-30 border-b border-platinum-tint bg-white/95 backdrop-blur-sm dark:bg-slate-950/95">
       <div className="max-w-7xl mx-auto px-0 py-4 sm:px-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4 flex-1">

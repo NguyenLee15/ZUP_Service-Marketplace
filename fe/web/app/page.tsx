@@ -1,4 +1,5 @@
 import React, { Suspense } from "react";
+import Link from "next/link";
 import { Sparkles, ListOrdered } from "lucide-react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -279,7 +280,7 @@ export default async function Home() {
         );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       <CustomerHeader />
 
       <main id="main-content" className="flex-1">
@@ -310,6 +311,17 @@ export default async function Home() {
         </script>
 
         <HeroSection />
+
+        <section className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pt-6 md:flex-row md:items-center md:justify-between md:px-6" aria-label="Lối tắt khách hàng">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Bạn đã đặt dịch vụ trước đó?</p>
+            <p className="text-sm text-muted-foreground">Theo dõi tiến độ hoặc đặt lại chỉ với một chạm.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/bookings" className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Xem đơn của tôi</Link>
+            <Link href="/services" className="inline-flex min-h-11 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Tìm dịch vụ</Link>
+          </div>
+        </section>
 
         <div className="px-4 md:px-6 py-8 md:py-10 max-w-7xl mx-auto space-y-10 md:space-y-12">
           {/* TOC nhanh — thanh anchor gọn */}

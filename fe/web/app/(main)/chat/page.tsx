@@ -12,7 +12,7 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-[calc(100dvh-9rem)] min-h-[620px] items-center justify-center rounded-2xl glass-panel text-sm font-semibold text-muted-foreground shadow-[0_0_30px_rgba(0,107,255,0.05)]">
+        <div className="flex h-[calc(100dvh-9rem)] min-h-[620px] items-center justify-center rounded-2xl border border-border bg-card text-sm font-semibold text-muted-foreground">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-action-blue/10 flex items-center justify-center animate-pulse">
               <Bot className="w-5 h-5 text-action-blue" />
@@ -65,7 +65,7 @@ function ChatPageContent() {
   } = useChatFlow();
 
   return (
-    <div className="h-[calc(100dvh-9rem)] min-h-[620px] flex bg-card overflow-hidden rounded-2xl glass-panel shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+    <div className="flex h-[calc(100dvh-9rem)] min-h-[620px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       {/* Sidebar */}
       <ChatSidebar
         selectedConversation={selectedConversation}

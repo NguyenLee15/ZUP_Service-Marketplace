@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Search,
@@ -202,7 +201,7 @@ export function CustomerHeader() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-200 border-b ${
+        className={`sticky top-0 z-50 transition-[background-color,border-color,box-shadow] duration-200 border-b ${
           scrolled
             ? 'bg-white/95 dark:bg-slate-900/95 border-slate-200/80 dark:border-slate-800 shadow-sm'
             : 'bg-white/80 dark:bg-slate-900/80 border-slate-200/60 dark:border-slate-800/60'
@@ -241,7 +240,7 @@ export function CustomerHeader() {
                   id="header-search-form"
                   className="relative group"
                 >
-                  <div className="relative flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 focus-within:border-sky-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all duration-200">
+                  <div className="relative flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 focus-within:border-sky-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-2 focus-within:ring-sky-500/20 transition-[background-color,border-color,box-shadow] duration-200">
                     <Search className="w-4 h-4 ml-3.5 text-slate-400 dark:text-slate-500 shrink-0 pointer-events-none" />
                     <input
                       type="text"

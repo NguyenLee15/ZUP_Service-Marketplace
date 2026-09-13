@@ -91,7 +91,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
         <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 md:p-8">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
                 <ShieldAlert className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -120,7 +120,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
                 {reasons.map((r) => (
                   <label
                     key={r}
-                    className={`flex items-center gap-3 p-3.5 glass-panel rounded-xl cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors duration-200 ${
                       reason === r
                         ? 'border-action-blue/40 bg-action-blue/5 shadow-[0_0_10px_rgba(0,107,255,0.1)]'
                         : 'hover:bg-pale-gray/30'
@@ -174,7 +174,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`glass-panel border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors duration-200 ${
                   isDragging
                     ? 'border-action-blue bg-action-blue/5 shadow-[0_0_20px_rgba(0,107,255,0.1)]'
                     : 'border-platinum-tint hover:border-action-blue/30'
@@ -233,7 +233,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
             <Button
               type="submit"
               disabled={!reason || !description || isSubmitting}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-steel-gray text-white font-semibold py-3 flex items-center justify-center gap-2 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.2)] transition-all hover:-translate-y-0.5"
+              className="w-full bg-destructive hover:bg-destructive/90 disabled:bg-muted text-destructive-foreground font-semibold py-3 flex items-center justify-center gap-2 rounded-xl transition-colors"
             >
               <Send className="w-4 h-4" />
               {isSubmitting ? 'Đang gửi…' : 'Gửi khiếu nại'}

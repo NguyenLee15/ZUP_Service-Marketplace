@@ -15,6 +15,7 @@ import { ServicesSearchBar } from '@/features/service/components/ServicesSearchB
 import { ServicesActiveFilters } from '@/features/service/components/ServicesActiveFilters';
 import { ServicesSearchResults } from '@/features/service/components/ServicesSearchResults';
 import { ServicesFloatingFilterButton } from '@/features/service/components/ServicesFloatingFilterButton';
+import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
 export default function ServicesSearchPage() {
   return (
@@ -116,23 +117,19 @@ function ServicesSearchContent() {
             {/* Heading & View Mode / Sort Controls */}
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 sm:gap-6 mb-6">
               <div className="min-w-0 space-y-1">
-                <h2 className="text-2xl sm:text-3xl font-bold brand-heading leading-tight flex items-center gap-3 break-words text-balance">
-                  {searchParams.get('keyword') ? (
-                    <>
-                      Kết quả {searchParams.get('ai') === 'true' ? 'AI ' : ''}cho &quot;
-                      {searchParams.get('keyword')}&quot;
-                    </>
-                  ) : activeCategories.length === 1 ? (
-                    <>{activeCategories[0].name}</>
-                  ) : activeCategories.length > 1 ? (
-                    <>{activeCategories.length} danh mục đã chọn</>
-                  ) : (
-                    <>Tất cả dịch vụ</>
-                  )}
-                </h2>
-                <p className="text-sm sm:text-base text-muted-foreground font-medium text-pretty">
-                  {locationDescription}
-                </p>
+                <CustomerPageHeader
+                  eyebrow="Khám phá dịch vụ"
+                  title={
+                    searchParams.get('keyword')
+                      ? `Kết quả ${searchParams.get('ai') === 'true' ? 'AI ' : ''}cho "${searchParams.get('keyword')}"`
+                      : activeCategories.length === 1
+                        ? activeCategories[0].name
+                        : activeCategories.length > 1
+                          ? `${activeCategories.length} danh mục đã chọn`
+                          : 'Tất cả dịch vụ'
+                  }
+                  description={locationDescription}
+                />
               </div>
 
               <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto md:items-center">

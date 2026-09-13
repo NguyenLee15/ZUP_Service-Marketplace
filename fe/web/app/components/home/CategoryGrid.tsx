@@ -48,7 +48,7 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
           <Link
             href="/services"
             prefetch={false}
-            className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-sky-600 hover:text-white transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 md:shrink-0"
+            className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-sky-600 hover:text-white transition-colors shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 md:shrink-0"
           >
             <span>Khám phá tất cả dịch vụ</span>
             <span>→</span>
@@ -66,7 +66,7 @@ export function CategoryGrid({ categories = [] }: { categories?: Category[] }) {
                 href={`/services?categoryIds=${cat.categoryId}`}
                 prefetch={false}
                 aria-label={`Xem dịch vụ ${cat.label}`}
-                className="group relative rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 p-3 flex items-center gap-3 transition-all duration-150 min-h-[76px] md:min-h-[84px] cursor-pointer hover:border-sky-500/40 hover:-translate-y-0.5 hover:shadow-sm"
+                className="group relative flex min-h-[76px] cursor-pointer items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-3 transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:border-sky-500/40 hover:shadow-sm dark:border-slate-800/80 dark:bg-slate-900/50 md:min-h-[84px]"
               >
                 <div className="p-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 transition-colors duration-150 group-hover:bg-sky-600 group-hover:text-white shrink-0">
                   <IconComponent className="w-5 h-5 transition-transform duration-150 group-hover:scale-105" />

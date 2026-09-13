@@ -41,7 +41,7 @@ export function HowItWorks() {
             return (
               <article
                 key={step.step}
-                className="group relative rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all duration-150 hover:border-sky-500/40 hover:-translate-y-0.5"
+                className="group relative rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:border-sky-500/40 dark:border-slate-800 dark:bg-slate-900"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400">

@@ -81,7 +81,7 @@ export function Testimonials() {
       {/* Compact Stats Strip — số liệu tín nhiệm ngắn gọn */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-200/80 dark:border-slate-800">
         {stats.map((s) => (
-          <div key={s.label} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs p-4 rounded-xl text-center transition-all hover:-translate-y-0.5 duration-300">
+          <div key={s.label} className="rounded-xl border border-slate-200/80 bg-white p-4 text-center shadow-xs transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-sky-200 dark:border-slate-800 dark:bg-slate-900">
             <span className={`text-2xl md:text-3xl font-extrabold block mb-0.5 ${s.color}`}>{s.value}</span>
             <p className="text-[11px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400">{s.label}</p>
           </div>

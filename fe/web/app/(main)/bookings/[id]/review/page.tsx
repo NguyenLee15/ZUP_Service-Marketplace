@@ -67,7 +67,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
         <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 md:p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
+            <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
               <Star className="w-8 h-8 text-white fill-white" />
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Đánh giá dịch vụ</h1>
@@ -90,10 +90,10 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                       onClick={() => setRating(idx + 1)}
                       onMouseEnter={() => setHoveredRating(idx + 1)}
                       onMouseLeave={() => setHoveredRating(0)}
-                      className="p-1 transition-all duration-200 hover:scale-125 active:scale-95"
+                      className="p-1 transition-transform duration-200 hover:scale-110 active:scale-95"
                     >
                       <Star
-                        className={`w-12 h-12 transition-all duration-200 ${
+                        className={`w-12 h-12 transition-colors duration-200 ${
                           isFilled
                             ? 'fill-amber-400 text-amber-400'
                             : 'text-muted-foreground/30 hover:text-amber-200'
@@ -153,7 +153,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                 <button
                   type="button"
                   onClick={handleAutoSuggest}
-                  className="absolute right-3 bottom-3 p-2 rounded-lg bg-gradient-to-r from-action-blue to-glacier-blue text-white shadow-[0_0_10px_rgba(0,107,255,0.3)] hover:scale-105 transition-transform"
+                  className="absolute right-3 bottom-3 p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                   aria-label="AI soạn thảo tự động"
                 >
                   <Zap className="w-4 h-4" />
@@ -190,7 +190,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             <Button
               type="submit"
               disabled={rating === 0 || isSubmitting}
-              className="w-full bg-action-blue hover:bg-glacier-blue disabled:bg-steel-gray text-white font-semibold py-3 flex items-center justify-center gap-2 rounded-xl shadow-[0_0_15px_rgba(0,107,255,0.25)] transition-all hover:-translate-y-0.5"
+              className="w-full bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground font-semibold py-3 flex items-center justify-center gap-2 rounded-xl transition-colors"
             >
               <Send className="w-4 h-4" />
               {isSubmitting ? 'Đang gửi…' : 'Gửi đánh giá'}
