@@ -41,8 +41,8 @@ export const authApi = {
   resendOtp: (email: string) =>
     api.post('/auth/resend-otp', { email }),
 
-  login: (dto: LoginDto) =>
-    api.post('/auth/login', dto),
+  login: (dto: LoginDto, rememberMe = true) =>
+    api.post('/auth/login', dto, { headers: { 'X-Remember-Me': String(rememberMe) } }),
 
   refresh: (refreshToken?: string) =>
     api.post('/auth/refresh', refreshToken ? { refreshToken } : {}),
@@ -59,8 +59,8 @@ export const authApi = {
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.post('/auth/change-password', data),
 
-  googleAuth: (credential: string) =>
-    api.post('/auth/google', { credential }),
+  googleAuth: (credential: string, rememberMe = true) =>
+    api.post('/auth/google', { credential }, { headers: { 'X-Remember-Me': String(rememberMe) } }),
 
   getProfile: () =>
     api.get('/auth/profile'),

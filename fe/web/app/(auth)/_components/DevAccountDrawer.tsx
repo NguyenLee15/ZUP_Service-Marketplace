@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, User, Briefcase, ShieldCheck, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Sparkles, User, Briefcase, ShieldCheck, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type DemoRoleKey = 'customer' | 'staff' | 'admin';
@@ -103,7 +103,7 @@ export function DevAccountDrawer({ onSelectAccount, currentEmail }: DevAccountDr
                   type="button"
                   onClick={() => handleSelect(acc)}
                   className={cn(
-                    'w-full flex items-center justify-between p-2 rounded-xl text-left transition-all text-xs cursor-pointer',
+                    'w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors text-xs cursor-pointer',
                     isCurrent
                       ? 'bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60'
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 border border-transparent'
@@ -153,7 +153,7 @@ export function DevAccountDrawer({ onSelectAccount, currentEmail }: DevAccountDr
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-md text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-md text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors active:scale-95 cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
           <span>Demo Accounts</span>
@@ -162,4 +162,3 @@ export function DevAccountDrawer({ onSelectAccount, currentEmail }: DevAccountDr
     </div>
   );
 }
-

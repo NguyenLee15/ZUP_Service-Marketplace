@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface AuthCardProps {
@@ -11,21 +11,20 @@ interface AuthCardProps {
 
 export function AuthCard({ title, description, children, className }: AuthCardProps) {
   return (
-    <Card className={cn('w-full border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-sm py-0 overflow-hidden', className)}>
-      <CardHeader className="p-6 pb-2 text-center space-y-1.5">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+    <Card className={cn('w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white py-0 shadow-sm dark:border-slate-800 dark:bg-slate-900', className)}>
+      <CardHeader className="space-y-1.5 p-6 pb-2 text-left sm:p-8 sm:pb-3">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {title}
         </h1>
         {description && (
-          <CardDescription className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <CardDescription className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
             {description}
           </CardDescription>
         )}
       </CardHeader>
-      <CardContent className="p-6 pt-4 space-y-4">
+      <CardContent className="space-y-4 p-6 pt-4 sm:p-8 sm:pt-4">
         {children}
       </CardContent>
     </Card>
   );
 }
-

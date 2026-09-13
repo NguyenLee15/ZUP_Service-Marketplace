@@ -120,7 +120,7 @@ export default function LoginPage() {
       setLoading(true);
       setError('');
       try {
-        const res = await authApi.googleAuth(response.credential);
+        const res = await authApi.googleAuth(response.credential, rememberMe);
         const { accessToken, refreshToken, user: authUser } = normalizeLoginPayload(res.data);
 
         setTokens(accessToken, refreshToken);
@@ -132,7 +132,7 @@ export default function LoginPage() {
         setLoading(false);
       }
     },
-    [routeAfterAuth, setTokens, setUser]
+    [rememberMe, routeAfterAuth, setTokens, setUser]
   );
 
   const validate = (name: string, value: string) => {
@@ -170,7 +170,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const res = await authApi.login({ email: email.trim(), password });
+      const res = await authApi.login({ email: email.trim(), password }, rememberMe);
       const { accessToken, refreshToken, user: authUser } = normalizeLoginPayload(res.data);
 
       setTokens(accessToken, refreshToken);
@@ -283,7 +283,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-colors active:scale-[0.99] disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <span className="flex items-center gap-2">

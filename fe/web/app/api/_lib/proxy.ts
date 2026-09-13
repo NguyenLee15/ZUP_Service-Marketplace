@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const ACCESS_TOKEN_COOKIE = "hs_access_token";
 const REFRESH_TOKEN_COOKIE = "hs_refresh_token";
+const SESSION_MODE_COOKIE = "hs_session_mode";
 const AUTH_TOKEN_PATHS = new Set([
   "/auth/login",
   "/auth/google",
@@ -11,19 +12,20 @@ const AUTH_TOKEN_PATHS = new Set([
   "/auth/refresh",
 ]);
 
-function authCookieOptions(maxAge: number) {
+function authCookieOptions(maxAge?: number) {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
-    maxAge,
+    ...(maxAge === undefined ? {} : { maxAge }),
   };
 }
 
 function clearAuthCookies(response: NextResponse) {
   response.cookies.set(ACCESS_TOKEN_COOKIE, "", authCookieOptions(0));
   response.cookies.set(REFRESH_TOKEN_COOKIE, "", authCookieOptions(0));
+  response.cookies.set(SESSION_MODE_COOKIE, "", authCookieOptions(0));
 }
 
 function readJsonBody(text: string) {
@@ -75,27 +77,34 @@ function stripRefreshToken(payload: ApiPayload) {
 function storeAuthCookies(
   response: NextResponse,
   tokens: { accessToken: string | null; refreshToken: string | null; role: string | null },
+  rememberMe: boolean,
 ) {
+  const isAdminOrStaff = tokens.role === "ADMIN" || tokens.role === "STAFF";
+  const refreshMaxAge = isAdminOrStaff ? 2 * 60 * 60 : 7 * 24 * 60 * 60;
+
   if (tokens.accessToken) {
     response.cookies.set(
       ACCESS_TOKEN_COOKIE,
       tokens.accessToken,
-      authCookieOptions(30 * 60),
+      authCookieOptions(rememberMe ? 30 * 60 : undefined),
     );
   }
 
   if (tokens.refreshToken) {
     // Admin/Staff: 2 hours (2 * 60 * 60)
     // Customer/Provider: 7 days (7 * 24 * 60 * 60)
-    const isAdminOrStaff = tokens.role === "ADMIN" || tokens.role === "STAFF";
-    const refreshMaxAge = isAdminOrStaff ? 2 * 60 * 60 : 7 * 24 * 60 * 60;
-    
     response.cookies.set(
       REFRESH_TOKEN_COOKIE,
       tokens.refreshToken,
-      authCookieOptions(refreshMaxAge),
+      authCookieOptions(rememberMe ? refreshMaxAge : undefined),
     );
   }
+
+  response.cookies.set(
+    SESSION_MODE_COOKIE,
+    rememberMe ? "persistent" : "session",
+    authCookieOptions(rememberMe ? refreshMaxAge : undefined),
+  );
 }
 
 /**
@@ -236,7 +245,11 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
     });
 
     if (authTokens) {
-      storeAuthCookies(proxiedResponse, authTokens);
+      const requestedRememberMe = req.headers.get("x-remember-me");
+      const rememberMe = requestedRememberMe === null
+        ? cookieStore.get(SESSION_MODE_COOKIE)?.value !== "session"
+        : requestedRememberMe === "true";
+      storeAuthCookies(proxiedResponse, authTokens, rememberMe);
     }
 
     if (
