@@ -59,8 +59,8 @@ export function DevAccountDrawer({ onSelectAccount, currentEmail }: DevAccountDr
   const [isOpen, setIsOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  // In production builds, we can hide or keep minimal
-  if (process.env.NODE_ENV === 'production') {
+  // Demo credentials are intentionally public; deployments can opt out.
+  if (process.env.NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS === 'false') {
     return null;
   }
 
