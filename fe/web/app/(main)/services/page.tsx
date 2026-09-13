@@ -21,7 +21,7 @@ export default function ServicesSearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-[100dvh] bg-background flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-action-blue border-t-transparent rounded-full animate-spin" />
         </div>
       }
@@ -87,7 +87,7 @@ function ServicesSearchContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background">
       {/* Search Header Bar */}
       <ServicesSearchBar
         loading={loading}

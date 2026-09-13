@@ -102,7 +102,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
           </div>
 
           {/* Warning Alert */}
-          <div className="mb-6 glass-panel rounded-xl p-4 flex gap-3 border-l-4 border-amber-pop">
+          <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex gap-3 border-l-4 border-l-amber-500">
             <AlertCircle className="w-5 h-5 text-amber-pop flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-foreground mb-1">Quá trình Khiếu Nại</p>
@@ -187,7 +187,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
                   <Button
                     type="button"
                     variant="outline"
-                    className="text-foreground glass-panel hover:bg-action-blue/10 hover:text-action-blue transition-colors"
+                    className="text-foreground rounded-xl border border-border bg-muted/30 hover:bg-primary/10 hover:text-primary transition-colors"
                     asChild
                   >
                     <span className="cursor-pointer">Chọn File</span>
@@ -208,7 +208,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
                   {uploadedFiles.map((file, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-3 glass-panel rounded-xl"
+                      className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30"
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{file.name}</p>

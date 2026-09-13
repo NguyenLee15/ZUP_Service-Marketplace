@@ -66,7 +66,7 @@ export function Testimonials() {
             </p>
 
             <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-800 pt-4" itemProp="author" itemScope itemType="https://schema.org/Person">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-sky-600 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
                 {t.initials}
               </div>
               <div>

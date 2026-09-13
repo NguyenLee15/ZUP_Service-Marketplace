@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -81,9 +82,9 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
 
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
-                <h1 className="text-lg md:text-2xl font-bold tracking-tight truncate max-w-[240px]" title={provider.fullName}>
+                <h2 className="text-lg md:text-2xl font-bold tracking-tight truncate max-w-[240px]" title={provider.fullName}>
                   {provider.fullName}
-                </h1>
+                </h2>
                 <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300 text-[8px] md:text-[9px] font-bold uppercase tracking-widest border border-green-500/30">
                   <Shield className="w-2.5 h-2.5" />
                   Đối tác uy tín
@@ -138,6 +139,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
                   onClick={handleShare}
                   className="bg-muted hover:bg-muted/80 border border-border text-foreground rounded-full h-10 w-10 flex items-center justify-center transition-colors shrink-0 shadow-sm"
                   title="Chia sẻ hồ sơ"
+                  aria-label="Chia sẻ hồ sơ nhà cung cấp"
                 >
                   <Share2 className="w-4 h-4 text-white" />
                 </button>
@@ -279,7 +281,7 @@ export function ProviderProfileClient({ provider }: ProviderProfileClientProps) 
           </div>
         ) : services.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center bg-pale-gray/30 rounded-[20px] border border-platinum-tint border-dashed">
-            <div className="text-4xl mb-3">📦</div>
+            <Package className="mb-3 h-10 w-10 text-muted-foreground/60" aria-hidden="true" />
             <h3 className="font-bold text-foreground">Không tìm thấy dịch vụ nào</h3>
             <p className="text-muted-foreground text-xs md:text-sm max-w-sm mt-1">
               {debouncedSearch

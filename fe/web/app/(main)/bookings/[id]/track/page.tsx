@@ -14,7 +14,7 @@ import { TrackingProviderInfoCard } from "@/features/booking/components/track/Tr
 const TrackingMap = dynamic(() => import("./TrackingMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full glass-panel rounded-2xl flex items-center justify-center">
+    <div className="w-full h-full rounded-2xl border border-border bg-muted flex items-center justify-center">
       <div className="flex flex-col items-center gap-3 text-muted-foreground">
         <div className="w-10 h-10 rounded-full bg-action-blue/10 flex items-center justify-center animate-pulse">
           <Navigation className="w-5 h-5 text-action-blue" />
@@ -49,7 +49,7 @@ export default function TrackingPage({
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <div className="h-[80vh] glass-panel rounded-2xl animate-pulse" />
+        <div className="h-[80vh] rounded-2xl border border-border bg-muted animate-pulse" />
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function TrackingPage({
     return (
       <div className="max-w-2xl mx-auto p-6 text-center">
         <BackButton fallbackHref="/bookings" className="mb-4" />
-        <div className="glass-panel rounded-2xl p-8 flex flex-col items-center gap-4">
+        <div className="rounded-2xl border border-border bg-card p-8 flex flex-col items-center gap-4">
           <AlertCircle className="w-12 h-12 text-red-400" />
           <p className="text-lg font-semibold text-foreground">
             {error || "Không tìm thấy đơn hàng"}
@@ -108,8 +108,7 @@ export default function TrackingPage({
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <BackButton fallbackHref={`/bookings/${id}`} className="mb-6" />
-        <div className="glass-panel rounded-3xl p-8 flex flex-col items-center gap-6 shadow-xl relative overflow-hidden border border-white/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-action-blue/5 via-transparent to-transparent pointer-events-none" />
+        <div className="rounded-3xl border border-border bg-card p-8 flex flex-col items-center gap-6 shadow-sm relative overflow-hidden">
 
           <div
             className={`w-16 h-16 rounded-full ${iconBg} flex items-center justify-center`}
@@ -118,7 +117,7 @@ export default function TrackingPage({
           </div>
 
           <div className="space-y-2">
-            <span className="inline-block text-[10px] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 font-bold text-action-blue uppercase tracking-wider">
+            <span className="inline-block text-[10px] px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 font-bold text-primary uppercase tracking-wider">
               {statusLabel}
             </span>
             <h1 className="text-xl font-extrabold text-foreground tracking-tight">
@@ -132,7 +131,7 @@ export default function TrackingPage({
           <div className="w-full pt-2 flex flex-col gap-2">
             <Button
               onClick={() => router.push(`/bookings/${id}`)}
-              className="w-full bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white rounded-xl py-5 font-bold shadow-lg"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-5 font-bold transition-colors"
             >
               Xem chi tiết đơn hàng
             </Button>

@@ -130,7 +130,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                     onClick={() =>
                       setComment((prev) => (prev ? `${prev}, ${tag}` : tag))
                     }
-                    className="px-3 py-1.5 rounded-full glass-panel text-action-blue text-xs font-semibold hover:bg-action-blue/10 transition-colors active:scale-95"
+                    className="px-3 py-2 rounded-full border border-border bg-muted/40 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors active:scale-95"
                   >
                     + {tag}
                   </button>
@@ -165,7 +165,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             </div>
 
             {/* Helpful Tips */}
-            <div className="glass-panel rounded-xl p-4">
+            <div className="rounded-xl border border-border bg-muted/40 p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Lightbulb className="w-4 h-4 text-amber-pop" />
                 <p className="text-sm font-medium text-foreground">Mẹo viết đánh giá tốt:</p>
