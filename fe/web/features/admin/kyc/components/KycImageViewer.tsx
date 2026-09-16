@@ -52,44 +52,50 @@ export function KycImageViewer({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-9 w-9 min-h-[36px] min-w-[36px] p-0 focus-visible:ring-2 focus-visible:ring-slate-400"
                 onClick={handleZoomIn}
                 title="Phóng to"
+                aria-label="Phóng to ảnh"
               >
                 <ZoomIn className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-9 w-9 min-h-[36px] min-w-[36px] p-0 focus-visible:ring-2 focus-visible:ring-slate-400"
                 onClick={handleZoomOut}
                 title="Thu nhỏ"
+                aria-label="Thu nhỏ ảnh"
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-9 w-9 min-h-[36px] min-w-[36px] p-0 focus-visible:ring-2 focus-visible:ring-slate-400"
                 onClick={handleRotate}
                 title="Xoay 90 độ"
+                aria-label="Xoay ảnh 90 độ"
               >
                 <RotateCw className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs px-2"
+                className="h-9 min-h-[36px] text-xs px-2.5 focus-visible:ring-2 focus-visible:ring-slate-400"
                 onClick={handleReset}
+                title="Đặt lại kích thước"
+                aria-label={`Đặt lại kích thước ban đầu (hiện tại ${zoom}%)`}
               >
                 {zoom}%
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-9 w-9 min-h-[36px] min-w-[36px] p-0 focus-visible:ring-2 focus-visible:ring-slate-400"
                 onClick={() => setLightboxOpen(true)}
                 title="Xem toàn màn hình"
+                aria-label="Xem ảnh tài liệu toàn màn hình"
               >
                 <Maximize2 className="h-4 w-4" />
               </Button>

@@ -60,7 +60,7 @@ export default function AdminLayout({
         />
 
         <main
-          className={`flex-grow overflow-auto transition-[margin-left] duration-300 flex flex-col h-[100dvh] ${
+          className={`flex-grow transition-[margin-left] duration-300 flex flex-col h-[100dvh] overflow-hidden ${
             sidebarOpen ? "md:ml-64" : "md:ml-20"
           }`}
         >

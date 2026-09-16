@@ -144,26 +144,37 @@ export default function AdminServicesPage() {
 
   return (
     <AdminPermissionGuard permission={AdminPermission.SERVICE_MODERATE}>
-      <div className="space-y-6">
+      <div className="mx-auto max-w-[1600px] space-y-6">
       <div>
-        <h3 className="text-2xl font-bold text-foreground">Quản Lý Dịch Vụ</h3>
-        <p className="text-muted-foreground mt-1">Duyệt và quản lý dịch vụ của nhà cung cấp</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-950">Quản Lý Dịch Vụ</h1>
+        <p className="text-muted-foreground mt-1 text-sm">Duyệt và quản lý dịch vụ của nhà cung cấp</p>
       </div>
 
       {/* Filter Tabs & Search */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap" role="tablist" aria-label="Bộ lọc trạng thái dịch vụ">
           {['all', 'PENDING', 'ACTIVE', 'REJECTED', 'HIDDEN'].map((status) => (
-            <Button key={status} variant={filterStatus === status ? 'default' : 'outline'}
-              onClick={() => { setFilterStatus(status); setPage(1); }} size="sm" className="gap-1">
+            <Button
+              key={status}
+              variant={filterStatus === status ? 'default' : 'outline'}
+              aria-pressed={filterStatus === status}
+              onClick={() => { setFilterStatus(status); setPage(1); }}
+              size="sm"
+              className="gap-1"
+            >
               <Filter className="w-3 h-3" />
               {status === 'all' ? 'Tất Cả' : statusConfig[status]?.label || status}
             </Button>
           ))}
         </div>
         <div className="relative w-full sm:w-64">
+          <label htmlFor="admin-services-search" className="sr-only">
+            Tìm kiếm dịch vụ
+          </label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            id="admin-services-search"
+            aria-label="Tìm dịch vụ hoặc tên thợ"
             placeholder="Tìm dịch vụ, thợ..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

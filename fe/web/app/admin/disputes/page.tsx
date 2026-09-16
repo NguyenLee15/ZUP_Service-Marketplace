@@ -82,9 +82,9 @@ export default function AdminDisputesPage() {
       <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950">
             Quản Lý Tranh Chấp & Khiếu Nại
-          </h3>
+          </h1>
           <p className="mt-1 text-sm text-slate-500">
             Xem hồ sơ, đối chiếu chứng cứ và đưa ra phán quyết tối hậu giải quyết mâu thuẫn.
           </p>
@@ -92,15 +92,20 @@ export default function AdminDisputesPage() {
 
         <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:items-center">
           <div className="relative w-full sm:w-64 mb-2 sm:mb-0">
+            <label htmlFor="admin-disputes-search" className="sr-only">
+              Tìm kiếm khiếu nại
+            </label>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
+              id="admin-disputes-search"
+              aria-label="Tìm kiếm theo mã đơn, khách hàng hoặc thợ"
               placeholder="Tìm mã đơn, khách, thợ..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 h-9 text-sm rounded-lg"
             />
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Bộ lọc trạng thái khiếu nại">
           {[
             { value: '', label: 'Tất cả' },
             { value: 'PENDING', label: 'Đang chờ xử lý' },
@@ -109,6 +114,7 @@ export default function AdminDisputesPage() {
             <button
               key={option.value}
               type="button"
+              aria-pressed={statusFilter === option.value}
               onClick={() => setStatusFilter(option.value as ApiPayload)}
               className={`h-9 rounded-lg border px-4 text-xs font-bold transition-all ${
                 statusFilter === option.value

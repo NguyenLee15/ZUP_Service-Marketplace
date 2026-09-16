@@ -26,7 +26,7 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   return (
     <aside
-      className={`hidden md:flex fixed left-0 top-0 z-40 h-screen border-r border-slate-800 bg-[var(--admin-sidebar)] text-slate-200 transition-[width] duration-300 flex-col shadow-[8px_0_28px_rgba(15,23,42,0.16)] ${
+      className={`hidden md:flex fixed left-0 top-0 z-40 h-[100dvh] border-r border-slate-800 bg-[var(--admin-sidebar)] text-slate-200 transition-[width] duration-300 flex-col shadow-[8px_0_28px_rgba(15,23,42,0.16)] ${
         sidebarOpen ? "w-64" : "w-20"
       }`}
     >
@@ -64,9 +64,9 @@ export function AdminSidebar({
         )}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label={sidebarOpen ? "Thu gọn" : "Mở rộng"}
+          aria-label={sidebarOpen ? "Thu gọn thanh điều hướng" : "Mở rộng thanh điều hướng"}
           title={sidebarOpen ? "Thu gọn" : "Mở rộng"}
-          className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus:outline-none"
+          className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
         >
           {sidebarOpen ? (
             <ChevronLeft className="w-4 h-4" />

@@ -65,7 +65,15 @@ export function DashboardRevenueChart({ data, loading }: DashboardRevenueChartPr
             </p>
           </div>
 
-          <div className="mt-6 h-[230px] w-full">
+          <div className="sr-only">
+            Tổng hoa hồng trong kỳ: {formatCurrency(totalCommission)} qua {visibleData.length} mốc dữ liệu thống kê.
+          </div>
+
+          <div
+            className="mt-6 h-[230px] w-full"
+            role="region"
+            aria-label="Biểu đồ miền doanh thu hoa hồng theo thời gian"
+          >
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={230}>
               <AreaChart
                 data={visibleData}

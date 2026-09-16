@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, Loader2, AlertCircle } from "lucide-react";
+import { Search, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
 import { AdminPermission } from "@/types/admin-permissions";
@@ -46,10 +46,11 @@ function BookingsListContent() {
 
       {/* Filter Tabs & Search Bar */}
       <div className="flex flex-col gap-3 rounded-xl border bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Bộ lọc trạng thái đơn hàng">
           {BOOKING_STATUS_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              aria-pressed={filterStatus === opt.value}
               onClick={() => {
                 setFilterStatus(opt.value);
                 setPage(1);
@@ -66,8 +67,13 @@ function BookingsListContent() {
         </div>
 
         <div className="relative w-full sm:w-72">
+          <label htmlFor="admin-bookings-search" className="sr-only">
+            Tìm kiếm đơn hàng
+          </label>
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
+            id="admin-bookings-search"
+            aria-label="Tìm theo mã đơn hàng, tên khách hàng hoặc dịch vụ"
             type="text"
             placeholder="Tìm theo mã, tên, dịch vụ..."
             value={searchTerm}
@@ -82,9 +88,17 @@ function BookingsListContent() {
         {/* Left Column: Booking Cards List */}
         <div className="lg:col-span-5 space-y-3">
           {loading ? (
-            <div className="flex flex-col items-center justify-center p-12 text-slate-400 space-y-2">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm">Đang tải danh sách đơn hàng...</p>
+            <div className="space-y-3" aria-busy="true" aria-label="Đang tải danh sách đơn hàng">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-28 rounded-xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse space-y-3">
+                  <div className="flex justify-between">
+                    <div className="h-4 w-24 bg-slate-200 rounded" />
+                    <div className="h-4 w-20 bg-slate-200 rounded" />
+                  </div>
+                  <div className="h-3 w-40 bg-slate-100 rounded" />
+                  <div className="h-3 w-32 bg-slate-100 rounded" />
+                </div>
+              ))}
             </div>
           ) : bookings.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 text-center text-slate-500 bg-white">

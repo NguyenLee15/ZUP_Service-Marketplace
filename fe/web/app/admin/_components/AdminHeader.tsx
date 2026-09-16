@@ -38,7 +38,8 @@ export function AdminHeader({
         <div className="flex items-center gap-4">
           <Link
             href="/admin/notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+            aria-label={`Thông báo hệ thống${unreadCount > 0 ? ` (${unreadCount} chưa đọc)` : ""}`}
+            className="relative flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (

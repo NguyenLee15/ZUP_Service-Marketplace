@@ -60,6 +60,7 @@ export default function AdminNotificationsPage() {
   const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
   const [typeFilter, setTypeFilter] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -67,21 +68,24 @@ export default function AdminNotificationsPage() {
 
   const fetchNotifications = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await notificationsApi.getAll({
         isRead: readFilter === "all" ? undefined : readFilter === "read",
         type: typeFilter.trim() || undefined,
       });
       setNotifications(res.data.data || []);
-    } catch (error: unknown) {
-      const status = typeof error === "object" && error !== null
-        ? (error as { response?: { status?: number }; status?: number })
+    } catch (err: unknown) {
+      const status = typeof err === "object" && err !== null
+        ? (err as { response?: { status?: number }; status?: number })
         : undefined;
 
       if (status?.response?.status === 401 || status?.status === 401) {
         useAuthStore.getState().logout();
         router.push("/login");
+        return;
       }
+      setError("Không thể tải danh sách thông báo. Vui lòng kiểm tra kết nối và thử lại.");
     } finally {
       setLoading(false);
     }
@@ -132,7 +136,7 @@ export default function AdminNotificationsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-[1440px] mx-auto space-y-4">
         <div className="h-8 w-48 bg-slate-200 rounded animate-pulse mb-6"></div>
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-24 bg-white rounded-xl border border-slate-100 shadow-sm animate-pulse"></div>
@@ -142,7 +146,7 @@ export default function AdminNotificationsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-[1440px] mx-auto space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
@@ -165,8 +169,22 @@ export default function AdminNotificationsPage() {
         )}
       </div>
 
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm">
+          <span>{error}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchNotifications}
+            className="border-red-300 text-red-800 hover:bg-red-100 shrink-0"
+          >
+            Thử lại
+          </Button>
+        </div>
+      )}
+
       <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between shadow-sm">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Bộ lọc trạng thái đọc">
           {[
             { key: "all", label: "Tất cả" },
             { key: "unread", label: "Chưa đọc" },
@@ -177,18 +195,26 @@ export default function AdminNotificationsPage() {
               type="button"
               variant={readFilter === item.key ? "default" : "outline"}
               size="sm"
+              aria-pressed={readFilter === item.key}
               onClick={() => setReadFilter(item.key as typeof readFilter)}
             >
               {item.label}
             </Button>
           ))}
         </div>
-        <input
-          value={typeFilter}
-          onChange={(event) => setTypeFilter(event.target.value)}
-          placeholder="Lọc theo loại, ví dụ: NEW_KYC"
-          className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all sm:w-64"
-        />
+        <div className="flex items-center gap-2">
+          <label htmlFor="admin-notification-type-filter" className="sr-only">
+            Lọc theo loại thông báo
+          </label>
+          <input
+            id="admin-notification-type-filter"
+            aria-label="Lọc theo loại thông báo"
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            placeholder="Lọc theo loại, ví dụ: NEW_KYC"
+            className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all sm:w-64"
+          />
+        </div>
       </div>
 
       {notifications.length === 0 ? (
@@ -211,8 +237,18 @@ export default function AdminNotificationsPage() {
             return (
               <div
                 key={notification.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Thông báo: ${notification.title}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (!notification.isRead) handleMarkAsRead(notification.id);
+                    if (detailHref) router.push(detailHref);
+                  }
+                }}
                 onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
-                className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer ${
+                className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none ${
                   notification.isRead
                     ? "bg-slate-50/50 border-slate-100 opacity-80"
                     : "bg-white border-indigo-100 shadow-[0_4px_20px_-4px_rgba(79,70,229,0.1)] hover:border-indigo-300"
@@ -263,7 +299,9 @@ export default function AdminNotificationsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                        aria-label="Xóa thông báo"
+                        title="Xóa thông báo"
+                        className="h-9 w-9 min-h-[36px] min-w-[36px] text-slate-400 hover:text-red-500 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400"
                         disabled={deletingId === notification.id}
                         onClick={(e) => {
                           e.stopPropagation();

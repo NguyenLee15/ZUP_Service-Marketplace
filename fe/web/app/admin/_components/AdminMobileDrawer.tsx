@@ -35,7 +35,11 @@ export function AdminMobileDrawer({
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-800 bg-[var(--admin-sidebar)] text-slate-200 flex flex-col shadow-2xl transition-transform duration-300 md:hidden ${
+        role="dialog"
+        aria-modal={isOpen}
+        aria-label="Menu điều hướng quản trị"
+        aria-hidden={!isOpen}
+        className={`fixed left-0 top-0 z-50 h-[100dvh] w-64 border-r border-slate-800 bg-[var(--admin-sidebar)] text-slate-200 flex flex-col shadow-2xl transition-transform duration-300 md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -61,8 +65,8 @@ export function AdminMobileDrawer({
           </div>
           <button
             onClick={onClose}
-            aria-label="Đóng menu"
-            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+            aria-label="Đóng menu điều hướng"
+            className="rounded-md p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-white focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
           >
             <X className="w-5 h-5" />
           </button>

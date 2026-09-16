@@ -70,13 +70,14 @@ export function AdminUserFilters({
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col gap-3 rounded-xl border bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Bộ lọc trạng thái tài khoản">
           {statusTabs.map((tab) => {
             const active = statusFilter === tab.value;
             return (
               <button
                 key={tab.value}
                 type="button"
+                aria-pressed={active}
                 onClick={() => setStatusFilter(tab.value)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                   active
@@ -91,8 +92,13 @@ export function AdminUserFilters({
         </div>
 
         <div className="relative w-full sm:w-72">
+          <label htmlFor="admin-users-search" className="sr-only">
+            Tìm kiếm người dùng
+          </label>
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
+            id="admin-users-search"
+            aria-label="Tìm kiếm người dùng theo tên, email hoặc số điện thoại"
             type="text"
             placeholder="Tìm theo tên, email, SĐT..."
             value={searchTerm}

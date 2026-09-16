@@ -194,13 +194,14 @@ export function StaffTable({
                         {new Date(staff.createdAt).toLocaleDateString('vi-VN')}
                       </TableCell>
                       <TableCell className="py-3 px-4">
-                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onEdit(staff)}
-                            className="h-7 w-7 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                            className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-400"
                             title="Chỉnh sửa thông tin"
+                            aria-label={`Chỉnh sửa thông tin nhân viên ${staff.fullName}`}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </Button>
@@ -213,8 +214,9 @@ export function StaffTable({
                                 disabled={
                                   permissionsLoading || Boolean(permissionsError)
                                 }
-                                className="h-7 w-7 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                                className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 focus-visible:ring-2 focus-visible:ring-purple-400"
                                 title={permissionsError || 'Phân quyền module'}
+                                aria-label={`Phân quyền module cho ${staff.fullName}`}
                               >
                                 <Settings2 className="w-3.5 h-3.5" />
                               </Button>
@@ -222,8 +224,9 @@ export function StaffTable({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDelete(staff)}
-                                className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400"
                                 title="Xóa nhân viên"
+                                aria-label={`Xóa tài khoản nhân viên ${staff.fullName}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>

@@ -44,7 +44,10 @@ export function DashboardStatusChart({ data, loading }: DashboardStatusChartProp
       {!isMounted || loading ? (
         <DashboardLoadingState />
       ) : visibleData.length > 0 ? (
-        <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-2">
+        <div className="min-h-[280px] rounded-lg bg-pale-gray/30 p-2" role="region" aria-label="Biểu đồ phân bổ trạng thái đơn hàng">
+          <div className="sr-only">
+            Thống kê trạng thái đơn hàng: {visibleData.map((d) => `${d.name}: ${d.count} đơn`).join(', ')}.
+          </div>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
               <BarChart

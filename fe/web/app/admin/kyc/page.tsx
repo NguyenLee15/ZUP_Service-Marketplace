@@ -8,7 +8,6 @@ import {
   XCircle,
   Clock,
   ExternalLink,
-  Loader2,
   AlertCircle,
   ShieldCheck,
 } from "lucide-react";
@@ -139,10 +138,12 @@ export default function KYCPage() {
           <CardContent className="p-4 sm:p-5">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               {/* Filter Tabs */}
-              <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
+              <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200" role="tablist" aria-label="Bộ lọc trạng thái hồ sơ KYC">
                 {filterTabs.map((tab) => (
                   <button
                     key={tab.value}
+                    type="button"
+                    aria-pressed={selectedStatus === tab.value}
                     onClick={() => {
                       setSelectedStatus(tab.value);
                       setPage(1);
@@ -160,8 +161,13 @@ export default function KYCPage() {
 
               {/* Search Bar */}
               <div className="relative w-full sm:w-72">
+                <label htmlFor="admin-kyc-search" className="sr-only">
+                  Tìm kiếm hồ sơ KYC
+                </label>
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <Input
+                  id="admin-kyc-search"
+                  aria-label="Tìm theo tên, email hoặc số điện thoại thợ"
                   placeholder="Tìm theo tên, email, SĐT..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -181,9 +187,20 @@ export default function KYCPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex flex-col items-center justify-center p-12 text-slate-400 space-y-2">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                <p className="text-sm">Đang tải danh sách KYC...</p>
+              <div className="p-6 space-y-4" aria-busy="true" aria-label="Đang tải danh sách KYC">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center justify-between gap-4 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-slate-200" />
+                      <div className="space-y-1.5">
+                        <div className="h-4 w-32 bg-slate-200 rounded" />
+                        <div className="h-3 w-24 bg-slate-100 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-6 w-20 bg-slate-200 rounded-full" />
+                    <div className="h-8 w-16 bg-slate-200 rounded" />
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500 space-y-3">
