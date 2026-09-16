@@ -90,35 +90,49 @@ export class ReviewsService {
       }
     }
 
-    const review = await this.prisma.$transaction(async (tx) => {
-      const createdReview = await tx.review.create({
-        data: {
-          bookingId,
-          customerId,
-          serviceId: booking.serviceId,
-          rating,
-          comment,
-          isFlagged,
-        },
-      });
+    let review;
+    try {
+      review = await this.prisma.$transaction(async (tx) => {
+        const createdReview = await tx.review.create({
+          data: {
+            bookingId,
+            customerId,
+            serviceId: booking.serviceId,
+            rating,
+            comment,
+            isFlagged,
+          },
+        });
 
-      // Cập nhật avgRating + totalReviews trên Service
-      const stats = await tx.review.aggregate({
-        where: { serviceId: booking.serviceId },
-        _avg: { rating: true },
-        _count: { rating: true },
-      });
+        // Cập nhật avgRating + totalReviews trên Service
+        const stats = await tx.review.aggregate({
+          where: { serviceId: booking.serviceId },
+          _avg: { rating: true },
+          _count: { rating: true },
+        });
 
-      await tx.service.update({
-        where: { id: booking.serviceId },
-        data: {
-          avgRating: stats._avg.rating || 0,
-          totalReviews: stats._count.rating,
-        },
-      });
+        await tx.service.update({
+          where: { id: booking.serviceId },
+          data: {
+            avgRating: stats._avg.rating || 0,
+            totalReviews: stats._count.rating,
+          },
+        });
 
-      return createdReview;
-    });
+        return createdReview;
+      });
+    } catch (error: any) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Bạn đã đánh giá đơn hàng này rồi',
+        });
+      }
+      throw error;
+    }
 
     // Báº¯n event kiá»ƒm duyá»‡t AI náº¿u cÃ³ comment
     if (comment) {

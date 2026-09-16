@@ -12,6 +12,7 @@ import { CustomerBookingTimeline } from '../../../features/booking/components/Cu
 import { CustomerDisputeSection } from '../../../features/booking/components/CustomerDisputeSection';
 import { CustomerProviderInfoCard } from '../../../features/booking/components/CustomerProviderInfoCard';
 import { CustomerQuotationCard } from '../../../features/booking/components/CustomerQuotationCard';
+import { CustomerSupplementaryQuotationCard } from '../../../features/booking/components/CustomerSupplementaryQuotationCard';
 import type { CustomerBookingDetail, CustomerBookingTimelineItem } from '../../../features/booking/components/customer-booking-detail.types';
 import { chatApi } from '../../../features/chat/chat.api';
 import { useActiveColors } from '../../../hooks/useActiveColors';
@@ -19,8 +20,10 @@ import { getApiErrorMessage, unwrapData } from '../../../lib/api-response';
 import { exportBookingReceiptPdf } from '../../../lib/customer-pdf-export';
 import { toRouteId, routes } from '../../../lib/route-utils';
 
-type BookingAction = 'confirm' | 'reject' | 'cancel' | 'accept' | 'rebook';
-type Sheet = 'reject' | 'cancel' | 'accept' | null;
+type BookingAction =
+  | { type: 'confirm' | 'reject' | 'cancel' | 'accept' | 'rebook' }
+  | { type: 'confirmSupplementary' | 'rejectSupplementary'; quoteId: number };
+type Sheet = 'reject' | 'cancel' | 'accept' | 'rejectSupplementary' | null;
 
 function getConversationId(payload: unknown) {
   const data: any = unwrapData(payload);
@@ -40,6 +43,7 @@ export default function BookingDetailScreen() {
   const bookingId = Number(id);
   const validBookingId = Number.isFinite(bookingId) && bookingId > 0;
   const [reason, setReason] = useState('');
+  const [selectedQuoteId, setSelectedQuoteId] = useState<number | null>(null);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [message, setMessage] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -63,20 +67,30 @@ export default function BookingDetailScreen() {
     queryClient.invalidateQueries({ queryKey: ['bookings'] }),
   ]);
   const actionMutation = useMutation({
-    mutationFn: ({ type }: { type: BookingAction }) => {
-      if (type === 'confirm') return bookingApi.confirmQuote(bookingId);
-      if (type === 'reject') return bookingApi.rejectQuote(bookingId, reason.trim());
-      if (type === 'cancel') return bookingApi.cancelByCustomer(bookingId, reason.trim());
-      if (type === 'accept') return bookingApi.acceptCompletion(bookingId);
+    mutationFn: (action: BookingAction) => {
+      if (action.type === 'confirm') return bookingApi.confirmQuote(bookingId);
+      if (action.type === 'reject') return bookingApi.rejectQuote(bookingId, reason.trim());
+      if (action.type === 'cancel') return bookingApi.cancelByCustomer(bookingId, reason.trim());
+      if (action.type === 'accept') return bookingApi.acceptCompletion(bookingId);
+      if (action.type === 'confirmSupplementary') return bookingApi.confirmSupplementaryQuote(bookingId, action.quoteId);
+      if (action.type === 'rejectSupplementary') return bookingApi.rejectSupplementaryQuote(bookingId, action.quoteId, reason.trim());
       return bookingApi.rebook(bookingId);
     },
-    onSuccess: async (response, { type }) => {
-      setSheet(null); setReason(''); await invalidate();
+    onSuccess: async (response, action) => {
+      setSheet(null); setReason(''); setSelectedQuoteId(null); await invalidate();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      if (type === 'rebook') {
+      if (action.type === 'rebook') {
         const nextId = toRouteId(getRebookTargetId(response));
         setMessage('Đã tạo lại đơn từ đơn cũ.');
         if (nextId) router.push(routes.booking.detail(nextId));
+        return;
+      }
+      if (action.type === 'confirmSupplementary') {
+        setMessage('Đã chấp thuận báo giá phát sinh.');
+        return;
+      }
+      if (action.type === 'rejectSupplementary') {
+        setMessage('Đã từ chối báo giá phát sinh.');
         return;
       }
       setMessage('Đã cập nhật đơn hàng.');
@@ -107,6 +121,9 @@ export default function BookingDetailScreen() {
   const confirmSheet = () => {
     if (sheet === 'accept') return actionMutation.mutate({ type: 'accept' });
     if (!reason.trim()) return setMessage('Vui lòng nhập lý do trước khi xác nhận.');
+    if (sheet === 'rejectSupplementary' && selectedQuoteId) {
+      return actionMutation.mutate({ type: 'rejectSupplementary', quoteId: selectedQuoteId });
+    }
     actionMutation.mutate({ type: sheet === 'reject' ? 'reject' : 'cancel' });
   };
 
@@ -116,6 +133,8 @@ export default function BookingDetailScreen() {
 
   const status = booking.status || 'PENDING';
   const statusColor = getBookingStatusColor(status, colors);
+  const supplementaryQuotes = booking.quotations?.filter((q) => q.type === 'SUPPLEMENTARY') || [];
+
   return <View style={styles.screen}>
     <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic" refreshControl={<RefreshControl refreshing={bookingQuery.isRefetching || timelineQuery.isRefetching} onRefresh={() => { bookingQuery.refetch(); timelineQuery.refetch(); }} />}>
       <CustomerBookingHeader booking={booking} statusColor={statusColor} />
@@ -123,10 +142,55 @@ export default function BookingDetailScreen() {
       <CustomerProviderInfoCard booking={booking} statusColor={statusColor} />
       <CustomerBookingTimeline booking={booking} history={timelineQuery.data} />
       {booking.quoteAmount || booking.actualPrice || status === 'QUOTED' ? <CustomerQuotationCard booking={booking} loading={actionMutation.isPending} onConfirm={() => actionMutation.mutate({ type: 'confirm' })} onReject={() => setSheet('reject')} /> : null}
+      {supplementaryQuotes.map((suppQuote) => (
+        <CustomerSupplementaryQuotationCard
+          key={suppQuote.id}
+          quotation={suppQuote}
+          loading={actionMutation.isPending}
+          onConfirm={() => actionMutation.mutate({ type: 'confirmSupplementary', quoteId: suppQuote.id })}
+          onReject={() => {
+            setSelectedQuoteId(suppQuote.id);
+            setSheet('rejectSupplementary');
+          }}
+        />
+      ))}
       <CustomerDisputeSection booking={booking} loading={actionMutation.isPending} chatLoading={chatLoading} exportLoading={exportingPdf} onCancel={() => setSheet('cancel')} onChat={openChat} onExport={exportReceipt} onTrack={() => router.push(routes.booking.track(String(bookingId)))} onReview={() => router.push(routes.booking.review(String(bookingId)))} onDispute={() => router.push(routes.booking.dispute(String(bookingId)))} onAccept={() => setSheet('accept')} onRebook={() => actionMutation.mutate({ type: 'rebook' })} />
     </ScrollView>
     {status === 'QUOTED' ? <BottomActionBar><Button mode="outlined" disabled={actionMutation.isPending} onPress={() => setSheet('reject')} style={styles.flexButton}>Từ chối</Button><Button mode="contained" loading={actionMutation.isPending} disabled={actionMutation.isPending} onPress={() => actionMutation.mutate({ type: 'confirm' })} style={styles.flexButton}>Chấp nhận giá</Button></BottomActionBar> : status === 'DONE' ? <BottomActionBar><Button mode="outlined" icon="star-outline" onPress={() => router.push(routes.booking.review(String(bookingId)))} style={styles.flexButton}>Đánh giá</Button><Button mode="contained" icon="check-circle-outline" loading={actionMutation.isPending} disabled={actionMutation.isPending} onPress={() => setSheet('accept')} style={styles.flexButton}>Hoàn thành</Button></BottomActionBar> : ['CONFIRMED', 'IN_PROGRESS'].includes(status) ? <BottomActionBar><Button mode="outlined" icon="map-marker-path" onPress={() => router.push(routes.booking.track(String(bookingId)))} style={styles.flexButton}>Theo dõi</Button><Button mode="contained" icon="chat-outline" loading={chatLoading} disabled={chatLoading} onPress={openChat} style={styles.flexButton}>Nhắn tin thợ</Button></BottomActionBar> : null}
-    <ConfirmSheet visible={sheet !== null} title={sheet === 'accept' ? 'Xác nhận hoàn thành' : sheet === 'reject' ? 'Từ chối báo giá' : 'Hủy đơn hàng'} description={sheet === 'accept' ? 'Bạn xác nhận dịch vụ đã được thực hiện đúng thỏa thuận?' : 'Vui lòng nhập lý do để nhà cung cấp nắm được tình huống.'} confirmLabel={sheet === 'accept' ? 'Xác nhận' : sheet === 'reject' ? 'Từ chối' : 'Hủy đơn'} destructive={sheet !== 'accept'} loading={actionMutation.isPending} onDismiss={() => { setSheet(null); setReason(''); }} onConfirm={confirmSheet}>{sheet !== 'accept' ? <TextInput label="Lý do" mode="outlined" value={reason} onChangeText={setReason} multiline numberOfLines={4} autoFocus /> : null}</ConfirmSheet>
+    <ConfirmSheet
+      visible={sheet !== null}
+      title={
+        sheet === 'accept'
+          ? 'Xác nhận hoàn thành'
+          : sheet === 'reject'
+            ? 'Từ chối báo giá'
+            : sheet === 'rejectSupplementary'
+              ? 'Từ chối báo giá phát sinh'
+              : 'Hủy đơn hàng'
+      }
+      description={
+        sheet === 'accept'
+          ? 'Bạn xác nhận dịch vụ đã được thực hiện đúng thỏa thuận?'
+          : 'Vui lòng nhập lý do để nhà cung cấp nắm được tình huống.'
+      }
+      confirmLabel={sheet === 'accept' ? 'Xác nhận' : sheet === 'cancel' ? 'Hủy đơn' : 'Từ chối'}
+      destructive={sheet !== 'accept'}
+      loading={actionMutation.isPending}
+      onDismiss={() => { setSheet(null); setReason(''); setSelectedQuoteId(null); }}
+      onConfirm={confirmSheet}
+    >
+      {sheet !== 'accept' ? (
+        <TextInput
+          label="Lý do"
+          mode="outlined"
+          value={reason}
+          onChangeText={setReason}
+          multiline
+          numberOfLines={4}
+          autoFocus
+        />
+      ) : null}
+    </ConfirmSheet>
   </View>;
 }
 

@@ -47,6 +47,17 @@ export class ChatsController {
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.match(/^image\/(jpeg|png|webp|gif)$/i)) {
+          return cb(
+            new BadRequestException(
+              'Chỉ chấp nhận tệp hình ảnh (jpeg, png, webp, gif)',
+            ),
+            false,
+          );
+        }
+        cb(null, true);
+      },
     }),
   )
   @ApiOperation({ summary: 'Upload chat image' })

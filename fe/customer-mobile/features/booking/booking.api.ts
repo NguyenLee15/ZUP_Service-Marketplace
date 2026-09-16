@@ -16,6 +16,10 @@ export const bookingApi = {
   cancelByCustomer: (id: number, reason: string) =>
     api.patch(`/bookings/${id}/cancel`, { reason }),
   acceptCompletion: (id: number) => api.patch(`/bookings/${id}/accept`),
+  confirmSupplementaryQuote: (id: number, quoteId: number) =>
+    api.patch(`/bookings/${id}/supplementary-quotes/${quoteId}/confirm`),
+  rejectSupplementaryQuote: (id: number, quoteId: number, reason?: string) =>
+    api.patch(`/bookings/${id}/supplementary-quotes/${quoteId}/reject`, { reason }),
   dispute: (id: number, data: FormData) =>
     api.post(`/bookings/${id}/dispute`, data, {
       headers: { "Content-Type": "multipart/form-data" },

@@ -74,13 +74,21 @@ export class ServicesController {
     return this.searchService.search(dto);
   }
 
-  /** POST /services/ai-search */
+  /** GET /services/ai-state */
   @Get('ai-state')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get AI diagnostic state (Admin only)' })
   async getAiState() {
     return this.searchService.getAiState();
   }
 
   @Post('ai-test')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Test AI search diagnostics (Admin only)' })
   async testAiSearch(@Body() dto: AiSearchDto) {
     return this.searchService.testAiSearch(dto.query);
   }

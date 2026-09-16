@@ -26,13 +26,13 @@ export class ProviderPublicService {
             id: true,
             fullName: true,
             avatarUrl: true,
-            phone: true,
             createdAt: true,
           },
         },
         images: { orderBy: { displayOrder: 'asc' } },
         items: true,
         reviews: {
+          where: { isFlagged: false },
           include: {
             customer: { select: { id: true, fullName: true, avatarUrl: true } },
           },
@@ -166,7 +166,6 @@ export class ProviderPublicService {
             province: true,
             district: true,
             ward: true,
-            addressDetail: true,
           },
         },
       },
@@ -200,13 +199,17 @@ export class ProviderPublicService {
       this.getProviderMetrics(provider.id),
     ]);
 
+    const maskedPhone = provider.phone
+      ? provider.phone.slice(0, 4) + '****' + provider.phone.slice(-2)
+      : null;
+
     return {
       data: {
         id: provider.id,
         fullName: provider.fullName,
         avatarUrl: provider.avatarUrl,
-        phone: provider.phone,
-        email: provider.email,
+        phone: maskedPhone,
+        email: null,
         createdAt: provider.createdAt,
         address: provider.addresses[0] || null,
         stats: {

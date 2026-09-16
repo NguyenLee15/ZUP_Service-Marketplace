@@ -117,6 +117,7 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       content: string;
       messageType?: string;
       imageUrl?: string;
+      clientId?: string;
     },
   ) {
     const user = client.data.user;
@@ -155,7 +156,9 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.imageUrl,
     );
 
-    this.server.to(`convo:${data.conversationId}`).emit('newMessage', message);
+    this.server
+      .to(`convo:${data.conversationId}`)
+      .emit('newMessage', { ...message, clientId: data.clientId });
 
     // AI Fallback if recipient is offline
     const convo = await this.prisma.conversation.findUnique({

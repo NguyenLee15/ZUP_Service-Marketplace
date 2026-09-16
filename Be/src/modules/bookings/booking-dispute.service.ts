@@ -97,9 +97,24 @@ export class BookingDisputeService {
     }
 
     const { updated, dispute } = await this.prisma.$transaction(async (tx) => {
-      const updatedBooking = await tx.booking.update({
-        where: { id: bookingId },
+      const claim = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          customerId,
+          status: { in: [BookingStatus.IN_PROGRESS, BookingStatus.DONE] },
+        },
         data: { status: BookingStatus.DISPUTED },
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Đơn hàng không ở trạng thái hợp lệ để khiếu nại hoặc đã có khiếu nại trước đó',
+        });
+      }
+
+      const updatedBooking = await tx.booking.findUnique({
+        where: { id: bookingId },
       });
 
       const createdDispute = await tx.dispute.create({

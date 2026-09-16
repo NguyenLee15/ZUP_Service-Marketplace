@@ -1,3 +1,22 @@
+export type QuotationItem = {
+  id: number;
+  name: string;
+  unit?: string | null;
+  price: number | string;
+  quantity: number;
+};
+
+export type QuotationDetail = {
+  id: number;
+  type: string;
+  status: string;
+  actualPrice: number | string;
+  estimatedTime?: string | null;
+  note?: string | null;
+  createdAt?: string | Date | null;
+  quotationItems?: QuotationItem[];
+};
+
 export type CustomerBookingDetail = {
   id?: number | string;
   bookingCode?: string | null;
@@ -17,6 +36,7 @@ export type CustomerBookingDetail = {
   providerAcceptedAt?: string | Date | null;
   provider?: { id?: number | string; fullName?: string | null; phone?: string | null } | null;
   service?: { id?: number | string; name?: string | null } | null;
+  quotations?: QuotationDetail[];
 };
 
 export type CustomerBookingTimelineItem = {

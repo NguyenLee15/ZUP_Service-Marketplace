@@ -113,6 +113,9 @@ export class BookingCreationService {
     );
 
     const booking = await this.prisma.$transaction(async (tx) => {
+      // Concurrency lock: Tuần tự hóa yêu cầu tạo đơn từ cùng 1 khách hàng
+      await tx.$executeRaw`SELECT id FROM users WHERE id = ${customerId} FOR UPDATE`;
+
       // Guard: chống đặt trùng cùng dịch vụ trong thời gian ngắn (chạy trong transaction)
       const duplicateWindow = new Date(Date.now() - 5 * 60 * 1000); // 5 phút
       const existingBooking = await tx.booking.findFirst({
