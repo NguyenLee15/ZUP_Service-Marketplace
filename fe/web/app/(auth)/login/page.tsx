@@ -224,12 +224,12 @@ export default function LoginPage() {
         title="Đăng nhập ZUP"
         description="Chào mừng bạn quay lại. Đăng nhập để tiếp tục quản lý lịch hẹn và dịch vụ."
       >
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
           {error && (
             <div
               role="alert"
               aria-live="assertive"
-              className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-2.5 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium"
             >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
@@ -237,8 +237,8 @@ export default function LoginPage() {
           )}
 
           {/* Email input */}
-          <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
+          <div className="space-y-1">
+            <Label htmlFor="email" className="text-xs font-medium text-slate-700 dark:text-slate-300">
               Địa chỉ Email
             </Label>
             <div className="relative">
@@ -257,7 +257,7 @@ export default function LoginPage() {
                 }}
                 aria-invalid={!!fieldErrors.email}
                 aria-describedby={fieldErrors.email ? 'email-error' : undefined}
-                className={`h-11 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm focus-visible:ring-sky-500 ${
+                className={`h-10 pl-9.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-sm focus-visible:ring-sky-500 ${
                   fieldErrors.email ? 'border-rose-500 focus-visible:ring-rose-400' : ''
                 }`}
                 autoComplete="email"
@@ -303,7 +303,7 @@ export default function LoginPage() {
             </div>
             <Link
               href="/forgot-password"
-              className="inline-flex min-h-[44px] items-center text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-lg px-1"
+              className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded px-1 py-0.5"
             >
               Quên mật khẩu?
             </Link>
@@ -313,7 +313,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-colors active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+            className="h-10 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm font-semibold text-white shadow-sm transition-colors active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -334,22 +334,20 @@ export default function LoginPage() {
           />
 
           {/* Register switch link */}
-          <div className="pt-2 text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          <div className="pt-0.5 text-center text-xs text-slate-600 dark:text-slate-400">
             Chưa có tài khoản ZUP?{' '}
             <Link
               href="/register"
-              className="inline-flex min-h-[44px] items-center font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-lg px-1"
+              className="font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded px-1 py-0.5"
             >
               Đăng ký ngay
             </Link>
           </div>
 
           {/* Provider Guidance Notice */}
-          <div className="mt-3 rounded-xl border border-sky-100 bg-sky-50/70 p-3 text-center text-xs text-slate-600 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-slate-300">
-            <p className="font-semibold text-sky-800 dark:text-sky-300">Bạn là Đối tác Thợ ZUP?</p>
-            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Vui lòng đăng nhập trên ứng dụng <span className="font-semibold text-slate-800 dark:text-slate-200">ZUP Thợ (Mobile App)</span> để nhận việc và gửi báo giá.
-            </p>
+          <div className="pt-0.5 text-center text-[11px] text-slate-500 dark:text-slate-400">
+            Đối tác Thợ vui lòng đăng nhập trên ứng dụng{' '}
+            <span className="font-semibold text-slate-700 dark:text-slate-300">ZUP Thợ (Mobile App)</span>
           </div>
         </form>
       </AuthCard>

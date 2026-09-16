@@ -89,8 +89,8 @@ export function SocialAuthGroup({
   }, [gsiReady, googleClientId, handleCallback, mode]);
 
   return (
-    <div className="w-full space-y-3">
-      <div className="relative my-4">
+    <div className="w-full space-y-2">
+      <div className="relative my-2.5">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <div className="w-full border-t border-slate-200 dark:border-slate-800" />
         </div>
