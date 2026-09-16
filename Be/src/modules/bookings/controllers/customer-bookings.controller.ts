@@ -13,7 +13,7 @@ import {
   UploadedFiles,
   Res,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import {
   ApiBearerAuth,
@@ -256,7 +256,9 @@ export class BookingsController {
       required: ['reason', 'description'],
     },
   })
-  @UseInterceptors(FilesInterceptor('evidenceFiles', 5))
+  @UseInterceptors(
+    AnyFilesInterceptor({ limits: { fileSize: 10 * 1024 * 1024, files: 5 } }),
+  )
   async dispute(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,

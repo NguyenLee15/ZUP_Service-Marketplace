@@ -206,14 +206,49 @@ export function useCreateBookingFlow() {
 
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      () => {
-        setAddressMode('custom');
-        setSelectedAddressId(null);
-        toast({
-          title: 'Đã nhận được vị trí hiện tại',
-          description: 'Vui lòng kiểm tra và nhập địa chỉ chi tiết để thợ đến đúng nơi.',
-        });
-        setGpsLoading(false);
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            const loc = data.results[0];
+            const formatted = loc.formatted_address || '';
+            const components = loc.address_components || [];
+
+            const pComp = components.find((c: { types: string[]; long_name: string }) =>
+              c.types.includes('administrative_area_level_1'),
+            );
+            const dComp = components.find((c: { types: string[]; long_name: string }) =>
+              c.types.includes('administrative_area_level_2'),
+            );
+            const wComp = components.find((c: { types: string[]; long_name: string }) =>
+              c.types.includes('administrative_area_level_3'),
+            );
+
+            if (pComp?.long_name) setProvince(pComp.long_name);
+            if (dComp?.long_name) setDistrict(dComp.long_name);
+            if (wComp?.long_name) setWard(wComp.long_name);
+            setAddressDetail(formatted);
+          } else {
+            setAddressDetail(`Tọa độ: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          }
+          setAddressMode('custom');
+          setSelectedAddressId(null);
+          clearAddressErrors();
+          toast({
+            title: 'Đã nhận được vị trí hiện tại',
+            description: 'Địa chỉ đã được tự động điền. Vui lòng kiểm tra lại số nhà/ngõ.',
+          });
+        } catch {
+          toast({
+            title: 'Không thể phân giải địa chỉ',
+            description: 'Vui lòng kiểm tra và nhập địa chỉ chi tiết theo cách thủ công.',
+            variant: 'destructive',
+          });
+        } finally {
+          setGpsLoading(false);
+        }
       },
       () => {
         toast({

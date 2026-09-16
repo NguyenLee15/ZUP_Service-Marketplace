@@ -150,7 +150,6 @@ export default function CreateBookingScreen() {
   const [provincePickerOpen, setProvincePickerOpen] = useState(false);
   const [wardPickerOpen, setWardPickerOpen] = useState(false);
   const [error, setError] = useState('');
-  const [conditionPhotos, setConditionPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const { addressOptions, loading: addressOptionsLoading, fallback } = useAddressOptions();
 
   const serviceQuery = useQuery({
@@ -265,31 +264,6 @@ export default function CreateBookingScreen() {
     });
   };
 
-  const pickConditionPhotos = async () => {
-    if (conditionPhotos.length >= 3) {
-      setError('Bạn đã chọn đủ 3 ảnh hiện trạng.');
-      return;
-    }
-    try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        setError('Ứng dụng cần quyền truy cập thư viện ảnh.');
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        selectionLimit: 3 - conditionPhotos.length,
-        quality: 0.82,
-      });
-      if (!result.canceled) {
-        setConditionPhotos((prev) => [...prev, ...result.assets].slice(0, 3));
-        Haptics.selectionAsync().catch(() => {});
-      }
-    } catch {
-      setError('Không thể mở thư viện ảnh.');
-    }
-  };
 
   if (serviceId <= 0) {
     return (
@@ -389,44 +363,6 @@ export default function CreateBookingScreen() {
         </CustomerCard>
       </SectionWithIcon>
 
-      <SectionWithIcon title="Ảnh hiện trạng (tùy chọn)" icon="camera-outline">
-        <CustomerCard>
-          <View style={styles.formBlock}>
-            <Text variant="bodySmall" style={styles.subtitle}>
-              Đính kèm ảnh mô tả tình trạng thiết bị/khu vực để thợ chuẩn bị tốt hơn.
-            </Text>
-            <Button
-              mode="outlined"
-              icon="image-plus"
-              onPress={pickConditionPhotos}
-              disabled={conditionPhotos.length >= 3}
-              style={styles.roundedButton}
-            >
-              {conditionPhotos.length >= 3 ? 'Đã chọn đủ 3 ảnh' : `Chọn ảnh (${conditionPhotos.length}/3)`}
-            </Button>
-            {conditionPhotos.length > 0 ? (
-              <View style={styles.photoGrid}>
-                {conditionPhotos.map((photo, index) => (
-                  <View key={`${photo.uri}-${index}`} style={styles.photoItem}>
-                    <Image source={{ uri: photo.uri }} style={styles.photoThumb} contentFit="cover" transition={160} />
-                    <Pressable
-                      style={styles.photoRemoveBtn}
-                      onPress={() => {
-                        setConditionPhotos((prev) => prev.filter((_, i) => i !== index));
-                        Haptics.selectionAsync().catch(() => {});
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel="Xóa ảnh"
-                    >
-                      <MaterialCommunityIcons name="close" size={14} color="#FFF" />
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-          </View>
-        </CustomerCard>
-      </SectionWithIcon>
 
       <SectionWithIcon title="Địa chỉ" icon="map-marker-outline">
         <View style={styles.formBlock}>

@@ -8,7 +8,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
-import { Prisma } from '@prisma/client';
+import { BookingStatus, DisputeStatus, Prisma } from '@prisma/client';
 import { AiService } from '../../shared/ai/ai.service';
 
 @Injectable()
@@ -37,33 +37,41 @@ export class ReviewsService {
       });
     }
 
-    // Kiểm tra booking thuộc customer + đã DONE + autoCompletedAt ghi rồi
+    // Kiểm tra booking thuộc customer + đã DONE + autoCompletedAt ghi rồi + không có tranh chấp chưa giải quyết
     const booking = await this.prisma.booking.findFirst({
       where: { id: bookingId, customerId },
+      include: { dispute: true },
     });
 
     if (!booking) {
       throw new NotFoundException({
         code: ErrorCodes.NOT_FOUND,
-        message: 'ÄÆ¡n hÃ ng khÃ´ng tá»“n táº¡i',
+        message: 'Đơn hàng không tồn tại',
       });
     }
 
-    if (!booking.autoCompletedAt) {
+    if (booking.status !== BookingStatus.DONE || !booking.autoCompletedAt) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
-        message: 'ChÆ°a Ä‘á»§ Ä‘iá»u kiá»‡n Ä‘Ã¡nh giÃ¡',
+        message: 'Chưa đủ điều kiện đánh giá (đơn hàng phải ở trạng thái hoàn thành)',
       });
     }
 
-    // Kiá»ƒm tra chÆ°a Ä‘Ã¡nh giÃ¡
+    if (booking.dispute && booking.dispute.status !== DisputeStatus.RESOLVED) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Đơn hàng đang có khiếu nại chưa giải quyết xong, chưa thể gửi đánh giá',
+      });
+    }
+
+    // Kiểm tra chưa đánh giá
     const existing = await this.prisma.review.findUnique({
       where: { bookingId },
     });
     if (existing) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Báº¡n Ä‘Ã£ Ä‘Ã¡nh giÃ¡ Ä‘Æ¡n nÃ y rá»“i',
+        message: 'Bạn đã đánh giá đơn hàng này rồi',
       });
     }
 

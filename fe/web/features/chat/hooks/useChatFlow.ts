@@ -234,6 +234,14 @@ export function useChatFlow() {
       }
     } catch (err) {
       console.error('Lỗi gửi tin nhắn', err);
+      // Khôi phục lại nội dung nhập để người dùng không bị mất tin nhắn soạn dở
+      setInputValue(currentText);
+      if (currentFile) {
+        setSelectedFile(currentFile);
+        const url = URL.createObjectURL(currentFile);
+        setSelectedFilePreview(url);
+      }
+      toast.error('Không thể gửi tin nhắn. Đã khôi phục nội dung để bạn thử lại.');
     }
   };
 

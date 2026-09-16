@@ -74,7 +74,11 @@ function getExistingDispute(booking?: DisputeBooking | null) {
 }
 
 function canDisputeBooking(booking?: DisputeBooking | null) {
-  return Boolean(booking && booking.status === 'DONE' && !getExistingDispute(booking));
+  return Boolean(
+    booking &&
+      (booking.status === 'IN_PROGRESS' || booking.status === 'DONE') &&
+      !getExistingDispute(booking),
+  );
 }
 
 const DISPUTE_CATEGORIES = [
@@ -100,7 +104,7 @@ function validateDisputeForm(reason: string, evidences: ImagePicker.ImagePickerA
 }
 
 function appendEvidenceFile(formData: FormData, image: ImagePicker.ImagePickerAsset, index: number) {
-  formData.append('evidences', {
+  formData.append('evidenceFiles', {
     uri: image.uri,
     type: image.mimeType || 'image/jpeg',
     name: image.fileName || `evidence-${index + 1}.jpg`,

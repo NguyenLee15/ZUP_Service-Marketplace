@@ -69,11 +69,14 @@ export function useAdminBookingsListFlow() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchBookings = useCallback(() => {
     setLoading(true);
+    setError(null);
     const params: Record<string, unknown> = { page, limit: 10 };
     if (filterStatus !== "all") params.status = filterStatus;
+    if (searchTerm.trim()) params.keyword = searchTerm.trim();
 
     adminApi
       .getBookings(params)
@@ -81,16 +84,19 @@ export function useAdminBookingsListFlow() {
         const data = (res.data?.data || []) as BookingListItem[];
         setBookings(data);
         setTotalPages(res.data?.meta?.totalPages || 1);
-        if (data.length > 0 && !selectedBooking) {
-          setSelectedBooking(data[0]);
-        }
+        setSelectedBooking((prev) => prev || (data.length > 0 ? data[0] : null));
       })
-      .catch(() => {
+      .catch((err) => {
         setBookings([]);
         setTotalPages(1);
+        setError(
+          err?.response?.data?.error?.message ||
+            err?.response?.data?.message ||
+            "Không thể tải danh sách đơn hàng. Vui lòng thử lại.",
+        );
       })
       .finally(() => setLoading(false));
-  }, [filterStatus, page, selectedBooking]);
+  }, [filterStatus, page, searchTerm]);
 
   useEffect(() => {
     fetchBookings();
@@ -120,6 +126,7 @@ export function useAdminBookingsListFlow() {
     page,
     setPage,
     totalPages,
+    error,
     refetch: fetchBookings,
   };
 }

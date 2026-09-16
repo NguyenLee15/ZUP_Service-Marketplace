@@ -67,14 +67,24 @@ export default function CategoriesPage() {
     mode: "onChange",
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   const fetchCategories = useCallback(() => {
     setLoading(true);
+    setError(null);
     adminApi
       .getCategories()
       .then((res) => {
         setCategories(res.data?.data || []);
       })
-      .catch(() => setCategories([]))
+      .catch((err) => {
+        setCategories([]);
+        setError(
+          err?.response?.data?.error?.message ||
+            err?.response?.data?.message ||
+            "Không thể tải danh sách danh mục. Vui lòng thử lại.",
+        );
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -214,6 +224,14 @@ export default function CategoriesPage() {
               <div className="flex flex-col items-center justify-center p-12 text-slate-400 space-y-2">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                 <p className="text-sm">Đang tải danh mục...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center text-rose-500 space-y-2">
+                <AlertCircle className="h-10 w-10 text-rose-500 mb-1" />
+                <p className="font-semibold text-sm">{error}</p>
+                <Button variant="outline" size="sm" onClick={fetchCategories} className="mt-2 text-slate-700">
+                  Thử lại
+                </Button>
               </div>
             ) : categories.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500">

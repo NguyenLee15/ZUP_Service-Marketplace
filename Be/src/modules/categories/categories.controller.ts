@@ -24,6 +24,12 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto/categories.dto';
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
+  /** GET /categories — public, danh sách phẳng */
+  @Get()
+  async getAll() {
+    return this.categoriesService.getFlat();
+  }
+
   /** GET /categories/tree — public, cached */
   @Get('tree')
   async getTree() {

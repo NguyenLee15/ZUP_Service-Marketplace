@@ -156,17 +156,47 @@ export function useServicesSearchFlow() {
             userLocation.lat,
             userLocation.lng,
           );
-          const aiData = (res.data.data || []).map((s: ApiPayload) => ({
+          let aiData = (res.data.data || []).map((s: ApiPayload) => ({
             ...s,
             distance: s.distanceKm ?? s.distance,
           }));
 
+          // Áp dụng các bộ lọc đang chọn trên UI cho kết quả tìm kiếm AI
+          const activeCategoryIds = currentFilters?.categoryIds || categoryIds;
+          if (activeCategoryIds && activeCategoryIds.length > 0) {
+            aiData = aiData.filter((s: ApiPayload) => {
+              const catId = s.categoryId ?? s.category?.id;
+              return catId !== undefined && activeCategoryIds.map(Number).includes(Number(catId));
+            });
+          }
+
+          const activeMinPrice = currentFilters?.minPrice || minPrice;
+          if (activeMinPrice !== undefined && activeMinPrice !== '') {
+            aiData = aiData.filter(
+              (s: ApiPayload) => Number(s.referencePrice) >= Number(activeMinPrice),
+            );
+          }
+
+          const activeMaxPrice = currentFilters?.maxPrice || maxPrice;
+          if (activeMaxPrice !== undefined && activeMaxPrice !== '') {
+            aiData = aiData.filter(
+              (s: ApiPayload) => Number(s.referencePrice) <= Number(activeMaxPrice),
+            );
+          }
+
+          const activeMinRating = currentFilters?.minRating || minRating;
+          if (activeMinRating !== undefined && activeMinRating !== '') {
+            aiData = aiData.filter(
+              (s: ApiPayload) => Number(s.avgRating || 0) >= Number(activeMinRating),
+            );
+          }
+
           if (sortBy === 'price_asc') {
-            aiData.sort((a: ApiPayload, b: ApiPayload) => a.referencePrice - b.referencePrice);
+            aiData.sort((a: ApiPayload, b: ApiPayload) => Number(a.referencePrice) - Number(b.referencePrice));
           } else if (sortBy === 'price_desc') {
-            aiData.sort((a: ApiPayload, b: ApiPayload) => b.referencePrice - a.referencePrice);
+            aiData.sort((a: ApiPayload, b: ApiPayload) => Number(b.referencePrice) - Number(a.referencePrice));
           } else if (sortBy === 'rating') {
-            aiData.sort((a: ApiPayload, b: ApiPayload) => (b.avgRating || 0) - (a.avgRating || 0));
+            aiData.sort((a: ApiPayload, b: ApiPayload) => (Number(b.avgRating) || 0) - (Number(a.avgRating) || 0));
           }
 
           data = aiData;

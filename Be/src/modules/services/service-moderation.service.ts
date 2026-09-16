@@ -60,65 +60,88 @@ export class ServiceModerationService {
       });
     }
 
-    const wallet = await this.prisma.providerWallet.findUnique({
-      where: { providerId: service.providerId },
-    });
+    const { updated, hasEnoughBalance, newStatus } =
+      await this.prisma.$transaction(async (tx) => {
+        // Atomic claim: chỉ duyệt nếu dịch vụ vẫn đang ở trạng thái PENDING
+        const claimResult = await tx.service.updateMany({
+          where: { id: serviceId, status: ServiceStatus.PENDING },
+          data: { status: ServiceStatus.PENDING },
+        });
 
-    const activeServices = await this.prisma.service.findMany({
-      where: {
-        providerId: service.providerId,
-        status: 'ACTIVE',
-        isDeleted: false,
-      },
-      select: { referencePrice: true },
-    });
+        if (claimResult.count === 0) {
+          throw new BadRequestException({
+            code: ErrorCodes.INVALID_STATUS,
+            message:
+              'Dịch vụ đã được xử lý bởi quản trị viên khác hoặc không còn ở trạng thái chờ duyệt',
+          });
+        }
 
-    const sumReferencePrice = activeServices.reduce(
-      (sum, s) => sum + Number(s.referencePrice),
-      0,
-    );
-    const totalExpectedRefPrice =
-      sumReferencePrice + Number(service.referencePrice);
+        const wallet = await tx.providerWallet.findUnique({
+          where: { providerId: service.providerId },
+        });
 
-    let rate = 8.5;
-    const setting = await this.prisma.systemSetting.findUnique({
-      where: { key: 'commission_rate' },
-    });
-    if (setting?.value) {
-      try {
-        const parsed = JSON.parse(setting.value) as { rate?: unknown };
-        if (typeof parsed.rate === 'number') rate = parsed.rate;
-      } catch {
-        // use default fallback rate
-      }
-    } else {
-      const commissionConfig = await this.prisma.commissionConfig.findFirst({
-        orderBy: { effectiveFrom: 'desc' },
+        const activeServices = await tx.service.findMany({
+          where: {
+            providerId: service.providerId,
+            status: 'ACTIVE',
+            isDeleted: false,
+          },
+          select: { referencePrice: true },
+        });
+
+        const sumReferencePrice = activeServices.reduce(
+          (sum, s) => sum + Number(s.referencePrice),
+          0,
+        );
+        const totalExpectedRefPrice =
+          sumReferencePrice + Number(service.referencePrice);
+
+        let rate = 8.5;
+        const setting = await tx.systemSetting.findUnique({
+          where: { key: 'commission_rate' },
+        });
+        if (setting?.value) {
+          try {
+            const parsed = JSON.parse(setting.value) as { rate?: unknown };
+            if (typeof parsed.rate === 'number') rate = parsed.rate;
+          } catch {
+            // use default fallback rate
+          }
+        } else {
+          const commissionConfig = await tx.commissionConfig.findFirst({
+            orderBy: { effectiveFrom: 'desc' },
+          });
+          if (commissionConfig) rate = Number(commissionConfig.rate);
+        }
+
+        const requiredDeposit = (totalExpectedRefPrice * rate) / 100;
+        const balanceOk =
+          wallet !== null && Number(wallet.balance) >= requiredDeposit;
+
+        const statusToSet = balanceOk
+          ? ServiceStatus.ACTIVE
+          : ServiceStatus.HIDDEN;
+
+        const up = await tx.service.update({
+          where: { id: serviceId },
+          data: { status: statusToSet },
+        });
+
+        await this.ledger.syncWalletRestriction(service.providerId, tx);
+
+        if (!balanceOk) {
+          await tx.user.update({
+            where: { id: service.providerId },
+            data: { isOnline: false },
+          });
+        }
+
+        return {
+          updated: up,
+          hasEnoughBalance: balanceOk,
+          newStatus: statusToSet,
+        };
       });
-      if (commissionConfig) rate = Number(commissionConfig.rate);
-    }
-
-    const requiredDeposit = (totalExpectedRefPrice * rate) / 100;
-    const hasEnoughBalance =
-      wallet && Number(wallet.balance) >= requiredDeposit;
-
-    const newStatus = hasEnoughBalance
-      ? ServiceStatus.ACTIVE
-      : ServiceStatus.HIDDEN;
-
-    const updated = await this.prisma.service.update({
-      where: { id: serviceId },
-      data: { status: newStatus },
-    });
-
-    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
-
-    if (!hasEnoughBalance) {
-      await this.prisma.user.update({
-        where: { id: service.providerId },
-        data: { isOnline: false },
-      });
-    }
 
     await this.jobsService.enqueue(JobName.ServiceGenerateEmbedding, {
       serviceId,

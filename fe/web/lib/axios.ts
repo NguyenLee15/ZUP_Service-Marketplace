@@ -94,6 +94,14 @@ instance.interceptors.response.use(
     }
 
     // 3. Xử lý Transient Server Errors (502, 503, 504, Timeout) + Auto Retry với Exponential Backoff
+    // An toàn giao dịch: Chỉ retry các request idempotent (GET, HEAD, OPTIONS) hoặc khi có Idempotency-Key
+    const method = (originalRequest.method || 'get').toLowerCase();
+    const hasIdempotencyKey = Boolean(
+      originalRequest.headers?.['Idempotency-Key'] ||
+      originalRequest.headers?.['idempotency-key'],
+    );
+    const isIdempotent = ['get', 'head', 'options'].includes(method) || hasIdempotencyKey;
+
     const isTransient =
       error.response?.status === 502 ||
       error.response?.status === 503 ||
@@ -101,7 +109,7 @@ instance.interceptors.response.use(
       error.code === 'ECONNABORTED';
 
     const retryConfig = originalRequest as Record<string, ApiPayload>;
-    if (isTransient && (!retryConfig._retryCount || retryConfig._retryCount < 3)) {
+    if (isIdempotent && isTransient && (!retryConfig._retryCount || retryConfig._retryCount < 3)) {
       retryConfig._retryCount = (retryConfig._retryCount || 0) + 1;
       const delay = Math.pow(2, retryConfig._retryCount) * 1000;
       await new Promise((resolve) => setTimeout(resolve, delay));

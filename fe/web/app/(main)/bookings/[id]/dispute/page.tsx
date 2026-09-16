@@ -59,7 +59,9 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
     try {
       const formData = new FormData();
       formData.append('reason', `${reason} - ${description}`);
-      uploadedFiles.forEach((file) => formData.append('evidences', file));
+      uploadedFiles.forEach((file) => {
+        formData.append('evidenceFiles', file);
+      });
 
       const { bookingApi } = await import('@/features/booking/services/booking.api');
       const { toast } = await import('sonner');

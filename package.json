@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "npm run build --prefix Be && npm run build --prefix fe/wed"
+    "build": "npm run build --prefix Be && npm run build --prefix fe/web"
   },
   "devDependencies": {
     "@google/design.md": "^0.1.1"

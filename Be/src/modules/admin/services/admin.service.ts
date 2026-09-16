@@ -493,6 +493,14 @@ export class AdminService {
     },
     ip?: string,
   ) {
+    if (body.minAmount > body.maxAmount) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message:
+          'Mức hoa hồng tối thiểu (minAmount) không được lớn hơn mức hoa hồng tối đa (maxAmount)',
+      });
+    }
+
     await this.prisma.$transaction(async (tx) => {
       await tx.systemSetting.upsert({
         where: { key: 'commission_rate' },

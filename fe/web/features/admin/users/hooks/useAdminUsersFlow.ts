@@ -23,9 +23,11 @@ export function useAdminUsersFlow() {
     useState<AdminUserStatusFilter>("ALL");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(() => {
     setLoading(true);
+    setError(null);
     adminApi
       .getUsers({
         page,
@@ -37,9 +39,14 @@ export function useAdminUsersFlow() {
         setUsers((res.data?.data || []) as AdminUserItem[]);
         setTotalPages(res.data?.meta?.totalPages || 1);
       })
-      .catch(() => {
+      .catch((err) => {
         setUsers([]);
         setTotalPages(1);
+        setError(
+          err?.response?.data?.error?.message ||
+            err?.response?.data?.message ||
+            "Không thể tải danh sách người dùng. Vui lòng thử lại.",
+        );
       })
       .finally(() => setLoading(false));
   }, [page, roleFilter, searchTerm]);
@@ -132,6 +139,7 @@ export function useAdminUsersFlow() {
     page,
     setPage,
     totalPages,
+    error,
     handleLockUser,
     handleUnlockUser,
     refetch: fetchUsers,

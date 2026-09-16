@@ -165,13 +165,25 @@ export class KycService {
       action === 'APPROVE' ? KycStatus.APPROVED : KycStatus.REJECTED;
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const up = await tx.kycProfile.update({
-        where: { id: kycId },
+      // Atomic claim: chỉ duyệt nếu yêu cầu vẫn đang ở trạng thái PENDING
+      const claimResult = await tx.kycProfile.updateMany({
+        where: { id: kycId, status: KycStatus.PENDING },
         data: {
           status: newStatus,
           reviewedBy: reviewerId,
           rejectReason: action === 'REJECT' ? reason : null,
         },
+      });
+
+      if (claimResult.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.INVALID_STATUS,
+          message: 'Yêu cầu KYC này đã được xử lý bởi nhân sự khác.',
+        });
+      }
+
+      const up = await tx.kycProfile.findUniqueOrThrow({
+        where: { id: kycId },
       });
 
       // Nếu duyệt -> Tạo ví nếu chưa có

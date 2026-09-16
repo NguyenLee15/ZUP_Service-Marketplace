@@ -127,10 +127,10 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
     (cookieAccessToken ? `Bearer ${cookieAccessToken}` : null);
   if (auth) headers["Authorization"] = auth;
 
-  // Forward IP for audit logs
+  // Forward IP for audit logs (sanitize X-Forwarded-For)
   const clientIp =
-    req.headers.get("x-forwarded-for") ||
     req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown";
   headers["X-Forwarded-For"] = clientIp;
 

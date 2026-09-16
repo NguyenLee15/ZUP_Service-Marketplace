@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import {
   BookingStatus,
+  DisputeEvidenceType,
   DisputeStatus,
   WalletTransactionType,
 } from '@prisma/client';
@@ -43,6 +44,58 @@ export class BookingDisputeService {
       booking.status,
       BookingStatus.DISPUTED,
     );
+    // Validate files if present
+    const allowedMimes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/jpg',
+      'video/mp4',
+      'video/quicktime',
+    ];
+    if (files && files.length > 0) {
+      if (files.length > 5) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Chỉ được đính kèm tối đa 5 tệp bằng chứng.',
+        });
+      }
+      for (const file of files) {
+        if (!allowedMimes.includes(file.mimetype)) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: `Định dạng tệp không được hỗ trợ (${file.mimetype}). Chỉ chấp nhận JPG, PNG, WEBP, MP4.`,
+          });
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: `Kích thước tệp vượt quá 10MB (${file.originalname}).`,
+          });
+        }
+      }
+    }
+
+    // Upload to Cloudinary first before modifying DB state
+    const uploadedEvidences: Array<{
+      type: DisputeEvidenceType;
+      fileUrl: string;
+    }> = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const uploaded = await this.cloudinaryService.uploadFile(
+          file.buffer,
+          'disputes',
+        );
+        uploadedEvidences.push({
+          type: file.mimetype.startsWith('video')
+            ? DisputeEvidenceType.VIDEO
+            : DisputeEvidenceType.IMAGE,
+          fileUrl: uploaded.url,
+        });
+      }
+    }
+
     const { updated, dispute } = await this.prisma.$transaction(async (tx) => {
       const updatedBooking = await tx.booking.update({
         where: { id: bookingId },
@@ -58,6 +111,17 @@ export class BookingDisputeService {
         },
       });
 
+      if (uploadedEvidences.length > 0) {
+        await tx.disputeEvidence.createMany({
+          data: uploadedEvidences.map((ev) => ({
+            disputeId: createdDispute.id,
+            type: ev.type,
+            fileUrl: ev.fileUrl,
+            uploadedBy: customerId,
+          })),
+        });
+      }
+
       await this.shared.addStatusHistory(
         bookingId,
         booking.status,
@@ -69,23 +133,6 @@ export class BookingDisputeService {
 
       return { updated: updatedBooking, dispute: createdDispute };
     });
-
-    if (files && files.length > 0) {
-      for (const file of files) {
-        const uploaded = await this.cloudinaryService.uploadFile(
-          file.buffer,
-          'disputes',
-        );
-        await this.prisma.disputeEvidence.create({
-          data: {
-            disputeId: dispute.id,
-            type: file.mimetype.startsWith('video') ? 'VIDEO' : 'IMAGE',
-            fileUrl: uploaded.url,
-            uploadedBy: customerId,
-          },
-        });
-      }
-    }
 
     const admins = await this.prisma.user.findMany({
       where: { role: { in: ['ADMIN', 'STAFF'] }, status: 'ACTIVE' },
@@ -141,8 +188,12 @@ export class BookingDisputeService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.dispute.update({
-        where: { id: disputeId },
+      // Atomic claim: chỉ giải quyết nếu tranh chấp chưa bị xử lý bởi admin khác
+      const claimResult = await tx.dispute.updateMany({
+        where: {
+          id: disputeId,
+          status: { not: DisputeStatus.RESOLVED },
+        },
         data: {
           status: DisputeStatus.RESOLVED,
           resolutionAction: dto.resolutionAction,
@@ -150,6 +201,24 @@ export class BookingDisputeService {
           assignedTo: adminId,
         },
       });
+
+      if (claimResult.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.INVALID_STATUS,
+          message: 'Khiếu nại đã được giải quyết bởi quản trị viên khác.',
+        });
+      }
+
+      // Khóa và kiểm tra trạng thái booking còn là DISPUTED
+      const currentBooking = await tx.booking.findUnique({
+        where: { id: dispute.bookingId },
+      });
+      if (!currentBooking || currentBooking.status !== BookingStatus.DISPUTED) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message: 'Trạng thái đơn hàng không hợp lệ để xử lý khiếu nại.',
+        });
+      }
 
       if (dto.resolutionAction === 'COMPLETE') {
         await tx.booking.update({

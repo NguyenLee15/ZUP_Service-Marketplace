@@ -85,4 +85,14 @@ export class AdminServicesController {
   ) {
     return this.moderationService.show(adminId, id, ip);
   }
+
+  /** PATCH /admin/services/:id/show — Alias cho unhide */
+  @Patch(':id/show')
+  async adminShow(
+    @CurrentUser('id') adminId: number,
+    @Ip() ip: string,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.moderationService.show(adminId, id, ip);
+  }
 }
