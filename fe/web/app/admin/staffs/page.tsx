@@ -53,6 +53,7 @@ export default function StaffsPage() {
     toggleAllPermissions,
     // Status & Delete
     handleToggleStatus,
+    togglingStaffId,
     deleteTarget,
     setDeleteTarget,
     deleteLoading,
@@ -109,6 +110,7 @@ export default function StaffsPage() {
           loading={loading}
           permissionsLoading={permissionsLoading}
           permissionsError={permissionsError}
+          togglingStaffId={togglingStaffId}
           onEdit={openEditModal}
           onOpenPerms={openPermModal}
           onToggleStatus={handleToggleStatus}

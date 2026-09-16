@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { adminApi } from "@/features/admin/services/admin.api";
 
 export interface BookingListItem {
@@ -67,11 +67,13 @@ export function useAdminBookingsListFlow() {
   const [selectedBooking, setSelectedBooking] =
     useState<BookingListItem | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const requestIdRef = useRef(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBookings = useCallback(() => {
+    const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
     const params: Record<string, unknown> = { page, limit: 10 };
@@ -81,12 +83,14 @@ export function useAdminBookingsListFlow() {
     adminApi
       .getBookings(params)
       .then((res) => {
+        if (currentRequestId !== requestIdRef.current) return;
         const data = (res.data?.data || []) as BookingListItem[];
         setBookings(data);
         setTotalPages(res.data?.meta?.totalPages || 1);
         setSelectedBooking((prev) => prev || (data.length > 0 ? data[0] : null));
       })
       .catch((err) => {
+        if (currentRequestId !== requestIdRef.current) return;
         setBookings([]);
         setTotalPages(1);
         setError(
@@ -95,7 +99,11 @@ export function useAdminBookingsListFlow() {
             "Không thể tải danh sách đơn hàng. Vui lòng thử lại.",
         );
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (currentRequestId === requestIdRef.current) {
+          setLoading(false);
+        }
+      });
   }, [filterStatus, page, searchTerm]);
 
   useEffect(() => {

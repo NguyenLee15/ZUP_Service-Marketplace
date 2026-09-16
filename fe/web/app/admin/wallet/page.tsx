@@ -126,7 +126,7 @@ function AdminWalletContent() {
       }
       setSelected(null);
       setNote("");
-      fetchRequests();
+      await fetchRequests();
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })

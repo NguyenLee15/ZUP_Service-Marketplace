@@ -9,6 +9,7 @@ import {
   Lock,
   Settings2,
   Users,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ interface StaffTableProps {
   loading: boolean;
   permissionsLoading: boolean;
   permissionsError: string;
+  togglingStaffId?: number | null;
   onEdit: (staff: StaffAccount) => void;
   onOpenPerms: (staff: StaffAccount) => void;
   onToggleStatus: (staff: StaffAccount) => void;
@@ -40,6 +42,7 @@ export function StaffTable({
   loading,
   permissionsLoading,
   permissionsError,
+  togglingStaffId,
   onEdit,
   onOpenPerms,
   onToggleStatus,
@@ -156,9 +159,10 @@ export function StaffTable({
                         <button
                           type="button"
                           onClick={() => !isAdminRole && onToggleStatus(staff)}
-                          className={isAdminRole ? '' : 'cursor-pointer'}
-                          disabled={isAdminRole}
+                          className={isAdminRole || togglingStaffId === staff.id ? '' : 'cursor-pointer'}
+                          disabled={isAdminRole || togglingStaffId === staff.id}
                           title={isAdminRole ? 'Không thể khóa Admin' : 'Bấm để đổi trạng thái'}
+                          aria-label={staff.status === 'ACTIVE' ? 'Khóa tài khoản nhân viên' : 'Mở khóa tài khoản nhân viên'}
                         >
                           <Badge
                             className={`border-0 text-[10px] font-bold ${
@@ -167,7 +171,12 @@ export function StaffTable({
                                 : 'bg-red-100 text-red-700'
                             }`}
                           >
-                            {staff.status === 'ACTIVE' ? (
+                            {togglingStaffId === staff.id ? (
+                              <span className="flex items-center gap-1">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Đang xử lý...
+                              </span>
+                            ) : staff.status === 'ACTIVE' ? (
                               <span className="flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                 Hoạt động

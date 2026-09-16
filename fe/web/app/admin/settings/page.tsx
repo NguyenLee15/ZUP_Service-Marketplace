@@ -1,17 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Save, Loader2, Percent, BadgeDollarSign, Landmark } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Save, Loader2, Percent, BadgeDollarSign, Landmark, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
-import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermissionGuard, useAdminPermission } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { hasPermission } = useAdminPermission();
+  const canEditCommission = hasPermission(AdminPermission.FINANCE_COMMISSION);
+
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -46,19 +51,30 @@ export default function SettingsPage() {
     setFieldErrors(newErrors);
   };
 
-  useEffect(() => {
+  const loadCommission = useCallback(() => {
+    setLoading(true);
+    setLoadError(null);
     adminApi.getCommission()
       .then((res) => {
-        const data = res.data.data;
+        const data = res.data?.data || {};
         setCurrentCommission({
           rate: data.rate || 8.5,
           minAmount: data.minAmount || 50000,
           maxAmount: data.maxAmount || 5000000,
         });
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ||
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+          'Không thể tải cấu hình hoa hồng. Vui lòng kiểm tra kết nối và thử lại.';
+        setLoadError(msg);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadCommission();
+  }, [loadCommission]);
 
   const startEditing = () => {
     setEditRate(String(currentCommission.rate));
@@ -112,12 +128,29 @@ export default function SettingsPage() {
   }
 
   return (
-    <AdminPermissionGuard adminOnly={true}>
+    <AdminPermissionGuard permission={[AdminPermission.FINANCE_COMMISSION, AdminPermission.SETTINGS_MANAGE]}>
       <div className="mx-auto max-w-[1440px] space-y-5">
       <div className="flex flex-col gap-1 border-b border-[var(--admin-border)] pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-slate-950">Cài đặt hệ thống</h1>
         <p className="text-sm text-slate-500">Quản lý cấu hình vận hành, hoa hồng và trạng thái module.</p>
       </div>
+
+      {loadError && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadCommission}
+            className="border-red-300 text-red-800 hover:bg-red-100 shrink-0"
+          >
+            Thử lại
+          </Button>
+        </div>
+      )}
 
       {/* Commission Settings */}
       <Card className="overflow-hidden rounded-lg border-[var(--admin-border)] shadow-sm">
@@ -177,7 +210,12 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex justify-end border-t border-[var(--admin-border)] pt-4">
-                <Button onClick={startEditing} className="gap-2 rounded-md bg-slate-950 hover:bg-slate-800">
+                <Button
+                  onClick={startEditing}
+                  disabled={!canEditCommission}
+                  title={!canEditCommission ? 'Bạn không có quyền chỉnh sửa cài đặt hoa hồng' : undefined}
+                  className="gap-2 rounded-md bg-slate-950 hover:bg-slate-800 disabled:opacity-50"
+                >
                   Chỉnh sửa cài đặt
                 </Button>
               </div>

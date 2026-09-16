@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -58,15 +58,19 @@ const filterTabs = [
 ];
 
 export default function KYCPage() {
+  const requestIdRef = useRef(0);
   const [kycList, setKycList] = useState<AdminKycItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [page, setPage] = useState(1);
   const limit = 10;
 
   const fetchKycList = useCallback(() => {
+    const currentRequestId = ++requestIdRef.current;
     setLoading(true);
+    setError(null);
     const params: { page: number; limit: number; status?: string } = {
       page,
       limit,
@@ -77,11 +81,24 @@ export default function KYCPage() {
     adminApi
       .getKycRequests(params)
       .then((res) => {
+        if (currentRequestId !== requestIdRef.current) return;
         const items = res.data?.data?.items || res.data?.data || [];
         setKycList(items);
       })
-      .catch(() => setKycList([]))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (currentRequestId !== requestIdRef.current) return;
+        setKycList([]);
+        setError(
+          err?.response?.data?.error?.message ||
+            err?.response?.data?.message ||
+            "Không thể tải danh sách hồ sơ KYC. Vui lòng thử lại."
+        );
+      })
+      .finally(() => {
+        if (currentRequestId === requestIdRef.current) {
+          setLoading(false);
+        }
+      });
   }, [page, selectedStatus]);
 
   useEffect(() => {
@@ -167,6 +184,14 @@ export default function KYCPage() {
               <div className="flex flex-col items-center justify-center p-12 text-slate-400 space-y-2">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                 <p className="text-sm">Đang tải danh sách KYC...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500 space-y-3">
+                <AlertCircle className="h-10 w-10 text-rose-500 mb-1" />
+                <p className="font-semibold text-sm text-slate-800">{error}</p>
+                <Button variant="outline" size="sm" onClick={fetchKycList} className="font-medium">
+                  Tải lại danh sách
+                </Button>
               </div>
             ) : filteredKycList.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500">

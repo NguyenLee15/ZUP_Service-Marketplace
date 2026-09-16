@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Loader2, AlertCircle, ShieldAlert } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

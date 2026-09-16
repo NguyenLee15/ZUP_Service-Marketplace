@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
 import {
@@ -12,6 +12,7 @@ import {
 
 export function useAdminUsersFlow() {
   const { toast } = useToast();
+  const requestIdRef = useRef(0);
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,6 +27,7 @@ export function useAdminUsersFlow() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(() => {
+    const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
     adminApi
@@ -36,10 +38,12 @@ export function useAdminUsersFlow() {
         ...(searchTerm.trim() ? { keyword: searchTerm.trim() } : {}),
       })
       .then((res) => {
+        if (currentRequestId !== requestIdRef.current) return;
         setUsers((res.data?.data || []) as AdminUserItem[]);
         setTotalPages(res.data?.meta?.totalPages || 1);
       })
       .catch((err) => {
+        if (currentRequestId !== requestIdRef.current) return;
         setUsers([]);
         setTotalPages(1);
         setError(
@@ -48,7 +52,11 @@ export function useAdminUsersFlow() {
             "Không thể tải danh sách người dùng. Vui lòng thử lại.",
         );
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (currentRequestId === requestIdRef.current) {
+          setLoading(false);
+        }
+      });
   }, [page, roleFilter, searchTerm]);
 
   useEffect(() => {

@@ -37,6 +37,7 @@ function AuditLogsContent() {
           </h1>
           <p className="text-sm text-slate-500 mt-1">
             Theo dõi vết kiểm toán toàn diện về bảo mật, tài chính và thay đổi trạng thái
+            {totalRecords > 0 ? ` • ${totalRecords.toLocaleString("vi-VN")} bản ghi` : ""}
           </p>
         </div>
 

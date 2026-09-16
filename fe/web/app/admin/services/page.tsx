@@ -9,9 +9,10 @@ import {
   Eye,
   Filter,
   Search,
+  Loader2,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,21 +54,25 @@ export default function AdminServicesPage() {
   const [showModal, setShowModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const fetchServices = () => {
     setLoading(true);
-    const params: Record<string, any> = { page, limit: 10 };
+    setError(null);
+    const params: Record<string, string | number> = { page, limit: 10 };
     if (filterStatus !== 'all') params.status = filterStatus;
     adminApi.getServices(params)
       .then((res) => {
         setServices(res.data.data || []);
         setTotalPages(res.data.meta?.totalPages || 1);
       })
-      .catch(() => {
+      .catch((err: ApiPayload) => {
         setServices([]);
         setTotalPages(1);
+        setError(err?.response?.data?.error?.message || 'Không thể tải danh sách dịch vụ');
       })
       .finally(() => setLoading(false));
   };
@@ -101,22 +106,28 @@ export default function AdminServicesPage() {
   };
 
   const handleHide = async (id: number) => {
+    setTogglingId(id);
     try {
       await adminApi.hideService(id);
       toast({ title: 'Đã ẩn dịch vụ' });
       fetchServices();
     } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
+    } finally {
+      setTogglingId(null);
     }
   };
 
   const handleShow = async (id: number) => {
+    setTogglingId(id);
     try {
       await adminApi.showService(id);
       toast({ title: 'Đã mở ẩn dịch vụ' });
       fetchServices();
     } catch (err: ApiPayload) {
       toast({ title: 'Lỗi', description: err.response?.data?.error?.message, variant: 'destructive' });
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -166,6 +177,14 @@ export default function AdminServicesPage() {
         <CardContent className="pt-6">
           {loading ? (
             <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-12 bg-muted rounded animate-pulse" />)}</div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
+              <AlertTriangle className="w-8 h-8 text-rose-500" />
+              <p className="text-sm text-slate-600 font-medium">{error}</p>
+              <Button variant="outline" size="sm" onClick={fetchServices}>
+                Thử lại
+              </Button>
+            </div>
           ) : services.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">Không có dịch vụ nào</p>
           ) : (
@@ -213,17 +232,45 @@ export default function AdminServicesPage() {
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedService(service); setShowModal(true); }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setSelectedService(service); setShowModal(true); }}
+                            aria-label="Xem chi tiết dịch vụ"
+                            title="Xem chi tiết"
+                          >
                             <Eye className="w-4 h-4 text-blue-600" />
                           </Button>
                           {service.status === 'ACTIVE' && (
-                            <Button variant="ghost" size="sm" onClick={() => handleHide(service.id)} title="Ẩn dịch vụ">
-                              <XCircle className="w-4 h-4 text-orange-500" />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={togglingId === service.id}
+                              onClick={() => handleHide(service.id)}
+                              aria-label="Ẩn dịch vụ"
+                              title="Ẩn dịch vụ"
+                            >
+                              {togglingId === service.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-orange-500" />
+                              )}
                             </Button>
                           )}
                           {service.status === 'HIDDEN' && (
-                            <Button variant="ghost" size="sm" onClick={() => handleShow(service.id)} title="Mở ẩn dịch vụ">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={togglingId === service.id}
+                              onClick={() => handleShow(service.id)}
+                              aria-label="Mở ẩn dịch vụ"
+                              title="Mở ẩn dịch vụ"
+                            >
+                              {togglingId === service.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin text-green-500" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              )}
                             </Button>
                           )}
                         </div>
@@ -305,7 +352,7 @@ export default function AdminServicesPage() {
                   <div>
                     <p className="text-muted-foreground text-sm mb-2">Hình Ảnh</p>
                     <div className="flex gap-2 overflow-x-auto pb-2">
-                      {selectedService.images.map((img: any) => (
+                      {selectedService.images.map((img: { id: number; imageUrl: string }) => (
                         <img key={img.id} src={img.imageUrl} alt="service image" className="w-24 h-24 object-cover rounded-md flex-shrink-0" />
                       ))}
                     </div>
@@ -316,7 +363,7 @@ export default function AdminServicesPage() {
                   <div>
                     <p className="text-muted-foreground text-sm mb-2">Các Hạng Mục Dịch Vụ</p>
                     <div className="bg-muted p-3 rounded-lg space-y-2">
-                      {selectedService.items.map((item: any) => (
+                      {selectedService.items.map((item: { id: number; name: string; price: number | string }) => (
                         <div key={item.id} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 border-gray-200">
                           <span>{item.name}</span>
                           <span className="font-medium tabular-nums">{formatPrice(Number(item.price))}</span>

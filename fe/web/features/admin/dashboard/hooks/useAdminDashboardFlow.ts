@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { adminApi } from '@/features/auth/services/api';
 import { toast } from 'sonner';
 import {
@@ -14,6 +14,7 @@ import {
 } from '../utils/admin-dashboard-helpers';
 
 export function useAdminDashboardFlow() {
+  const requestIdRef = useRef(0);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [chartData, setChartData] = useState<DashboardChartData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +23,7 @@ export function useAdminDashboardFlow() {
   const [isExporting, setIsExporting] = useState(false);
 
   const fetchStats = useCallback(() => {
+    const currentRequestId = ++requestIdRef.current;
     const params = compactFilters(buildDashboardParams(filters));
     setLoading(true);
     setLoadError('');
@@ -30,10 +32,12 @@ export function useAdminDashboardFlow() {
       adminApi.getDashboardChartData(params),
     ])
       .then(([statsRes, chartRes]) => {
+        if (currentRequestId !== requestIdRef.current) return;
         setStats(statsRes.data?.data || null);
         setChartData(chartRes.data?.data || null);
       })
       .catch(() => {
+        if (currentRequestId !== requestIdRef.current) return;
         setLoadError(
           'Không thể tải dữ liệu dashboard. Vui lòng kiểm tra kết nối và thử lại.'
         );
@@ -41,7 +45,11 @@ export function useAdminDashboardFlow() {
           description: 'Vui lòng thử lại sau.',
         });
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (currentRequestId === requestIdRef.current) {
+          setLoading(false);
+        }
+      });
   }, [filters]);
 
   useEffect(() => {

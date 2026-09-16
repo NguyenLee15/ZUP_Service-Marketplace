@@ -2,7 +2,6 @@
 
 import React from 'react';
 import {
-  X,
   Loader2,
   Settings2,
   Users,

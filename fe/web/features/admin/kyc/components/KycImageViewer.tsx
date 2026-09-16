@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { ZoomIn, ZoomOut, RotateCw, Maximize2, X } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCw, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

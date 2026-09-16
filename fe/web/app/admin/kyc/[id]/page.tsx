@@ -7,7 +7,7 @@ import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
-import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
+import { AdminPermissionGuard, useAdminPermission } from "@/features/admin/components/AdminPermissionGuard";
 import { AdminPermission } from "@/types/admin-permissions";
 import { KycDetail, KycDocument } from "@/features/admin/kyc/types/kyc.types";
 import {
@@ -17,6 +17,10 @@ import {
 } from "@/features/admin/kyc/components";
 
 function AdminKYCDetailContent() {
+  const { hasPermission } = useAdminPermission();
+  const canApprove = hasPermission(AdminPermission.KYC_APPROVE);
+  const canReject = hasPermission(AdminPermission.KYC_REJECT);
+
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -173,6 +177,8 @@ function AdminKYCDetailContent() {
             onApprove={handleApprove}
             onReject={handleReject}
             actionLoading={actionLoading}
+            canApprove={canApprove}
+            canReject={canReject}
           />
         </div>
       </div>

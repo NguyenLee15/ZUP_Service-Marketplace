@@ -75,3 +75,29 @@ export function AdminPermissionGuard({
   );
 }
 
+export function useAdminPermission() {
+  const { user, _hasHydrated } = useAuthStore();
+
+  const hasPermission = React.useCallback(
+    (permission: AdminPermissionValue | AdminPermissionValue[]) => {
+      if (!user) return false;
+      if (user.role === Role.ADMIN) return true;
+      if (user.role === Role.STAFF) {
+        const requiredList = Array.isArray(permission) ? permission : [permission];
+        const userPermissions = (user.permissions as string[]) || [];
+        return requiredList.some((p) => userPermissions.includes(p));
+      }
+      return false;
+    },
+    [user],
+  );
+
+  return {
+    hasPermission,
+    isAdmin: user?.role === Role.ADMIN,
+    isStaff: user?.role === Role.STAFF,
+    user,
+    isHydrated: _hasHydrated,
+  };
+}
+

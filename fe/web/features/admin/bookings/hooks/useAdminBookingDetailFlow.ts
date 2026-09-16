@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
+import { useAdminPermission } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 import {
   AdminBookingDetailData,
   AdminBookingTimelineItem,
@@ -11,6 +13,8 @@ import {
 export function useAdminBookingDetailFlow(id: number | null) {
   const router = useRouter();
   const { toast } = useToast();
+  const { hasPermission } = useAdminPermission();
+  const hasCancelPermission = hasPermission(AdminPermission.BOOKING_CANCEL);
 
   const [booking, setBooking] = useState<AdminBookingDetailData | null>(null);
   const [timeline, setTimeline] = useState<AdminBookingTimelineItem[]>([]);
@@ -60,13 +64,13 @@ export function useAdminBookingDetailFlow(id: number | null) {
   }, [booking]);
 
   const canCancel = useMemo(() => {
-    if (!booking) return false;
+    if (!booking || !hasCancelPermission) return false;
     return (
       booking.status === 'PENDING' ||
       booking.status === 'ACCEPTED' ||
       booking.status === 'QUOTED'
     );
-  }, [booking]);
+  }, [booking, hasCancelPermission]);
 
   const statusHistory = useMemo(() => {
     if (timeline.length > 0) return timeline;

@@ -23,6 +23,7 @@ interface AdminUserTableProps {
   onOpenLockDialog: (user: AdminUserItem) => void;
   onUnlockUser: (user: AdminUserItem) => void;
   actionLoading: boolean;
+  canLockUser?: boolean;
 }
 
 const statusBadgeConfig: Record<string, { label: string; className: string }> = {
@@ -49,6 +50,7 @@ export function AdminUserTable({
   onOpenLockDialog,
   onUnlockUser,
   actionLoading,
+  canLockUser = true,
 }: AdminUserTableProps) {
   if (loading) {
     return (
@@ -126,9 +128,10 @@ export function AdminUserTable({
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={actionLoading}
+                        disabled={actionLoading || !canLockUser}
+                        title={!canLockUser ? "Yêu cầu quyền Khóa/mở khóa (USER_LOCK)" : undefined}
                         onClick={() => onUnlockUser(user)}
-                        className="text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 gap-1"
+                        className="text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 gap-1 disabled:opacity-50"
                       >
                         <Unlock className="w-3.5 h-3.5" />
                         <span>Mở khóa</span>
@@ -137,9 +140,10 @@ export function AdminUserTable({
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={actionLoading}
+                        disabled={actionLoading || !canLockUser}
+                        title={!canLockUser ? "Yêu cầu quyền Khóa/mở khóa (USER_LOCK)" : undefined}
                         onClick={() => onOpenLockDialog(user)}
-                        className="text-xs border-rose-300 text-rose-700 hover:bg-rose-50 gap-1"
+                        className="text-xs border-rose-300 text-rose-700 hover:bg-rose-50 gap-1 disabled:opacity-50"
                       >
                         <Lock className="w-3.5 h-3.5" />
                         <span>Khóa</span>

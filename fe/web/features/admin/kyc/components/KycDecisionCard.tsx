@@ -12,6 +12,8 @@ interface KycDecisionCardProps {
   onApprove: () => void;
   onReject: (reason: string) => void;
   actionLoading: boolean;
+  canApprove?: boolean;
+  canReject?: boolean;
 }
 
 export function KycDecisionCard({
@@ -19,6 +21,8 @@ export function KycDecisionCard({
   onApprove,
   onReject,
   actionLoading,
+  canApprove = true,
+  canReject = true,
 }: KycDecisionCardProps) {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -47,8 +51,9 @@ export function KycDecisionCard({
             {!showRejectForm ? (
               <div className="flex flex-col gap-2">
                 <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-sm"
-                  disabled={actionLoading}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-sm disabled:opacity-50"
+                  disabled={actionLoading || !canApprove}
+                  title={!canApprove ? "Yêu cầu quyền Duyệt hồ sơ (KYC_APPROVE)" : undefined}
                   onClick={onApprove}
                 >
                   <CheckCircle className="w-4 h-4" />
@@ -56,8 +61,9 @@ export function KycDecisionCard({
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full border-red-300 text-red-600 hover:bg-red-50 gap-1.5 text-sm"
-                  disabled={actionLoading}
+                  className="w-full border-red-300 text-red-600 hover:bg-red-50 gap-1.5 text-sm disabled:opacity-50"
+                  disabled={actionLoading || !canReject}
+                  title={!canReject ? "Yêu cầu quyền Từ chối hồ sơ (KYC_REJECT)" : undefined}
                   onClick={() => setShowRejectForm(true)}
                 >
                   <XCircle className="w-4 h-4" />

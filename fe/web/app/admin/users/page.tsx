@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Users as UsersIcon } from "lucide-react";
-import { AdminPermissionGuard } from "@/features/admin/components/AdminPermissionGuard";
+import { AdminPermissionGuard, useAdminPermission } from "@/features/admin/components/AdminPermissionGuard";
 import { AdminPermission } from "@/types/admin-permissions";
 import { useAdminUsersFlow } from "@/features/admin/users/hooks/useAdminUsersFlow";
 import {
@@ -12,6 +12,8 @@ import {
 } from "@/features/admin/users/components";
 
 export default function UsersPage() {
+  const { hasPermission } = useAdminPermission();
+  const canLockUser = hasPermission(AdminPermission.USER_LOCK);
   const {
     users,
     loading,
@@ -69,6 +71,7 @@ export default function UsersPage() {
           }}
           onUnlockUser={handleUnlockUser}
           actionLoading={actionLoading}
+          canLockUser={canLockUser}
         />
 
         <AdminUserLockDialog

@@ -44,9 +44,10 @@ export function useStaffsManagementFlow() {
   const [permissionsLoading, setPermissionsLoading] = useState(true);
   const [permissionsError, setPermissionsError] = useState('');
 
-  // Delete Dialog State
+  // Delete Confirmation State
   const [deleteTarget, setDeleteTarget] = useState<StaffAccount | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [togglingStaffId, setTogglingStaffId] = useState<number | null>(null);
 
   const fetchStaffs = useCallback(async (search?: string) => {
     setLoading(true);
@@ -205,6 +206,7 @@ export function useStaffsManagementFlow() {
   };
 
   const handleToggleStatus = async (staff: StaffAccount) => {
+    setTogglingStaffId(staff.id);
     try {
       if (staff.status === 'ACTIVE') {
         await adminApi.lockUser(staff.id, {
@@ -215,7 +217,7 @@ export function useStaffsManagementFlow() {
         await adminApi.unlockUser(staff.id);
         toast({ title: 'Đã mở khóa tài khoản nhân viên' });
       }
-      fetchStaffs(keyword);
+      await fetchStaffs(keyword);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       toast({
@@ -223,6 +225,8 @@ export function useStaffsManagementFlow() {
         description: e.response?.data?.message || e.message,
         variant: 'destructive',
       });
+    } finally {
+      setTogglingStaffId(null);
     }
   };
 
@@ -336,6 +340,7 @@ export function useStaffsManagementFlow() {
     toggleAllPermissions,
     // Status & Delete
     handleToggleStatus,
+    togglingStaffId,
     deleteTarget,
     setDeleteTarget,
     deleteLoading,
