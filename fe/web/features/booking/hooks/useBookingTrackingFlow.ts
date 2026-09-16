@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { bookingApi } from "@/features/booking/services/booking.api";
 import { BookingStatus } from "@/types";
@@ -54,7 +54,7 @@ export function useBookingTrackingFlow(id: string) {
     lng: 105.854167,
   });
   const [currentStepIdx, setCurrentStepIdx] = useState(1);
-  const simulationRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isWaitingGps, setIsWaitingGps] = useState(true);
   const socketConnectedRef = useRef(false);
 
   // ---- Fetch booking ----
@@ -99,61 +99,6 @@ export function useBookingTrackingFlow(id: string) {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // ---- Simulation fallback ----
-  const startSimulation = useCallback(() => {
-    const offsetLat = (Math.random() - 0.5) * 0.04;
-    const offsetLng = (Math.random() - 0.5) * 0.04;
-    const startLat = customerLoc.lat + offsetLat;
-    const startLng = customerLoc.lng + offsetLng;
-
-    setProviderLoc({
-      lat: startLat,
-      lng: startLng,
-      heading: Math.random() * 360,
-      speed: 25 + Math.random() * 15,
-      updatedAt: new Date(),
-    });
-    setTrail([[startLat, startLng]]);
-
-    simulationRef.current = setInterval(() => {
-      setProviderLoc((prev) => {
-        if (!prev) return prev;
-        const dist = haversineDistance(
-          prev.lat,
-          prev.lng,
-          customerLoc.lat,
-          customerLoc.lng,
-        );
-
-        if (dist < 0.05) {
-          if (simulationRef.current) clearInterval(simulationRef.current);
-          setCurrentStepIdx(2);
-          return { ...prev, speed: 0, updatedAt: new Date() };
-        }
-
-        const stepSize = 0.0003 + Math.random() * 0.0002;
-        const dlat = customerLoc.lat - prev.lat;
-        const dlng = customerLoc.lng - prev.lng;
-        const angle = Math.atan2(dlng, dlat);
-        const jitter = (Math.random() - 0.5) * 0.3;
-
-        const newLat = prev.lat + Math.cos(angle + jitter) * stepSize;
-        const newLng = prev.lng + Math.sin(angle + jitter) * stepSize;
-        const heading = ((angle + jitter) * 180) / Math.PI;
-
-        setTrail((t) => [...t.slice(-100), [newLat, newLng]]);
-
-        return {
-          lat: newLat,
-          lng: newLng,
-          heading: heading < 0 ? heading + 360 : heading,
-          speed: 20 + Math.random() * 20,
-          updatedAt: new Date(),
-        };
-      });
-    }, 2000);
-  }, [customerLoc.lat, customerLoc.lng]);
-
   // ---- Socket.io Realtime Tracking ----
   useEffect(() => {
     if (!booking) return;
@@ -167,15 +112,10 @@ export function useBookingTrackingFlow(id: string) {
     socket.connect();
     socket.emit("subscribeTracking", { bookingId });
 
-    const fallbackTimer = setTimeout(() => {
-      if (!socketConnectedRef.current) {
-        startSimulation();
-      }
-    }, 5000);
-
     const handleLastKnown = (data: { bookingId: number; location: any }) => {
       if (data.location) {
         socketConnectedRef.current = true;
+        setIsWaitingGps(false);
         const loc = data.location;
         setProviderLoc({
           lat: loc.lat,
@@ -197,6 +137,7 @@ export function useBookingTrackingFlow(id: string) {
       timestamp?: number;
     }) => {
       socketConnectedRef.current = true;
+      setIsWaitingGps(false);
       const newLoc: ProviderLocation = {
         lat: data.lat,
         lng: data.lng,
@@ -228,15 +169,13 @@ export function useBookingTrackingFlow(id: string) {
     socket.on("trackingEnded", handleTrackingEndedUpdate);
 
     return () => {
-      clearTimeout(fallbackTimer);
       socket.emit("unsubscribeTracking", { bookingId });
       socket.off("lastKnownLocation", handleLastKnown);
       socket.off("providerLocation", handleProviderLocUpdate);
       socket.off("trackingEnded", handleTrackingEndedUpdate);
       socket.disconnect();
-      if (simulationRef.current) clearInterval(simulationRef.current);
     };
-  }, [booking?.status, id, customerLoc.lat, customerLoc.lng, startSimulation]);
+  }, [booking?.status, id, customerLoc.lat, customerLoc.lng]);
 
   const distance = providerLoc
     ? haversineDistance(
@@ -263,6 +202,7 @@ export function useBookingTrackingFlow(id: string) {
     loading,
     error,
     isTrackable,
+    isWaitingGps,
     providerLoc,
     customerLoc,
     trail,

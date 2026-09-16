@@ -49,6 +49,7 @@ export function useServicesSearchFlow() {
     label: DEFAULT_SEARCH_LOCATION.label,
   });
   const observerTarget = useRef<HTMLDivElement | null>(null);
+  const searchRequestIdRef = useRef(0);
 
   const { favorites, toggleFavoriteService, addRecentlyViewed } = useServiceStore();
   const { user } = useAuthStore();
@@ -137,6 +138,7 @@ export function useServicesSearchFlow() {
 
   const handleSearch = useCallback(
     async (page = 1, currentFilters?: ApiPayload, append = false) => {
+      const requestId = ++searchRequestIdRef.current;
       if (append) setIsFetchingMore(true);
       else {
         setLoading(true);
@@ -224,6 +226,9 @@ export function useServicesSearchFlow() {
           metaData = res.data.meta || { total: 0, page: 1, totalPages: 0 };
         }
 
+        // Bỏ qua nếu đã có request tìm kiếm mới hơn được kích hoạt
+        if (requestId !== searchRequestIdRef.current) return;
+
         if (append) {
           setServices((prev) => [...prev, ...data]);
         } else {
@@ -236,6 +241,7 @@ export function useServicesSearchFlow() {
         setMeta(metaData);
         setSearchError('');
       } catch (err) {
+        if (requestId !== searchRequestIdRef.current) return;
         const status = (err as { response?: { status?: number } })?.response?.status;
         const message =
           status === 502
@@ -248,8 +254,10 @@ export function useServicesSearchFlow() {
           setMeta({ total: 0, page: 1, totalPages: 0 });
         }
       } finally {
-        setLoading(false);
-        setIsFetchingMore(false);
+        if (requestId === searchRequestIdRef.current) {
+          setLoading(false);
+          setIsFetchingMore(false);
+        }
       }
     },
     [searchParams, sortBy, categoryIds, minPrice, maxPrice, minRating, userLocation],

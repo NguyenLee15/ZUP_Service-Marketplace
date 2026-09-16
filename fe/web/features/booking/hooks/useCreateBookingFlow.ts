@@ -72,6 +72,11 @@ export function useCreateBookingFlow() {
   const [step, setStep] = useState(1);
   const [gpsLoading, setGpsLoading] = useState(false);
   const submittedRef = useRef(false);
+  const idempotencyKeyRef = useRef<string>(
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `bk_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  );
 
   const [showSmartInput, setShowSmartInput] = useState(!serviceId);
   const [aiIntentResult, setAiIntentResult] = useState<ApiPayload>(null);
@@ -328,16 +333,19 @@ export function useCreateBookingFlow() {
         quantity: it.quantity,
       }));
 
-      await bookingsApi.create({
-        serviceId: Number(serviceId),
-        description,
-        province,
-        district: district || NEW_ADMIN_DISTRICT_VALUE,
-        ward,
-        addressDetail,
-        desiredTime: timeMode === 'now' ? new Date().toISOString() : new Date(desiredTime).toISOString(),
-        items: itemsPayload.length > 0 ? itemsPayload : undefined,
-      });
+      await bookingsApi.create(
+        {
+          serviceId: Number(serviceId),
+          description,
+          province,
+          district: district || NEW_ADMIN_DISTRICT_VALUE,
+          ward,
+          addressDetail,
+          desiredTime: timeMode === 'now' ? new Date().toISOString() : new Date(desiredTime).toISOString(),
+          items: itemsPayload.length > 0 ? itemsPayload : undefined,
+        },
+        idempotencyKeyRef.current,
+      );
       toast({ title: 'Đặt dịch vụ thành công', description: 'Nhà cung cấp sẽ liên hệ bạn sớm.' });
       router.push('/bookings');
     } catch (err: ApiPayload) {

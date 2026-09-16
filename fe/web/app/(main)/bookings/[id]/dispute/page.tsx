@@ -8,6 +8,19 @@ import { Upload, X, AlertCircle, Send, ShieldAlert, FileImage } from 'lucide-rea
 import { BackButton } from '@/components/navigation/BackButton'
 
 import { use } from 'react';
+import { toast } from 'sonner';
+
+const MAX_FILES = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'application/pdf',
+]);
 
 export default function DisputePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -26,6 +39,28 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
     'Khác',
   ]
 
+  const validateAndFilterFiles = (incomingFiles: File[], currentCount: number) => {
+    const valid: File[] = [];
+    for (const file of incomingFiles) {
+      const mime = file.type.toLowerCase();
+      if (mime && !ALLOWED_MIME_TYPES.has(mime)) {
+        toast.error(`Tệp "${file.name}" không hợp lệ. Chỉ chấp nhận ảnh (JPG, PNG, WebP) hoặc PDF.`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`Tệp "${file.name}" quá lớn (${(file.size / (1024 * 1024)).toFixed(1)}MB). Giới hạn tối đa là 10MB.`);
+        continue;
+      }
+      valid.push(file);
+    }
+    const remainingSlots = MAX_FILES - currentCount;
+    if (valid.length > remainingSlots) {
+      toast.warning(`Chỉ có thể thêm tối đa ${MAX_FILES} tệp bằng chứng.`);
+      return valid.slice(0, remainingSlots);
+    }
+    return valid;
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(true)
@@ -39,12 +74,20 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
     e.preventDefault()
     setIsDragging(false)
     const files = Array.from(e.dataTransfer.files)
-    setUploadedFiles(prev => [...prev, ...files].slice(0, 5))
+    setUploadedFiles((prev) => {
+      const valid = validateAndFilterFiles(files, prev.length);
+      return [...prev, ...valid];
+    })
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    setUploadedFiles(prev => [...prev, ...files].slice(0, 5))
+    setUploadedFiles((prev) => {
+      const valid = validateAndFilterFiles(files, prev.length);
+      return [...prev, ...valid];
+    })
+    // Reset file input value to allow re-selection
+    e.target.value = '';
   }
 
   const removeFile = (index: number) => {
@@ -197,7 +240,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
                   <input
                     type="file"
                     multiple
-                    accept="image/*,video/*"
+                    accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
                     onChange={handleFileSelect}
                     className="hidden"
                   />

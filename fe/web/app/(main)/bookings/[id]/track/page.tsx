@@ -37,6 +37,7 @@ export default function TrackingPage({
     loading,
     error,
     isTrackable,
+    isWaitingGps,
     providerLoc,
     customerLoc,
     trail,
@@ -110,6 +111,7 @@ export default function TrackingPage({
         <BackButton fallbackHref={`/bookings/${id}`} className="mb-6" />
         <div className="rounded-3xl border border-border bg-card p-8 flex flex-col items-center gap-6 shadow-sm relative overflow-hidden">
 
+
           <div
             className={`w-16 h-16 rounded-full ${iconBg} flex items-center justify-center`}
           >
@@ -172,6 +174,7 @@ export default function TrackingPage({
           providerLoc={providerLoc}
           distance={distance}
           eta={eta}
+          isWaitingGps={isWaitingGps}
         />
 
         {/* Re-center Button */}

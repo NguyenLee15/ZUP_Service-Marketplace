@@ -134,6 +134,27 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  // 5. Bảo vệ các tuyến đường riêng tư của Khách Hàng:
+  // Nếu chưa đăng nhập (!token || !payload) truy cập các trang cá nhân -> chuyển hướng về /login kèm param redirect
+  const customerProtectedPrefixes = [
+    '/bookings',
+    '/profile',
+    '/chat',
+    '/favorites',
+    '/notifications',
+    '/payment',
+  ];
+  if (!token || !payload) {
+    const isProtectedCustomerRoute = customerProtectedPrefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix + '/'),
+    );
+    if (isProtectedCustomerRoute) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   if (pathname !== '/_next/image') {
     const nonce = btoa(crypto.randomUUID());
     const requestHeaders = new Headers(request.headers);

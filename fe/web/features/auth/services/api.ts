@@ -45,7 +45,10 @@ export const categoriesApi = {
 };
 
 export const bookingsApi = {
-  create: (data: ApiPayload) => api.post("/bookings", data),
+  create: (data: ApiPayload, idempotencyKey?: string) =>
+    api.post("/bookings", data, {
+      headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
+    }),
 
   extractIntent: (prompt: string, latitude?: number, longitude?: number) =>
     api.post("/bookings/intent-extract", { prompt, latitude, longitude }),

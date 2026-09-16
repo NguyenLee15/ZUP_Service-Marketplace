@@ -134,6 +134,11 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
     "unknown";
   headers["X-Forwarded-For"] = clientIp;
 
+  // Forward Idempotency-Key if present
+  const idempotencyKey =
+    req.headers.get("idempotency-key") || req.headers.get("x-idempotency-key");
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+
   const fetchOptions: RequestInit = {
     method: req.method,
     headers,
@@ -143,6 +148,21 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
   if (req.method !== "GET" && req.method !== "HEAD") {
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
+      // Guard against oversized uploads before buffering formData (55MB max)
+      const contentLength = req.headers.get("content-length");
+      if (contentLength && parseInt(contentLength, 10) > 55 * 1024 * 1024) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "PAYLOAD_TOO_LARGE",
+              message: "Kích thước tệp tải lên vượt quá giới hạn cho phép (tối đa 50MB).",
+            },
+          },
+          { status: 413 },
+        );
+      }
+
       // FormData — pass through, let fetch set boundary
       const formData = await req.formData();
       fetchOptions.body = formData as ApiPayload;

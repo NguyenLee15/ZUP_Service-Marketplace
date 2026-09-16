@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Package, Clock, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon, User, Loader2 } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon, User, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { bookingsApi } from '@/features/auth/services/api';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
 import { Badge } from '@/components/ui/badge';
@@ -31,22 +31,32 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
   const fetchBookings = useCallback(() => {
     setIsFetching(true);
+    setErrorMessage('');
     const params: any = { page, limit: PAGE_SIZE };
     if (status) params.status = status;
     bookingsApi.getMyBookings(params)
       .then((res) => {
         setBookings(res.data.data || []);
         if (res.data.meta) setMeta(res.data.meta);
-        setInitialLoading(false);
       })
-      .catch(() => {})
-      .finally(() => setIsFetching(false));
+      .catch((err: any) => {
+        const msg =
+          err?.response?.data?.error?.message ||
+          err?.response?.data?.message ||
+          'Không thể tải danh sách đơn hàng. Vui lòng kiểm tra kết nối.';
+        setErrorMessage(msg);
+      })
+      .finally(() => {
+        setInitialLoading(false);
+        setIsFetching(false);
+      });
   }, [status, page]);
 
   useEffect(() => {
@@ -85,6 +95,19 @@ export default function BookingsPage() {
       {initialLoading ? (
         <div className="space-y-3">
            {[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-xl animate-pulse" />)}
+        </div>
+      ) : errorMessage ? (
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 text-center py-12 px-4 mt-6 shadow-sm">
+          <div className="w-14 h-14 mx-auto mb-3 bg-destructive/10 rounded-full flex items-center justify-center text-destructive">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-bold text-foreground mb-1.5">Không thể tải danh sách đơn hàng</h3>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-5 leading-relaxed">
+            {errorMessage}
+          </p>
+          <Button onClick={fetchBookings} variant="outline" className="rounded-lg px-6 font-medium gap-2">
+            <RefreshCw className="w-4 h-4" /> Thử lại
+          </Button>
         </div>
       ) : bookings.length === 0 ? (
         <div className="rounded-xl border border-border bg-card text-center py-16 px-4 mt-6 shadow-sm">

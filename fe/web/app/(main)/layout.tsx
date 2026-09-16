@@ -17,18 +17,26 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const { user, _hasHydrated } = useAuthStore();
 
   useEffect(() => {
-    if (_hasHydrated && user && (user.role === Role.ADMIN || user.role === Role.STAFF)) {
-      const customerOnlyPrefixes = [
-        '/bookings',
-        '/profile',
-        '/chat',
-        '/favorites',
-        '/notifications',
-        '/payment',
-      ];
-      if (customerOnlyPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+    if (!_hasHydrated) return;
+
+    const customerProtectedPrefixes = [
+      '/bookings',
+      '/profile',
+      '/chat',
+      '/favorites',
+      '/notifications',
+      '/payment',
+    ];
+    const isProtected = customerProtectedPrefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix + '/'),
+    );
+
+    if (user && (user.role === Role.ADMIN || user.role === Role.STAFF)) {
+      if (isProtected) {
         router.replace('/admin/dashboard');
       }
+    } else if (!user && isProtected) {
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [_hasHydrated, user, pathname, router]);
   const mainBackRouteMap: Record<string, string> = {

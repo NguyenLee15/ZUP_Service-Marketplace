@@ -2,8 +2,10 @@ import api from '@/lib/axios';
 
 export const bookingApi = {
   // Customer
-  create: (dto: Record<string, unknown>) =>
-    api.post('/bookings', dto),
+  create: (dto: Record<string, unknown>, idempotencyKey?: string) =>
+    api.post('/bookings', dto, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    }),
 
   getMyBookings: (params?: Record<string, unknown>) =>
     api.get('/bookings', { params }),
