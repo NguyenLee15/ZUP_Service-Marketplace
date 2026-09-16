@@ -243,12 +243,26 @@ export class BookingCreationService {
       });
     }
 
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
+    const claim = await this.prisma.booking.updateMany({
+      where: {
+        id: bookingId,
+        providerId,
+        status: BookingStatus.PENDING,
+      },
       data: {
         providerAcceptedAt: new Date(),
         status: BookingStatus.ACCEPTED,
       },
+    });
+    if (claim.count === 0) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Đơn hàng không ở trạng thái chờ nhận hoặc đã được xử lý',
+      });
+    }
+
+    const updated = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
     });
 
     await this.shared.addStatusHistory(
@@ -293,9 +307,23 @@ export class BookingCreationService {
     );
 
     const reason = dto?.reason || 'Nhà cung cấp từ chối nhận đơn';
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
+    const claim = await this.prisma.booking.updateMany({
+      where: {
+        id: bookingId,
+        providerId,
+        status: BookingStatus.PENDING,
+      },
       data: { status: BookingStatus.CANCELLED },
+    });
+    if (claim.count === 0) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message: 'Đơn hàng không ở trạng thái chờ nhận hoặc đã được xử lý',
+      });
+    }
+
+    const updated = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
     });
 
     await this.shared.addStatusHistory(

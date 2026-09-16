@@ -22,6 +22,7 @@ type MockPrisma = {
     findUnique: jest.Mock;
     findFirst: jest.Mock;
     update: jest.Mock;
+    updateMany: jest.Mock;
   };
   bookingStatusHistory: {
     create: jest.Mock;
@@ -58,6 +59,7 @@ describe('BookingLifecycleService', () => {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     bookingStatusHistory: {
       create: jest.fn(),
@@ -180,7 +182,8 @@ describe('BookingLifecycleService', () => {
         status: BookingStatus.QUOTED,
       };
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
-      mockPrisma.booking.update.mockResolvedValue({
+      mockPrisma.booking.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.booking.findUnique.mockResolvedValue({
         ...booking,
         status: BookingStatus.CONFIRMED,
       });
@@ -205,10 +208,12 @@ describe('BookingLifecycleService', () => {
         status: 'ACTIVE',
       });
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
-      mockPrisma.booking.update.mockResolvedValue({
+      mockPrisma.booking.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.booking.findUnique.mockResolvedValue({
         ...booking,
         status: BookingStatus.DONE,
         completedAt: new Date(),
+        autoCompletedAt: null,
       });
 
       const mockFiles = [
@@ -221,11 +226,8 @@ describe('BookingLifecycleService', () => {
       const result = await service.completeWork(10, 1, mockFiles);
 
       expect(result.data.status).toBe(BookingStatus.DONE);
-      const updateMock = mockPrisma.booking.update as jest.Mock<
-        unknown,
-        [BookingUpdateArg]
-      >;
-      const updateArg = updateMock.mock.calls[0]?.[0];
+      const updateManyMock = mockPrisma.booking.updateMany as jest.Mock;
+      const updateArg = updateManyMock.mock.calls[0]?.[0];
       expect(updateArg.data.status).toBe(BookingStatus.DONE);
       expect(updateArg.data.completedAt).toBeInstanceOf(Date);
       expect(updateArg.data.autoCompletedAt).toBeNull();

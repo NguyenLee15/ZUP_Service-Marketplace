@@ -8,6 +8,7 @@ import {
   IsArray,
   ValidateNested,
   Min,
+  Max,
   MinLength,
   IsNotEmpty,
   IsIn,
@@ -93,18 +94,24 @@ export class ConfirmSurveyorDto {
 
 export class CreateQuotationItemDto {
   @IsString()
+  @IsNotEmpty()
   @MaxLength(100)
   name!: string;
 
   @IsString()
+  @IsNotEmpty()
   @MaxLength(20)
   unit!: string;
 
   @IsNumber()
   @Type(() => Number)
+  @Min(1000)
+  @Max(100000000)
   price!: number;
 
   @IsInt()
+  @Min(1)
+  @Max(1000)
   quantity!: number;
 }
 

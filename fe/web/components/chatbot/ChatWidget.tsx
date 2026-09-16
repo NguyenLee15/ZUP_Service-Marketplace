@@ -4,15 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import {
-  Bot,
-  Check,
-  Loader2,
-  MessageSquare,
-  Pencil,
-  Send,
-  X,
-} from "lucide-react";
+import { Bot, Loader2, MessageSquare } from "lucide-react";
 import api from "@/lib/axios";
 import { chatbotApi } from "@/features/auth/services/api";
 import { useAuthStore } from "@/store/auth.store";
@@ -24,6 +16,8 @@ import {
   getMessageText,
 } from "./types";
 import { ChatMessageItem } from "./ChatMessageItem";
+import { ChatWidgetHeader } from "./ChatWidgetHeader";
+import { ChatWidgetInput } from "./ChatWidgetInput";
 
 function getAuthToken(): string {
   return useAuthStore.getState().accessToken || "";
@@ -336,75 +330,20 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           id="chat-widget-modal"
           className="fixed inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-50 flex h-[min(620px,calc(100dvh_-_1.5rem_-_env(safe-area-inset-bottom)))] w-auto flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[min(420px,calc(100vw_-_2rem))]"
         >
-          <div className="border-b border-slate-200 bg-white px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-                  <Bot className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  {editingTitle ? (
-                    <div className="flex min-w-0 items-center gap-1">
-                      <input
-                        value={titleInput}
-                        onChange={(event) =>
-                          setTitleInput(event.target.value.slice(0, 120))
-                        }
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") void saveSessionTitle();
-                          if (event.key === "Escape") setEditingTitle(false);
-                        }}
-                        autoFocus
-                        className="h-7 min-w-0 rounded-md border border-slate-200 px-2 text-sm font-semibold text-slate-950 outline-none focus:border-blue-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={saveSessionTitle}
-                        disabled={titleSaving || !titleInput.trim()}
-                        aria-label="Lưu tên phiên chat"
-                        className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50 disabled:opacity-50"
-                      >
-                        {titleSaving ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Check className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex min-w-0 items-center gap-1">
-                      <h3 className="truncate text-sm font-semibold text-slate-950">
-                        {sessionTitle}
-                      </h3>
-                      {sessionId && accessToken && (
-                        <button
-                          type="button"
-                          onClick={startEditingTitle}
-                          aria-label="Đổi tên phiên chat"
-                          className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {isLoading
-                      ? "Đang suy nghĩ…"
-                      : "Tìm dịch vụ, đặt lịch, tra cứu đơn"}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                aria-label="Đóng trợ lý AI"
-                className="rounded-lg p-2 text-slate-500 transition-[background-color,color] hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <ChatWidgetHeader
+            sessionTitle={sessionTitle}
+            editingTitle={editingTitle}
+            titleInput={titleInput}
+            titleSaving={titleSaving}
+            sessionId={sessionId}
+            accessToken={accessToken}
+            isLoading={isLoading}
+            onStartEditingTitle={startEditingTitle}
+            onTitleInputChange={(val) => setTitleInput(val.slice(0, 120))}
+            onSaveSessionTitle={saveSessionTitle}
+            onCancelEditingTitle={() => setEditingTitle(false)}
+            onClose={() => setIsOpen(false)}
+          />
 
           <div
             className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4"
@@ -448,36 +387,12 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-slate-200 bg-white p-3">
-            <div className="relative">
-              <input
-                type="text"
-                name="chatbot-message"
-                aria-label="Nhập tin nhắn cho trợ lý AI"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") handleSendMessage(input);
-                }}
-                placeholder="Nhập nhu cầu, ví dụ: máy lạnh chảy nước…"
-                disabled={isLoading}
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-3.5 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:opacity-60"
-              />
-              <button
-                type="button"
-                onClick={() => handleSendMessage(input)}
-                disabled={!input.trim() || isLoading}
-                aria-label="Gửi tin nhắn"
-                className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
+          <ChatWidgetInput
+            input={input}
+            isLoading={isLoading}
+            onInputChange={setInput}
+            onSendMessage={handleSendMessage}
+          />
         </div>
       )}
     </>

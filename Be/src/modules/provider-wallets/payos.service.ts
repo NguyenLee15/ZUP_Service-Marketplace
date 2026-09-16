@@ -105,6 +105,14 @@ export class PayosService implements OnModuleInit {
       };
     } catch (error: any) {
       this.logger.error('Error creating PayOS payment link', error);
+      await this.prisma.walletTransaction
+        .update({
+          where: { id: txn.id },
+          data: { status: 'FAILED' },
+        })
+        .catch((updateErr) => {
+          this.logger.error('Failed to mark transaction as FAILED', updateErr);
+        });
       throw new BadRequestException({
         code: ErrorCodes.INTERNAL_ERROR,
         message: 'Không thể tạo liên kết thanh toán PayOS',

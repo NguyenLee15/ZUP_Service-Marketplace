@@ -36,9 +36,25 @@ export class BookingExecutionService {
       });
     }
 
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
+    const claim = await this.prisma.booking.updateMany({
+      where: {
+        id: bookingId,
+        providerId,
+        status: BookingStatus.ACCEPTED,
+        providerArrivedAt: null,
+      },
       data: { providerArrivedAt: new Date() },
+    });
+    if (claim.count === 0) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message:
+          'Bạn đã xác nhận đến nơi trước đó hoặc đơn hàng đã thay đổi trạng thái',
+      });
+    }
+
+    const updated = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
     });
 
     await this.shared.addStatusHistory(
@@ -69,9 +85,25 @@ export class BookingExecutionService {
       booking.status,
       BookingStatus.IN_PROGRESS,
     );
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
+
+    const claim = await this.prisma.booking.updateMany({
+      where: {
+        id: bookingId,
+        providerId,
+        status: BookingStatus.CONFIRMED,
+      },
       data: { status: BookingStatus.IN_PROGRESS },
+    });
+    if (claim.count === 0) {
+      throw new BadRequestException({
+        code: ErrorCodes.BOOKING_INVALID_STATE,
+        message:
+          'Đơn hàng không ở trạng thái chờ thực hiện hoặc đã được cập nhật',
+      });
+    }
+
+    const updated = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
     });
 
     await this.shared.addStatusHistory(
@@ -123,14 +155,25 @@ export class BookingExecutionService {
     );
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const b = await tx.booking.update({
-        where: { id: bookingId },
+      const claim = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          providerId,
+          status: BookingStatus.IN_PROGRESS,
+        },
         data: {
           status: BookingStatus.DONE,
           completedAt: now,
           autoCompletedAt: null,
         },
       });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Đơn hàng không ở trạng thái đang thực hiện hoặc đã được cập nhật',
+        });
+      }
 
       if (uploadedFiles.length > 0) {
         await tx.bookingAttachment.createMany({
@@ -141,7 +184,8 @@ export class BookingExecutionService {
           })),
         });
       }
-      return b;
+
+      return tx.booking.findUnique({ where: { id: bookingId } });
     });
 
     await this.shared.addStatusHistory(
@@ -174,7 +218,10 @@ export class BookingExecutionService {
       const currentBooking = await tx.booking.findUnique({
         where: { id: bookingId },
       });
-      if (currentBooking?.status !== BookingStatus.DONE) {
+      if (
+        currentBooking?.status !== BookingStatus.DONE ||
+        currentBooking?.autoCompletedAt !== null
+      ) {
         throw new BadRequestException({
           code: ErrorCodes.BOOKING_INVALID_STATE,
           message: 'Đơn hàng đã được nghiệm thu hoặc thay đổi trạng thái',

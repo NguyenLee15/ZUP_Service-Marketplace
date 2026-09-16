@@ -51,12 +51,26 @@ export class BookingCommissionService {
       where: { id: bookingId },
     });
     if (!booking) return;
+    const existingCommissionTx = await tx.walletTransaction.findFirst({
+      where: {
+        bookingId,
+        type: 'COMMISSION',
+        status: 'SUCCESS',
+      },
+    });
+    if (existingCommissionTx) {
+      this.logger.warn(`Commission already deducted for booking ${bookingId}`);
+      return;
+    }
 
-    const fee = quotations.reduce(
-      (sum, q) =>
-        sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
-      0,
+    const fee = Math.round(
+      quotations.reduce(
+        (sum, q) =>
+          sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
+        0,
+      ),
     );
+    if (fee <= 0) return;
 
     const executeDeduction = async (dbTx: Prisma.TransactionClient) => {
       const wallet = await dbTx.providerWallet.findUnique({

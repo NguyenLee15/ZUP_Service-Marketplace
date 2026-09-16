@@ -100,7 +100,7 @@ export class MailService {
             </div>
           </div>
         `,
-      consoleText: `Staff credentials for ${email}: ${password}`,
+      consoleText: `Staff account credentials notification prepared for ${email}`,
     });
   }
 

@@ -101,12 +101,27 @@ export class BookingQuotationService {
 
         await tx.quotationItem.createMany({ data: quotationItems });
 
-        const updated = await tx.booking.update({
-          where: { id: bookingId },
+        const claim = await tx.booking.updateMany({
+          where: {
+            id: bookingId,
+            providerId,
+            status: BookingStatus.ACCEPTED,
+          },
           data: { status: BookingStatus.QUOTED },
         });
+        if (claim.count === 0) {
+          throw new BadRequestException({
+            code: ErrorCodes.BOOKING_INVALID_STATE,
+            message:
+              'Đơn hàng không ở trạng thái hợp lệ để gửi báo giá hoặc đã được cập nhật',
+          });
+        }
 
-        return [createdQuotation, updated];
+        const updated = await tx.booking.findUnique({
+          where: { id: bookingId },
+        });
+
+        return [createdQuotation, updated!];
       },
     );
 
@@ -161,10 +176,21 @@ export class BookingQuotationService {
       BookingStatus.CONFIRMED,
     );
     const updated = await this.prisma.$transaction(async (tx) => {
-      const updatedBooking = await tx.booking.update({
-        where: { id: bookingId },
+      const claim = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          customerId,
+          status: BookingStatus.QUOTED,
+        },
         data: { status: BookingStatus.CONFIRMED },
       });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Đơn hàng không ở trạng thái chờ xác nhận báo giá hoặc đã được xử lý',
+        });
+      }
 
       await tx.quotation.updateMany({
         where: { bookingId, type: 'ORIGINAL', status: 'PENDING' },
@@ -180,7 +206,10 @@ export class BookingQuotationService {
         tx,
       );
 
-      return updatedBooking;
+      const updatedBooking = await tx.booking.findUnique({
+        where: { id: bookingId },
+      });
+      return updatedBooking!;
     });
     await this.shared.notify(
       booking.providerId,
@@ -210,10 +239,21 @@ export class BookingQuotationService {
     );
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const b = await tx.booking.update({
-        where: { id: bookingId },
+      const claim = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          customerId,
+          status: BookingStatus.QUOTED,
+        },
         data: { status: BookingStatus.CANCELLED },
       });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Đơn hàng không ở trạng thái chờ xác nhận báo giá hoặc đã được xử lý',
+        });
+      }
 
       await tx.quotation.updateMany({
         where: { bookingId, status: { in: ['PENDING', 'ACCEPTED'] } },
@@ -229,7 +269,10 @@ export class BookingQuotationService {
         tx,
       );
 
-      return b;
+      const b = await tx.booking.findUnique({
+        where: { id: bookingId },
+      });
+      return b!;
     });
 
     await this.shared.notify(
@@ -297,6 +340,42 @@ export class BookingQuotationService {
       (await this.bookingCommissionService.getCurrentCommissionRate());
 
     const createdQuotation = await this.prisma.$transaction(async (tx) => {
+      const currentBooking = await tx.booking.findUnique({
+        where: { id: bookingId },
+      });
+      if (
+        !currentBooking ||
+        currentBooking.providerId !== providerId ||
+        currentBooking.status !== BookingStatus.IN_PROGRESS
+      ) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message: 'Đơn hàng không ở trạng thái đang thực hiện',
+        });
+      }
+
+      const existingSupplementaryCount = await tx.quotation.count({
+        where: { bookingId, type: 'SUPPLEMENTARY' },
+      });
+
+      if (existingSupplementaryCount >= 3) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Đã vượt quá số lần báo giá phát sinh tối đa (3 lần)',
+        });
+      }
+
+      const pendingSupplementary = await tx.quotation.findFirst({
+        where: { bookingId, type: 'SUPPLEMENTARY', status: 'PENDING' },
+      });
+
+      if (pendingSupplementary) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Vẫn còn báo giá phát sinh đang chờ duyệt',
+        });
+      }
+
       const q = await tx.quotation.create({
         data: {
           bookingId,
@@ -378,21 +457,39 @@ export class BookingQuotationService {
 
     const newStatus = isAccepted ? 'ACCEPTED' : 'REJECTED';
 
-    const updated = await this.prisma.quotation.update({
-      where: { id: quotationId },
-      data: { status: newStatus },
-      include: { quotationItems: true },
-    });
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const claim = await tx.quotation.updateMany({
+        where: {
+          id: quotationId,
+          bookingId,
+          type: 'SUPPLEMENTARY',
+          status: 'PENDING',
+        },
+        data: { status: newStatus },
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Báo giá phát sinh không hợp lệ hoặc đã được xử lý',
+        });
+      }
 
-    await this.shared.addStatusHistory(
-      bookingId,
-      BookingStatus.IN_PROGRESS,
-      BookingStatus.IN_PROGRESS,
-      customerId,
-      isAccepted
-        ? 'Khách hàng đồng ý báo giá phát sinh'
-        : `Khách hàng từ chối báo giá phát sinh: ${reason}`,
-    );
+      await this.shared.addStatusHistory(
+        bookingId,
+        BookingStatus.IN_PROGRESS,
+        BookingStatus.IN_PROGRESS,
+        customerId,
+        isAccepted
+          ? 'Khách hàng đồng ý báo giá phát sinh'
+          : `Khách hàng từ chối báo giá phát sinh: ${reason}`,
+        tx,
+      );
+
+      return tx.quotation.findUnique({
+        where: { id: quotationId },
+        include: { quotationItems: true },
+      });
+    });
 
     await this.shared.notify(
       booking.providerId,

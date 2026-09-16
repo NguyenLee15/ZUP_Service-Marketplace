@@ -60,18 +60,47 @@ export class BookingCancellationService {
       booking.status,
       BookingStatus.CANCELLED,
     );
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: BookingStatus.CANCELLED },
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const claim = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          providerId,
+          status: {
+            in: [
+              BookingStatus.PENDING,
+              BookingStatus.ACCEPTED,
+              BookingStatus.QUOTED,
+            ],
+          },
+        },
+        data: { status: BookingStatus.CANCELLED },
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Chỉ có thể hủy đơn ở trạng thái Chờ xử lý, Đang đến hoặc Đã báo giá',
+        });
+      }
+
+      await tx.quotation.updateMany({
+        where: { bookingId, status: { in: ['PENDING', 'ACCEPTED'] } },
+        data: { status: 'REJECTED' },
+      });
+
+      await this.shared.addStatusHistory(
+        bookingId,
+        booking.status,
+        'CANCELLED',
+        providerId,
+        dto.reason,
+        tx,
+      );
+
+      return tx.booking.findUnique({ where: { id: bookingId } });
     });
 
-    await this.shared.addStatusHistory(
-      bookingId,
-      booking.status,
-      'CANCELLED',
-      providerId,
-      dto.reason,
-    );
     await this.shared.notify(
       booking.customerId,
       'BOOKING_CANCELLED',
@@ -99,20 +128,20 @@ export class BookingCancellationService {
       });
     }
 
-    if (
-      !(
-        [
-          BookingStatus.PENDING,
-          BookingStatus.ACCEPTED,
-          BookingStatus.QUOTED,
-        ] as BookingStatus[]
-      ).includes(booking.status)
-    ) {
+    const allowedStatuses: BookingStatus[] = [
+      BookingStatus.PENDING,
+      BookingStatus.ACCEPTED,
+      BookingStatus.QUOTED,
+    ];
+
+    if (!allowedStatuses.includes(booking.status)) {
       const canCancelFree = await this.redisService.exists(
         `booking:noshow:${bookingId}`,
       );
 
-      if (!(booking.status === BookingStatus.CONFIRMED && canCancelFree)) {
+      if (booking.status === BookingStatus.CONFIRMED && canCancelFree) {
+        allowedStatuses.push(BookingStatus.CONFIRMED);
+      } else {
         throw new BadRequestException({
           code: ErrorCodes.BOOKING_INVALID_STATE,
           message:
@@ -127,10 +156,21 @@ export class BookingCancellationService {
     );
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const b = await tx.booking.update({
-        where: { id: bookingId },
+      const claim = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          customerId,
+          status: { in: allowedStatuses },
+        },
         data: { status: BookingStatus.CANCELLED },
       });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Chỉ có thể hủy đơn ở trạng thái Chờ xử lý, Đang đến hoặc Đã báo giá',
+        });
+      }
 
       await tx.quotation.updateMany({
         where: { bookingId, status: { in: ['PENDING', 'ACCEPTED'] } },
@@ -146,7 +186,7 @@ export class BookingCancellationService {
         tx,
       );
 
-      return b;
+      return tx.booking.findUnique({ where: { id: bookingId } });
     });
 
     await this.shared.notify(
@@ -204,9 +244,44 @@ export class BookingCancellationService {
       booking.status,
       BookingStatus.CANCELLED,
     );
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: BookingStatus.CANCELLED },
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const claim = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          status: {
+            notIn: [
+              BookingStatus.CANCELLED,
+              BookingStatus.DONE,
+              BookingStatus.DISPUTED,
+            ],
+          },
+        },
+        data: { status: BookingStatus.CANCELLED },
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Không thể hủy đơn đã hủy, đã hoàn thành hoặc đang tranh chấp',
+        });
+      }
+
+      await tx.quotation.updateMany({
+        where: { bookingId, status: { in: ['PENDING', 'ACCEPTED'] } },
+        data: { status: 'REJECTED' },
+      });
+
+      await this.shared.addStatusHistory(
+        bookingId,
+        booking.status,
+        'CANCELLED',
+        adminId,
+        `Admin hủy đơn: ${reason}`,
+        tx,
+      );
+
+      return tx.booking.findUnique({ where: { id: bookingId } });
     });
 
     await this.shared.addStatusHistory(
