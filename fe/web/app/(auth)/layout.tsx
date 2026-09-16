@@ -76,26 +76,26 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
           <Link
             href="/"
-            className="text-xs font-medium text-slate-600 transition-colors hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:text-slate-400 dark:hover:text-sky-400"
+            className="inline-flex min-h-[44px] items-center px-2 text-xs font-medium text-slate-600 transition-colors hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-lg dark:text-slate-400 dark:hover:text-sky-400"
           >
             ← Về trang chủ
           </Link>
         </div>
       </header>
 
-      <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-8 sm:px-8 lg:py-12">
+      <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-6 sm:px-8 lg:py-12">
         <div className="w-full max-w-[440px]">
           {children}
         </div>
       </main>
 
       <footer className="w-full border-t border-slate-200/80 bg-white/50 px-4 py-4 dark:border-slate-800/80 dark:bg-slate-900/50">
-        <div className="mx-auto max-w-md space-y-2 text-center text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <div className="mx-auto max-w-md space-y-2 text-center text-xs text-slate-600 dark:text-slate-400">
+          <div className="flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>Thông tin đăng nhập được bảo vệ trong suốt phiên làm việc</span>
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             © {new Date().getFullYear()} ZUP Platform. Nền tảng dịch vụ tiện ích gia đình chuẩn mực.
           </p>
         </div>

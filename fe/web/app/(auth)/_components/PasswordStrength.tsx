@@ -54,13 +54,13 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
           <span
             key={index}
             className={cn(
-              'h-1 rounded-full transition-all duration-300',
+              'h-1 rounded-full transition-colors duration-300 motion-reduce:transition-none',
               index < score ? color : 'bg-slate-200 dark:bg-slate-800',
             )}
           />
         ))}
       </div>
-      <p className={cn('text-[11px] font-medium transition-colors', textColor)}>{label}</p>
+      <p className={cn('text-xs font-medium transition-colors', textColor)}>{label}</p>
     </div>
   );
 }

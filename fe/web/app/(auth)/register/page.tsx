@@ -283,7 +283,9 @@ export default function RegisterPage() {
                 />
               </div>
               {fieldErrors.fullName && (
-                <p id="fullName-error" className="text-xs text-rose-500 font-medium">{fieldErrors.fullName}</p>
+                <p id="fullName-error" role="alert" aria-live="polite" className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                  {fieldErrors.fullName}
+                </p>
               )}
             </div>
 
@@ -315,7 +317,9 @@ export default function RegisterPage() {
                 />
               </div>
               {fieldErrors.phone && (
-                <p id="phone-error" className="text-xs text-rose-500 font-medium">{fieldErrors.phone}</p>
+                <p id="phone-error" role="alert" aria-live="polite" className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                  {fieldErrors.phone}
+                </p>
               )}
             </div>
           </div>
@@ -350,7 +354,9 @@ export default function RegisterPage() {
               />
             </div>
             {fieldErrors.email && (
-              <p id="email-error" className="text-xs text-rose-500 font-medium">{fieldErrors.email}</p>
+              <p id="email-error" role="alert" aria-live="polite" className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                {fieldErrors.email}
+              </p>
             )}
           </div>
 
@@ -389,11 +395,11 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-colors active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />
                 Đang xử lý…
               </span>
             ) : (
@@ -410,16 +416,16 @@ export default function RegisterPage() {
           />
 
           {/* Terms notice */}
-          <p className="text-[11px] leading-relaxed text-slate-400 dark:text-slate-500 text-center">
+          <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400 text-center">
             Bằng việc tiếp tục, bạn đồng ý với Điều khoản sử dụng và Chính sách quyền riêng tư của ZUP.
           </p>
 
           {/* Login switch link */}
-          <div className="pt-2 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <div className="pt-2 text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             Đã có tài khoản ZUP?{' '}
             <Link
               href="/login"
-              className="font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors"
+              className="inline-flex min-h-[44px] items-center font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-lg px-1"
             >
               Đăng nhập ngay
             </Link>

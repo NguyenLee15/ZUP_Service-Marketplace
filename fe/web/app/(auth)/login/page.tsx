@@ -266,7 +266,9 @@ export default function LoginPage() {
               />
             </div>
             {fieldErrors.email && (
-              <p id="email-error" className="text-xs text-rose-500 font-medium">{fieldErrors.email}</p>
+              <p id="email-error" role="alert" aria-live="polite" className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                {fieldErrors.email}
+              </p>
             )}
           </div>
 
@@ -301,7 +303,7 @@ export default function LoginPage() {
             </div>
             <Link
               href="/forgot-password"
-              className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors"
+              className="inline-flex min-h-[44px] items-center text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-lg px-1"
             >
               Quên mật khẩu?
             </Link>
@@ -311,11 +313,11 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-colors active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-colors active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />
                 Đang đăng nhập…
               </span>
             ) : (
@@ -332,21 +334,21 @@ export default function LoginPage() {
           />
 
           {/* Register switch link */}
-          <div className="pt-2 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <div className="pt-2 text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             Chưa có tài khoản ZUP?{' '}
             <Link
               href="/register"
-              className="font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors"
+              className="inline-flex min-h-[44px] items-center font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-lg px-1"
             >
               Đăng ký ngay
             </Link>
           </div>
 
           {/* Provider Guidance Notice */}
-          <div className="mt-4 rounded-xl border border-sky-100 bg-sky-50/70 p-3 text-center text-xs text-slate-600 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-slate-300">
+          <div className="mt-3 rounded-xl border border-sky-100 bg-sky-50/70 p-3 text-center text-xs text-slate-600 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-slate-300">
             <p className="font-semibold text-sky-800 dark:text-sky-300">Bạn là Đối tác Thợ ZUP?</p>
-            <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-              Vui lòng đăng nhập trên ứng dụng <span className="font-medium text-slate-700 dark:text-slate-200">ZUP Thợ (Mobile App)</span> để nhận việc và gửi báo giá.
+            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Vui lòng đăng nhập trên ứng dụng <span className="font-semibold text-slate-800 dark:text-slate-200">ZUP Thợ (Mobile App)</span> để nhận việc và gửi báo giá.
             </p>
           </div>
         </form>
