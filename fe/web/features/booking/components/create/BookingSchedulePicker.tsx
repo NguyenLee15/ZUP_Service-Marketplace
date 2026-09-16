@@ -44,9 +44,15 @@ export function BookingSchedulePicker({
           Thời gian mong muốn thực hiện *
         </Label>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div
+          role="radiogroup"
+          aria-label="Phương thức chọn thời gian thực hiện"
+          className="grid grid-cols-2 gap-3 mb-4"
+        >
           <button
             type="button"
+            role="radio"
+            aria-checked={timeMode === 'now'}
             onClick={() => {
               setTimeMode('now');
               setFieldErrors((prev) => {
@@ -67,13 +73,15 @@ export function BookingSchedulePicker({
               }`}
             />
             <span className="text-xs sm:text-sm font-bold">Đặt ngay</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 text-center">
+            <span className="text-xs text-slate-500 dark:text-slate-400 text-center">
               Thợ đến càng sớm càng tốt
             </span>
           </button>
 
           <button
             type="button"
+            role="radio"
+            aria-checked={timeMode === 'scheduled'}
             onClick={() => setTimeMode('scheduled')}
             className={`flex flex-col items-center justify-center gap-1.5 p-3 sm:p-4 rounded-xl border transition-all cursor-pointer ${
               timeMode === 'scheduled'
@@ -87,20 +95,25 @@ export function BookingSchedulePicker({
               }`}
             />
             <span className="text-xs sm:text-sm font-bold">Hẹn giờ</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 text-center">
+            <span className="text-xs text-slate-500 dark:text-slate-400 text-center">
               Chọn thời gian cụ thể
             </span>
           </button>
         </div>
 
         {timeMode === 'scheduled' && (
-          <div className="animate-in fade-in duration-300 slide-in-from-top-2">
+          <div className="animate-in fade-in duration-300 slide-in-from-top-2 space-y-1.5">
+            <Label htmlFor="booking-desired-time" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+              Chọn ngày và giờ mong muốn:
+            </Label>
             <Input
               id="booking-desired-time"
               name="desiredTime"
               autoComplete="off"
               type="datetime-local"
               value={desiredTime}
+              aria-invalid={Boolean(fieldErrors.desiredTime)}
+              aria-describedby={fieldErrors.desiredTime ? "booking-desired-time-error" : undefined}
               onChange={(e) => {
                 setDesiredTime(e.target.value);
                 validate('desiredTime', e.target.value);
@@ -113,7 +126,9 @@ export function BookingSchedulePicker({
               }
             />
             {fieldErrors.desiredTime && (
-              <p className="text-red-500 text-[10px] mt-1">{fieldErrors.desiredTime}</p>
+              <p id="booking-desired-time-error" role="alert" className="text-red-500 text-xs mt-1">
+                {fieldErrors.desiredTime}
+              </p>
             )}
 
             {/* AI Scheduling Hints */}

@@ -48,20 +48,20 @@ export function TrackingProviderInfoCard({
               className="flex flex-col items-center gap-1.5 flex-1 relative"
             >
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500 ${
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-300 ${
                   isDone
-                    ? "bg-gradient-to-br from-green-400 to-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                    ? "bg-emerald-600 text-white shadow-xs"
                     : isActive
-                      ? "bg-gradient-to-br from-action-blue to-glacier-blue text-white shadow-[0_0_12px_rgba(0,107,255,0.3)] animate-pulse"
-                      : "glass-panel text-muted-foreground"
+                      ? "bg-sky-600 text-white shadow-xs ring-4 ring-sky-500/20"
+                      : "bg-muted/80 text-muted-foreground border border-border"
                 }`}
               >
                 <Icon className="w-4 h-4" />
               </div>
               <span
-                className={`text-[9px] font-bold uppercase tracking-wider text-center leading-tight ${
+                className={`text-xs font-semibold tracking-normal text-center leading-tight ${
                   isDone || isActive
-                    ? "text-foreground"
+                    ? "text-foreground font-bold"
                     : "text-muted-foreground"
                 }`}
               >

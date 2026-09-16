@@ -29,6 +29,9 @@ export function HeaderMobileDrawer({
   useEffect(() => {
     if (!isOpen) return;
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -36,7 +39,10 @@ export function HeaderMobileDrawer({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   const handleLogout = async () => {
@@ -51,7 +57,12 @@ export function HeaderMobileDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="md:hidden fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menu điều hướng di động"
+      className="md:hidden fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150"
+    >
       <button
         type="button"
         className="absolute inset-0 w-full h-full cursor-default"

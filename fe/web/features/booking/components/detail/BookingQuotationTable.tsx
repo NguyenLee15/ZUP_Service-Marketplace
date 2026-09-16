@@ -290,7 +290,12 @@ export function BookingQuotationTable({
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
+            <label htmlFor="reject-quote-reason" className="sr-only">
+              Lý do từ chối báo giá phát sinh
+            </label>
             <textarea
+              id="reject-quote-reason"
+              aria-label="Lý do từ chối báo giá phát sinh"
               className="w-full min-h-[100px] p-3 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Nhập lý do từ chối (ví dụ: Chi phí phát sinh quá cao, không đồng ý phụ tùng thay thế...)"
               value={rejectReason}

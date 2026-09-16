@@ -54,8 +54,8 @@ export function BookingActionButtons({
       {isCustomer && booking.status === BookingStatus.DONE && !booking.review && (
         <div className="glass-panel flex flex-col gap-3 mt-8 p-6 rounded-2xl">
           <div className="text-center mb-2">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-              <CheckCircle className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">
               Công việc đã hoàn tất
@@ -78,9 +78,9 @@ export function BookingActionButtons({
               }
             }}
             disabled={actionLoading}
-            className="w-full bg-action-blue hover:bg-glacier-blue text-white rounded-xl shadow-[0_0_15px_rgba(0,107,255,0.3)] py-6 font-bold text-base transition-[background-color,box-shadow,transform] hover:-translate-y-0.5"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm py-6 font-bold text-base transition-colors"
           >
-            <Star className="w-5 h-5 mr-2 fill-white text-white" /> Đánh giá & Nghiệm thu
+            <Star className="w-5 h-5 mr-2 fill-primary-foreground text-primary-foreground" /> Đánh giá & Nghiệm thu
           </Button>
 
           <Button

@@ -69,6 +69,7 @@ function CreateBookingContent() {
     handleWardChange,
     handleAutoLocate,
     handleSubmit,
+    handleNextStep,
     isStep1Valid,
     isStep2Valid,
   } = useCreateBookingFlow();
@@ -90,7 +91,7 @@ function CreateBookingContent() {
       <form
         onSubmit={handleSubmit}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') {
+          if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
             e.preventDefault();
           }
         }}
@@ -178,9 +179,8 @@ function CreateBookingContent() {
           {step < 3 ? (
             <Button
               type="button"
-              onClick={() => setStep((s) => Math.min(3, s + 1))}
-              disabled={(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)}
-              className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={handleNextStep}
+              className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               Tiếp tục
               <ChevronRight className="w-4 h-4" />

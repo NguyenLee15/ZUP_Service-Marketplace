@@ -49,24 +49,26 @@ export function BookingStepIndicator({
               <div key={item.s} className="flex flex-col items-center gap-2">
                 <button
                   type="button"
+                  aria-label={`Bước ${item.s}: ${item.label}`}
+                  aria-current={isActive ? 'step' : undefined}
                   onClick={() => {
                     if (item.s < step) setStep(item.s);
                     else if (item.s === 2 && isStep1Valid) setStep(2);
                     else if (item.s === 3 && isStep1Valid && isStep2Valid) setStep(3);
                   }}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center border font-bold text-xs transition-all duration-300 ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center border font-bold text-xs transition-colors duration-200 cursor-pointer ${
                     isCompleted
-                      ? 'bg-gradient-to-br from-green-400 to-emerald-600 border-green-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                      ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
                       : isActive
-                      ? 'bg-gradient-to-br from-action-blue to-glacier-blue border-action-blue text-white shadow-[0_0_12px_rgba(0,107,255,0.3)]'
-                      : 'bg-card border-white/10 text-muted-foreground'
+                      ? 'bg-sky-600 border-sky-600 text-white shadow-sm ring-4 ring-sky-500/20'
+                      : 'bg-muted border-border text-muted-foreground hover:bg-muted/80'
                   }`}
                 >
                   {isCompleted ? <Check className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
                 </button>
                 <span
-                  className={`text-[10px] font-bold uppercase tracking-wider hidden sm:block ${
-                    isActive || isCompleted ? 'text-foreground font-extrabold' : 'text-muted-foreground'
+                  className={`text-xs font-semibold tracking-wide hidden sm:block ${
+                    isActive || isCompleted ? 'text-foreground font-bold' : 'text-muted-foreground'
                   }`}
                 >
                   {item.label}

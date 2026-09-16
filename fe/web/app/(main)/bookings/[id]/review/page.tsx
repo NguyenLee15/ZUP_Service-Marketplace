@@ -41,7 +41,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       await reviewsApi.create({ bookingId: Number(id), rating, comment });
       toast.success('Đánh giá thành công');
       router.push('/bookings');
-    } catch (error) {
+    } catch (_error) {
       const { toast } = await import('sonner');
       toast.error('Có lỗi xảy ra khi gửi đánh giá');
     } finally {
@@ -140,9 +140,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
             {/* Comment Section */}
             <div>
-              <label className="block text-foreground font-medium mb-3">Nhận xét (tùy chọn)</label>
+              <label htmlFor="review-comment" className="block text-foreground font-medium mb-3">
+                Nhận xét (tùy chọn)
+              </label>
               <div className="relative">
                 <textarea
+                  id="review-comment"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Chia sẻ chi tiết về trải nghiệm của bạn với dịch vụ này…"
@@ -153,8 +156,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                 <button
                   type="button"
                   onClick={handleAutoSuggest}
+                  aria-label="Tự động gợi ý nhận xét với AI"
                   className="absolute right-3 bottom-3 p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  aria-label="AI soạn thảo tự động"
                 >
                   <Zap className="w-4 h-4" />
                 </button>

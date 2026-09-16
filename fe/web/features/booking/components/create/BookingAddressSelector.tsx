@@ -237,6 +237,7 @@ export function BookingAddressSelector({
                       fieldErrors.province ? 'border-destructive' : ''
                     }`}
                     aria-invalid={!!fieldErrors.province}
+                    aria-describedby={fieldErrors.province ? 'booking-province-error' : undefined}
                   >
                     <SelectValue placeholder="Chọn tỉnh/thành" />
                   </SelectTrigger>
@@ -249,7 +250,7 @@ export function BookingAddressSelector({
                   </SelectContent>
                 </Select>
                 {fieldErrors.province && (
-                  <p className="text-red-500 text-[10px]">{fieldErrors.province}</p>
+                  <p id="booking-province-error" role="alert" className="text-destructive text-xs mt-1">{fieldErrors.province}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -266,6 +267,7 @@ export function BookingAddressSelector({
                       fieldErrors.ward ? 'border-destructive' : ''
                     }`}
                     aria-invalid={!!fieldErrors.ward}
+                    aria-describedby={fieldErrors.ward ? 'booking-ward-error' : undefined}
                   >
                     <SelectValue
                       placeholder={province ? 'Chọn phường/xã/đặc khu' : 'Chọn tỉnh trước'}
@@ -279,7 +281,7 @@ export function BookingAddressSelector({
                     ))}
                   </SelectContent>
                 </Select>
-                {fieldErrors.ward && <p className="text-destructive text-[10px]">{fieldErrors.ward}</p>}
+                {fieldErrors.ward && <p id="booking-ward-error" role="alert" className="text-destructive text-xs mt-1">{fieldErrors.ward}</p>}
               </div>
             </div>
 
@@ -295,12 +297,14 @@ export function BookingAddressSelector({
                   validate('addressDetail', e.target.value);
                 }}
                 placeholder="Số nhà, tên đường…"
-                className={`bg-background border-input text-foreground ${
+                aria-invalid={!!fieldErrors.addressDetail}
+                aria-describedby={fieldErrors.addressDetail ? 'booking-address-detail-error' : undefined}
+                className={`bg-background border-input text-foreground h-11 ${
                   fieldErrors.addressDetail ? 'border-destructive' : ''
                 }`}
               />
               {fieldErrors.addressDetail && (
-                <p className="text-destructive text-[10px]">{fieldErrors.addressDetail}</p>
+                <p id="booking-address-detail-error" role="alert" className="text-destructive text-xs mt-1">{fieldErrors.addressDetail}</p>
               )}
             </div>
           </div>

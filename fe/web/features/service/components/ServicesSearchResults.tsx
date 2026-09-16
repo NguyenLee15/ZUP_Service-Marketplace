@@ -47,16 +47,18 @@ export function ServicesSearchResults({
   onClearFilters,
   observerTarget,
 }: ServicesSearchResultsProps) {
-  if (viewMode === 'map') {
-    return (
-      <ServiceMap
-        services={services}
-        userLocation={userLocation.source === 'gps' ? userLocation : null}
-      />
-    );
-  }
-
   if (loading && !isFetchingMore) {
+    if (viewMode === 'map') {
+      return (
+        <div className="w-full h-[600px] surface-card rounded-[20px] overflow-hidden relative flex flex-col items-center justify-center gap-3">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+          <span className="text-sm font-semibold text-muted-foreground animate-pulse">
+            Đang tải dữ liệu bản đồ...
+          </span>
+        </div>
+      );
+    }
+
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {[...Array(6)].map((_, i) => (
@@ -84,8 +86,9 @@ export function ServicesSearchResults({
           Không tìm thấy kết quả nào
         </h3>
         <p className="text-muted-foreground max-w-sm px-4 text-pretty leading-relaxed">
-          Chúng tôi không tìm thấy dịch vụ nào khớp với tiêu chí bạn chọn. Thử mở rộng bộ lọc hoặc
-          tìm kiếm lại nhé!
+          {viewMode === 'map'
+            ? 'Không có dịch vụ nào trong khu vực hiển thị. Thử mở rộng bán kính tìm kiếm hoặc xóa bộ lọc nhé!'
+            : 'Chúng tôi không tìm thấy dịch vụ nào khớp với tiêu chí bạn chọn. Thử mở rộng bộ lọc hoặc tìm kiếm lại nhé!'}
         </p>
         <Button
           onClick={onClearFilters}
@@ -95,6 +98,15 @@ export function ServicesSearchResults({
           Xóa tất cả bộ lọc
         </Button>
       </div>
+    );
+  }
+
+  if (viewMode === 'map') {
+    return (
+      <ServiceMap
+        services={services}
+        userLocation={userLocation.source === 'gps' ? userLocation : null}
+      />
     );
   }
 

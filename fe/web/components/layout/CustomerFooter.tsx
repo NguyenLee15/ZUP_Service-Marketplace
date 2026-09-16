@@ -70,9 +70,9 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <div className="mb-4 text-base font-bold text-slate-900 dark:text-white sm:mb-6 sm:text-lg">
+            <h3 className="mb-4 text-base font-bold text-slate-900 dark:text-white sm:mb-6 sm:text-lg">
               Dịch vụ phổ biến
-            </div>
+            </h3>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
@@ -123,14 +123,14 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <div className="mb-4 text-base font-bold text-slate-900 dark:text-white sm:mb-6 sm:text-lg">
+            <h3 className="mb-4 text-base font-bold text-slate-900 dark:text-white sm:mb-6 sm:text-lg">
               Hỗ trợ khách hàng
-            </div>
+            </h3>
             <ul className="space-y-3 text-sm">
               <li>
                 <div className="text-muted-foreground cursor-default flex items-center">
                   <span className="inline-block w-[140px] shrink-0">Trung tâm trợ giúp</span>
-                  <span className="text-[9px] uppercase tracking-wider font-bold text-glacier-blue shrink-0">
+                  <span className="text-xs uppercase tracking-wider font-bold text-glacier-blue shrink-0">
                     Sắp ra mắt
                   </span>
                 </div>
@@ -138,7 +138,7 @@ export function CustomerFooter() {
               <li>
                 <div className="text-muted-foreground cursor-default flex items-center">
                   <span className="inline-block w-[140px] shrink-0">An toàn mua bán</span>
-                  <span className="text-[9px] uppercase tracking-wider font-bold text-glacier-blue shrink-0">
+                  <span className="text-xs uppercase tracking-wider font-bold text-glacier-blue shrink-0">
                     Sắp ra mắt
                   </span>
                 </div>
@@ -146,7 +146,7 @@ export function CustomerFooter() {
               <li>
                 <div className="text-muted-foreground cursor-default flex items-center">
                   <span className="inline-block w-[140px] shrink-0">Quy định cần biết</span>
-                  <span className="text-[9px] uppercase tracking-wider font-bold text-glacier-blue shrink-0">
+                  <span className="text-xs uppercase tracking-wider font-bold text-glacier-blue shrink-0">
                     Sắp ra mắt
                   </span>
                 </div>
@@ -164,9 +164,9 @@ export function CustomerFooter() {
           </div>
 
           <div>
-            <div className="mb-4 text-base font-bold text-slate-900 dark:text-white sm:mb-6 sm:text-lg">
+            <h3 className="mb-4 text-base font-bold text-slate-900 dark:text-white sm:mb-6 sm:text-lg">
               Liên hệ & Hỗ trợ
-            </div>
+            </h3>
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-action-blue shrink-0 mt-0.5" />

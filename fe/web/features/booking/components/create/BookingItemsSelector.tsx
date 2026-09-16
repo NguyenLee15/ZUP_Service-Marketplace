@@ -113,6 +113,7 @@ export function BookingItemsSelector({
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <input
+                      id={`booking-item-${item.id}`}
                       type="checkbox"
                       checked={isSelected}
                       onChange={(e) => {
@@ -135,36 +136,17 @@ export function BookingItemsSelector({
                           });
                         }
                       }}
-                      className="w-4.5 h-4.5 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sky-600 focus:ring-sky-500 focus:ring-offset-0 cursor-pointer"
+                      className="w-5 h-5 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sky-600 focus:ring-sky-500 focus:ring-offset-0 cursor-pointer"
                     />
-                    <div
-                      className="min-w-0 cursor-pointer flex-1"
-                      onClick={() => {
-                        setSelectedItems((prev) => {
-                          if (isSelected) {
-                            const next = { ...prev };
-                            delete next[item.id];
-                            return next;
-                          } else {
-                            return {
-                              ...prev,
-                              [item.id]: {
-                                serviceItemId: item.id,
-                                quantity: 1,
-                                name: item.name,
-                                price: Number(item.price),
-                                unit: item.unit,
-                              },
-                            };
-                          }
-                        });
-                      }}
+                    <label
+                      htmlFor={`booking-item-${item.id}`}
+                      className="min-w-0 cursor-pointer flex-1 select-none py-1"
                     >
-                      <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">{item.name}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{item.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         {formatPrice(Number(item.price))} / {item.unit}
                       </p>
-                    </div>
+                    </label>
                   </div>
 
                   {isSelected && (
@@ -181,11 +163,11 @@ export function BookingItemsSelector({
                             },
                           }));
                         }}
-                        className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-sm font-bold text-slate-800 dark:text-slate-100 transition-colors active:scale-95 cursor-pointer"
+                        className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-base font-bold text-slate-800 dark:text-slate-100 transition-colors active:scale-95 cursor-pointer"
                       >
                         -
                       </button>
-                      <span className="text-xs font-bold w-6 text-center text-slate-900 dark:text-slate-100">{qty}</span>
+                      <span className="text-sm font-bold w-6 text-center text-slate-900 dark:text-slate-100">{qty}</span>
                       <button
                         type="button"
                         aria-label={`Tăng số lượng ${item.name}`}
@@ -198,7 +180,7 @@ export function BookingItemsSelector({
                             },
                           }));
                         }}
-                        className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-sm font-bold text-slate-800 dark:text-slate-100 transition-colors active:scale-95 cursor-pointer"
+                        className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-base font-bold text-slate-800 dark:text-slate-100 transition-colors active:scale-95 cursor-pointer"
                       >
                         +
                       </button>

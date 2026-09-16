@@ -363,6 +363,48 @@ export function useCreateBookingFlow() {
       ? true
       : Boolean(province && ward && addressDetail && !fieldErrors.province && !fieldErrors.ward && !fieldErrors.addressDetail);
 
+  const handleNextStep = () => {
+    if (step === 1) {
+      if (!description.trim()) {
+        const err = { description: 'Vui lòng mô tả chi tiết yêu cầu công việc' };
+        setFieldErrors((prev) => ({ ...prev, ...err }));
+        document.getElementById('booking-description')?.focus();
+        return false;
+      }
+      if (description.trim().length < 10) {
+        const err = { description: 'Mô tả quá ngắn (tối thiểu 10 ký tự)' };
+        setFieldErrors((prev) => ({ ...prev, ...err }));
+        document.getElementById('booking-description')?.focus();
+        return false;
+      }
+      setStep(2);
+      return true;
+    }
+
+    if (step === 2) {
+      if (addressMode === 'default') {
+        if (!selectedAddressId) {
+          toast({ title: 'Chưa chọn địa chỉ', description: 'Vui lòng chọn một địa chỉ đã lưu hoặc nhập địa chỉ mới.', variant: 'destructive' });
+          return false;
+        }
+      } else {
+        const newErrors: Record<string, string> = {};
+        if (!province) newErrors.province = 'Vui lòng chọn tỉnh / thành phố';
+        if (!ward) newErrors.ward = 'Vui lòng chọn phường / xã';
+        if (!addressDetail.trim()) newErrors.addressDetail = 'Vui lòng nhập số nhà, tên đường';
+        if (Object.keys(newErrors).length > 0) {
+          setFieldErrors((prev) => ({ ...prev, ...newErrors }));
+          focusBookingError(newErrors);
+          return false;
+        }
+      }
+      setStep(3);
+      return true;
+    }
+
+    return true;
+  };
+
   return {
     router,
     serviceId,
@@ -408,6 +450,7 @@ export function useCreateBookingFlow() {
     handleWardChange,
     handleAutoLocate,
     handleSubmit,
+    handleNextStep,
     isStep1Valid,
     isStep2Valid,
   };
