@@ -26,11 +26,19 @@ export default function ForgotPasswordPage() {
     setError('');
     try {
       await authApi.forgotPassword({ email: email.trim() });
-    } catch {
-      // Giữ phản hồi an toàn để không tiết lộ email có tồn tại hay không.
+      setSent(true);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status && status >= 500) {
+        setError('Máy chủ đang bận hoặc gặp sự cố. Vui lòng thử lại sau ít phút.');
+      } else if (!status) {
+        setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.');
+      } else {
+        // Giữ phản hồi an toàn tránh user enumeration nếu là lỗi client (400, 404)
+        setSent(true);
+      }
     } finally {
       setLoading(false);
-      setSent(true);
     }
   };
 
@@ -67,7 +75,11 @@ export default function ForgotPasswordPage() {
       ) : (
         <form onSubmit={handleForgotSubmit} className="space-y-4" noValidate>
           {error && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium"
+            >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>

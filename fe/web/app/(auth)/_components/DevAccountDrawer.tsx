@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, User, Briefcase, ShieldCheck, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -65,6 +65,17 @@ export function DevAccountDrawer({
 }: DevAccountDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   // Demo credentials are intentionally public; deployments can opt out.
   if (process.env.NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS === 'false') {

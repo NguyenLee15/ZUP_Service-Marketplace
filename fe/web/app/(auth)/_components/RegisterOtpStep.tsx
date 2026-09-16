@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useRef, useEffect } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,6 +14,7 @@ interface RegisterOtpStepProps {
   otp: string;
   setOtp: (val: string) => void;
   loading: boolean;
+  resending?: boolean;
   error: string;
   countdown: number;
   onVerify: () => void;
@@ -25,12 +27,33 @@ export function RegisterOtpStep({
   otp,
   setOtp,
   loading,
+  resending = false,
   error,
   countdown,
   onVerify,
   onBack,
   onResend,
 }: RegisterOtpStepProps) {
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleVerify = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (!loading && otp.length === 6) {
+      onVerify();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -42,11 +65,17 @@ export function RegisterOtpStep({
         <InputOTP
           maxLength={6}
           value={otp}
+          disabled={loading}
           onChange={(val) => {
             setOtp(val);
+            if (timerRef.current) {
+              clearTimeout(timerRef.current);
+              timerRef.current = null;
+            }
             if (val.length === 6 && !loading) {
-              // Trigger verify automatically
-              setTimeout(() => onVerify(), 50);
+              timerRef.current = setTimeout(() => {
+                onVerify();
+              }, 120);
             }
           }}
           autoFocus
@@ -81,14 +110,18 @@ export function RegisterOtpStep({
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium text-center">
+        <div
+          role="alert"
+          aria-live="polite"
+          className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium text-center"
+        >
           {error}
         </div>
       )}
 
       <Button
         type="button"
-        onClick={onVerify}
+        onClick={handleVerify}
         disabled={otp.length !== 6 || loading}
         className="h-11 w-full rounded-xl bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-semibold text-white shadow-sm transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
       >
@@ -119,10 +152,12 @@ export function RegisterOtpStep({
         ) : (
           <button
             type="button"
+            disabled={resending}
             onClick={onResend}
-            className="font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 disabled:opacity-50 transition-colors cursor-pointer"
           >
-            Gửi lại mã OTP
+            {resending && <Loader2 className="size-3.5 animate-spin" />}
+            <span>{resending ? 'Đang gửi…' : 'Gửi lại mã OTP'}</span>
           </button>
         )}
       </div>

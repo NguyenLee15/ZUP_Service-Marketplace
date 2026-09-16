@@ -61,7 +61,7 @@ function normalizeLoginPayload(payload: unknown): LoginPayload {
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { setTokens, setUser, user, _hasHydrated } = useAuthStore();
+  const { setUser, setTokens, user, accessToken, _hasHydrated } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -70,16 +70,16 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [rememberMe, setRememberMe] = useState(true);
 
-  // Auto redirect if already logged in
+  // Auto redirect if already logged in with valid accessToken
   useEffect(() => {
-    if (_hasHydrated && user) {
+    if (_hasHydrated && user && accessToken) {
       if (user.role === Role.ADMIN || user.role === Role.STAFF) {
         router.replace('/admin/dashboard');
       } else if (user.role === Role.CUSTOMER) {
         router.replace('/');
       }
     }
-  }, [_hasHydrated, user, router]);
+  }, [_hasHydrated, user, accessToken, router]);
 
   const handleSelectDemoAccount = useCallback((account: DemoAccount) => {
     setEmail(account.email);
@@ -89,7 +89,7 @@ export default function LoginPage() {
   }, []);
 
   const routeAfterAuth = useCallback(
-    (authenticatedUser: { role: Role; fullName?: string }) => {
+    async (authenticatedUser: { role: Role; fullName?: string }) => {
       toast({
         title: 'Đăng nhập thành công',
         description: `Chào mừng ${authenticatedUser.fullName || 'bạn'} quay trở lại ZUP`,
@@ -101,6 +101,7 @@ export default function LoginPage() {
           router.push('/admin/dashboard');
           break;
         case Role.PROVIDER:
+          await authApi.logout().catch(() => {});
           useAuthStore.getState().logout();
           toast({
             title: 'Từ chối truy cập trên trình duyệt',

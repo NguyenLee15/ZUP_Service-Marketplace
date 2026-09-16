@@ -84,7 +84,11 @@ function ResetPasswordContent() {
     >
       <form onSubmit={handleResetSubmit} className="space-y-4" noValidate>
         {!token && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium"
+          >
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               Liên kết đặt lại mật khẩu không hợp lệ. Vui lòng kiểm tra lại email hoặc yêu cầu liên kết mới.
@@ -93,7 +97,11 @@ function ResetPasswordContent() {
         )}
 
         {error && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium"
+          >
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>

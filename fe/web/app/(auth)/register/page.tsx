@@ -42,6 +42,7 @@ export default function RegisterPage() {
 
   const [otp, setOtp] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [resendingOtp, setResendingOtp] = useState(false);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -173,7 +174,8 @@ export default function RegisterPage() {
   };
 
   const handleResendOtp = async () => {
-    if (countdown > 0) return;
+    if (countdown > 0 || resendingOtp) return;
+    setResendingOtp(true);
     setError('');
     try {
       await authApi.resendOtp(email.trim());
@@ -184,6 +186,8 @@ export default function RegisterPage() {
       });
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err, 'Không thể gửi lại mã OTP. Vui lòng thử lại sau.'));
+    } finally {
+      setResendingOtp(false);
     }
   };
 
@@ -207,6 +211,7 @@ export default function RegisterPage() {
           });
 
           if (authUser.role === Role.PROVIDER) {
+            await authApi.logout().catch(() => {});
             useAuthStore.getState().logout();
             toast({
               title: 'Từ chối truy cập trên trình duyệt',
@@ -238,7 +243,11 @@ export default function RegisterPage() {
       {step === 'form' ? (
         <form onSubmit={handleRegister} className="space-y-4" noValidate>
           {error && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium"
+            >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -422,6 +431,7 @@ export default function RegisterPage() {
           otp={otp}
           setOtp={setOtp}
           loading={loading}
+          resending={resendingOtp}
           error={error}
           countdown={countdown}
           onVerify={handleVerifyOtp}
