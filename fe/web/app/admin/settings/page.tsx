@@ -33,20 +33,21 @@ export default function SettingsPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const validate = (name: string, value: string) => {
-    const newErrors = { ...fieldErrors };
-    const val = parseFloat(value);
-    if (name === 'rate') {
-      if (isNaN(val) || val < 0 || val > 100) newErrors.rate = 'Tỉ lệ phải từ 0-100';
-      else delete newErrors.rate;
+    const nextRate = name === 'rate' ? parseFloat(value) : parseFloat(editRate);
+    const nextMin = name === 'minAmount' ? parseInt(value, 10) : parseInt(editMin, 10);
+    const nextMax = name === 'maxAmount' ? parseInt(value, 10) : parseInt(editMax, 10);
+    const newErrors: Record<string, string> = {};
+    if (!Number.isFinite(nextRate) || nextRate < 0 || nextRate > 100) {
+      newErrors.rate = 'Tỉ lệ phải từ 0 đến 100';
     }
-    if (name === 'minAmount') {
-      if (isNaN(val) || val < 0) newErrors.minAmount = 'Không hợp lệ';
-      else delete newErrors.minAmount;
+    if (!Number.isFinite(nextMin) || nextMin < 0) {
+      newErrors.minAmount = 'Mức tối thiểu không hợp lệ';
     }
-    if (name === 'maxAmount') {
-      if (isNaN(val) || val < 0) newErrors.maxAmount = 'Không hợp lệ';
-      else if (val < (parseInt(editMin) || 0)) newErrors.maxAmount = 'Phải lớn hơn mức tối thiểu';
-      else delete newErrors.maxAmount;
+    if (!Number.isFinite(nextMax) || nextMax < 0) {
+      newErrors.maxAmount = 'Mức tối đa không hợp lệ';
+    } else if (Number.isFinite(nextMin) && nextMin > nextMax) {
+      newErrors.minAmount = 'Không được lớn hơn mức tối đa';
+      newErrors.maxAmount = 'Phải lớn hơn hoặc bằng mức tối thiểu';
     }
     setFieldErrors(newErrors);
   };
@@ -88,8 +89,8 @@ export default function SettingsPage() {
     const minAmount = parseInt(editMin);
     const maxAmount = parseInt(editMax);
 
-    if (isNaN(rate) || rate < 0 || rate > 100) {
-      toast({ title: 'Tỉ lệ hoa hồng phải từ 0 đến 100%', variant: 'destructive' });
+    if (!Number.isFinite(rate) || rate < 0 || rate > 100 || !Number.isFinite(minAmount) || !Number.isFinite(maxAmount) || minAmount < 0 || maxAmount < 0 || minAmount > maxAmount) {
+      toast({ title: 'Vui lòng kiểm tra tỉ lệ và khoảng mức hoa hồng', variant: 'destructive' });
       return;
     }
 

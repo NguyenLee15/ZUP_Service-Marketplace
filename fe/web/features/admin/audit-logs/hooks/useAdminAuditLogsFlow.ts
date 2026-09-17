@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
 import { AuditFilters, AuditLogItem } from "../types/audit-log.types";
@@ -54,17 +54,25 @@ export function useAdminAuditLogsFlow() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const fetchRequestIdRef = useRef(0);
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
 
-  const queryParams = useMemo(() => compactFilters(filters), [filters]);
+  const queryParams = useMemo(
+    () => compactFilters({ ...filters, keyword: debouncedKeyword }),
+    [debouncedKeyword, filters],
+  );
 
   const fetchLogs = useCallback(async () => {
+    const currentRequestId = ++fetchRequestIdRef.current;
     setLoading(true);
     try {
       const res = await adminApi.getAuditLogs(queryParams);
+      if (currentRequestId !== fetchRequestIdRef.current) return;
       const unwrapped = unwrapList(res.data);
       setLogs(unwrapped.data);
       setMeta(unwrapped.meta);
     } catch (err: unknown) {
+      if (currentRequestId !== fetchRequestIdRef.current) return;
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })
           ?.response?.data?.error?.message || "Không tải được audit logs";
@@ -74,9 +82,14 @@ export function useAdminAuditLogsFlow() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (currentRequestId === fetchRequestIdRef.current) setLoading(false);
     }
   }, [queryParams, toast]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedKeyword(filters.keyword), 400);
+    return () => window.clearTimeout(timeoutId);
+  }, [filters.keyword]);
 
   useEffect(() => {
     void fetchLogs();

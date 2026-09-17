@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiService } from '../../shared/ai/ai.service';
 import {
@@ -113,7 +114,7 @@ export class BookingIntentService {
     categoryId?: number,
     keywords: string[] = [],
   ): Promise<SuggestedServiceItem[]> {
-    const where: any = {
+    const where: Prisma.ServiceWhereInput = {
       status: 'ACTIVE',
       isDeleted: false,
       provider: {

@@ -12,6 +12,15 @@ import {
   SearchServicesResult,
 } from './service-query.types';
 
+type AiSearchDiagnostics = {
+  query: string;
+  state: ReturnType<AiService['getState']>;
+  embeddingError: string | null;
+  pgError: string | null;
+  success: boolean;
+  results: unknown[];
+};
+
 @Injectable()
 export class ServiceSearchService {
   private readonly logger = new Logger(ServiceSearchService.name);
@@ -73,7 +82,7 @@ export class ServiceSearchService {
     const requestedCategoryIds = this.getRequestedCategoryIds(dto);
     if (requestedCategoryIds.length > 0) {
       where.categoryId = {
-        in: await this.getCategoryIdsWithDescendants(requestedCategoryIds),
+        in: this.getCategoryIdsWithDescendants(requestedCategoryIds),
       };
     }
 
@@ -214,13 +223,13 @@ export class ServiceSearchService {
     return result;
   }
 
-  async getAiState() {
+  getAiState() {
     return this.aiService.getState();
   }
 
   async testAiSearch(query: string) {
-    const state = await this.aiService.getState();
-    const log: any = {
+    const state = this.aiService.getState();
+    const log: AiSearchDiagnostics = {
       query,
       state,
       embeddingError: null,
@@ -279,7 +288,7 @@ export class ServiceSearchService {
           });
 
           // Gắn isFeatured và similarity, sắp xếp lại theo similarity
-          const mappedData: any[] = fullServices
+          const mappedData = fullServices
             .map((service) => ({
               ...service,
               isFeatured: service.featuredListings.length > 0,
@@ -309,7 +318,9 @@ export class ServiceSearchService {
 
     if (cachedResult) {
       this.logger.log(`[AI Caching] Cache hit for query: "${query}"`);
-      baseData = this.parseAiSearchRows(cachedResult) as any;
+      baseData = this.parseAiSearchRows(
+        cachedResult,
+      ) as unknown as SearchServiceItem[];
     } else {
       this.logger.log(
         `[AI Caching] Cache miss for query: "${query}". Calling Gemini API...`,
@@ -379,7 +390,7 @@ export class ServiceSearchService {
             isFeatured: service.featuredListings.length > 0,
             similarity: similarityMap.get(service.id) || 0,
           }))
-          .sort((a, b) => (b as any).similarity - (a as any).similarity);
+          .sort((a, b) => b.similarity - a.similarity);
 
         await this.redisService.set(cacheKey, JSON.stringify(baseData), 86400);
       } catch (error) {
@@ -465,7 +476,7 @@ export class ServiceSearchService {
     return [...categoryIds].sort((a, b) => a - b);
   }
 
-  private async getCategoryIdsWithDescendants(categoryIds: number[]) {
+  private getCategoryIdsWithDescendants(categoryIds: number[]) {
     return Array.from(new Set(categoryIds));
   }
 

@@ -136,7 +136,7 @@ describe('Booking flow integration', () => {
       desiredTime: new Date(Date.now() + 86_400_000).toISOString(),
     });
 
-    const bookingId = created.data!.id;
+    const bookingId = (created.data as { id: number }).id;
     await lifecycle.acceptByProvider(seed.provider.id, bookingId);
     await lifecycle.confirmSurveyor(seed.provider.id, bookingId, {
       surveyorName: 'Thợ A',

@@ -15,6 +15,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { WalletTransactionType } from '@prisma/client';
+import type { Webhook } from '@payos/node';
 import type { Request } from 'express';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -201,7 +202,7 @@ export class ProviderWalletsController {
   /** PayOS Webhook */
   @Post('payos/webhook')
   @SkipThrottle()
-  async handlePayosWebhook(@Body() body: any) {
+  async handlePayosWebhook(@Body() body: Webhook) {
     return this.payosService.verifyWebhook(body);
   }
 }

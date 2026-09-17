@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { adminApi } from '@/features/auth/services/api';
+import { useDisputesManagementFlow, AdminDisputeListItem } from '@/features/admin/disputes/hooks/useDisputesManagementFlow';
 import {
   AlertTriangle,
   CheckCircle,
@@ -15,49 +15,24 @@ import {
   Search,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
 import { AdminPermission } from '@/types/admin-permissions';
 
 export default function AdminDisputesPage() {
   const router = useRouter();
-  const requestIdRef = useRef(0);
-  const [disputes, setDisputes] = useState<ApiPayload[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | ''>('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  const fetchDisputes = useCallback(async () => {
-    const currentRequestId = ++requestIdRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const params: Record<string, string | number> = { page, limit: 10 };
-      if (statusFilter) params.status = statusFilter;
-      const res = await adminApi.getDisputes(params);
-      if (currentRequestId !== requestIdRef.current) return;
-      setDisputes(res.data?.data || []);
-      setTotalPages(res.data?.meta?.totalPages || 1);
-    } catch (err: unknown) {
-      if (currentRequestId !== requestIdRef.current) return;
-      setDisputes([]);
-      setTotalPages(1);
-      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message || 'Không thể tải danh sách khiếu nại';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      if (currentRequestId === requestIdRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [page, statusFilter]);
-
-  useEffect(() => {
-    fetchDisputes();
-  }, [fetchDisputes]);
+  const {
+    disputes,
+    loading,
+    error,
+    statusFilter,
+    setStatusFilter,
+    searchTerm,
+    setSearchTerm,
+    page,
+    setPage,
+    totalPages,
+    refetch: fetchDisputes,
+  } = useDisputesManagementFlow();
 
   const formatDate = (d: string) => new Date(d).toLocaleString('vi-VN', {
     year: 'numeric',
@@ -65,16 +40,6 @@ export default function AdminDisputesPage() {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit'
-  });
-
-  const filteredDisputes = disputes.filter(d => {
-    if (!searchTerm) return true;
-    const q = searchTerm.toLowerCase();
-    return (
-      (d.booking?.bookingCode?.toLowerCase() || '').includes(q) ||
-      (d.booking?.customer?.fullName?.toLowerCase() || '').includes(q) ||
-      (d.booking?.provider?.fullName?.toLowerCase() || '').includes(q)
-    );
   });
 
   return (
@@ -115,7 +80,7 @@ export default function AdminDisputesPage() {
               key={option.value}
               type="button"
               aria-pressed={statusFilter === option.value}
-              onClick={() => setStatusFilter(option.value as ApiPayload)}
+              onClick={() => setStatusFilter(option.value as 'PENDING' | 'RESOLVED' | '')}
               className={`h-9 rounded-lg border px-4 text-xs font-bold transition-all ${
                 statusFilter === option.value
                   ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-500/10'
@@ -143,7 +108,7 @@ export default function AdminDisputesPage() {
             Thử lại
           </Button>
         </div>
-      ) : filteredDisputes.length === 0 ? (
+      ) : disputes.length === 0 ? (
         <div className="text-center py-16 rounded-xl bg-white border border-slate-200 shadow-sm">
           <CheckCircle className="w-10 h-10 mx-auto mb-3 text-slate-400" />
           <p className="font-semibold text-slate-800 text-sm">Hiện không có khiếu nại hoặc tranh chấp nào</p>
@@ -152,7 +117,7 @@ export default function AdminDisputesPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredDisputes.map((d: ApiPayload) => {
+            {disputes.map((d: AdminDisputeListItem) => {
               const isResolved = d.status === 'RESOLVED';
               const booking = d.booking || {};
               const service = booking.service || {};

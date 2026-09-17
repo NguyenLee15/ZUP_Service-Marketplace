@@ -2,6 +2,9 @@ import { Transform, Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 
+const trimString = (value: unknown): unknown =>
+  typeof value === 'string' ? value.trim() : value;
+
 export class WalletHistoryQueryDto extends PaginationQueryDto {
   @IsString()
   @IsOptional()
@@ -50,7 +53,7 @@ export class CreateWithdrawalRequestDto {
 export class AdminWalletActionDto {
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }) => trimString(value))
   @MaxLength(500)
   note?: string;
 }

@@ -15,6 +15,16 @@ type GeminiModel = {
   supportedGenerationMethods?: string[];
 };
 
+type DisputeAnalysis = {
+  category: string;
+  severity: string;
+  summary: string;
+  confidence: number;
+  recommendation: string;
+  evidencePoints: { type: string; text: string }[];
+  anomalies: { type: string; text: string }[];
+};
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -237,7 +247,7 @@ Yêu cầu trả về JSON có cấu trúc sau:
     };
 
     try {
-      const result = await this.generateJson<any>(
+      const result = await this.generateJson<DisputeAnalysis>(
         prompt,
         this.timeoutMs * 2,
         schema,

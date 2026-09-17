@@ -16,6 +16,23 @@ import {
 import { Type, Transform, plainToInstance } from 'class-transformer';
 import { FeaturedListingStatus } from '@prisma/client';
 
+function parseServiceItems(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? plainToInstance(CreateServiceItemDto, parsed)
+      : parsed;
+  } catch {
+    return value;
+  }
+}
+
+function trimString(value: unknown): unknown {
+  return typeof value === 'string' ? value.trim() : value;
+}
+
 export class CreateServiceItemDto {
   @IsString()
   @MaxLength(100)
@@ -52,20 +69,7 @@ export class CreateServiceDto {
   })
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          return plainToInstance(CreateServiceItemDto, parsed);
-        }
-        return parsed;
-      } catch {
-        return value;
-      }
-    }
-    return value;
-  })
+  @Transform(({ value }) => parseServiceItems(value))
   items?: CreateServiceItemDto[];
 }
 
@@ -92,20 +96,7 @@ export class UpdateServiceDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          return plainToInstance(CreateServiceItemDto, parsed);
-        }
-        return parsed;
-      } catch {
-        return value;
-      }
-    }
-    return value;
-  })
+  @Transform(({ value }) => parseServiceItems(value))
   items?: CreateServiceItemDto[];
 }
 
@@ -185,7 +176,7 @@ export class SearchServiceDto {
 export class AdminRejectDto {
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }) => trimString(value))
   @MinLength(3)
   @MaxLength(500)
   reason: string;
@@ -194,7 +185,7 @@ export class AdminRejectDto {
 export class AdminHideDto {
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }) => trimString(value))
   @MaxLength(500)
   reason?: string;
 }

@@ -40,6 +40,16 @@ import type {
   StoredChatbotAction,
 } from './chatbot.types';
 
+type BookingActionSummary = { id: number; bookingCode: string };
+
+function toBookingActionSummary(value: unknown): BookingActionSummary | null {
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  return typeof record.id === 'number' && typeof record.bookingCode === 'string'
+    ? { id: record.id, bookingCode: record.bookingCode }
+    : null;
+}
+
 const districtCoords: Record<string, { lat: number; lng: number }> = {
   // TP.HCM
   'Quận 1': { lat: 10.7769, lng: 106.7009 },
@@ -938,7 +948,7 @@ export class ChatbotService {
       }
       const dto = this.draftService.toCreateBookingDto(draft);
       const result = await this.bookingLifecycleService.create(userId, dto);
-      const booking = result.data;
+      const booking = toBookingActionSummary(result.data);
       if (!booking) {
         throw new BadRequestException('Không thể tạo đặt lịch');
       }

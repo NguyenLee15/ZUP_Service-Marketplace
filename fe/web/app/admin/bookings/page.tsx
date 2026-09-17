@@ -27,6 +27,7 @@ function BookingsListContent() {
     page,
     setPage,
     totalPages,
+    error,
     refetch,
   } = useAdminBookingsListFlow();
 
@@ -99,6 +100,14 @@ function BookingsListContent() {
                   <div className="h-3 w-32 bg-slate-100 rounded" />
                 </div>
               ))}
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-rose-200 bg-white p-10 text-center text-slate-500">
+              <AlertCircle className="mb-2 h-10 w-10 text-rose-500" />
+              <p className="text-sm font-semibold text-slate-800">{error}</p>
+              <Button variant="outline" size="sm" onClick={refetch} className="mt-3">
+                Tải lại danh sách
+              </Button>
             </div>
           ) : bookings.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 text-center text-slate-500 bg-white">

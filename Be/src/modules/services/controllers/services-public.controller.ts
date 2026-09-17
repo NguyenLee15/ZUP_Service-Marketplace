@@ -80,7 +80,7 @@ export class ServicesController {
   @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get AI diagnostic state (Admin only)' })
-  async getAiState() {
+  getAiState() {
     return this.searchService.getAiState();
   }
 

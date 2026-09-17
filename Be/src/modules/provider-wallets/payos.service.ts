@@ -4,7 +4,7 @@ import {
   BadRequestException,
   OnModuleInit,
 } from '@nestjs/common';
-import { PayOS } from '@payos/node';
+import { PayOS, type Webhook } from '@payos/node';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WalletSharedService } from './wallet-shared.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
@@ -103,8 +103,11 @@ export class PayosService implements OnModuleInit {
         orderCode: paymentLinkRes.orderCode,
         txnId: txn.id,
       };
-    } catch (error: any) {
-      this.logger.error('Error creating PayOS payment link', error);
+    } catch (error: unknown) {
+      this.logger.error(
+        'Error creating PayOS payment link',
+        error instanceof Error ? error.stack : String(error),
+      );
       await this.prisma.walletTransaction
         .update({
           where: { id: txn.id },
@@ -120,7 +123,7 @@ export class PayosService implements OnModuleInit {
     }
   }
 
-  async verifyWebhook(webhookBody: any) {
+  async verifyWebhook(webhookBody: Webhook) {
     if (!this.isEnabled || !this.payos) {
       throw new BadRequestException({
         code: ErrorCodes.INTERNAL_ERROR,
@@ -138,8 +141,11 @@ export class PayosService implements OnModuleInit {
         await this.handleSuccessPayment(String(orderCode), amount);
       }
       return { success: true };
-    } catch (e: any) {
-      this.logger.error('PayOS Webhook verification failed', e);
+    } catch (error: unknown) {
+      this.logger.error(
+        'PayOS Webhook verification failed',
+        error instanceof Error ? error.stack : String(error),
+      );
       throw new BadRequestException({
         code: ErrorCodes.PAYMENT_HASH_INVALID,
         message: 'Chữ ký webhook PayOS không hợp lệ',

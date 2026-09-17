@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { adminApi } from "@/features/admin/services/admin.api";
 
 export interface BookingListItem {
@@ -67,30 +67,31 @@ export function useAdminBookingsListFlow() {
   const [selectedBooking, setSelectedBooking] =
     useState<BookingListItem | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const requestIdRef = useRef(0);
+  const fetchRequestIdRef = useRef(0);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBookings = useCallback(() => {
-    const currentRequestId = ++requestIdRef.current;
+    const currentRequestId = ++fetchRequestIdRef.current;
     setLoading(true);
     setError(null);
     const params: Record<string, unknown> = { page, limit: 10 };
     if (filterStatus !== "all") params.status = filterStatus;
-    if (searchTerm.trim()) params.keyword = searchTerm.trim();
+    if (debouncedSearchTerm.trim()) params.keyword = debouncedSearchTerm.trim();
 
     adminApi
       .getBookings(params)
       .then((res) => {
-        if (currentRequestId !== requestIdRef.current) return;
+        if (currentRequestId !== fetchRequestIdRef.current) return;
         const data = (res.data?.data || []) as BookingListItem[];
         setBookings(data);
         setTotalPages(res.data?.meta?.totalPages || 1);
         setSelectedBooking((prev) => prev || (data.length > 0 ? data[0] : null));
       })
       .catch((err) => {
-        if (currentRequestId !== requestIdRef.current) return;
+        if (currentRequestId !== fetchRequestIdRef.current) return;
         setBookings([]);
         setTotalPages(1);
         setError(
@@ -100,30 +101,26 @@ export function useAdminBookingsListFlow() {
         );
       })
       .finally(() => {
-        if (currentRequestId === requestIdRef.current) {
+        if (currentRequestId === fetchRequestIdRef.current) {
           setLoading(false);
         }
       });
-  }, [filterStatus, page, searchTerm]);
+  }, [debouncedSearchTerm, filterStatus, page]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(1);
+    }, 400);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
-  const filteredBookings = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return bookings;
-    return bookings.filter(
-      (b) =>
-        (b.bookingCode?.toLowerCase() || "").includes(term) ||
-        (b.customer?.fullName?.toLowerCase() || "").includes(term) ||
-        (b.provider?.fullName?.toLowerCase() || "").includes(term) ||
-        (b.service?.name?.toLowerCase() || "").includes(term),
-    );
-  }, [bookings, searchTerm]);
-
   return {
-    bookings: filteredBookings,
+    bookings,
     loading,
     searchTerm,
     setSearchTerm,

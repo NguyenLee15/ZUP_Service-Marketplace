@@ -278,15 +278,12 @@ export default function KYCPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="px-5 py-4 text-right">
-                          <Link href={`/admin/kyc/${item.id}`}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
-                            >
-                              <span>Xem hồ sơ</span>
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </Button>
+                          <Link
+                            href={`/admin/kyc/${item.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 px-3 py-2 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                          >
+                            <span>Xem hồ sơ</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
                           </Link>
                         </TableCell>
                       </TableRow>

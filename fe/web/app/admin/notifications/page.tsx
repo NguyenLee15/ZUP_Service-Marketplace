@@ -237,17 +237,7 @@ export default function AdminNotificationsPage() {
             return (
               <div
                 key={notification.id}
-                role="button"
-                tabIndex={0}
                 aria-label={`Thông báo: ${notification.title}`}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    if (!notification.isRead) handleMarkAsRead(notification.id);
-                    if (detailHref) router.push(detailHref);
-                  }
-                }}
-                onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
                 className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:outline-none ${
                   notification.isRead
                     ? "bg-slate-50/50 border-slate-100 opacity-80"
@@ -255,13 +245,18 @@ export default function AdminNotificationsPage() {
                 }`}
               >
                 <div className="flex gap-4">
-                  <div className="mt-1 shrink-0">
+                  <button
+                    type="button"
+                    className="mt-1 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                    aria-label={notification.isRead ? "Đã đọc" : "Đánh dấu đã đọc"}
+                    onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
+                  >
                     {notification.isRead ? (
                       <Circle className="w-3 h-3 text-slate-300 fill-slate-200" />
                     ) : (
                       <Circle className="w-3 h-3 text-indigo-500 fill-indigo-500" />
                     )}
-                  </div>
+                  </button>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
@@ -282,16 +277,17 @@ export default function AdminNotificationsPage() {
 
                     <div className="flex items-center justify-between mt-2">
                       {detailHref ? (
-                        <div
+                        <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!notification.isRead) handleMarkAsRead(notification.id);
                             router.push(detailHref);
                           }}
-                          className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors cursor-pointer"
+                          className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
                         >
                           Xem chi tiết <ArrowRight className="w-4 h-4 ml-1" />
-                        </div>
+                        </button>
                       ) : (
                         <div />
                       )}

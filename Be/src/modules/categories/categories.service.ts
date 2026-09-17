@@ -24,7 +24,8 @@ export class CategoriesService {
   async getFlat() {
     const cached = await this.redisService.get(CACHE_KEY);
     if (cached) {
-      return { data: JSON.parse(cached) };
+      const data: unknown = JSON.parse(cached);
+      return { data };
     }
 
     const categories = await this.prisma.serviceCategory.findMany({

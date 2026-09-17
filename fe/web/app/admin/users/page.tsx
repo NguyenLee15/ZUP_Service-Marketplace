@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Users as UsersIcon } from "lucide-react";
+import { AlertCircle, Users as UsersIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AdminPermissionGuard, useAdminPermission } from "@/features/admin/components/AdminPermissionGuard";
 import { AdminPermission } from "@/types/admin-permissions";
 import { useAdminUsersFlow } from "@/features/admin/users/hooks/useAdminUsersFlow";
@@ -32,6 +33,8 @@ export default function UsersPage() {
     page,
     setPage,
     totalPages,
+    error,
+    refetch,
     handleLockUser,
     handleUnlockUser,
   } = useAdminUsersFlow();
@@ -59,20 +62,30 @@ export default function UsersPage() {
           setSearchTerm={setSearchTerm}
         />
 
-        <AdminUserTable
-          users={users}
-          loading={loading}
-          page={page}
-          totalPages={totalPages}
-          setPage={setPage}
-          onOpenLockDialog={(user) => {
-            setSelectedUser(user);
-            setShowLockModal(true);
-          }}
-          onUnlockUser={handleUnlockUser}
-          actionLoading={actionLoading}
-          canLockUser={canLockUser}
-        />
+        {error ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-rose-200 bg-white p-12 text-center text-slate-500">
+            <AlertCircle className="mb-2 h-10 w-10 text-rose-500" />
+            <p className="text-sm font-semibold text-slate-800">{error}</p>
+            <Button variant="outline" size="sm" onClick={refetch} className="mt-3">
+              Tải lại danh sách
+            </Button>
+          </div>
+        ) : (
+          <AdminUserTable
+            users={users}
+            loading={loading}
+            page={page}
+            totalPages={totalPages}
+            setPage={setPage}
+            onOpenLockDialog={(user) => {
+              setSelectedUser(user);
+              setShowLockModal(true);
+            }}
+            onUnlockUser={handleUnlockUser}
+            actionLoading={actionLoading}
+            canLockUser={canLockUser}
+          />
+        )}
 
         <AdminUserLockDialog
           open={showLockModal}

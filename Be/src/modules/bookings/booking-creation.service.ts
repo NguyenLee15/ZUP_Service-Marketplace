@@ -20,11 +20,16 @@ import {
 } from './dto/bookings.dto';
 import { RedisService } from '../../shared/redis/redis.service';
 
+export type BookingCreationResult = {
+  data: unknown;
+  message: string;
+};
+
 @Injectable()
 export class BookingCreationService {
   private readonly memoryIdempotency = new Map<
     string,
-    { data: any; expiresAt: number }
+    { data: BookingCreationResult; expiresAt: number }
   >();
 
   constructor(
@@ -35,10 +40,13 @@ export class BookingCreationService {
     private readonly redisService: RedisService,
   ) {}
 
-  private async getIdempotency(key: string): Promise<any> {
+  private async getIdempotency(
+    key: string,
+  ): Promise<BookingCreationResult | null> {
     try {
       if (this.redisService.isEnabled()) {
-        const cached = await this.redisService.getJson(key);
+        const cached =
+          await this.redisService.getJson<BookingCreationResult>(key);
         if (cached) return cached;
       }
     } catch {
@@ -56,7 +64,7 @@ export class BookingCreationService {
 
   private async setIdempotency(
     key: string,
-    data: any,
+    data: BookingCreationResult,
     ttlSeconds = 120,
   ): Promise<void> {
     try {
@@ -76,7 +84,7 @@ export class BookingCreationService {
     customerId: number,
     dto: CreateBookingDto,
     idempotencyKey?: string,
-  ): Promise<{ data: any; message: string }> {
+  ): Promise<BookingCreationResult> {
     const normalizedKey = idempotencyKey?.trim();
     const idempotencyCacheKey = normalizedKey
       ? `booking:idempotency:${customerId}:${normalizedKey}`

@@ -31,7 +31,7 @@ export function AdminHeader({
             <Menu className="w-6 h-6" />
           </button>
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 md:hidden">
-            Admin Portal
+            ZUP Admin
           </span>
         </div>
 

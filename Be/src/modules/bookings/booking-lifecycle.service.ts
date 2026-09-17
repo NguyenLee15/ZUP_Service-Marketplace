@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { BookingCreationService } from './booking-creation.service';
+import {
+  BookingCreationService,
+  type BookingCreationResult,
+} from './booking-creation.service';
 import { BookingQuotationService } from './booking-quotation.service';
 import { BookingExecutionService } from './booking-execution.service';
 import { BookingCancellationService } from './booking-cancellation.service';
@@ -33,7 +36,7 @@ export class BookingLifecycleService {
     customerId: number,
     dto: CreateBookingDto,
     idempotencyKey?: string,
-  ): Promise<{ data: any; message: string }> {
+  ): Promise<BookingCreationResult> {
     return this.creationService.create(customerId, dto, idempotencyKey);
   }
 
