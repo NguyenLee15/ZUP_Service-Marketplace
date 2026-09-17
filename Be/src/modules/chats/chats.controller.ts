@@ -39,8 +39,16 @@ export class ChatsController {
 
   @Get()
   @ApiOperation({ summary: 'List current user conversations' })
-  async getConversations(@CurrentUser('id') userId: number) {
-    return this.chatsService.getConversations(userId);
+  async getConversations(
+    @CurrentUser('id') userId: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.chatsService.getConversations(
+      userId,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Post('upload-image')

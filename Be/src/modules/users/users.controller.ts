@@ -23,6 +23,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  AVATAR_UPLOAD_LIMITS,
+  IMAGE_UPLOAD_LIMITS,
+} from '../../common/constants/upload-limits.constant';
 import { UsersService } from './users.service';
 import { KycService } from './kyc.service';
 import {
@@ -51,7 +55,7 @@ export class UsersController {
 
   /** PATCH /users/profile — update name, phone, avatar */
   @Patch('profile')
-  @UseInterceptors(FileInterceptor('avatar'))
+  @UseInterceptors(FileInterceptor('avatar', AVATAR_UPLOAD_LIMITS))
   async updateProfile(
     @CurrentUser('id') userId: number,
     @Body() dto: UpdateProfileDto,
@@ -144,12 +148,15 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles('PROVIDER')
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'cccdFront', maxCount: 1 },
-      { name: 'cccdBack', maxCount: 1 },
-      { name: 'portrait', maxCount: 1 },
-      { name: 'certificate', maxCount: 1 },
-    ]),
+    FileFieldsInterceptor(
+      [
+        { name: 'cccdFront', maxCount: 1 },
+        { name: 'cccdBack', maxCount: 1 },
+        { name: 'portrait', maxCount: 1 },
+        { name: 'certificate', maxCount: 1 },
+      ],
+      IMAGE_UPLOAD_LIMITS,
+    ),
   )
   async submitKyc(
     @CurrentUser('id') userId: number,

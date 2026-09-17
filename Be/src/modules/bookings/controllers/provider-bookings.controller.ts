@@ -25,6 +25,7 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { IMAGE_UPLOAD_LIMITS } from '../../../common/constants/upload-limits.constant';
 import { ApiErrorResponses } from '../../../common/decorators/api-contract.decorator';
 import { BookingLifecycleService } from '../booking-lifecycle.service';
 import { BookingQueryService } from '../booking-query.service';
@@ -134,7 +135,7 @@ export class ProviderBookingsController {
       required: ['actualPrice', 'estimatedTime'],
     },
   })
-  @UseInterceptors(FilesInterceptor('surveyImages', 5))
+  @UseInterceptors(FilesInterceptor('surveyImages', 5, IMAGE_UPLOAD_LIMITS))
   async sendQuote(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -193,7 +194,7 @@ export class ProviderBookingsController {
       required: ['resultImages'],
     },
   })
-  @UseInterceptors(FilesInterceptor('resultImages', 10))
+  @UseInterceptors(FilesInterceptor('resultImages', 10, IMAGE_UPLOAD_LIMITS))
   async completeWork(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,

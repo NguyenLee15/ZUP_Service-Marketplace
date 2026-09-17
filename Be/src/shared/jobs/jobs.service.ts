@@ -6,6 +6,7 @@ import { Queue } from 'bullmq';
 import { MailService } from '../mail/mail.service';
 import { AiService } from '../ai/ai.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 export enum JobName {
   AuthSendOtp = 'auth.send-otp',
@@ -170,11 +171,13 @@ export class JobsService {
             const embedding = await aiService.createEmbedding(text);
             if (embedding) {
               const vectorStr = `[${embedding.join(',')}]`;
-              await prisma.$executeRawUnsafe(`
-                UPDATE services
-                SET embedding = '${vectorStr}'::vector
-                WHERE id = ${Number(embPayload.serviceId)}
-              `);
+              await prisma.$executeRaw(
+                Prisma.sql`
+                  UPDATE services
+                  SET embedding = CAST(${vectorStr} AS vector)
+                  WHERE id = ${Number(embPayload.serviceId)}
+                `,
+              );
               this.logger.log(
                 `Inline generated embedding for service #${embPayload.serviceId}`,
               );

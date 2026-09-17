@@ -493,10 +493,16 @@ export class AuthService {
 
     const user = tokenRecord.user;
     const tokens = await this.prisma.$transaction(async (tx) => {
-      await tx.refreshToken.update({
-        where: { id: tokenRecord.id },
+      const revoked = await tx.refreshToken.updateMany({
+        where: { id: tokenRecord.id, revoked: false },
         data: { revoked: true },
       });
+      if (revoked.count === 0) {
+        throw new UnauthorizedException(
+          'Refresh token đã bị thu hồi hoặc phát hiện sử dụng lại',
+        );
+      }
+
       return this.generateTokenPair(tx, user.id, user.email, user.role);
     });
 

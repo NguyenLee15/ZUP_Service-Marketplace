@@ -32,7 +32,7 @@ export class NotificationsGateway
 {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger('NotificationsGateway');
-  private connectedUsers = new Map<number, string>(); // userId → socketId
+  private connectedUsers = new Map<number, Set<string>>();
 
   constructor(
     private jwtService: JwtService,
@@ -63,7 +63,9 @@ export class NotificationsGateway
 
       const user = toAuthenticatedUser(payload);
       client.data.user = user;
-      this.connectedUsers.set(user.id, client.id);
+      const socketIds = this.connectedUsers.get(user.id) ?? new Set<string>();
+      socketIds.add(client.id);
+      this.connectedUsers.set(user.id, socketIds);
 
       // Join a room specifically for this user to receive their personal notifications
       await client.join(`user-notifications:${user.id}`);
@@ -76,7 +78,9 @@ export class NotificationsGateway
   handleDisconnect(client: AuthenticatedSocket) {
     const user = client.data.user;
     if (user) {
-      this.connectedUsers.delete(user.id);
+      const socketIds = this.connectedUsers.get(user.id);
+      socketIds?.delete(client.id);
+      if (socketIds?.size === 0) this.connectedUsers.delete(user.id);
       this.logger.log(`User ${user.id} disconnected from notifications`);
     }
   }

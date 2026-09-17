@@ -163,8 +163,8 @@ describe('AuthService token hardening', () => {
       },
       include: { user: true },
     });
-    expect(prisma.refreshToken.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+    expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, revoked: false },
       data: { revoked: true },
     });
     const createArg = firstCallArg<RefreshTokenCreateArg>(
@@ -173,6 +173,18 @@ describe('AuthService token hardening', () => {
     expect(createArg.data.userId).toBe(10);
     expect(createArg.data.token).toBe('');
     expect(typeof createArg.data.tokenHash).toBe('string');
+  });
+
+  it('rejects when refresh token CAS loses a concurrent rotation', async () => {
+    prisma.refreshToken.findFirst.mockResolvedValue(
+      refreshRecord({ tokenHash: hashToken('concurrent-refresh') }),
+    );
+    prisma.refreshToken.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(service.refreshToken('concurrent-refresh')).rejects.toThrow(
+      'Refresh token đã bị thu hồi hoặc phát hiện sử dụng lại',
+    );
+    expect(prisma.refreshToken.create).not.toHaveBeenCalled();
   });
 
   it('revokes all active sessions when a refresh token is reused', async () => {

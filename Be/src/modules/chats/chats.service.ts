@@ -379,16 +379,33 @@ export class ChatsService {
     });
   }
 
-  async getConversations(userId: number) {
-    const conversations = await this.prisma.conversation.findMany({
-      where: {
-        OR: [{ customerId: userId }, { providerId: userId }],
-      },
-      include: this.conversationInclude,
-      orderBy: { updatedAt: 'desc' },
-    });
+  async getConversations(userId: number, page = 1, limit = 20) {
+    const currentPage = Number.isInteger(page) && page > 0 ? page : 1;
+    const pageSize =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 50) : 20;
+    const where = {
+      OR: [{ customerId: userId }, { providerId: userId }],
+    };
+    const [conversations, total] = await this.prisma.$transaction([
+      this.prisma.conversation.findMany({
+        where,
+        include: this.conversationInclude,
+        orderBy: { updatedAt: 'desc' },
+        skip: (currentPage - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.conversation.count({ where }),
+    ]);
 
-    return { data: conversations.map((c) => this.toConversationResponse(c)) };
+    return {
+      data: conversations.map((c) => this.toConversationResponse(c)),
+      meta: {
+        page: currentPage,
+        limit: pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
   }
 
   async getSmartReplies(conversationId: number, userId: number) {

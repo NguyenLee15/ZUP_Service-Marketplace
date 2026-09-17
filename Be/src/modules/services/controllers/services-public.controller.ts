@@ -26,6 +26,7 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { IMAGE_UPLOAD_LIMITS } from '../../../common/constants/upload-limits.constant';
 import {
   ApiErrorResponses,
   ApiSuccessResponse,
@@ -204,7 +205,7 @@ export class ServicesController {
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
-  @UseInterceptors(FilesInterceptor('images', 5))
+  @UseInterceptors(FilesInterceptor('images', 5, IMAGE_UPLOAD_LIMITS))
   async create(
     @CurrentUser('id') providerId: number,
     @Body() dto: CreateServiceDto,
@@ -236,7 +237,7 @@ export class ServicesController {
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('PROVIDER')
-  @UseInterceptors(FilesInterceptor('images', 5))
+  @UseInterceptors(FilesInterceptor('images', 5, IMAGE_UPLOAD_LIMITS))
   async update(
     @CurrentUser('id') providerId: number,
     @Param('id', ParseIntPipe) id: number,
