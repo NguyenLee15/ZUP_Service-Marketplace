@@ -168,14 +168,14 @@ export function ChatMessageList({
                     </div>
                   )}
                   <div
-                    className={`relative group inline-block max-w-full px-4 py-2.5 shadow-sm ${
+                    className={`relative group inline-block max-w-full px-4 py-2.5 shadow-xs ${
                       isRecalled
-                        ? 'border border-dashed border-platinum-tint bg-card/70 text-muted-foreground italic rounded-2xl'
+                        ? 'border border-dashed border-border bg-muted/60 text-muted-foreground italic rounded-2xl'
                         : isMe
-                        ? 'bg-gradient-to-r from-action-blue to-glacier-blue text-white rounded-2xl rounded-tr-sm'
+                        ? 'bg-sky-600 dark:bg-sky-500 text-white rounded-2xl rounded-tr-sm'
                         : isAi
-                        ? 'bg-[#ECFDF5] border border-[#BBF7D0] text-emerald-950 rounded-2xl rounded-tl-sm'
-                        : 'bg-surface border border-outline-variant text-foreground rounded-2xl rounded-tl-sm'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-100 rounded-2xl rounded-tl-sm'
+                        : 'bg-muted/70 border border-border text-foreground rounded-2xl rounded-tl-sm'
                     }`}
                   >
                     {message.imageUrl && !isRecalled && (

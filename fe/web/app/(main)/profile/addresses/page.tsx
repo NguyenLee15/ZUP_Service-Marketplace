@@ -37,37 +37,35 @@ export default function AddressesPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <CustomerPageHeader eyebrow="Tài khoản" title="Quản lý địa chỉ" description="Lưu địa chỉ thường dùng để đặt dịch vụ nhanh hơn." />
-        <div>
-          <h1 className="text-3xl font-bold brand-heading">Quản lý địa chỉ</h1>
-          <p className="text-muted-foreground mt-1">
-            Danh sách này được tải theo tài khoản đang đăng nhập.
-          </p>
-        </div>
+        <CustomerPageHeader
+          eyebrow="Tài khoản"
+          title="Quản lý địa chỉ"
+          description="Lưu địa chỉ thường dùng để đặt dịch vụ nhanh hơn và nhận hỗ trợ chuẩn xác nhất."
+        />
         <Button
           onClick={() => setShowModal(true)}
-          className="bg-action-blue hover:bg-glacier-blue text-white flex items-center gap-2 shadow-[var(--brand-shadow-button)]"
+          className="rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center gap-2 shadow-xs transition-colors shrink-0"
         >
-          <Plus className="w-5 h-5" />
-          Thêm địa chỉ
+          <Plus className="w-4 h-4" />
+          Thêm địa chỉ mới
         </Button>
       </div>
 
       {successMessage && (
         <div
-          className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800"
+          className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 dark:border-emerald-800/60 p-4 text-emerald-800 dark:text-emerald-200"
           aria-live="polite"
         >
-          <Check className="w-5 h-5 flex-shrink-0" />
+          <Check className="w-5 h-5 flex-shrink-0 text-emerald-600" />
           <span className="text-sm font-medium">{successMessage}</span>
         </div>
       )}
       {errorMessage && (
         <div
-          className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"
+          className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-950/40 dark:border-rose-800/60 p-4 text-rose-800 dark:text-rose-200"
           role="alert"
         >
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />
           <span className="text-sm font-medium">{errorMessage}</span>
         </div>
       )}
@@ -77,16 +75,25 @@ export default function AddressesPage() {
           [...Array(2)].map((_, index) => (
             <Card
               key={index}
-              className="surface-card h-32 animate-pulse rounded-[20px]"
+              className="h-32 animate-pulse rounded-2xl border border-border bg-card/60"
             />
           ))
         ) : addresses.length === 0 ? (
-          <Card className="surface-card rounded-[20px] p-8 text-center">
-            <MapPin className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-            <p className="font-semibold text-foreground">Bạn chưa có địa chỉ nào</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Thêm địa chỉ mới để đặt dịch vụ nhanh hơn.
+          <Card className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center flex flex-col items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-3 text-muted-foreground">
+              <MapPin className="w-7 h-7" />
+            </div>
+            <p className="font-bold text-foreground text-base">Bạn chưa có địa chỉ nào</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              Lưu địa chỉ nhà riêng hoặc văn phòng để thợ đến phục vụ thuận tiện và nhanh chóng nhất.
             </p>
+            <Button
+              onClick={() => setShowModal(true)}
+              className="mt-5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center gap-2 shadow-xs transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Thêm địa chỉ ngay
+            </Button>
           </Card>
         ) : (
           addresses.map((addr) => (

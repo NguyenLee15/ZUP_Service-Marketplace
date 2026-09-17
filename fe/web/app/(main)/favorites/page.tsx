@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, Heart, Search } from 'lucide-react';
+import { AlertCircle, Heart, Search, RefreshCw } from 'lucide-react';
 import { serviceApi } from '@/features/service/services/service.api';
 import { Button } from '@/components/ui/button';
 import { Service } from '@/types';
@@ -81,23 +81,15 @@ export default function FavoritesPage() {
   }, [favoriteServices, favorites, fetchedServices]);
 
   return (
-    <div className="space-y-8">
-      <div className="surface-card flex flex-col gap-4 rounded-[20px] p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
-              <Heart className="h-5 w-5 fill-current" />
-            </div>
-            <p className="text-sm font-bold text-muted-foreground">Bộ sưu tập của bạn</p>
-          </div>
-          <CustomerPageHeader
-            eyebrow="Bộ sưu tập của bạn"
-            title="Dịch vụ yêu thích"
-            description="Lưu lại các dịch vụ bạn quan tâm để so sánh, xem lại và đặt lịch nhanh hơn."
-          />
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <CustomerPageHeader
+          eyebrow="Bộ sưu tập cá nhân"
+          title="Dịch vụ yêu thích"
+          description="Lưu lại các dịch vụ bạn quan tâm để so sánh, xem lại và đặt lịch nhanh hơn."
+        />
         <Link href="/services">
-          <Button className="rounded-xl bg-action-blue px-6 font-bold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue">
+          <Button className="rounded-xl bg-sky-600 px-6 font-semibold text-white transition-colors hover:bg-sky-500 shadow-xs">
             <Search className="mr-2 h-4 w-4" />
             Tìm thêm dịch vụ
           </Button>
@@ -108,37 +100,48 @@ export default function FavoritesPage() {
         <div
           role="status"
           aria-live="polite"
-          className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800/60 px-5 py-4 text-amber-900 dark:text-amber-200"
         >
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-          <div>
-            <p className="font-bold">Chưa tải đủ dữ liệu</p>
-            <p className="text-sm text-amber-800">{loadError}</p>
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="font-bold text-sm">Chưa tải đủ dữ liệu dịch vụ</p>
+              <p className="text-xs text-amber-800 dark:text-amber-300">{loadError}</p>
+            </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+            className="shrink-0 border-amber-300 text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900/50"
+          >
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            Thử lại
+          </Button>
         </div>
       )}
 
       {favorites.length === 0 ? (
-        <div className="surface-card flex min-h-[360px] flex-col items-center justify-center rounded-[20px] border-dashed px-6 py-16 text-center">
-          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-500">
-            <Heart className="h-9 w-9" />
+        <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/60 px-6 py-16 text-center">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500 dark:bg-rose-950/40 dark:text-rose-400">
+            <Heart className="h-8 w-8" />
           </div>
-          <h2 className="mb-3 text-2xl font-bold text-foreground">Bạn chưa có dịch vụ yêu thích</h2>
-          <p className="mb-8 max-w-md text-sm leading-relaxed text-muted-foreground">
-            Khi thấy dịch vụ phù hợp, bấm biểu tượng trái tim trên card để lưu lại tại đây.
+          <h2 className="mb-2 text-xl font-bold text-foreground">Bạn chưa có dịch vụ yêu thích</h2>
+          <p className="mb-6 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Khi thấy dịch vụ phù hợp, bấm biểu tượng trái tim trên thẻ dịch vụ để lưu lại tại đây.
           </p>
           <Link href="/services">
-            <Button className="rounded-xl bg-action-blue px-8 font-bold text-white shadow-[var(--brand-shadow-button)] transition-colors hover:bg-glacier-blue">
+            <Button className="rounded-xl bg-sky-600 px-7 font-semibold text-white transition-colors hover:bg-sky-500 shadow-xs">
               Khám phá dịch vụ
             </Button>
           </Link>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-bold text-muted-foreground">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
               {favorites.length} dịch vụ đã lưu
-            </p>
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
             {storedFavoriteServices.map((service, index) => (

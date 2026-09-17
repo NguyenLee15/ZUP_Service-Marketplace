@@ -65,7 +65,7 @@ function ChatPageContent() {
   } = useChatFlow();
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] min-h-[620px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <div className="flex h-[calc(100dvh-9rem)] min-h-[480px] sm:min-h-[580px] overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
       {/* Sidebar */}
       <ChatSidebar
         selectedConversation={selectedConversation}

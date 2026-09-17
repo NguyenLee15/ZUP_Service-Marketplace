@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Bell,
   CheckCircle2,
@@ -9,6 +10,8 @@ import {
   Clock,
   ArrowRight,
   Trash2,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { notificationsApi } from "@/features/auth/services/api";
 import { Button } from "@/components/ui/button";
@@ -56,6 +59,7 @@ export default function NotificationsPage() {
     [],
   );
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
   const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">(
     "all",
   );
@@ -68,6 +72,7 @@ export default function NotificationsPage() {
 
   const fetchNotifications = async () => {
     setLoading(true);
+    setErrorMessage("");
     try {
       const res = await notificationsApi.getAll({
         isRead: readFilter === "all" ? undefined : readFilter === "read",
@@ -90,6 +95,8 @@ export default function NotificationsPage() {
         const { useAuthStore } = await import("@/store/auth.store");
         useAuthStore.getState().logout();
         router.push("/login");
+      } else {
+        setErrorMessage("Không thể tải danh sách thông báo. Vui lòng thử lại.");
       }
     } finally {
       setLoading(false);
@@ -114,15 +121,16 @@ export default function NotificationsPage() {
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       useNotificationStore.getState().markAllRead();
     } catch (error) {
-      console.error("Failed to mark all read:", error);
+      console.error("Failed to mark all as read:", error);
     }
   };
 
   const handleDeleteNotification = async (id: number) => {
-    setDeletingId(id);
     try {
+      setDeletingId(id);
       await notificationsApi.delete(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
+      useNotificationStore.getState().removeNotification(id);
     } catch (error) {
       console.error("Failed to delete notification:", error);
     } finally {
@@ -132,70 +140,75 @@ export default function NotificationsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat("vi-VN", {
+    return date.toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(date);
+    });
   };
 
-  if (loading) {
-    return (
-      <div className="max-w-3xl mx-auto p-6 space-y-4">
-        <div className="h-8 w-48 bg-slate-200 rounded animate-pulse mb-6"></div>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-24 bg-slate-200/80 rounded-xl animate-pulse"
-          ></div>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-3xl mx-auto p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <CustomerPageHeader
-            eyebrow="Cập nhật mới"
-            title="Thông báo của bạn"
-            description="Cập nhật những thông tin mới nhất về dịch vụ và đơn hàng."
-          />
-        </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <CustomerPageHeader
+          eyebrow="Tài khoản"
+          title="Thông báo của bạn"
+          description="Cập nhật tiến độ đơn hàng, báo giá và tin nhắn từ thợ."
+        />
 
-        {notifications.some((n) => !n.isRead) && (
+        {notifications.length > 0 && (
           <Button
             variant="outline"
             size="sm"
             onClick={handleMarkAllAsRead}
-            className="shrink-0 border-slate-200 bg-white text-slate-800 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-2 self-start sm:self-auto rounded-xl border-border hover:bg-muted font-medium"
           >
-            <CheckCircle2 className="w-4 h-4 mr-2" /> Đánh dấu tất cả đã đọc
+            <CheckCircle2 className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            Đánh dấu đã đọc tất cả
           </Button>
         )}
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+      {errorMessage && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 dark:bg-rose-950/40 dark:border-rose-800/60 p-4 text-rose-800 dark:text-rose-200"
+        >
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            <p className="text-sm font-medium">{errorMessage}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchNotifications}
+            className="shrink-0 border-rose-300 text-rose-900 hover:bg-rose-100 dark:border-rose-700 dark:text-rose-200 dark:hover:bg-rose-900/50"
+          >
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            Thử lại
+          </Button>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
         <div className="flex flex-wrap gap-2">
           {[
-            { key: "all", label: "Tất cả" },
-            { key: "unread", label: "Chưa đọc" },
-            { key: "read", label: "Đã đọc" },
+            { id: "all", label: "Tất cả" },
+            { id: "unread", label: "Chưa đọc" },
+            { id: "read", label: "Đã đọc" },
           ].map((item) => (
             <Button
-              key={item.key}
-              type="button"
-              variant={readFilter === item.key ? "default" : "outline"}
+              key={item.id}
               size="sm"
-              onClick={() => setReadFilter(item.key as typeof readFilter)}
-              className={
-                readFilter === item.key
-                  ? "bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                  : "border-slate-200 bg-white text-slate-800 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-              }
+              variant={readFilter === item.id ? "default" : "outline"}
+              onClick={() => setReadFilter(item.id as "all" | "unread" | "read")}
+              className={`rounded-xl px-4 text-xs font-semibold ${
+                readFilter === item.id
+                  ? "bg-sky-600 hover:bg-sky-500 text-white"
+                  : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
             >
               {item.label}
             </Button>
@@ -204,54 +217,80 @@ export default function NotificationsPage() {
         <input
           value={typeFilter}
           onChange={(event) => setTypeFilter(event.target.value)}
-          placeholder="Lọc theo type, ví dụ BOOKING"
-          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none placeholder:text-slate-500 focus:border-sky-600/60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 sm:w-64"
+          placeholder="Lọc theo loại (vd: BOOKING)"
+          aria-label="Lọc theo loại thông báo"
+          className="h-9 rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-sky-500 focus:ring-1 focus:ring-sky-500 sm:w-64"
         />
       </div>
 
-      {notifications.length === 0 ? (
-        <Card className="surface-card rounded-[20px] p-12 text-center border-dashed flex flex-col items-center justify-center">
-          <div className="w-16 h-16 bg-cyan-400/10 text-cyan-300 rounded-full flex items-center justify-center mb-4 border border-cyan-300/15">
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="h-24 rounded-2xl border border-border bg-card/60 animate-pulse"
+            />
+          ))}
+        </div>
+      ) : notifications.length === 0 ? (
+        <Card className="rounded-2xl p-12 text-center border-dashed border-border bg-card/60 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400 rounded-full flex items-center justify-center mb-4 border border-sky-200/40">
             <Bell className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-lg font-bold text-foreground mb-1">
             Chưa có thông báo nào
           </h3>
-          <p className="text-muted-foreground">
-            Bạn sẽ nhận được thông báo khi có cập nhật mới về đơn hàng hoặc tài
-            khoản.
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Bạn sẽ nhận được thông báo khi có cập nhật mới về đơn hàng hoặc các chương trình ưu đãi.
           </p>
+          <Link href="/services" className="mt-5">
+            <Button className="rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold shadow-xs">
+              Khám phá dịch vụ ngay
+            </Button>
+          </Link>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {notifications.map((notification) => {
             const detailHref = getNotificationHref(notification);
 
             return (
               <div
                 key={notification.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Thông báo: ${notification.title}`}
                 onClick={() =>
                   !notification.isRead && handleMarkAsRead(notification.id)
                 }
-                className={`p-4 md:p-5 rounded-2xl border transition-[background-color,border-color,box-shadow] cursor-pointer ${
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (!notification.isRead) handleMarkAsRead(notification.id);
+                    if (detailHref) router.push(detailHref);
+                  }
+                }}
+                className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                   notification.isRead
-                    ? "bg-white border-slate-200 hover:border-slate-300 opacity-80"
-                    : "bg-blue-50/40 border-action-blue/30 shadow-sm hover:border-action-blue/50"
+                    ? "bg-card border-border/80 hover:border-border opacity-85"
+                    : "bg-sky-50/40 dark:bg-sky-950/20 border-sky-200 dark:border-sky-800/60 shadow-xs hover:border-sky-400 dark:hover:border-sky-700"
                 }`}
               >
                 <div className="flex gap-4">
                   <div className="mt-1 shrink-0">
                     {notification.isRead ? (
-                      <Circle className="w-3 h-3 text-slate-300 fill-slate-300" />
+                      <Circle className="w-3 h-3 text-slate-300 fill-slate-300 dark:text-slate-700 dark:fill-slate-700" />
                     ) : (
-                      <Circle className="w-3 h-3 text-action-blue fill-action-blue" />
+                      <Circle className="w-3 h-3 text-sky-600 fill-sky-600 dark:text-sky-400 dark:fill-sky-400" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
                       <h4
-                        className={`font-semibold text-base ${notification.isRead ? "text-slate-700" : "text-foreground font-bold"}`}
+                        className={`font-semibold text-base ${
+                          notification.isRead ? "text-muted-foreground" : "text-foreground font-bold"
+                        }`}
                       >
                         {notification.title}
                       </h4>
@@ -262,13 +301,15 @@ export default function NotificationsPage() {
                     </div>
 
                     <p
-                      className={`text-sm leading-relaxed ${notification.isRead ? "text-muted-foreground" : "text-foreground/90"}`}
+                      className={`text-sm leading-relaxed ${
+                        notification.isRead ? "text-muted-foreground" : "text-foreground/90"
+                      }`}
                     >
                       {notification.content}
                     </p>
 
-                    {detailHref && (
-                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      {detailHref && (
                         <Button
                           type="button"
                           variant="link"
@@ -279,42 +320,25 @@ export default function NotificationsPage() {
                             }
                             router.push(detailHref);
                           }}
-                          className="p-0 h-auto text-cyan-300 hover:text-cyan-100 font-semibold text-sm"
+                          className="p-0 h-auto text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-semibold text-sm"
                         >
                           Xem chi tiết <ArrowRight className="w-4 h-4 ml-1" />
                         </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          disabled={deletingId === notification.id}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDeleteNotification(notification.id);
-                          }}
-                          className="h-auto p-0 text-sm font-semibold text-red-300 hover:bg-transparent hover:text-red-100"
-                        >
-                          <Trash2 className="mr-1 h-4 w-4" />
-                          Xóa
-                        </Button>
-                      </div>
-                    )}
-                    {!detailHref && (
-                      <div className="mt-3">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          disabled={deletingId === notification.id}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDeleteNotification(notification.id);
-                          }}
-                          className="h-auto p-0 text-sm font-semibold text-red-300 hover:bg-transparent hover:text-red-100"
-                        >
-                          <Trash2 className="mr-1 h-4 w-4" />
-                          Xóa
-                        </Button>
-                      </div>
-                    )}
+                      )}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={deletingId === notification.id}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleDeleteNotification(notification.id);
+                        }}
+                        className="h-auto p-0 text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-transparent hover:text-rose-700 dark:hover:text-rose-300"
+                      >
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />
+                        Xóa
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

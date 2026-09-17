@@ -63,8 +63,9 @@ export function ChatInputArea({
         <Button
           type="button"
           variant="ghost"
+          aria-label="Đính kèm hình ảnh"
           onClick={() => fileInputRef.current?.click()}
-          className="rounded-full w-10 h-10 p-0 flex items-center justify-center flex-shrink-0 text-muted-foreground hover:text-action-blue hover:bg-action-blue/10"
+          className="rounded-full w-11 h-11 p-0 flex items-center justify-center flex-shrink-0 text-muted-foreground hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40"
         >
           <ImageIcon className="w-5 h-5" />
         </Button>
@@ -79,13 +80,13 @@ export function ChatInputArea({
           aria-label="Nhập tin nhắn"
           name="message"
           autoComplete="off"
-          className="flex-1 px-4 py-2.5 glass-panel text-foreground rounded-full focus:outline-none focus:ring-2 focus:ring-action-blue focus:border-action-blue/30 min-h-[44px]"
+          className="flex-1 px-4 py-2.5 bg-muted/60 text-foreground rounded-full border border-border/70 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent min-h-[44px]"
         />
         <Button
           type="submit"
           aria-label="Gửi tin nhắn"
           disabled={!inputValue.trim() && !selectedFile}
-          className="bg-gradient-to-r from-action-blue to-glacier-blue hover:from-glacier-blue hover:to-action-blue text-white rounded-full w-11 h-11 p-0 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(0,107,255,0.3)] transition-all mb-0"
+          className="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white rounded-full w-11 h-11 p-0 flex items-center justify-center flex-shrink-0 shadow-xs transition-all disabled:opacity-50 disabled:pointer-events-none mb-0"
         >
           <Send className="w-4 h-4 ml-[-2px]" />
         </Button>

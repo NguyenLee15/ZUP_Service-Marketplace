@@ -19,15 +19,58 @@ import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
 export default function ServicesSearchPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[100dvh] bg-background flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-action-blue border-t-transparent rounded-full animate-spin" />
-        </div>
-      }
-    >
+    <Suspense fallback={<ServicesSearchSkeleton />}>
       <ServicesSearchContent />
     </Suspense>
+  );
+}
+
+function ServicesSearchSkeleton() {
+  return (
+    <div className="min-h-[100dvh] bg-background">
+      <div className="border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="h-10 w-full max-w-md bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+          <div className="hidden sm:flex items-center gap-3">
+            <div className="h-10 w-32 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div className="h-10 w-24 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-10">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 sm:gap-6 mb-8">
+          <div className="space-y-2">
+            <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+            <div className="h-8 w-56 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+            <div className="h-4 w-40 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-36 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div className="h-10 w-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="h-[260px] sm:h-[300px] bg-slate-100/80 dark:bg-slate-800/50 rounded-2xl border border-slate-200/60 dark:border-slate-800 p-4 flex flex-col justify-between overflow-hidden"
+            >
+              <div className="space-y-3">
+                <div className="h-32 bg-slate-200/70 dark:bg-slate-700/50 rounded-xl animate-pulse" />
+                <div className="h-4 w-3/4 bg-slate-200/70 dark:bg-slate-700/50 rounded animate-pulse" />
+                <div className="h-3 w-1/2 bg-slate-200/50 dark:bg-slate-700/30 rounded animate-pulse" />
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <div className="h-4 w-20 bg-slate-200/70 dark:bg-slate-700/50 rounded animate-pulse" />
+                <div className="h-8 w-8 rounded-full bg-slate-200/70 dark:bg-slate-700/50 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

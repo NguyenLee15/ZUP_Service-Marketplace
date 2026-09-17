@@ -177,7 +177,7 @@ export function CustomerHeader() {
               {/* Mobile hamburger button */}
               <button
                 type="button"
-                className="md:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                className="md:hidden inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label={mobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
                 aria-expanded={mobileMenuOpen}
