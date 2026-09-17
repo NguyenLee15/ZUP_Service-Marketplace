@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 
 interface TransactionVerification {
   id: number;
@@ -40,9 +41,14 @@ export default async function PaymentReturnPage({
   let verifiedTx: TransactionVerification | null = null;
   if (txnRef && backendUrl) {
     try {
+      const cookieStore = await cookies();
+      const token = cookieStore.get('hs_access_token')?.value;
       const res = await fetch(
         `${backendUrl}/provider-wallets/transactions/status?txnRef=${encodeURIComponent(txnRef)}`,
-        { cache: 'no-store' }
+        {
+          cache: 'no-store',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
       );
       if (res.ok) {
         const json = await res.json();
@@ -84,7 +90,7 @@ export default async function PaymentReturnPage({
           {isPending
             ? 'Hệ thống đang chờ kết quả đối soát chính thức từ cổng thanh toán. Vui lòng kiểm tra lại sau ít phút.'
             : isSuccess
-            ? displayAmount > 0 
+            ? displayAmount > 0
               ? `Bạn đã nạp thành công ${displayAmount.toLocaleString('vi-VN')}đ vào ví.`
               : 'Giao dịch nạp tiền đã được ghi nhận thành công vào ví.'
             : verifiedTx?.failureReason || 'Đã có lỗi xảy ra hoặc bạn đã hủy giao dịch.'}

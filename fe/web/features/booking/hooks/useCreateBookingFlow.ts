@@ -280,7 +280,7 @@ export function useCreateBookingFlow() {
       province: z.string().optional(),
       ward: z.string().optional(),
       addressDetail: z.string().optional(),
-      timeMode: z.enum(['asap', 'scheduled']),
+      timeMode: z.enum(['now', 'asap', 'scheduled']),
       desiredTime: z.string().optional(),
     })
     .superRefine((data, ctx) => {

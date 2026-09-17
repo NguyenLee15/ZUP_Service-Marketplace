@@ -169,9 +169,16 @@ export class ProviderWalletsController {
   /** Xác thực trạng thái giao dịch nạp tiền theo mã tham chiếu (txnRef / orderCode) */
   @Get('transactions/status')
   @ApiOperation({ summary: 'Xác thực trạng thái giao dịch theo mã tham chiếu' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PROVIDER', 'ADMIN', 'STAFF')
   @SkipThrottle()
-  async getTransactionStatus(@Query('txnRef') txnRef: string) {
-    return this.depositService.verifyTransactionStatus(txnRef);
+  async getTransactionStatus(
+    @CurrentUser('id') userId: number,
+    @CurrentUser('role') role: string,
+    @Query('txnRef') txnRef: string,
+  ) {
+    return this.depositService.verifyTransactionStatus(txnRef, userId, role);
   }
 
   /** VNPay IPN — xử lý tiền (không cần auth) */

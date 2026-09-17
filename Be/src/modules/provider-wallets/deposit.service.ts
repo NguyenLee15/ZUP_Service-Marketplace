@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -323,7 +324,11 @@ export class DepositService {
     return `NAPVI-${providerId}-${timestamp}-${suffix}`;
   }
 
-  async verifyTransactionStatus(txnRef: string) {
+  async verifyTransactionStatus(
+    txnRef: string,
+    userId?: number,
+    role?: string,
+  ) {
     if (!txnRef || !txnRef.trim()) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
@@ -333,14 +338,8 @@ export class DepositService {
 
     const tx = await this.prisma.walletTransaction.findFirst({
       where: { vnpayTxnRef: txnRef.trim() },
-      select: {
-        id: true,
-        status: true,
-        amount: true,
-        type: true,
-        processedAt: true,
-        failureReason: true,
-        createdAt: true,
+      include: {
+        wallet: true,
       },
     });
 
@@ -351,6 +350,28 @@ export class DepositService {
       });
     }
 
-    return { data: tx };
+    if (
+      role !== 'ADMIN' &&
+      role !== 'STAFF' &&
+      userId &&
+      tx.wallet.providerId !== userId
+    ) {
+      throw new ForbiddenException({
+        code: ErrorCodes.FORBIDDEN,
+        message: 'Bạn không có quyền xem thông tin giao dịch này',
+      });
+    }
+
+    return {
+      data: {
+        id: tx.id,
+        status: tx.status,
+        amount: tx.amount,
+        type: tx.type,
+        processedAt: tx.processedAt,
+        failureReason: tx.failureReason,
+        createdAt: tx.createdAt,
+      },
+    };
   }
 }
