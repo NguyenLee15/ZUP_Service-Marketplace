@@ -422,9 +422,16 @@ export class AdminService {
         });
       }
 
+      if (user.email.startsWith('DELETED_')) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Tài khoản này đã bị xóa trước đó',
+        });
+      }
+
       const activeBookings = await tx.booking.count({
         where: {
-          customerId: id,
+          OR: [{ customerId: id }, { providerId: id }],
           status: {
             in: [
               BookingStatus.PENDING,
@@ -444,7 +451,7 @@ export class AdminService {
       }
 
       const updated = await tx.user.updateMany({
-        where: { id, status: { not: UserStatus.LOCKED } },
+        where: { id, email: { not: { startsWith: 'DELETED_' } } },
         data: {
           email: `DELETED_${id}_${user.email}`,
           status: UserStatus.LOCKED,
@@ -454,7 +461,7 @@ export class AdminService {
       if (updated.count === 0) {
         throw new BadRequestException({
           code: ErrorCodes.VALIDATION_ERROR,
-          message: 'Tài khoản này đã bị khóa hoặc đã được xử lý trước đó',
+          message: 'Tài khoản này đã bị xóa trước đó',
         });
       }
 

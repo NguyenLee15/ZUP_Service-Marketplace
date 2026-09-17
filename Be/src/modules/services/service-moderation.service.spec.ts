@@ -17,7 +17,9 @@ describe('ServiceModerationService', () => {
 
   beforeEach(() => {
     prisma = {
-      $transaction: jest.fn(async (callback: (tx: any) => any) => callback(prisma)),
+      $transaction: jest.fn(async (callback: (tx: any) => any) =>
+        callback(prisma),
+      ),
       service: {
         findUnique: jest.fn(),
         findUniqueOrThrow: jest.fn(),
@@ -119,9 +121,9 @@ describe('ServiceModerationService', () => {
       });
       prisma.service.updateMany.mockResolvedValue({ count: 0 });
 
-      await expect(
-        service.reject(1, 101, 'Lý do', '10.0.0.1'),
-      ).rejects.toThrow('Dịch vụ đã được xử lý bởi quản trị viên khác hoặc không còn ở trạng thái chờ duyệt');
+      await expect(service.reject(1, 101, 'Lý do', '10.0.0.1')).rejects.toThrow(
+        'Dịch vụ đã được xử lý bởi quản trị viên khác hoặc không còn ở trạng thái chờ duyệt',
+      );
 
       expect(prisma.auditLog.create).not.toHaveBeenCalled();
     });

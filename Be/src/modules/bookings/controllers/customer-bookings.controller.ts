@@ -14,7 +14,10 @@ import {
   Res,
   Headers,
 } from '@nestjs/common';
-import { FilesInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
+import {
+  FilesInterceptor,
+  AnyFilesInterceptor,
+} from '@nestjs/platform-express';
 import type { Response } from 'express';
 import {
   ApiBearerAuth,

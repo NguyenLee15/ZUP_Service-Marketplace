@@ -228,8 +228,8 @@ describe('BookingLifecycleService', () => {
       ];
       const result = await service.completeWork(10, 1, mockFiles);
 
-      expect(result.data.status).toBe(BookingStatus.DONE);
-      const updateManyMock = mockPrisma.booking.updateMany as jest.Mock;
+      expect(result.data?.status).toBe(BookingStatus.DONE);
+      const updateManyMock = mockPrisma.booking.updateMany;
       const updateArg = updateManyMock.mock.calls[0]?.[0];
       expect(updateArg.data.status).toBe(BookingStatus.DONE);
       expect(updateArg.data.completedAt).toBeInstanceOf(Date);

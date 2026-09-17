@@ -354,4 +354,3 @@ export class DepositService {
     return { data: tx };
   }
 }
-

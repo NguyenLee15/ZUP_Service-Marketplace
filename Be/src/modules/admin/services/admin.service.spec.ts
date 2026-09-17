@@ -212,13 +212,64 @@ describe('AdminService', () => {
             findUnique: jest
               .fn()
               .mockResolvedValueOnce({ id: 2, role: 'STAFF', status: 'ACTIVE' })
-              .mockResolvedValueOnce({ id: 3, role: 'ADMIN', status: 'ACTIVE' }),
+              .mockResolvedValueOnce({
+                id: 3,
+                role: 'ADMIN',
+                status: 'ACTIVE',
+              }),
           },
         });
       });
 
       await expect(service.deleteUser(2, 3, '127.0.0.1')).rejects.toThrow(
         'Không thể xóa tài khoản Quản trị viên',
+      );
+    });
+
+    it('throws BadRequestException when user is already deleted', async () => {
+      prisma.$transaction.mockImplementation(async (cb: (tx: any) => any) => {
+        return cb({
+          user: {
+            findUnique: jest
+              .fn()
+              .mockResolvedValueOnce({ id: 1, role: 'ADMIN', status: 'ACTIVE' })
+              .mockResolvedValueOnce({
+                id: 5,
+                role: 'CUSTOMER',
+                email: 'DELETED_5_test@example.com',
+                status: 'LOCKED',
+              }),
+          },
+        });
+      });
+
+      await expect(service.deleteUser(1, 5, '127.0.0.1')).rejects.toThrow(
+        'Tài khoản này đã bị xóa trước đó',
+      );
+    });
+
+    it('throws BadRequestException when user has active bookings', async () => {
+      prisma.$transaction.mockImplementation(async (cb: (tx: any) => any) => {
+        return cb({
+          user: {
+            findUnique: jest
+              .fn()
+              .mockResolvedValueOnce({ id: 1, role: 'ADMIN', status: 'ACTIVE' })
+              .mockResolvedValueOnce({
+                id: 5,
+                role: 'PROVIDER',
+                email: 'pro@example.com',
+                status: 'ACTIVE',
+              }),
+          },
+          booking: {
+            count: jest.fn().mockResolvedValue(2),
+          },
+        });
+      });
+
+      await expect(service.deleteUser(1, 5, '127.0.0.1')).rejects.toThrow(
+        'Không thể xóa tài khoản khi còn đơn hàng chưa hoàn thành',
       );
     });
   });

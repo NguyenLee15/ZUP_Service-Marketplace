@@ -61,8 +61,8 @@ export class ServiceModerationService {
       });
     }
 
-    const { updated, hasEnoughBalance, newStatus } =
-      await this.prisma.$transaction(async (tx) => {
+    const { updated, hasEnoughBalance } = await this.prisma.$transaction(
+      async (tx) => {
         const wallet = await tx.providerWallet.findUnique({
           where: { providerId: service.providerId },
         });
@@ -152,9 +152,9 @@ export class ServiceModerationService {
         return {
           updated: up,
           hasEnoughBalance: balanceOk,
-          newStatus: statusToSet,
         };
-      });
+      },
+    );
 
     try {
       await this.jobsService.enqueue(JobName.ServiceGenerateEmbedding, {

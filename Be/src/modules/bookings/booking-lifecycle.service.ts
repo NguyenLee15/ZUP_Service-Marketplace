@@ -29,7 +29,11 @@ export class BookingLifecycleService {
     private readonly cancellationService: BookingCancellationService,
   ) {}
 
-  create(customerId: number, dto: CreateBookingDto, idempotencyKey?: string) {
+  create(
+    customerId: number,
+    dto: CreateBookingDto,
+    idempotencyKey?: string,
+  ): Promise<{ data: any; message: string }> {
     return this.creationService.create(customerId, dto, idempotencyKey);
   }
 

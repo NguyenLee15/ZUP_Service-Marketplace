@@ -66,7 +66,8 @@ export class BookingCommissionService {
     const fee = Math.round(
       quotations.reduce(
         (sum, q) =>
-          sum + (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
+          sum +
+          (Number(q.actualPrice) * Number(q.commissionRateSnapshot)) / 100,
         0,
       ),
     );

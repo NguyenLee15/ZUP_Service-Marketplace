@@ -164,7 +164,6 @@ export class BookingQuotationService {
     };
   }
 
-
   async customerConfirmQuote(customerId: number, bookingId: number) {
     const booking = await this.shared.checkBooking(bookingId, {
       customerId,
@@ -221,7 +220,6 @@ export class BookingQuotationService {
 
     return { data: updated, message: 'Đã xác nhận báo giá' };
   }
-
 
   async customerRejectQuote(
     customerId: number,
@@ -285,7 +283,6 @@ export class BookingQuotationService {
 
     return { data: updated, message: 'Đã từ chối báo giá' };
   }
-
 
   async providerSendSupplementaryQuote(
     providerId: number,
@@ -426,7 +423,6 @@ export class BookingQuotationService {
     };
   }
 
-
   async customerReplySupplementaryQuote(
     customerId: number,
     bookingId: number,
@@ -505,5 +501,4 @@ export class BookingQuotationService {
 
     return { data: updated, message: 'Đã xử lý báo giá phát sinh' };
   }
-
 }

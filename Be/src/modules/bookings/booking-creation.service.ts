@@ -35,7 +35,7 @@ export class BookingCreationService {
     private readonly redisService: RedisService,
   ) {}
 
-  private async getIdempotency(key: string): Promise<any | null> {
+  private async getIdempotency(key: string): Promise<any> {
     try {
       if (this.redisService.isEnabled()) {
         const cached = await this.redisService.getJson(key);
@@ -76,7 +76,7 @@ export class BookingCreationService {
     customerId: number,
     dto: CreateBookingDto,
     idempotencyKey?: string,
-  ) {
+  ): Promise<{ data: any; message: string }> {
     const normalizedKey = idempotencyKey?.trim();
     const idempotencyCacheKey = normalizedKey
       ? `booking:idempotency:${customerId}:${normalizedKey}`
@@ -270,7 +270,10 @@ export class BookingCreationService {
       include: { bookingItems: true },
     });
 
-    const result = { data: bookingWithItems, message: 'Đặt dịch vụ thành công' };
+    const result = {
+      data: bookingWithItems,
+      message: 'Đặt dịch vụ thành công',
+    };
     if (idempotencyCacheKey) {
       await this.setIdempotency(idempotencyCacheKey, result, 120);
     }

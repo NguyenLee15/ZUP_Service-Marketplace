@@ -72,7 +72,7 @@ describe('WithdrawalService admin processing', () => {
     };
     service = new WithdrawalService(
       prisma as never,
-      ledger as unknown as WalletLedgerService,
+      ledger,
       {} as WalletSharedService,
     );
   });
@@ -177,7 +177,7 @@ describe('WithdrawalService admin processing', () => {
     };
     service = new WithdrawalService(
       prisma as never,
-      ledger as unknown as WalletLedgerService,
+      ledger,
       shared as unknown as WalletSharedService,
     );
     tx.providerWallet.findUnique.mockResolvedValue({
@@ -210,7 +210,7 @@ describe('WithdrawalService admin processing', () => {
     };
     service = new WithdrawalService(
       prisma as never,
-      ledger as unknown as WalletLedgerService,
+      ledger,
       shared as unknown as WalletSharedService,
     );
     tx.providerWallet.findUnique.mockResolvedValue({

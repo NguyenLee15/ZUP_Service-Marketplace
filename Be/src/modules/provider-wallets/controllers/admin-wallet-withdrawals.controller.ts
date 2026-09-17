@@ -65,11 +65,13 @@ export class AdminWalletWithdrawalsController {
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() body?: AdminWalletActionDto,
+    @Ip() ip?: string,
   ) {
     return this.withdrawalService.adminRejectWithdrawal(
       adminId,
       id,
       body?.note,
+      ip,
     );
   }
 }

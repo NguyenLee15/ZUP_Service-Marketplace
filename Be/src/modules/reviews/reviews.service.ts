@@ -53,14 +53,16 @@ export class ReviewsService {
     if (booking.status !== BookingStatus.DONE || !booking.autoCompletedAt) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Chưa đủ điều kiện đánh giá (đơn hàng phải ở trạng thái hoàn thành)',
+        message:
+          'Chưa đủ điều kiện đánh giá (đơn hàng phải ở trạng thái hoàn thành)',
       });
     }
 
     if (booking.dispute && booking.dispute.status !== DisputeStatus.RESOLVED) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Đơn hàng đang có khiếu nại chưa giải quyết xong, chưa thể gửi đánh giá',
+        message:
+          'Đơn hàng đang có khiếu nại chưa giải quyết xong, chưa thể gửi đánh giá',
       });
     }
 
