@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { BookingStatus, Prisma } from '@prisma/client';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { BookingStatus } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';

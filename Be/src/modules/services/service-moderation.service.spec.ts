@@ -1,9 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { JobsService } from '../../shared/jobs/jobs.service';
-import { ServiceSharedService } from './service-shared.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
+import { BadRequestException } from '@nestjs/common';
 import { ServiceModerationService } from './service-moderation.service';
 import { ServiceStatus } from '@prisma/client';
 

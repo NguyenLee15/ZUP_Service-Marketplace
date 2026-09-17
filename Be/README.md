@@ -51,11 +51,19 @@ $ npm run start:prod
 $ npm run test
 
 # e2e tests
+$ npm run db:test:up
+$ $env:DATABASE_URL_TEST='postgresql://postgres:postgres@localhost:5433/service_marketplace_test?schema=public'
+$ npm run db:test:migrate
 $ npm run test:e2e
 
 # test coverage
 $ npm run test:cov
 ```
+
+E2E tests require the disposable PostgreSQL service above. Keep TLS certificate
+verification enabled; do not replace the database URL with a production URL or
+disable TLS validation to bypass connection errors. The test database must be
+reachable at `localhost:5433` and migrated before running the suite.
 
 ## Deployment
 

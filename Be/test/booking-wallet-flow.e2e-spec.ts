@@ -305,6 +305,7 @@ describe('Booking/wallet production flow (e2e)', () => {
     expect(mocks.lifecycle.create).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ serviceId: 10 }),
+      undefined,
     );
     expect(mocks.lifecycle.acceptByProvider).toHaveBeenCalledWith(2, 100);
   });

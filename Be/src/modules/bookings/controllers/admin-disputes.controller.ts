@@ -1,21 +1,5 @@
-import {
-  Controller,
-  Patch,
-  Body,
-  Param,
-  Req,
-  ParseIntPipe,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
-import { PermissionsGuard } from '../../../common/guards/permissions.guard';
+import { Patch, Body, Param, Req, ParseIntPipe } from '@nestjs/common';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
-import { Roles } from '../../../common/decorators/roles.decorator';
-import { Permissions } from '../../../common/decorators/permissions.decorator';
-import { AdminPermission } from '../../../common/constants/admin-permissions';
-import { ApiErrorResponses } from '../../../common/decorators/api-contract.decorator';
 import { BookingDisputeService } from '../booking-dispute.service';
 import { ResolveDisputeDto } from '../dto/bookings.dto';
 

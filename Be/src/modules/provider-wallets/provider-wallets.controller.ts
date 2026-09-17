@@ -6,8 +6,6 @@ import {
   Query,
   Req,
   UseGuards,
-  Patch,
-  Param,
   ParseIntPipe,
 } from '@nestjs/common';
 import {
@@ -16,24 +14,20 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { WalletRequestStatus, WalletTransactionType } from '@prisma/client';
+import { WalletTransactionType } from '@prisma/client';
 import type { Request } from 'express';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Permissions } from '../../common/decorators/permissions.decorator';
-import { AdminPermission } from '../../common/constants/admin-permissions';
 import {
   ApiErrorResponses,
   ApiSuccessResponse,
 } from '../../common/decorators/api-contract.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import {
-  AdminWalletActionDto,
-  AdminWalletRequestQueryDto,
   CreateWithdrawalRequestDto,
   DepositRequestDto,
   ManualDepositRequestDto,

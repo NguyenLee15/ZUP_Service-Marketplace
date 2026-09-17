@@ -6,7 +6,6 @@ import {
   Body,
   Param,
   Query,
-  Req,
   ParseIntPipe,
   UseGuards,
   UseInterceptors,
@@ -14,10 +13,7 @@ import {
   Res,
   Headers,
 } from '@nestjs/common';
-import {
-  FilesInterceptor,
-  AnyFilesInterceptor,
-} from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import {
   ApiBearerAuth,
@@ -48,7 +44,6 @@ import {
   CancelBookingDto,
   RejectQuoteDto,
   DisputeDto,
-  RejectSupplementaryDto,
 } from '../dto/bookings.dto';
 
 // ===== Customer Booking Controller =====

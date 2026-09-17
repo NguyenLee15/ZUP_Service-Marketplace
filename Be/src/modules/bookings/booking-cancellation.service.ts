@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BookingStatus, Prisma } from '@prisma/client';
+import { BookingStatus } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BookingCommissionService } from './booking-commission.service';
