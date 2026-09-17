@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Phone,
@@ -74,11 +75,14 @@ export function TrackingProviderInfoCard({
 
       {/* Provider Info */}
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-action-blue to-glacier-blue flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden shadow-[0_0_15px_rgba(0,107,255,0.3)]">
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-action-blue to-glacier-blue flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden shadow-[0_0_15px_rgba(0,107,255,0.3)] relative">
           {provider?.avatarUrl ? (
-            <img
+            <Image
               src={provider.avatarUrl}
-              alt=""
+              alt={provider?.fullName || "Avatar"}
+              width={56}
+              height={56}
+              unoptimized={!provider.avatarUrl.includes("res.cloudinary.com")}
               className="w-full h-full object-cover"
             />
           ) : (

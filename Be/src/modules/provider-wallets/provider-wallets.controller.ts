@@ -171,6 +171,14 @@ export class ProviderWalletsController {
     return { data: query };
   }
 
+  /** Xác thực trạng thái giao dịch nạp tiền theo mã tham chiếu (txnRef / orderCode) */
+  @Get('transactions/status')
+  @ApiOperation({ summary: 'Xác thực trạng thái giao dịch theo mã tham chiếu' })
+  @SkipThrottle()
+  async getTransactionStatus(@Query('txnRef') txnRef: string) {
+    return this.depositService.verifyTransactionStatus(txnRef);
+  }
+
   /** VNPay IPN — xử lý tiền (không cần auth) */
   @Get('vnpay/ipn')
   @SkipThrottle()

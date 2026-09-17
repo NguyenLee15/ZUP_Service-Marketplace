@@ -322,4 +322,36 @@ export class DepositService {
     const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
     return `NAPVI-${providerId}-${timestamp}-${suffix}`;
   }
+
+  async verifyTransactionStatus(txnRef: string) {
+    if (!txnRef || !txnRef.trim()) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Mã giao dịch (txnRef) là bắt buộc',
+      });
+    }
+
+    const tx = await this.prisma.walletTransaction.findFirst({
+      where: { vnpayTxnRef: txnRef.trim() },
+      select: {
+        id: true,
+        status: true,
+        amount: true,
+        type: true,
+        processedAt: true,
+        failureReason: true,
+        createdAt: true,
+      },
+    });
+
+    if (!tx) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Không tìm thấy giao dịch với mã tham chiếu này',
+      });
+    }
+
+    return { data: tx };
+  }
 }
+

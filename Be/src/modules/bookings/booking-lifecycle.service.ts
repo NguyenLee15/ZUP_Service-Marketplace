@@ -29,8 +29,8 @@ export class BookingLifecycleService {
     private readonly cancellationService: BookingCancellationService,
   ) {}
 
-  create(customerId: number, dto: CreateBookingDto) {
-    return this.creationService.create(customerId, dto);
+  create(customerId: number, dto: CreateBookingDto, idempotencyKey?: string) {
+    return this.creationService.create(customerId, dto, idempotencyKey);
   }
 
   acceptByProvider(providerId: number, bookingId: number) {

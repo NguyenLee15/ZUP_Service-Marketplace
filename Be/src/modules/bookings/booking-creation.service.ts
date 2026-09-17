@@ -18,17 +18,77 @@ import {
   ConfirmSurveyorDto,
   CreateBookingDto,
 } from './dto/bookings.dto';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class BookingCreationService {
+  private readonly memoryIdempotency = new Map<
+    string,
+    { data: any; expiresAt: number }
+  >();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly shared: BookingSharedService,
     private readonly bookingTimeoutService: BookingTimeoutService,
     private readonly bookingStatePolicy: BookingStatePolicy,
+    private readonly redisService: RedisService,
   ) {}
 
-  async create(customerId: number, dto: CreateBookingDto) {
+  private async getIdempotency(key: string): Promise<any | null> {
+    try {
+      if (this.redisService.isEnabled()) {
+        const cached = await this.redisService.getJson(key);
+        if (cached) return cached;
+      }
+    } catch {
+      // Fallback to memory on Redis error
+    }
+    const mem = this.memoryIdempotency.get(key);
+    if (mem) {
+      if (mem.expiresAt > Date.now()) {
+        return mem.data;
+      }
+      this.memoryIdempotency.delete(key);
+    }
+    return null;
+  }
+
+  private async setIdempotency(
+    key: string,
+    data: any,
+    ttlSeconds = 120,
+  ): Promise<void> {
+    try {
+      if (this.redisService.isEnabled()) {
+        await this.redisService.setJson(key, data, ttlSeconds);
+      }
+    } catch {
+      // Fallback to memory on Redis error
+    }
+    this.memoryIdempotency.set(key, {
+      data,
+      expiresAt: Date.now() + ttlSeconds * 1000,
+    });
+  }
+
+  async create(
+    customerId: number,
+    dto: CreateBookingDto,
+    idempotencyKey?: string,
+  ) {
+    const normalizedKey = idempotencyKey?.trim();
+    const idempotencyCacheKey = normalizedKey
+      ? `booking:idempotency:${customerId}:${normalizedKey}`
+      : null;
+
+    if (idempotencyCacheKey) {
+      const cached = await this.getIdempotency(idempotencyCacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
     await this.shared.checkActiveUser(customerId);
     const service = await this.prisma.service.findFirst({
       where: {
@@ -210,7 +270,12 @@ export class BookingCreationService {
       include: { bookingItems: true },
     });
 
-    return { data: bookingWithItems, message: 'Đặt dịch vụ thành công' };
+    const result = { data: bookingWithItems, message: 'Đặt dịch vụ thành công' };
+    if (idempotencyCacheKey) {
+      await this.setIdempotency(idempotencyCacheKey, result, 120);
+    }
+
+    return result;
   }
 
   async acceptByProvider(providerId: number, bookingId: number) {

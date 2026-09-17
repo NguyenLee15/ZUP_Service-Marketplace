@@ -179,6 +179,8 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
       }
     }
+
+    return { success: true, messageId: message.id, clientId: data.clientId };
   }
 
   @SubscribeMessage('typing')

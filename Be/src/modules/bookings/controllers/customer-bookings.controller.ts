@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   Res,
+  Headers,
 } from '@nestjs/common';
 import { FilesInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -81,8 +82,9 @@ export class BookingsController {
   async create(
     @CurrentUser('id') customerId: number,
     @Body() dto: CreateBookingDto,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
-    return this.bookingLifecycleService.create(customerId, dto);
+    return this.bookingLifecycleService.create(customerId, dto, idempotencyKey);
   }
 
   /** GET /bookings — Danh sách đơn của tôi (Customer hoặc Provider) */

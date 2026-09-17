@@ -2,12 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Star, Send, Sparkles, Zap, Lightbulb } from 'lucide-react'
 import { BackButton } from '@/components/navigation/BackButton'
 
 import { use } from 'react';
+
+const reviewFormSchema = z.object({
+  rating: z.number().int().min(1, 'Vui lòng chọn số sao đánh giá (từ 1 đến 5 sao)').max(5, 'Đánh giá tối đa 5 sao'),
+  comment: z.string().trim().min(5, 'Nội dung nhận xét cần ít nhất 5 ký tự để giúp thợ nâng cao chất lượng dịch vụ').max(1000, 'Nhận xét không được vượt quá 1000 ký tự'),
+});
 
 export default function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -16,6 +22,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [hoveredRating, setHoveredRating] = useState(0)
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const quickTags = [
     'Chuyên nghiệp',
@@ -30,7 +37,16 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0) return;
+    setFormError(null);
+
+    const validation = reviewFormSchema.safeParse({ rating, comment });
+    if (!validation.success) {
+      const msg = validation.error.issues[0]?.message || 'Dữ liệu đánh giá không hợp lệ';
+      setFormError(msg);
+      const { toast } = await import('sonner');
+      toast.error(msg);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -38,7 +54,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         '@/features/booking/services/review.api'
       );
       const { toast } = await import('sonner');
-      await reviewsApi.create({ bookingId: Number(id), rating, comment });
+      await reviewsApi.create({ bookingId: Number(id), rating, comment: comment.trim() });
       toast.success('Đánh giá thành công');
       router.push('/bookings');
     } catch (_error) {
@@ -199,9 +215,11 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
               {isSubmitting ? 'Đang gửi…' : 'Gửi đánh giá'}
             </Button>
 
-            {rating === 0 && (
-              <p className="text-sm text-red-600 text-center">Vui lòng chọn mức đánh giá</p>
-            )}
+            {formError ? (
+              <p className="text-sm text-destructive font-medium text-center">{formError}</p>
+            ) : rating === 0 ? (
+              <p className="text-xs text-muted-foreground text-center">Vui lòng chọn số sao để tiếp tục</p>
+            ) : null}
           </form>
 
           {/* Additional Info */}

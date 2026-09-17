@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { MessageCircle, Phone, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,11 +16,14 @@ export function BookingProviderCard({ booking }: BookingProviderCardProps) {
   return (
     <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs py-0">
       <CardContent className="p-5 flex items-start gap-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-action-blue to-glacier-blue flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden shadow-[0_0_15px_rgba(0,107,255,0.3)]">
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-action-blue to-glacier-blue flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden shadow-[0_0_15px_rgba(0,107,255,0.3)] relative">
           {booking.provider?.avatarUrl ? (
-            <img
+            <Image
               src={booking.provider.avatarUrl}
-              alt=""
+              alt={booking.provider?.fullName || 'Avatar'}
+              width={56}
+              height={56}
+              unoptimized={!booking.provider.avatarUrl.includes('res.cloudinary.com')}
               className="w-full h-full object-cover"
             />
           ) : (

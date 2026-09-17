@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { z } from 'zod';
 import { servicesApi, bookingsApi } from '@/features/auth/services/api';
 import { useToast } from '@/components/ui/use-toast';
 import { userApi } from '@/features/user/services/user.api';
@@ -267,25 +268,93 @@ export function useCreateBookingFlow() {
     );
   };
 
+  const bookingValidationSchema = z
+    .object({
+      description: z
+        .string()
+        .trim()
+        .min(10, 'Mô tả quá ngắn (tối thiểu 10 ký tự)')
+        .max(2000, 'Mô tả không được vượt quá 2000 ký tự'),
+      addressMode: z.enum(['default', 'custom']),
+      selectedAddressId: z.number().nullable().optional(),
+      province: z.string().optional(),
+      ward: z.string().optional(),
+      addressDetail: z.string().optional(),
+      timeMode: z.enum(['asap', 'scheduled']),
+      desiredTime: z.string().optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (!(data.addressMode === 'default' && data.selectedAddressId)) {
+        if (!data.province?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['province'],
+            message: 'Bắt buộc',
+          });
+        }
+        if (!data.ward?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['ward'],
+            message: 'Bắt buộc',
+          });
+        }
+        if (!data.addressDetail?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['addressDetail'],
+            message: 'Bắt buộc',
+          });
+        }
+      }
+
+      if (data.timeMode === 'scheduled') {
+        if (!data.desiredTime) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['desiredTime'],
+            message: 'Vui lòng chọn thời gian',
+          });
+        } else {
+          const selectedDate = new Date(data.desiredTime);
+          if (isNaN(selectedDate.getTime())) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['desiredTime'],
+              message: 'Thời gian không hợp lệ',
+            });
+          } else if (selectedDate.getTime() <= Date.now()) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['desiredTime'],
+              message: 'Thời gian phải ở tương lai',
+            });
+          }
+        }
+      }
+    });
+
   const validateBookingBeforeSubmit = () => {
+    const result = bookingValidationSchema.safeParse({
+      description,
+      addressMode,
+      selectedAddressId,
+      province,
+      ward,
+      addressDetail,
+      timeMode,
+      desiredTime,
+    });
+
+    if (result.success) return {};
+
     const errors: Record<string, string> = {};
-
-    if (!description.trim()) errors.description = 'Vui lòng mô tả yêu cầu';
-    else if (description.trim().length < 10) errors.description = 'Mô tả quá ngắn (tối thiểu 10 ký tự)';
-
-    if (!(addressMode === 'default' && selectedAddressId)) {
-      if (!province) errors.province = 'Bắt buộc';
-      if (!ward) errors.ward = 'Bắt buộc';
-      if (!addressDetail.trim()) errors.addressDetail = 'Bắt buộc';
+    for (const issue of result.error.issues) {
+      const path = issue.path[0] as string;
+      if (path && !errors[path]) {
+        errors[path] = issue.message;
+      }
     }
-
-    if (timeMode === 'scheduled') {
-      const selectedDate = new Date(desiredTime);
-      if (!desiredTime) errors.desiredTime = 'Vui lòng chọn thời gian';
-      else if (isNaN(selectedDate.getTime())) errors.desiredTime = 'Thời gian không hợp lệ';
-      else if (selectedDate < new Date()) errors.desiredTime = 'Thời gian phải ở tương lai';
-    }
-
     return errors;
   };
 

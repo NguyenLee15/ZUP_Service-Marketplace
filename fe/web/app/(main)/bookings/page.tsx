@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Package, Clock, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon, User, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { bookingsApi } from '@/features/auth/services/api';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
@@ -142,9 +143,16 @@ export default function BookingsPage() {
                       href={`/bookings/${booking.id}`}
                       className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 group"
                     >
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-muted border border-border/70 flex items-center justify-center shrink-0 overflow-hidden">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-muted border border-border/70 flex items-center justify-center shrink-0 overflow-hidden relative">
                         {booking.service?.images?.[0]?.imageUrl ? (
-                          <img src={booking.service.images[0].imageUrl} alt={booking.service?.name || "Hình ảnh dịch vụ"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
+                          <Image
+                            src={booking.service.images[0].imageUrl}
+                            alt={booking.service?.name || "Hình ảnh dịch vụ"}
+                            width={56}
+                            height={56}
+                            unoptimized={!booking.service.images[0].imageUrl.includes('res.cloudinary.com')}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
                         ) : <Package className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600 dark:text-sky-400" />}
                       </div>
                       <div className="flex-1 min-w-0">

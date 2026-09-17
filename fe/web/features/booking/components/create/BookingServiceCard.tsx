@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Wrench } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatPrice } from '@/features/booking/hooks/useCreateBookingFlow';
@@ -15,11 +16,14 @@ export function BookingServiceCard({ service }: BookingServiceCardProps) {
   return (
     <Card className="mb-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs py-0">
       <CardContent className="p-4 flex items-center gap-4">
-        <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 overflow-hidden shadow-xs">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 overflow-hidden shadow-xs relative">
           {service.images?.[0]?.imageUrl ? (
-            <img
+            <Image
               src={service.images[0].imageUrl}
-              alt={service.name}
+              alt={service.name || 'Dịch vụ'}
+              width={64}
+              height={64}
+              unoptimized={!service.images[0].imageUrl.includes('res.cloudinary.com')}
               className="w-full h-full object-cover"
             />
           ) : (

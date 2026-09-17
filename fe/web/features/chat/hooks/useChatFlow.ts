@@ -223,15 +223,41 @@ export function useChatFlow() {
       }
 
       const socket = getChatSocket();
-      if (socket) {
-        if (!socket.connected) socket.connect();
-        socket.emit('sendMessage', {
-          conversationId: selectedConversation,
-          content: currentText || (currentFile ? '[Hình ảnh]' : ''),
-          messageType: finalMessageType,
-          imageUrl: finalImageUrl,
-        });
+      if (!socket) {
+        throw new Error('Không thể kết nối máy chủ trò chuyện');
       }
+
+      if (!socket.connected) {
+        socket.connect();
+      }
+
+      const clientId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const messagePayload = {
+        conversationId: selectedConversation,
+        content: currentText || (currentFile ? '[Hình ảnh]' : ''),
+        messageType: finalMessageType,
+        imageUrl: finalImageUrl,
+        clientId,
+      };
+
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error('Quá thời gian phản hồi từ máy chủ chat'));
+        }, 6000);
+
+        socket.emit(
+          'sendMessage',
+          messagePayload,
+          (ack?: { success?: boolean; error?: string }) => {
+            clearTimeout(timer);
+            if (ack && ack.success === false) {
+              reject(new Error(ack.error || 'Gửi tin nhắn không thành công'));
+            } else {
+              resolve();
+            }
+          }
+        );
+      });
     } catch (err) {
       console.error('Lỗi gửi tin nhắn', err);
       // Khôi phục lại nội dung nhập để người dùng không bị mất tin nhắn soạn dở

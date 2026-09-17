@@ -93,6 +93,9 @@ describe('BookingLifecycleService', () => {
     get: jest.fn(),
     set: jest.fn(),
     exists: jest.fn().mockResolvedValue(false),
+    isEnabled: jest.fn().mockReturnValue(true),
+    getJson: jest.fn().mockResolvedValue(null),
+    setJson: jest.fn().mockResolvedValue(undefined),
   };
 
   const mockEventEmitter = {
