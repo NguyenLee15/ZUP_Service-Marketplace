@@ -1,10 +1,12 @@
 import {
   IsIn,
   IsString,
+  IsNotEmpty,
   IsOptional,
   IsInt,
   IsNumber,
   MaxLength,
+  MinLength,
   Max,
   Min,
   IsArray,
@@ -182,12 +184,18 @@ export class SearchServiceDto {
 
 export class AdminRejectDto {
   @IsString()
+  @IsNotEmpty()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @MinLength(3)
+  @MaxLength(500)
   reason: string;
 }
 
 export class AdminHideDto {
   @IsString()
   @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @MaxLength(500)
   reason?: string;
 }
 
@@ -207,6 +215,10 @@ export class AiSearchDto {
 }
 
 export class AdminServicesQueryDto {
+  @IsString()
+  @IsOptional()
+  keyword?: string;
+
   @IsString()
   @IsOptional()
   status?: string;

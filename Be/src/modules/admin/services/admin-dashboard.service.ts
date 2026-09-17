@@ -84,7 +84,6 @@ export class AdminDashboardService {
           status: 'ACCEPTED',
         },
         select: { actualPrice: true, commissionRateSnapshot: true },
-        take: 5000,
       }),
     ]);
 
@@ -114,6 +113,7 @@ export class AdminDashboardService {
       commissionRevenue,
       avgOrderValue: quotationCount ? totalRevenue / quotationCount : 0,
       filterSummary: this.describeFilters(normalized),
+      isTruncated: false,
     };
   }
 
@@ -139,7 +139,6 @@ export class AdminDashboardService {
             booking: { select: { createdAt: true } },
           },
           orderBy: { booking: { createdAt: 'asc' } },
-          take: 2000,
         }),
         this.prisma.booking.findMany({
           where: bookingWhere,
@@ -153,7 +152,6 @@ export class AdminDashboardService {
               },
             },
           },
-          take: 2000,
         }),
         this.getFilterOptions(),
       ]);

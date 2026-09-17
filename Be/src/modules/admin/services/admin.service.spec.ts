@@ -197,4 +197,29 @@ describe('AdminService', () => {
       });
     });
   });
+
+  describe('deleteUser', () => {
+    it('throws BadRequestException when trying to delete own account', async () => {
+      await expect(service.deleteUser(1, 1, '127.0.0.1')).rejects.toThrow(
+        'Không thể tự xóa tài khoản của chính mình',
+      );
+    });
+
+    it('throws ForbiddenException when non-admin tries to delete an admin', async () => {
+      prisma.$transaction.mockImplementation(async (cb: (tx: any) => any) => {
+        return cb({
+          user: {
+            findUnique: jest
+              .fn()
+              .mockResolvedValueOnce({ id: 2, role: 'STAFF', status: 'ACTIVE' })
+              .mockResolvedValueOnce({ id: 3, role: 'ADMIN', status: 'ACTIVE' }),
+          },
+        });
+      });
+
+      await expect(service.deleteUser(2, 3, '127.0.0.1')).rejects.toThrow(
+        'Không thể xóa tài khoản Quản trị viên',
+      );
+    });
+  });
 });

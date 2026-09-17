@@ -15,6 +15,7 @@ import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
 export interface AdminServiceFilters {
   status?: string;
   categoryId?: number;
+  keyword?: string;
   page?: number;
   limit?: number;
 }
@@ -62,20 +63,6 @@ export class ServiceModerationService {
 
     const { updated, hasEnoughBalance, newStatus } =
       await this.prisma.$transaction(async (tx) => {
-        // Atomic claim: chỉ duyệt nếu dịch vụ vẫn đang ở trạng thái PENDING
-        const claimResult = await tx.service.updateMany({
-          where: { id: serviceId, status: ServiceStatus.PENDING },
-          data: { status: ServiceStatus.PENDING },
-        });
-
-        if (claimResult.count === 0) {
-          throw new BadRequestException({
-            code: ErrorCodes.INVALID_STATUS,
-            message:
-              'Dịch vụ đã được xử lý bởi quản trị viên khác hoặc không còn ở trạng thái chờ duyệt',
-          });
-        }
-
         const wallet = await tx.providerWallet.findUnique({
           where: { providerId: service.providerId },
         });
@@ -122,9 +109,22 @@ export class ServiceModerationService {
           ? ServiceStatus.ACTIVE
           : ServiceStatus.HIDDEN;
 
-        const up = await tx.service.update({
-          where: { id: serviceId },
+        // Atomic Compare-and-Set: Transition state only if still PENDING
+        const claimResult = await tx.service.updateMany({
+          where: { id: serviceId, status: ServiceStatus.PENDING },
           data: { status: statusToSet },
+        });
+
+        if (claimResult.count === 0) {
+          throw new BadRequestException({
+            code: ErrorCodes.INVALID_STATUS,
+            message:
+              'Dịch vụ đã được xử lý bởi quản trị viên khác hoặc không còn ở trạng thái chờ duyệt',
+          });
+        }
+
+        const up = await tx.service.findUniqueOrThrow({
+          where: { id: serviceId },
         });
 
         await this.ledger.syncWalletRestriction(service.providerId, tx);
@@ -136,6 +136,19 @@ export class ServiceModerationService {
           });
         }
 
+        if (adminId) {
+          await tx.auditLog.create({
+            data: {
+              actorId: adminId,
+              action: 'APPROVE_SERVICE',
+              targetType: 'SERVICE',
+              targetId: serviceId,
+              description: `Phê duyệt dịch vụ: ${service.name}`,
+              ipAddress: ip || 'System',
+            },
+          });
+        }
+
         return {
           updated: up,
           hasEnoughBalance: balanceOk,
@@ -143,33 +156,28 @@ export class ServiceModerationService {
         };
       });
 
-    await this.jobsService.enqueue(JobName.ServiceGenerateEmbedding, {
-      serviceId,
-      name: service.name,
-      description: service.description,
-    });
-
-    this.eventEmitter.emit(NOTIFICATION_EVENTS.SEND, {
-      userId: service.providerId,
-      type: 'SERVICE_APPROVED',
-      title: 'Dịch vụ đã được duyệt',
-      content: hasEnoughBalance
-        ? `Dịch vụ "${service.name}" đã được phê duyệt và tự động hoạt động do ví của bạn đã đủ số dư ký quỹ.`
-        : `Dịch vụ "${service.name}" đã được phê duyệt. Vui lòng nạp thêm tiền vào ví để đạt mức ký quỹ tối thiểu và bật hoạt động để khách hàng có thể đặt lịch.`,
-      referenceId: serviceId,
-    });
-
-    if (adminId) {
-      await this.prisma.auditLog.create({
-        data: {
-          actorId: adminId,
-          action: 'APPROVE_SERVICE',
-          targetType: 'SERVICE',
-          targetId: serviceId,
-          description: `Phê duyệt dịch vụ: ${service.name}`,
-          ipAddress: ip,
-        },
+    try {
+      await this.jobsService.enqueue(JobName.ServiceGenerateEmbedding, {
+        serviceId,
+        name: service.name,
+        description: service.description,
       });
+    } catch (err) {
+      console.error('Failed to enqueue service embedding job:', err);
+    }
+
+    try {
+      this.eventEmitter.emit(NOTIFICATION_EVENTS.SEND, {
+        userId: service.providerId,
+        type: 'SERVICE_APPROVED',
+        title: 'Dịch vụ đã được duyệt',
+        content: hasEnoughBalance
+          ? `Dịch vụ "${service.name}" đã được phê duyệt và tự động hoạt động do ví của bạn đã đủ số dư ký quỹ.`
+          : `Dịch vụ "${service.name}" đã được phê duyệt. Vui lòng nạp thêm tiền vào ví để đạt mức ký quỹ tối thiểu và bật hoạt động để khách hàng có thể đặt lịch.`,
+        referenceId: serviceId,
+      });
+    } catch (err) {
+      console.error('Failed to emit service approved notification:', err);
     }
 
     return { data: updated, message: 'Đã phê duyệt dịch vụ' };
@@ -189,35 +197,51 @@ export class ServiceModerationService {
       });
     }
 
-    const updated = await this.prisma.service.update({
-      where: { id: serviceId },
-      data: { status: ServiceStatus.REJECTED },
-    });
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const claimResult = await tx.service.updateMany({
+        where: { id: serviceId, status: ServiceStatus.PENDING },
+        data: { status: ServiceStatus.REJECTED },
+      });
 
-    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
+      if (claimResult.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.INVALID_STATUS,
+          message:
+            'Dịch vụ đã được xử lý bởi quản trị viên khác hoặc không còn ở trạng thái chờ duyệt',
+        });
+      }
 
-    await this.prisma.notification.create({
-      data: {
-        userId: service.providerId,
-        type: 'SERVICE_REJECTED',
-        title: 'Dịch vụ bị từ chối',
-        content: `Dịch vụ "${service.name}" bị từ chối. Lý do: ${reason}`,
-        referenceId: serviceId,
-      },
-    });
+      const up = await tx.service.findUniqueOrThrow({
+        where: { id: serviceId },
+      });
 
-    if (adminId) {
-      await this.prisma.auditLog.create({
+      await this.ledger.syncWalletRestriction(service.providerId, tx);
+
+      await tx.notification.create({
         data: {
-          actorId: adminId,
-          action: 'REJECT_SERVICE',
-          targetType: 'SERVICE',
-          targetId: serviceId,
-          description: `Từ chối dịch vụ: ${service.name}. Lý do: ${reason}`,
-          ipAddress: ip,
+          userId: service.providerId,
+          type: 'SERVICE_REJECTED',
+          title: 'Dịch vụ bị từ chối',
+          content: `Dịch vụ "${service.name}" bị từ chối. Lý do: ${reason}`,
+          referenceId: serviceId,
         },
       });
-    }
+
+      if (adminId) {
+        await tx.auditLog.create({
+          data: {
+            actorId: adminId,
+            action: 'REJECT_SERVICE',
+            targetType: 'SERVICE',
+            targetId: serviceId,
+            description: `Từ chối dịch vụ: ${service.name}. Lý do: ${reason}`,
+            ipAddress: ip || 'System',
+          },
+        });
+      }
+
+      return up;
+    });
 
     return { data: updated, message: 'Đã từ chối dịch vụ' };
   }
@@ -231,35 +255,50 @@ export class ServiceModerationService {
       });
     }
 
-    const updated = await this.prisma.service.update({
-      where: { id: serviceId },
-      data: { status: ServiceStatus.HIDDEN },
-    });
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const claimResult = await tx.service.updateMany({
+        where: { id: serviceId, status: ServiceStatus.ACTIVE },
+        data: { status: ServiceStatus.HIDDEN },
+      });
 
-    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
+      if (claimResult.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.INVALID_STATUS,
+          message: 'Chỉ có thể ẩn dịch vụ đang hoạt động',
+        });
+      }
 
-    await this.prisma.notification.create({
-      data: {
-        userId: service.providerId,
-        type: 'SERVICE_HIDDEN',
-        title: 'Dịch vụ bị ẩn bởi Admin',
-        content: `Dịch vụ "${service.name}" đã bị ẩn. Lý do: ${reason}`,
-        referenceId: serviceId,
-      },
-    });
+      const up = await tx.service.findUniqueOrThrow({
+        where: { id: serviceId },
+      });
 
-    if (adminId) {
-      await this.prisma.auditLog.create({
+      await this.ledger.syncWalletRestriction(service.providerId, tx);
+
+      await tx.notification.create({
         data: {
-          actorId: adminId,
-          action: 'HIDE_SERVICE',
-          targetType: 'SERVICE',
-          targetId: serviceId,
-          description: `Ẩn dịch vụ: ${service.name}. Lý do: ${reason}`,
-          ipAddress: ip,
+          userId: service.providerId,
+          type: 'SERVICE_HIDDEN',
+          title: 'Dịch vụ bị ẩn bởi Admin',
+          content: `Dịch vụ "${service.name}" đã bị ẩn. Lý do: ${reason}`,
+          referenceId: serviceId,
         },
       });
-    }
+
+      if (adminId) {
+        await tx.auditLog.create({
+          data: {
+            actorId: adminId,
+            action: 'HIDE_SERVICE',
+            targetType: 'SERVICE',
+            targetId: serviceId,
+            description: `Ẩn dịch vụ: ${service.name}. Lý do: ${reason}`,
+            ipAddress: ip || 'System',
+          },
+        });
+      }
+
+      return up;
+    });
 
     return { data: updated, message: 'Đã ẩn dịch vụ' };
   }
@@ -273,35 +312,50 @@ export class ServiceModerationService {
       });
     }
 
-    const updated = await this.prisma.service.update({
-      where: { id: serviceId },
-      data: { status: ServiceStatus.ACTIVE },
-    });
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const claimResult = await tx.service.updateMany({
+        where: { id: serviceId, status: ServiceStatus.HIDDEN },
+        data: { status: ServiceStatus.ACTIVE },
+      });
 
-    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
+      if (claimResult.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.INVALID_STATUS,
+          message: 'Chỉ có thể mở ẩn dịch vụ đang bị ẩn',
+        });
+      }
 
-    await this.prisma.notification.create({
-      data: {
-        userId: service.providerId,
-        type: 'SERVICE_APPROVED',
-        title: 'Dịch vụ đã được hiển thị lại',
-        content: `Dịch vụ "${service.name}" đã được Admin mở ẩn và hiển thị lại trên hệ thống`,
-        referenceId: serviceId,
-      },
-    });
+      const up = await tx.service.findUniqueOrThrow({
+        where: { id: serviceId },
+      });
 
-    if (adminId) {
-      await this.prisma.auditLog.create({
+      await this.ledger.syncWalletRestriction(service.providerId, tx);
+
+      await tx.notification.create({
         data: {
-          actorId: adminId,
-          action: 'SHOW_SERVICE',
-          targetType: 'SERVICE',
-          targetId: serviceId,
-          description: `Mở hiển thị dịch vụ: ${service.name}`,
-          ipAddress: ip,
+          userId: service.providerId,
+          type: 'SERVICE_APPROVED',
+          title: 'Dịch vụ đã được hiển thị lại',
+          content: `Dịch vụ "${service.name}" đã được Admin mở ẩn và hiển thị lại trên hệ thống`,
+          referenceId: serviceId,
         },
       });
-    }
+
+      if (adminId) {
+        await tx.auditLog.create({
+          data: {
+            actorId: adminId,
+            action: 'SHOW_SERVICE',
+            targetType: 'SERVICE',
+            targetId: serviceId,
+            description: `Mở hiển thị dịch vụ: ${service.name}`,
+            ipAddress: ip || 'System',
+          },
+        });
+      }
+
+      return up;
+    });
 
     return { data: updated, message: 'Đã mở ẩn dịch vụ' };
   }
@@ -309,35 +363,44 @@ export class ServiceModerationService {
   async delete(adminId: number, serviceId: number, ip?: string) {
     const service = await this.getServiceOrThrow(serviceId);
 
-    await this.prisma.service.update({
-      where: { id: serviceId },
-      data: { isDeleted: true },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      const claimResult = await tx.service.updateMany({
+        where: { id: serviceId, isDeleted: false },
+        data: { isDeleted: true },
+      });
 
-    await this.ledger.syncWalletRestriction(service.providerId, this.prisma);
+      if (claimResult.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.INVALID_STATUS,
+          message: 'Dịch vụ này đã được xóa hoặc không tồn tại',
+        });
+      }
 
-    await this.prisma.notification.create({
-      data: {
-        userId: service.providerId,
-        type: 'SERVICE_DELETED',
-        title: 'Dịch vụ bị xóa bởi Admin',
-        content: `Dịch vụ "${service.name}" đã bị Admin xóa khỏi hệ thống`,
-        referenceId: serviceId,
-      },
-    });
+      await this.ledger.syncWalletRestriction(service.providerId, tx);
 
-    if (adminId) {
-      await this.prisma.auditLog.create({
+      await tx.notification.create({
         data: {
-          actorId: adminId,
-          action: 'DELETE_SERVICE',
-          targetType: 'SERVICE',
-          targetId: serviceId,
-          description: `Xóa dịch vụ: ${service.name}`,
-          ipAddress: ip,
+          userId: service.providerId,
+          type: 'SERVICE_DELETED',
+          title: 'Dịch vụ bị xóa bởi Admin',
+          content: `Dịch vụ "${service.name}" đã bị Admin xóa khỏi hệ thống`,
+          referenceId: serviceId,
         },
       });
-    }
+
+      if (adminId) {
+        await tx.auditLog.create({
+          data: {
+            actorId: adminId,
+            action: 'DELETE_SERVICE',
+            targetType: 'SERVICE',
+            targetId: serviceId,
+            description: `Xóa dịch vụ: ${service.name}`,
+            ipAddress: ip || 'System',
+          },
+        });
+      }
+    });
 
     return { message: 'Đã xóa dịch vụ' };
   }
@@ -349,6 +412,14 @@ export class ServiceModerationService {
     if (this.shared.isServiceStatus(filters?.status))
       where.status = filters.status;
     if (filters?.categoryId) where.categoryId = filters.categoryId;
+    if (filters?.keyword?.trim()) {
+      const kw = filters.keyword.trim();
+      where.OR = [
+        { name: { contains: kw, mode: 'insensitive' } },
+        { description: { contains: kw, mode: 'insensitive' } },
+        { provider: { fullName: { contains: kw, mode: 'insensitive' } } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.service.findMany({

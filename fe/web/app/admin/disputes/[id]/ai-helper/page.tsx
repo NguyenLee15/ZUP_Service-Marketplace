@@ -23,6 +23,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminApi } from '@/features/auth/services/api';
+import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermission } from '@/types/admin-permissions';
 
 type ParsedAiSummary = {
   confidence: number;
@@ -138,7 +140,8 @@ export default function AdminDisputeAiHelperPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-5">
+    <AdminPermissionGuard permission={AdminPermission.DISPUTE_RESOLVE}>
+      <div className="mx-auto max-w-[1440px] space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Button asChild variant="outline" size="icon" className="rounded-md">
@@ -282,7 +285,8 @@ export default function AdminDisputeAiHelperPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AdminPermissionGuard>
   );
 }
 

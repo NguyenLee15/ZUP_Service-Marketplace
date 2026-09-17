@@ -395,52 +395,68 @@ export class AdminService {
       });
     }
 
-    const actor = await this.checkActiveActor(adminId);
-
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException({
-        code: ErrorCodes.NOT_FOUND,
-        message: 'Người dùng không tồn tại',
-      });
-    }
-
-    if (user.role === UserRole.ADMIN && actor.role !== UserRole.ADMIN) {
-      throw new ForbiddenException({
-        code: ErrorCodes.FORBIDDEN,
-        message: 'Không thể xóa tài khoản Quản trị viên',
-      });
-    }
-
-    const activeBookings = await this.prisma.booking.count({
-      where: {
-        customerId: id,
-        status: {
-          in: [
-            BookingStatus.PENDING,
-            BookingStatus.QUOTED,
-            BookingStatus.CONFIRMED,
-            BookingStatus.IN_PROGRESS,
-          ],
-        },
-      },
-    });
-
-    if (activeBookings > 0) {
-      throw new BadRequestException({
-        code: ErrorCodes.BOOKING_INVALID_STATE,
-        message: 'Không thể xóa tài khoản khi còn đơn hàng chưa hoàn thành',
-      });
-    }
-
     await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id },
+      const actor = await tx.user.findUnique({
+        where: { id: adminId },
+        select: { id: true, role: true, status: true },
+      });
+      if (!actor || actor.status !== UserStatus.ACTIVE) {
+        throw new ForbiddenException({
+          code: ErrorCodes.ACCOUNT_LOCKED,
+          message: 'Tài khoản quản trị của bạn không hợp lệ hoặc đã bị khóa',
+        });
+      }
+
+      const user = await tx.user.findUnique({ where: { id } });
+      if (!user) {
+        throw new NotFoundException({
+          code: ErrorCodes.NOT_FOUND,
+          message: 'Người dùng không tồn tại',
+        });
+      }
+
+      if (user.role === UserRole.ADMIN && actor.role !== UserRole.ADMIN) {
+        throw new ForbiddenException({
+          code: ErrorCodes.FORBIDDEN,
+          message: 'Không thể xóa tài khoản Quản trị viên',
+        });
+      }
+
+      const activeBookings = await tx.booking.count({
+        where: {
+          customerId: id,
+          status: {
+            in: [
+              BookingStatus.PENDING,
+              BookingStatus.QUOTED,
+              BookingStatus.CONFIRMED,
+              BookingStatus.IN_PROGRESS,
+            ],
+          },
+        },
+      });
+
+      if (activeBookings > 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message: 'Không thể xóa tài khoản khi còn đơn hàng chưa hoàn thành',
+        });
+      }
+
+      const updated = await tx.user.updateMany({
+        where: { id, status: { not: UserStatus.LOCKED } },
         data: {
           email: `DELETED_${id}_${user.email}`,
           status: UserStatus.LOCKED,
         },
       });
+
+      if (updated.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Tài khoản này đã bị khóa hoặc đã được xử lý trước đó',
+        });
+      }
 
       await tx.refreshToken.updateMany({
         where: { userId: id, revoked: false },
@@ -459,7 +475,7 @@ export class AdminService {
           targetType: 'USER',
           targetId: id,
           description: 'Xóa tài khoản (Soft delete)',
-          ipAddress: ip,
+          ipAddress: ip || 'System',
         },
       });
     });

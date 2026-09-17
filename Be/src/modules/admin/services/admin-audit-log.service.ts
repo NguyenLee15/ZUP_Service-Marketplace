@@ -53,16 +53,25 @@ export class AdminAuditLogService {
   }
 
   async exportAuditLogsCsv(query: AdminAuditLogsQueryDto) {
-    const rows = await this.prisma.auditLog.findMany({
-      where: this.buildWhere(query),
-      include: {
-        actor: { select: auditLogActorSelect },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5000,
-    });
+    const where = this.buildWhere(query);
+    const [rows, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        include: {
+          actor: { select: auditLogActorSelect },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5000,
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
 
-    return this.toCsv(rows);
+    const isTruncated = total > rows.length;
+    const csvContent = this.toCsv(rows);
+    if (isTruncated) {
+      return `# CANH BAO: Du lieu xuat gioi han 5000 dong. Tong so ban ghi: ${total}. Vui long thu hep bo loc.\n${csvContent}`;
+    }
+    return csvContent;
   }
 
   private buildWhere(query: AdminAuditLogsQueryDto): Prisma.AuditLogWhereInput {

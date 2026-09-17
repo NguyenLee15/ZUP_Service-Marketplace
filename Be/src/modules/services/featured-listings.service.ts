@@ -288,7 +288,7 @@ export class FeaturedListingsService {
         include: {
           service: { select: { id: true, name: true, status: true } },
           provider: {
-            select: { id: true, fullName: true, email: true, phone: true },
+            select: { id: true, fullName: true },
           },
         },
         orderBy: { createdAt: 'desc' },

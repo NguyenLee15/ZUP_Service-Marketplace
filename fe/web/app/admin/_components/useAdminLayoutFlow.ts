@@ -40,9 +40,19 @@ export function useAdminLayoutFlow() {
             useAuthStore.getState().setUser(res.data.data);
           }
         })
-        .catch(() => {});
+        .catch((err: unknown) => {
+          const status =
+            typeof err === "object" && err !== null
+              ? (err as { response?: { status?: number }; status?: number })
+              : undefined;
+          const statusCode = status?.response?.status || status?.status;
+          if (statusCode === 401 || statusCode === 403) {
+            useAuthStore.getState().logout();
+            router.replace("/login");
+          }
+        });
     }
-  }, [_hasHydrated, isAuthorized]);
+  }, [_hasHydrated, isAuthorized, router]);
 
   // 3. Menu items according to permissions
   const navItems = useMemo<NavItem[]>(() => {

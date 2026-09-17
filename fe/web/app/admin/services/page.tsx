@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Clock,
   AlertTriangle,
@@ -50,6 +50,7 @@ export default function AdminServicesPage() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
   const [selectedService, setSelectedService] = useState<ApiPayload>(null);
   const [showModal, setShowModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -59,25 +60,52 @@ export default function AdminServicesPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchServices = () => {
+  const fetchRequestIdRef = useRef(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(searchTerm.trim());
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchServices = useCallback(() => {
+    const currentRequestId = ++fetchRequestIdRef.current;
     setLoading(true);
     setError(null);
     const params: Record<string, string | number> = { page, limit: 10 };
     if (filterStatus !== 'all') params.status = filterStatus;
-    adminApi.getServices(params)
+    if (debouncedKeyword) params.keyword = debouncedKeyword;
+
+    adminApi
+      .getServices(params)
       .then((res) => {
-        setServices(res.data.data || []);
-        setTotalPages(res.data.meta?.totalPages || 1);
+        if (currentRequestId === fetchRequestIdRef.current) {
+          setServices(res.data.data || []);
+          setTotalPages(res.data.meta?.totalPages || 1);
+        }
       })
       .catch((err: ApiPayload) => {
-        setServices([]);
-        setTotalPages(1);
-        setError(err?.response?.data?.error?.message || 'Không thể tải danh sách dịch vụ');
+        if (currentRequestId === fetchRequestIdRef.current) {
+          setServices([]);
+          setTotalPages(1);
+          setError(
+            err?.response?.data?.error?.message ||
+              'Không thể tải danh sách dịch vụ',
+          );
+        }
       })
-      .finally(() => setLoading(false));
-  };
+      .finally(() => {
+        if (currentRequestId === fetchRequestIdRef.current) {
+          setLoading(false);
+        }
+      });
+  }, [debouncedKeyword, filterStatus, page]);
 
-  useEffect(() => { fetchServices(); }, [filterStatus, page]);
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
 
   const handleApprove = async (id: number) => {
     setActionLoading(true);
@@ -132,15 +160,6 @@ export default function AdminServicesPage() {
   };
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN').format(p) + '₫';
-
-  const filteredServices = services.filter((s: ApiPayload) => {
-    if (!searchTerm) return true;
-    const q = searchTerm.toLowerCase();
-    return (
-      (s.name?.toLowerCase() || '').includes(q) ||
-      (s.provider?.fullName?.toLowerCase() || '').includes(q)
-    );
-  });
 
   return (
     <AdminPermissionGuard permission={AdminPermission.SERVICE_MODERATE}>
@@ -211,7 +230,7 @@ export default function AdminServicesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredServices.map((service: ApiPayload) => {
+                {services.map((service: ApiPayload) => {
                   const sc = statusConfig[service.status] || statusConfig.DRAFT;
                   const StatusIcon = sc.icon;
                   return (

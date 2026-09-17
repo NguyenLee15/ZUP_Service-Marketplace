@@ -17,9 +17,12 @@ describe('ServiceModerationService', () => {
 
   beforeEach(() => {
     prisma = {
+      $transaction: jest.fn(async (callback: (tx: any) => any) => callback(prisma)),
       service: {
         findUnique: jest.fn(),
+        findUniqueOrThrow: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
         findMany: jest.fn(),
         count: jest.fn(),
       },
@@ -65,7 +68,8 @@ describe('ServiceModerationService', () => {
         status: ServiceStatus.PENDING,
         providerId: 5,
       });
-      prisma.service.update.mockResolvedValue({
+      prisma.service.updateMany.mockResolvedValue({ count: 1 });
+      prisma.service.findUniqueOrThrow.mockResolvedValue({
         id: 101,
         status: ServiceStatus.REJECTED,
       });
@@ -105,6 +109,22 @@ describe('ServiceModerationService', () => {
 
       expect(prisma.auditLog.create).not.toHaveBeenCalled();
     });
+
+    it('throws BadRequestException when concurrent admin already processed the service', async () => {
+      prisma.service.findUnique.mockResolvedValue({
+        id: 101,
+        name: 'Sửa điều hòa',
+        status: ServiceStatus.PENDING,
+        providerId: 5,
+      });
+      prisma.service.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.reject(1, 101, 'Lý do', '10.0.0.1'),
+      ).rejects.toThrow('Dịch vụ đã được xử lý bởi quản trị viên khác hoặc không còn ở trạng thái chờ duyệt');
+
+      expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('hide', () => {
@@ -115,7 +135,8 @@ describe('ServiceModerationService', () => {
         status: ServiceStatus.ACTIVE,
         providerId: 6,
       });
-      prisma.service.update.mockResolvedValue({
+      prisma.service.updateMany.mockResolvedValue({ count: 1 });
+      prisma.service.findUniqueOrThrow.mockResolvedValue({
         id: 102,
         status: ServiceStatus.HIDDEN,
       });
@@ -144,7 +165,8 @@ describe('ServiceModerationService', () => {
         status: ServiceStatus.HIDDEN,
         providerId: 6,
       });
-      prisma.service.update.mockResolvedValue({
+      prisma.service.updateMany.mockResolvedValue({ count: 1 });
+      prisma.service.findUniqueOrThrow.mockResolvedValue({
         id: 102,
         status: ServiceStatus.ACTIVE,
       });
@@ -171,10 +193,7 @@ describe('ServiceModerationService', () => {
         name: 'Sơn tường',
         providerId: 7,
       });
-      prisma.service.update.mockResolvedValue({
-        id: 103,
-        isDeleted: true,
-      });
+      prisma.service.updateMany.mockResolvedValue({ count: 1 });
 
       await service.delete(1, 103, '127.0.0.1');
 

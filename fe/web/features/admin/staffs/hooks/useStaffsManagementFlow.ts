@@ -118,7 +118,7 @@ export function useStaffsManagementFlow() {
     }
     if (name === 'password' && !editingStaff) {
       if (!value) newErrors.password = 'Mật khẩu không được để trống';
-      else if (value.length < 6) newErrors.password = 'Ít nhất 6 ký tự';
+      else if (value.length < 8) newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
       else delete newErrors.password;
     }
     setFormErrors(newErrors);

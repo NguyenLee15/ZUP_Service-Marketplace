@@ -15,6 +15,9 @@ type MockTransaction = {
     update: jest.Mock;
     updateMany: jest.Mock;
   };
+  walletTransaction: {
+    create: jest.Mock;
+  };
   notification: {
     create: jest.Mock;
   };
@@ -26,7 +29,12 @@ type MockTransaction = {
 describe('WithdrawalService admin processing', () => {
   let tx: MockTransaction;
   let prisma: { $transaction: jest.Mock };
-  let ledger: jest.Mocked<Pick<WalletLedgerService, 'debitWallet'>>;
+  let ledger: jest.Mocked<
+    Pick<
+      WalletLedgerService,
+      'debitWallet' | 'creditWallet' | 'syncWalletRestriction'
+    >
+  >;
   let service: WithdrawalService;
 
   beforeEach(() => {
@@ -42,6 +50,9 @@ describe('WithdrawalService admin processing', () => {
         update: jest.fn(),
         updateMany: jest.fn(),
       },
+      walletTransaction: {
+        create: jest.fn(),
+      },
       notification: {
         create: jest.fn(),
       },
@@ -56,6 +67,8 @@ describe('WithdrawalService admin processing', () => {
     };
     ledger = {
       debitWallet: jest.fn(),
+      creditWallet: jest.fn(),
+      syncWalletRestriction: jest.fn(),
     };
     service = new WithdrawalService(
       prisma as never,
@@ -64,7 +77,7 @@ describe('WithdrawalService admin processing', () => {
     );
   });
 
-  it('approves a pending withdrawal by claiming pending state before ledger debit', async () => {
+  it('approves a pending withdrawal by claiming pending state and recording ledger entry', async () => {
     tx.withdrawalRequest.findUnique.mockResolvedValue({
       id: 7,
       providerId: 2,
@@ -72,12 +85,12 @@ describe('WithdrawalService admin processing', () => {
       status: 'PENDING',
     });
     tx.withdrawalRequest.updateMany.mockResolvedValue({ count: 1 });
-    tx.providerWallet.update.mockResolvedValue({
+    tx.providerWallet.findUnique.mockResolvedValue({
       id: 3,
       providerId: 2,
       balance: 100000,
     });
-    ledger.debitWallet.mockResolvedValue({ id: 99 } as never);
+    tx.walletTransaction.create.mockResolvedValue({ id: 99 });
     tx.withdrawalRequest.findUniqueOrThrow.mockResolvedValue({ id: 7 });
 
     await expect(
@@ -95,11 +108,16 @@ describe('WithdrawalService admin processing', () => {
     expect(updateArgs?.where).toEqual({ id: 7, status: 'PENDING' });
     expect(updateArgs?.data).toMatchObject({ status: 'APPROVED' });
 
-    const ledgerCalls = ledger.debitWallet.mock.calls as unknown as Array<
-      [unknown, { idempotencyKey?: string | null }]
-    >;
-    const ledgerArgs = ledgerCalls[0]?.[1];
-    expect(ledgerArgs?.idempotencyKey).toBe('withdrawal:7');
+    expect(tx.walletTransaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        walletId: 3,
+        type: 'WITHDRAWAL',
+        amount: -50000,
+        status: 'SUCCESS',
+        idempotencyKey: 'withdrawal:7',
+      }),
+    });
+    expect(ledger.syncWalletRestriction).toHaveBeenCalledWith(2, tx);
   });
 
   it('rejects duplicate approve without creating a wallet transaction', async () => {
@@ -115,7 +133,41 @@ describe('WithdrawalService admin processing', () => {
       BadRequestException,
     );
 
-    expect(ledger.debitWallet).not.toHaveBeenCalled();
+    expect(tx.walletTransaction.create).not.toHaveBeenCalled();
+  });
+
+  it('refunds reserved amount via ledger when admin rejects a withdrawal', async () => {
+    tx.withdrawalRequest.findUnique.mockResolvedValue({
+      id: 7,
+      providerId: 2,
+      amount: 50000,
+      status: 'PENDING',
+    });
+    tx.withdrawalRequest.updateMany.mockResolvedValue({ count: 1 });
+    tx.providerWallet.findUnique.mockResolvedValue({
+      id: 3,
+      providerId: 2,
+      balance: 50000,
+    });
+    ledger.creditWallet.mockResolvedValue({ id: 101 } as never);
+    tx.withdrawalRequest.findUniqueOrThrow.mockResolvedValue({ id: 7 });
+
+    await expect(
+      service.adminRejectWithdrawal(1, 7, 'Thông tin STK sai'),
+    ).resolves.toMatchObject({
+      data: { id: 7 },
+      message: 'Đã từ chối yêu cầu rút tiền',
+    });
+
+    expect(ledger.creditWallet).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({
+        walletId: 3,
+        amount: 50000,
+        type: 'DEPOSIT',
+        idempotencyKey: 'withdrawal-refund:7',
+      }),
+    );
   });
 
   it('atomically reserves balance when creating a withdrawal request', async () => {

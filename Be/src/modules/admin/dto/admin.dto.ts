@@ -16,7 +16,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   BookingStatus,
   DisputeStatus,
@@ -146,6 +146,8 @@ export class AdminDashboardQueryDto {
 export class AdminReasonDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @MinLength(3)
   @MaxLength(500)
   reason!: string;
 }
@@ -272,6 +274,10 @@ export class AdminResolveDisputeDto {
   resolutionAction!: 'COMPLETE' | 'PENALIZE';
 
   @IsString()
+  @IsNotEmpty()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @MinLength(5)
+  @MaxLength(1000)
   resolutionReason!: string;
 
   @IsOptional()

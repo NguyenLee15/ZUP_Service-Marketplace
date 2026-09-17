@@ -142,7 +142,7 @@ export class WithdrawalService {
     note?: string,
     ipAddress?: string,
   ) {
-    const approved = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const request = await tx.withdrawalRequest.findUnique({
         where: { id },
       });
@@ -175,9 +175,8 @@ export class WithdrawalService {
         });
       }
 
-      const wallet = await tx.providerWallet.update({
+      const wallet = await tx.providerWallet.findUnique({
         where: { providerId: request.providerId },
-        data: { balance: { increment: request.amount } },
       });
       if (!wallet) {
         throw new NotFoundException({
@@ -187,23 +186,35 @@ export class WithdrawalService {
       }
 
       const amount = Number(request.amount);
-      if (Number(wallet.balance) < amount) {
-        throw new BadRequestException({
-          code: ErrorCodes.VALIDATION_ERROR,
-          message: 'Số dư ví không đủ để duyệt yêu cầu rút',
-        });
-      }
 
-      await this.walletLedgerService.debitWallet(tx, {
-        walletId: wallet.id,
-        type: 'WITHDRAWAL',
-        amount,
-        idempotencyKey: `withdrawal:${id}`,
-        actorId: adminId,
-        actionName: 'WITHDRAWAL_APPROVED',
-        description: `Xác nhận rút ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
-        ipAddress,
+      // Record final ledger transaction for the approved withdrawal
+      // Amount was already debited and reserved upon withdrawal request creation.
+      const transaction = await tx.walletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          type: 'WITHDRAWAL',
+          amount: -amount,
+          status: 'SUCCESS',
+          idempotencyKey: `withdrawal:${id}`,
+          processedAt: new Date(),
+        },
       });
+
+      await tx.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'WITHDRAWAL_APPROVED',
+          targetType: 'WALLET',
+          targetId: transaction.id,
+          description: `Xác nhận rút ${amount.toLocaleString('vi-VN')}₫ cho provider ${request.providerId}`,
+          ipAddress: ipAddress || 'System',
+        },
+      });
+
+      await this.walletLedgerService.syncWalletRestriction(
+        wallet.providerId,
+        tx,
+      );
 
       const updatedRequest = await tx.withdrawalRequest.findUniqueOrThrow({
         where: { id },
@@ -221,8 +232,8 @@ export class WithdrawalService {
         data: {
           userId: request.providerId,
           type: 'WITHDRAWAL_APPROVED',
-          title: 'Yêu cầu rút tiền đã được chuyển khoản',
-          content: `Admin đã xác nhận chuyển ${amount.toLocaleString('vi-VN')}₫ về tài khoản ngân hàng của bạn.`,
+          title: 'Yêu cầu rút tiền đã được xác nhận',
+          content: `Yêu cầu rút ${amount.toLocaleString('vi-VN')}₫ của bạn đã được chuyển khoản thành công.`,
           referenceId: id,
         },
       });
@@ -230,13 +241,22 @@ export class WithdrawalService {
       return updatedRequest;
     });
 
-    return { data: approved, message: 'Đã xác nhận rút tiền' };
+    return {
+      data: result,
+      message: 'Đã xác nhận rút tiền',
+    };
   }
 
-  async adminRejectWithdrawal(adminId: number, id: number, note?: string) {
+  async adminRejectWithdrawal(
+    adminId: number,
+    id: number,
+    note?: string,
+    ipAddress?: string,
+  ) {
     const updated = await this.prisma.$transaction(async (tx) => {
       const request = await tx.withdrawalRequest.findUnique({
         where: { id },
+        include: { provider: true },
       });
       if (!request) {
         throw new NotFoundException({
@@ -267,9 +287,28 @@ export class WithdrawalService {
         });
       }
 
-      await tx.providerWallet.update({
+      const wallet = await tx.providerWallet.findUnique({
         where: { providerId: request.providerId },
-        data: { balance: { increment: request.amount } },
+      });
+      if (!wallet) {
+        throw new NotFoundException({
+          code: ErrorCodes.NOT_FOUND,
+          message: 'Ví không tồn tại',
+        });
+      }
+
+      const amount = Number(request.amount);
+
+      // Refund the reserved withdrawal amount back to provider wallet via ledger
+      await this.walletLedgerService.creditWallet(tx, {
+        walletId: wallet.id,
+        amount,
+        type: 'DEPOSIT',
+        idempotencyKey: `withdrawal-refund:${id}`,
+        actorId: adminId,
+        actionName: 'WITHDRAWAL_REJECTED',
+        description: `Hoàn trả ${amount.toLocaleString('vi-VN')}₫ do từ chối yêu cầu rút tiền #${id}`,
+        ipAddress: ipAddress || 'System',
       });
 
       const rejected = await tx.withdrawalRequest.findUniqueOrThrow({
@@ -299,7 +338,7 @@ export class WithdrawalService {
           targetType: 'WALLET',
           targetId: id,
           description: `Từ chối rút tiền cho provider ${request.providerId}`,
-          ipAddress: 'System',
+          ipAddress: ipAddress || 'System',
         },
       });
 
