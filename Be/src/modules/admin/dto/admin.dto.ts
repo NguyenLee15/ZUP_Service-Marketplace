@@ -154,27 +154,17 @@ export class AdminReasonDto {
 
 export class CreateStaffDto {
   @IsString()
-  @IsNotEmpty()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @MaxLength(100)
   fullName!: string;
 
   @IsEmail()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
-  @MaxLength(100)
   email!: string;
 
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @MaxLength(15)
   phone?: string;
 
   @IsString()
   @MinLength(8)
-  @MaxLength(100)
   password!: string;
 
   @IsArray()
@@ -187,21 +177,11 @@ export class CreateStaffDto {
 export class UpdateStaffDto {
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @MaxLength(100)
   fullName?: string;
 
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @MaxLength(15)
   phone?: string;
-
-  @IsString()
-  @MinLength(8)
-  @MaxLength(100)
-  @IsOptional()
-  password?: string;
 
   @IsEnum(UserStatus)
   @IsOptional()
