@@ -97,6 +97,47 @@ export class BookingDisputeService {
     }
 
     const { updated, dispute } = await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.booking.findUnique({
+        where: { id: bookingId },
+        select: {
+          status: true,
+          customerId: true,
+          autoCompletedAt: true,
+          completedAt: true,
+        },
+      });
+
+      if (!existing || existing.customerId !== customerId) {
+        throw new NotFoundException({
+          code: ErrorCodes.NOT_FOUND,
+          message: 'Đơn hàng không tồn tại',
+        });
+      }
+
+      if (
+        existing.status !== BookingStatus.IN_PROGRESS &&
+        existing.status !== BookingStatus.DONE
+      ) {
+        throw new BadRequestException({
+          code: ErrorCodes.BOOKING_INVALID_STATE,
+          message:
+            'Đơn hàng không ở trạng thái hợp lệ để khiếu nại hoặc đã có khiếu nại trước đó',
+        });
+      }
+
+      // Đơn hàng đã ở trạng thái DONE và thời hạn nghiệm thu tự động đã trôi qua
+      if (
+        existing.status === BookingStatus.DONE &&
+        existing.autoCompletedAt &&
+        existing.autoCompletedAt <= new Date()
+      ) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message:
+            'Thời hạn mở khiếu nại của đơn hàng đã kết thúc (đơn đã được nghiệm thu tự động)',
+        });
+      }
+
       const claim = await tx.booking.updateMany({
         where: {
           id: bookingId,

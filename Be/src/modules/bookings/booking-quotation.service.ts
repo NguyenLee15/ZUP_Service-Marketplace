@@ -333,6 +333,9 @@ export class BookingQuotationService {
       (await this.bookingCommissionService.getCurrentCommissionRate());
 
     const createdQuotation = await this.prisma.$transaction(async (tx) => {
+      // Concurrency lock: Khóa bi quan hàng booking để tuần tự hóa các yêu cầu báo giá phát sinh
+      await tx.$executeRaw`SELECT id FROM bookings WHERE id = ${bookingId} FOR UPDATE`;
+
       const currentBooking = await tx.booking.findUnique({
         where: { id: bookingId },
       });

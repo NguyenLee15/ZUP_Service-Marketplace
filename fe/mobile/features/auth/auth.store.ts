@@ -4,6 +4,8 @@
 import { create } from "zustand";
 import { storage } from "../../lib/storage";
 import api from "../../lib/axios";
+import { queryClient } from "../../lib/query-client";
+import { authApi } from "./auth.api";
 
 export interface ProviderUser {
   id: number;
@@ -36,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
 
   setUser: (user) => {
-    set({ user, isAuthenticated: true });
+    set({ user, isAuthenticated: true, isLoading: false });
     storage.setUser(user);
   },
 
@@ -62,6 +64,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
 
+      const savedUser = await storage.getUser();
+      if (savedUser) {
+        set({ user: savedUser, isAuthenticated: true });
+      }
+
       const res = await api.get("/auth/profile");
       const user = res.data?.data as ProviderUser | undefined;
       if (user?.role === "PROVIDER" && user.status !== "LOCKED") {
@@ -72,9 +79,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       await storage.clearAll();
       set({ user: null, isAuthenticated: false, isLoading: false });
-    } catch {
-      await storage.clearAll();
-      set({ user: null, isAuthenticated: false, isLoading: false });
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        await storage.clearAll();
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      } else {
+        const savedUser = await storage.getUser();
+        if (savedUser) {
+          set({ user: savedUser, isAuthenticated: true, isLoading: false });
+        } else {
+          set({ isLoading: false });
+        }
+      }
     }
   },
 
@@ -89,13 +106,22 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       await storage.clearAll();
       set({ user: null, isAuthenticated: false });
-    } catch {
-      await storage.clearAll();
-      set({ user: null, isAuthenticated: false });
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        await storage.clearAll();
+        set({ user: null, isAuthenticated: false });
+      }
     }
   },
 
   logout: async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore network errors so local session is always wiped
+    }
+    queryClient.clear();
     await storage.clearAll();
     set({ user: null, isAuthenticated: false });
   },

@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import api from '../../lib/axios';
 import { unwrapData } from '../../lib/api-response';
 import { storage } from '../../lib/storage';
+import { queryClient } from '../../lib/query-client';
+import { authApi } from './auth.api';
 
 export interface CustomerUser {
   id: number;
@@ -29,8 +31,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   isAuthenticated: false,
 
-  setUser: (user) => {
-    set({ user, isAuthenticated: true });
+  setUser: (user: CustomerUser) => {
+    set({ user, isAuthenticated: true, isLoading: false });
     storage.setUser(user);
   },
 
@@ -46,6 +48,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
 
+      const savedUser = await storage.getUser<CustomerUser>();
+      if (savedUser) {
+        set({ user: savedUser, isAuthenticated: true });
+      }
+
       const res = await api.get('/auth/profile');
       const user = unwrapData<CustomerUser>(res);
       if (user?.role === 'CUSTOMER' && user.status !== 'LOCKED') {
@@ -56,25 +63,49 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       await storage.clearAll();
       set({ user: null, isAuthenticated: false, isLoading: false });
-    } catch {
-      await storage.clearAll();
-      set({ user: null, isAuthenticated: false, isLoading: false });
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        await storage.clearAll();
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      } else {
+        const savedUser = await storage.getUser<CustomerUser>();
+        if (savedUser) {
+          set({ user: savedUser, isAuthenticated: true, isLoading: false });
+        } else {
+          set({ isLoading: false });
+        }
+      }
     }
   },
 
   fetchProfile: async () => {
-    const res = await api.get('/auth/profile');
-    const user = unwrapData<CustomerUser>(res);
-    if (user?.role === 'CUSTOMER' && user.status !== 'LOCKED') {
-      set({ user, isAuthenticated: true });
-      storage.setUser(user);
-      return;
+    try {
+      const res = await api.get('/auth/profile');
+      const user = unwrapData<CustomerUser>(res);
+      if (user?.role === 'CUSTOMER' && user.status !== 'LOCKED') {
+        set({ user, isAuthenticated: true });
+        await storage.setUser(user);
+        return;
+      }
+      await storage.clearAll();
+      set({ user: null, isAuthenticated: false });
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        await storage.clearAll();
+        set({ user: null, isAuthenticated: false });
+      }
     }
-    await storage.clearAll();
-    set({ user: null, isAuthenticated: false });
   },
 
   logout: async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore network errors so local session is always wiped
+    }
+    queryClient.clear();
     await storage.clearAll();
     set({ user: null, isAuthenticated: false });
   },

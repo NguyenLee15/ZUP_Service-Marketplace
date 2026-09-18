@@ -97,9 +97,12 @@ export default function WalletScreen() {
       if (res.data?.data) {
         setBalance(Number(res.data.data.balance || 0));
         setIsRestricted(Boolean(res.data.data.isRestricted));
+        return res.data.data;
       }
+      return null;
     } catch {
       setMessage({ tone: 'error', text: 'Chưa tải được số dư ví. Kéo xuống để thử lại.' });
+      return null;
     }
   }, []);
 
@@ -200,18 +203,27 @@ export default function WalletScreen() {
       resetDepositForm();
       setMessage({ tone: 'info', text: 'Đang mở cổng thanh toán. Sau khi thanh toán, ví sẽ tự tải lại.' });
 
+      const previousBalance = balance;
       await WebBrowser.openBrowserAsync(paymentUrl);
       
-      // Đợi 2 giây để IPN từ VNPay kịp cập nhật vào Database Backend
+      // Đợi 2 giây để webhook kịp cập nhật vào Database Backend
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      await fetchWallet();
+      const newWalletData = await fetchWallet();
       await fetchTransactions(1, true);
       
-      setMessage({ 
-        tone: 'success', 
-        text: 'Đã hoàn tất thanh toán. Nếu số dư chưa được cộng, vui lòng vuốt xuống để tải lại sau ít phút.' 
-      });
+      const newBalance = Number(newWalletData?.balance ?? balance);
+      if (newBalance > previousBalance) {
+        setMessage({ 
+          tone: 'success', 
+          text: `Nạp tiền thành công! Số dư mới: ${newBalance.toLocaleString('vi-VN')}₫.` 
+        });
+      } else {
+        setMessage({ 
+          tone: 'info', 
+          text: 'Đã đóng cổng thanh toán. Nếu bạn đã hoàn tất chuyển khoản, số dư sẽ tự động cập nhật sau giây lát.' 
+        });
+      }
     } catch (err: any) {
       setDepositError(
         err?.response?.data?.message ||

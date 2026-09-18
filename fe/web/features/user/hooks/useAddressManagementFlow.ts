@@ -161,8 +161,8 @@ export function useAddressManagementFlow() {
         district: data.district || NEW_ADMIN_DISTRICT_VALUE,
         ward: data.ward,
         addressDetail: data.addressDetail,
-        latitude: data.latitude || 21.028511,
-        longitude: data.longitude || 105.804817,
+        latitude: data.latitude || undefined,
+        longitude: data.longitude || undefined,
         isDefault: data.isDefault,
       });
 

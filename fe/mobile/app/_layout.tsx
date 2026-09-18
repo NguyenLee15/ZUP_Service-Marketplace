@@ -6,7 +6,8 @@ import { StyleSheet, View, Animated, useColorScheme, ActivityIndicator, Image } 
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PaperProvider, MD3DarkTheme, MD3LightTheme, Text, useTheme } from 'react-native-paper';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '../lib/query-client';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuthStore } from '../features/auth/auth.store';
@@ -15,19 +16,6 @@ import { usePushNotifications } from '../hooks/usePushNotifications';
 import { authApi } from '../features/auth/auth.api';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { Colors } from '../constants/colors';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 3, // 3 phút
-      gcTime: 1000 * 60 * 20,    // 20 phút
-      retry: 1,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-      refetchOnMount: false,
-    },
-  },
-});
 
 export default function RootLayout() {
   const { isAuthenticated, isLoading, loadFromStorage } = useAuthStore();

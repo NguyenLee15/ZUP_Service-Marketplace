@@ -3,8 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { ErrorCodes } from '../../common/errors/error-codes';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'pdf'];
+const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'mp4', 'mov', 'webm'];
 
 @Injectable()
 export class CloudinaryService {
@@ -21,17 +21,21 @@ export class CloudinaryService {
   /**
    * Upload file lên Cloudinary
    * @param buffer - File buffer
-   * @param folder - Thư mục trên Cloudinary (vd: 'kyc', 'services', 'bookings')
+   * @param folder - Thư mục trên Cloudinary (vd: 'kyc', 'services', 'bookings', 'disputes')
    */
   async uploadFile(
     buffer: Buffer,
     folder: string,
+    options?: { maxFileSize?: number; allowedFormats?: string[] },
   ): Promise<{ url: string; publicId: string }> {
+    const maxSize = options?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE;
+    const formats = options?.allowedFormats ?? ALLOWED_FORMATS;
+
     // Kiểm tra kích thước
-    if (buffer.length > MAX_FILE_SIZE) {
+    if (buffer.length > maxSize) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
-        message: 'Kích thước file không được vượt quá 5MB',
+        message: `Kích thước file không được vượt quá ${Math.round(maxSize / (1024 * 1024))}MB`,
       });
     }
 
@@ -40,8 +44,8 @@ export class CloudinaryService {
         .upload_stream(
           {
             folder: `service-marketplace/${folder}`,
-            resource_type: 'auto', // Hỗ trợ cả ảnh và PDF
-            allowed_formats: ALLOWED_FORMATS,
+            resource_type: 'auto', // Hỗ trợ cả ảnh, PDF và video
+            allowed_formats: formats,
           },
           (error, result: UploadApiResponse | undefined) => {
             if (error) {

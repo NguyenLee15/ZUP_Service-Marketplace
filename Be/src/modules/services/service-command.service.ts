@@ -131,7 +131,8 @@ export class ServiceCommandService {
     if (
       service.status === ServiceStatus.ACTIVE ||
       service.status === ServiceStatus.REJECTED ||
-      service.status === ServiceStatus.DRAFT
+      service.status === ServiceStatus.DRAFT ||
+      service.status === ServiceStatus.HIDDEN
     ) {
       updateData.status = ServiceStatus.PENDING;
     }

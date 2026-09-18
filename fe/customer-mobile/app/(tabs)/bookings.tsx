@@ -1,6 +1,6 @@
 import { useActiveColors } from '../../hooks/useActiveColors';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -61,6 +61,8 @@ export default function BookingsScreen() {
     bookings,
     isInitialLoading,
     isRefetching,
+    isFetchingNextPage,
+    loadMore,
     isError,
     refresh,
     openSearch,
@@ -94,6 +96,16 @@ export default function BookingsScreen() {
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       refreshing={isRefetching}
       onRefresh={refresh}
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.4}
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <ActivityIndicator
+            style={{ paddingVertical: 16 }}
+            color={activeColors.primary}
+          />
+        ) : null
+      }
       ListHeaderComponent={
         <View style={styles.headerContent}>
           <CustomerHeader

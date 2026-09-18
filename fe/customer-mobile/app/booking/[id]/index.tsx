@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, TextInput } from 'react-native-paper';
 import { BottomActionBar, ConfirmSheet, EmptyState, InlineMessage } from '../../../components/customer/customer-ui';
 import { getBookingStatusColor } from '../../../constants/booking-status';
@@ -60,6 +60,15 @@ export default function BookingDetailScreen() {
     enabled: validBookingId,
   });
   const booking = bookingQuery.data;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (validBookingId) {
+        bookingQuery.refetch();
+        timelineQuery.refetch();
+      }
+    }, [validBookingId])
+  );
 
   const invalidate = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ['booking', bookingId] }),

@@ -1,0 +1,32 @@
+{
+  "version": "0.2",
+  "language": "en,vi,vi-VN",
+  "dictionaries": ["vi-vn"],
+  "words": [
+    "PayOS",
+    "payos",
+    "PAYOS",
+    "Vnpay",
+    "vnpay",
+    "VNPAY",
+    "dicebear",
+    "pravatar",
+    "googleusercontent",
+    "Txns",
+    "tien",
+    "pgvector",
+    "isready",
+    "quicktime",
+    "spreadsheetml",
+    "NAPVI",
+    "notif",
+    "khóa",
+    "Khóa",
+    "khoá",
+    "Khoá",
+    "thỏa",
+    "Thỏa",
+    "thoả",
+    "Thoả"
+  ]
+}

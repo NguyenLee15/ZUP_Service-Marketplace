@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { VnpayService } from './vnpay.service';
+import { WalletLedgerService } from './wallet-ledger.service';
 
 @Injectable()
 export class PaymentCallbackService {
@@ -9,6 +10,7 @@ export class PaymentCallbackService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly vnpayService: VnpayService,
+    private readonly walletLedgerService: WalletLedgerService,
   ) {}
 
   async handleVnpayIpn(query: Record<string, string>) {
@@ -72,12 +74,10 @@ export class PaymentCallbackService {
         data: { balance: { increment: result.amount } },
       });
 
-      if (Number(wallet.balance) >= 0 && wallet.isRestricted) {
-        await tx.providerWallet.update({
-          where: { id: wallet.id },
-          data: { isRestricted: false },
-        });
-      }
+      await this.walletLedgerService.syncWalletRestriction(
+        wallet.providerId,
+        tx,
+      );
 
       await tx.notification.create({
         data: {

@@ -15,6 +15,7 @@ export default function TabsLayout() {
   useGlobalNotificationSocket(() => {
     // When a notification arrives (e.g. status changed), silently refetch data
     queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    queryClient.invalidateQueries({ queryKey: ['booking'] });
     queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
   });
 

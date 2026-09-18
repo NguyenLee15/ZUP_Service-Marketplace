@@ -26,10 +26,13 @@ function parseJwt(token: string) {
         .map(function (c) {
           return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         })
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
+        .join(''));
+    const parsed = JSON.parse(jsonPayload);
+    if (parsed && typeof parsed.exp === 'number' && parsed.exp * 1000 <= Date.now()) {
+      return null;
+    }
+    return parsed;
+  } catch {
     return null;
   }
 }

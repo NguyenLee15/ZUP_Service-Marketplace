@@ -70,6 +70,8 @@ export class WithdrawalService {
         throw new BadRequestException('Số dư ví không đủ để rút tiền');
       }
 
+      await this.walletLedgerService.syncWalletRestriction(providerId, tx);
+
       return tx.withdrawalRequest.create({
         data: {
           providerId,

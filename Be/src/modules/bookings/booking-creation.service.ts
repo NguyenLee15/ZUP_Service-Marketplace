@@ -124,7 +124,12 @@ export class BookingCreationService {
     }
 
     const desiredDate = new Date(dto.desiredTime);
-    if (isNaN(desiredDate.getTime()) || desiredDate.getTime() <= Date.now()) {
+    // Cho phép dung sai 5 phút (clock drift & network latency) cho các đơn "Đặt ngay"
+    const CLOCK_DRIFT_TOLERANCE_MS = 5 * 60 * 1000;
+    if (
+      isNaN(desiredDate.getTime()) ||
+      desiredDate.getTime() < Date.now() - CLOCK_DRIFT_TOLERANCE_MS
+    ) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_ERROR,
         message: 'Thời gian mong muốn thực hiện dịch vụ phải ở tương lai',
@@ -474,21 +479,6 @@ export class BookingCreationService {
       });
     }
 
-    const pendingCount = await this.prisma.booking.count({
-      where: {
-        customerId,
-        status: BookingStatus.PENDING,
-      },
-    });
-
-    if (pendingCount >= 3) {
-      throw new BadRequestException({
-        code: ErrorCodes.VALIDATION_ERROR,
-        message:
-          'Bạn đang có quá nhiều đơn chờ xác nhận (tối đa 3 đơn). Vui lòng chờ thợ phản hồi hoặc hủy bớt đơn cũ trước khi đặt thêm.',
-      });
-    }
-
     const service = await this.prisma.service.findFirst({
       where: {
         id: oldBooking.serviceId,
@@ -513,34 +503,54 @@ export class BookingCreationService {
       Date.now() + PROVIDER_ACCEPTANCE_TIMEOUT_MS,
     );
 
-    const newBooking = await this.prisma.booking.create({
-      data: {
-        bookingCode,
-        customerId,
-        providerId: oldBooking.providerId,
-        serviceId: oldBooking.serviceId,
-        description: oldBooking.description,
-        province: oldBooking.province,
-        district: oldBooking.district,
-        ward: oldBooking.ward,
-        addressDetail: oldBooking.addressDetail,
-        desiredTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        status: BookingStatus.PENDING,
-        providerResponseDeadline,
-        bookingItems:
-          oldBooking.bookingItems && oldBooking.bookingItems.length > 0
-            ? {
-                create: oldBooking.bookingItems.map((item) => ({
-                  serviceItemId: item.serviceItemId,
-                  name: item.name,
-                  unit: item.unit,
-                  quantity: item.quantity,
-                  priceSnapshot: item.priceSnapshot,
-                })),
-              }
-            : undefined,
-      },
-      include: { bookingItems: true },
+    const newBooking = await this.prisma.$transaction(async (tx) => {
+      // Concurrency lock: Tuần tự hóa yêu cầu đặt lại đơn từ cùng 1 khách hàng
+      await tx.$executeRaw`SELECT id FROM users WHERE id = ${customerId} FOR UPDATE`;
+
+      const pendingCount = await tx.booking.count({
+        where: {
+          customerId,
+          status: BookingStatus.PENDING,
+        },
+      });
+
+      if (pendingCount >= 3) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message:
+            'Bạn đang có quá nhiều đơn chờ xác nhận (tối đa 3 đơn). Vui lòng chờ thợ phản hồi hoặc hủy bớt đơn cũ trước khi đặt thêm.',
+        });
+      }
+
+      return tx.booking.create({
+        data: {
+          bookingCode,
+          customerId,
+          providerId: oldBooking.providerId,
+          serviceId: oldBooking.serviceId,
+          description: oldBooking.description,
+          province: oldBooking.province,
+          district: oldBooking.district,
+          ward: oldBooking.ward,
+          addressDetail: oldBooking.addressDetail,
+          desiredTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          status: BookingStatus.PENDING,
+          providerResponseDeadline,
+          bookingItems:
+            oldBooking.bookingItems && oldBooking.bookingItems.length > 0
+              ? {
+                  create: oldBooking.bookingItems.map((item) => ({
+                    serviceItemId: item.serviceItemId,
+                    name: item.name,
+                    unit: item.unit,
+                    quantity: item.quantity,
+                    priceSnapshot: item.priceSnapshot,
+                  })),
+                }
+              : undefined,
+        },
+        include: { bookingItems: true },
+      });
     });
 
     await this.shared.addStatusHistory(

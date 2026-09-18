@@ -35,7 +35,6 @@ jobs:
       - run: npx prisma validate
       - run: npm run typecheck
       - run: npm run test
-      - run: npm run test:e2e
       - run: npm run build
       - run: npm run lint
 
@@ -81,6 +80,7 @@ jobs:
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npm run test:integration
+      - run: npm run test:e2e
 
   frontend:
     name: Frontend CI

@@ -7,6 +7,7 @@ import {
 import { PayOS, type Webhook } from '@payos/node';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WalletSharedService } from './wallet-shared.service';
+import { WalletLedgerService } from './wallet-ledger.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class PayosService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletShared: WalletSharedService,
+    private readonly walletLedgerService: WalletLedgerService,
   ) {
     this.isEnabled = Boolean(
       process.env.PAYOS_CLIENT_ID &&
@@ -153,30 +155,66 @@ export class PayosService implements OnModuleInit {
     }
   }
 
-  private async handleSuccessPayment(orderCodeStr: string, amount: number) {
-    const pendingTxn = await this.prisma.walletTransaction.findFirst({
-      where: { vnpayTxnRef: orderCodeStr, status: 'PENDING', type: 'DEPOSIT' },
+  async checkPaymentStatus(orderCode: number): Promise<{
+    status: string;
+    amount: number;
+    amountPaid: number;
+  } | null> {
+    if (!this.isEnabled || !this.payos) return null;
+    try {
+      const paymentLink = (await this.payos.paymentRequests.get(orderCode)) as {
+        status?: string;
+        amount?: number;
+        amountPaid?: number;
+      };
+      return {
+        status: String(paymentLink?.status ?? ''),
+        amount: Number(paymentLink?.amount ?? 0),
+        amountPaid: Number(paymentLink?.amountPaid ?? 0),
+      };
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'string'
+            ? err
+            : 'Unknown error';
+      this.logger.error(
+        `Error querying PayOS for orderCode ${orderCode}: ${errorMessage}`,
+      );
+      return null;
+    }
+  }
+
+  async handleSuccessPayment(orderCodeStr: string, amount: number) {
+    const txn = await this.prisma.walletTransaction.findFirst({
+      where: { vnpayTxnRef: orderCodeStr, type: 'DEPOSIT' },
       include: { wallet: true },
     });
 
-    if (!pendingTxn) {
-      this.logger.warn(
-        `No pending PayOS deposit found for orderCode: ${orderCodeStr}`,
+    if (!txn) {
+      this.logger.warn(`No PayOS deposit found for orderCode: ${orderCodeStr}`);
+      return;
+    }
+
+    if (txn.status === 'SUCCESS') {
+      this.logger.log(
+        `PayOS deposit for orderCode ${orderCodeStr} already processed as SUCCESS.`,
       );
       return;
     }
 
-    if (Number(pendingTxn.amount) !== amount) {
+    if (Number(txn.amount) !== amount) {
       this.logger.error(
-        `Amount mismatch for ${orderCodeStr}. Expected ${pendingTxn.amount.toString()}, got ${amount}`,
+        `Amount mismatch for ${orderCodeStr}. Expected ${txn.amount.toString()}, got ${amount}`,
       );
       return;
     }
 
     await this.prisma.$transaction(async (tx) => {
-      // Atomic CAS update: Only proceed if this transaction is still PENDING
+      // Atomic CAS update: Only proceed if this transaction is not yet SUCCESS (allow recovering from mistaken FAILED)
       const updateResult = await tx.walletTransaction.updateMany({
-        where: { id: pendingTxn.id, status: 'PENDING' },
+        where: { id: txn.id, status: { in: ['PENDING', 'FAILED'] } },
         data: {
           status: 'SUCCESS',
           processedAt: new Date(),
@@ -191,16 +229,15 @@ export class PayosService implements OnModuleInit {
       }
 
       const updatedWallet = await tx.providerWallet.update({
-        where: { id: pendingTxn.walletId },
+        where: { id: txn.walletId },
         data: { balance: { increment: amount } },
       });
 
-      if (Number(updatedWallet.balance) >= 0 && updatedWallet.isRestricted) {
-        await tx.providerWallet.update({
-          where: { id: updatedWallet.id },
-          data: { isRestricted: false },
-        });
-      }
+      // P1.7: Evaluate wallet restriction against dynamic service escrow requirements
+      await this.walletLedgerService.syncWalletRestriction(
+        updatedWallet.providerId,
+        tx,
+      );
 
       await tx.notification.create({
         data: {
@@ -208,7 +245,7 @@ export class PayosService implements OnModuleInit {
           type: 'DEPOSIT_SUCCESS',
           title: 'Nạp tiền tự động thành công (VietQR)',
           content: `Bạn đã nạp thành công ${amount.toLocaleString('vi-VN')}₫ vào ví thông qua mã VietQR`,
-          referenceId: pendingTxn.id,
+          referenceId: txn.id,
         },
       });
 

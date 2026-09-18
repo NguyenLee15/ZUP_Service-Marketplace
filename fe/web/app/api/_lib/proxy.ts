@@ -257,11 +257,14 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
       responseBody = JSON.stringify(parsedPayload);
     }
 
-    const proxiedResponse = new NextResponse(responseBody, {
+    const isNoContent = response.status === 204 || response.status === 205 || response.status === 304;
+    const proxiedResponse = new NextResponse(isNoContent ? null : responseBody, {
       status: response.status,
-      headers: {
-        "Content-Type": responseContentType,
-      },
+      headers: isNoContent
+        ? undefined
+        : {
+            "Content-Type": responseContentType,
+          },
     });
 
     if (authTokens) {

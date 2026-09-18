@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { bookingApi } from '../booking.api';
 import { routes } from '../../../lib/route-utils';
@@ -23,25 +23,47 @@ export function useBookingsList() {
   const router = useRouter();
   const [status, setStatus] = useState('ALL');
 
-  const bookingsQuery = useQuery({
+  const bookingsQuery = useInfiniteQuery({
     queryKey: ['bookings', status],
-    queryFn: async () => {
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
       const response = await bookingApi.getMyBookings({
         status: status === 'ALL' ? undefined : status,
-        page: 1,
-        limit: 30,
+        page: pageParam,
+        limit: 20,
       });
-      return normalizeList<BookingListItem>(response);
+      const items = normalizeList<BookingListItem>(response);
+      const meta = (response.data as any)?.meta as
+        | { totalPages?: number; page?: number }
+        | undefined;
+      return {
+        items,
+        page: pageParam as number,
+        totalPages: meta?.totalPages ?? 1,
+      };
     },
-    staleTime: 1000 * 30, // 30s — booking status thay đổi thường xuyên
-    placeholderData: keepPreviousData, // Giữ data cũ khi đổi status filter để tránh flash trắng
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.totalPages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
+    staleTime: 1000 * 30, // 30s
   });
 
-  const bookings = useMemo(() => bookingsQuery.data || [], [bookingsQuery.data]);
-  const isInitialLoading = bookingsQuery.isLoading && !bookingsQuery.data;
+  const bookings = useMemo(
+    () => bookingsQuery.data?.pages.flatMap((page) => page.items) || [],
+    [bookingsQuery.data],
+  );
 
+  const isInitialLoading = bookingsQuery.isLoading && !bookingsQuery.data;
   const openSearch = () => router.push(routes.tabs.search);
   const refresh = () => bookingsQuery.refetch();
+  const loadMore = () => {
+    if (bookingsQuery.hasNextPage && !bookingsQuery.isFetchingNextPage) {
+      bookingsQuery.fetchNextPage();
+    }
+  };
 
   return {
     status,
@@ -49,7 +71,10 @@ export function useBookingsList() {
     bookings,
     isInitialLoading,
     isRefetching: bookingsQuery.isRefetching,
+    isFetchingNextPage: bookingsQuery.isFetchingNextPage,
+    hasNextPage: Boolean(bookingsQuery.hasNextPage),
     isError: bookingsQuery.isError,
+    loadMore,
     refresh,
     openSearch,
   };

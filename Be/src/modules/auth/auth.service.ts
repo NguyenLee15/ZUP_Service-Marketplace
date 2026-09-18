@@ -524,6 +524,12 @@ export class AuthService {
       data: { revoked: true },
     });
 
+    // Revoke push token của user khi logout để tránh gửi thông báo đến thiết bị sau khi đăng xuất
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { expoPushToken: null },
+    });
+
     return { message: 'Đăng xuất thành công' };
   }
 
