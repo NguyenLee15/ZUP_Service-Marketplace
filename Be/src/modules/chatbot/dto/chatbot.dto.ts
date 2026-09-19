@@ -1,6 +1,8 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  ArrayMaxSize,
+  MaxLength,
   IsNumber,
   IsObject,
   IsOptional,
@@ -41,20 +43,24 @@ export class ChatMessageHistoryItemDto {
   role: string;
 
   @IsString()
+  @MaxLength(4000)
   content: string;
 }
 
 export class ChatbotAskDto {
   @IsOptional()
   @IsString()
+  @MaxLength(4000)
   message?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   sessionId?: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(12)
   @ValidateNested({ each: true })
   @Type(() => ChatMessageHistoryItemDto)
   history?: ChatMessageHistoryItemDto[];
@@ -73,22 +79,27 @@ export class ChatbotAskDto {
 export class ChatbotStreamResultDto {
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   sessionId?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(4000)
   userMessage?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(4000)
   assistantMessage?: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   services?: any[];
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   quickReplies?: any[];
 
   @IsOptional()
@@ -101,5 +112,6 @@ export class ChatbotStreamResultDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   citations?: any[];
 }

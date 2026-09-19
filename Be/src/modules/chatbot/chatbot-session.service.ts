@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ServiceStatus, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { calculateHaversineDistance } from '../../shared/utils/geo';
 import type {
@@ -123,7 +123,9 @@ export class ChatbotSessionService {
         ? await this.prisma.service.findMany({
             where: {
               id: { in: uniqueServiceIds },
+              status: ServiceStatus.ACTIVE,
               isDeleted: false,
+              provider: { status: UserStatus.ACTIVE },
             },
             include: serviceCardInclude,
           })

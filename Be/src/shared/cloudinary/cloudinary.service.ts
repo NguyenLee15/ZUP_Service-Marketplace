@@ -4,7 +4,16 @@ import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { ErrorCodes } from '../../common/errors/error-codes';
 
 const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'mp4', 'mov', 'webm'];
+const ALLOWED_FORMATS = [
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+  'pdf',
+  'mp4',
+  'mov',
+  'webm',
+];
 
 @Injectable()
 export class CloudinaryService {

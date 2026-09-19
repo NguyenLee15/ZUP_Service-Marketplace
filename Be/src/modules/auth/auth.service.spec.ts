@@ -62,6 +62,7 @@ type AuthPrismaMock = {
     findFirst: jest.Mock<Promise<PasswordResetRecord | null>, unknown[]>;
     create: jest.Mock;
     update: jest.Mock;
+    updateMany: jest.Mock;
   };
   user: {
     findUnique: jest.Mock;
@@ -113,6 +114,7 @@ describe('AuthService token hardening', () => {
         findFirst: jest.fn<Promise<PasswordResetRecord | null>, unknown[]>(),
         create: jest.fn().mockResolvedValue({ id: 1 }),
         update: jest.fn().mockResolvedValue({}),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       user: {
         findUnique: jest.fn(),
@@ -287,6 +289,30 @@ describe('AuthService token hardening', () => {
 
     expect(prisma.user.update).not.toHaveBeenCalled();
     expect(prisma.passwordReset.update).not.toHaveBeenCalled();
+  });
+
+  it('does not update the password when a concurrent reset claim wins', async () => {
+    prisma.passwordReset.findFirst.mockResolvedValue(
+      passwordResetRecord({ used: false }),
+    );
+    prisma.passwordReset.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.resetPassword({
+        token: 'concurrent',
+        newPassword: 'Password123!',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(prisma.passwordReset.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 1,
+        used: false,
+        expiresAt: { gt: expect.any(Date) },
+      },
+      data: { used: true },
+    });
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('keeps legacy raw password reset token fallback until expiry', async () => {

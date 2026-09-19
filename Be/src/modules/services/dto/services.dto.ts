@@ -201,6 +201,8 @@ export class AdminHideDto {
 
 export class AiSearchDto {
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
   query: string;
 
   @IsNumber()

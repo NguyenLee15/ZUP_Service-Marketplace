@@ -6,7 +6,7 @@ test.describe('customer UI smoke coverage', () => {
     await expect(page.getByRole('heading', { name: /đăng nhập/i })).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Mật khẩu' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /demo accounts/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /tài khoản demo/i })).toBeVisible();
     await page.screenshot({ path: 'test-results/login-desktop.png', fullPage: true });
   });
 

@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import { PaymentCallbackService } from './payment-callback.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { VnpayService } from './vnpay.service';
+import { WalletLedgerService } from './wallet-ledger.service';
 
 type MockPrisma = {
   walletTransaction: {
@@ -39,6 +40,9 @@ describe('PaymentCallbackService', () => {
   const mockVnpay: MockVnpay = {
     verifyIpn: jest.fn(),
   };
+  const mockWalletLedger = {
+    syncWalletRestriction: jest.fn(),
+  } as unknown as WalletLedgerService;
 
   const createPrisma = () => {
     const txClient: MockTxClient = {
@@ -89,6 +93,7 @@ describe('PaymentCallbackService', () => {
     const service = new PaymentCallbackService(
       prisma as unknown as PrismaService,
       mockVnpay as unknown as VnpayService,
+      mockWalletLedger,
     );
 
     await expect(service.handleVnpayIpn({})).resolves.toEqual({
@@ -110,6 +115,7 @@ describe('PaymentCallbackService', () => {
     const service = new PaymentCallbackService(
       prisma as unknown as PrismaService,
       mockVnpay as unknown as VnpayService,
+      mockWalletLedger,
     );
 
     await expect(service.handleVnpayIpn({})).resolves.toEqual({
@@ -132,6 +138,7 @@ describe('PaymentCallbackService', () => {
     const service = new PaymentCallbackService(
       prisma as unknown as PrismaService,
       mockVnpay as unknown as VnpayService,
+      mockWalletLedger,
     );
 
     await expect(service.handleVnpayIpn({})).resolves.toEqual({
@@ -162,6 +169,7 @@ describe('PaymentCallbackService', () => {
     const service = new PaymentCallbackService(
       prisma as unknown as PrismaService,
       mockVnpay as unknown as VnpayService,
+      mockWalletLedger,
     );
 
     await expect(service.handleVnpayIpn({})).resolves.toEqual({

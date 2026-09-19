@@ -620,21 +620,32 @@ export class AuthService {
     // 2. Hash mật khẩu mới + update
     const hashedPassword = await hashPassword(dto.newPassword);
 
-    await this.prisma.$transaction([
-      this.prisma.user.update({
+    await this.prisma.$transaction(async (tx) => {
+      const claim = await tx.passwordReset.updateMany({
+        where: {
+          id: resetRecord.id,
+          used: false,
+          expiresAt: { gt: new Date() },
+        },
+        data: { used: true },
+      });
+
+      if (claim.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn',
+        });
+      }
+
+      await tx.user.update({
         where: { id: resetRecord.userId },
         data: { password: hashedPassword },
-      }),
-      this.prisma.passwordReset.update({
-        where: { id: resetRecord.id },
-        data: { used: true },
-      }),
-      // Revoke tất cả refresh token (force re-login)
-      this.prisma.refreshToken.updateMany({
+      });
+      await tx.refreshToken.updateMany({
         where: { userId: resetRecord.userId, revoked: false },
         data: { revoked: true },
-      }),
-    ]);
+      });
+    });
 
     return {
       data: { message: 'Mật khẩu đã được thay đổi thành công' },

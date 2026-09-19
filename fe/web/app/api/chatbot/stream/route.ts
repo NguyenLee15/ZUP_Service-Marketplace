@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import {
   createUIMessageStream,
@@ -7,6 +7,10 @@ import {
 } from "ai";
 
 export const maxDuration = 60;
+
+const MAX_REQUEST_BYTES = 64 * 1024;
+const MAX_HISTORY_MESSAGES = 12;
+const MAX_MESSAGE_CHARS = 4000;
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const FALLBACK_REPLY =
@@ -134,13 +138,26 @@ function createTextOnlyResponse(
 
 export async function POST(req: NextRequest) {
   try {
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (contentLength > MAX_REQUEST_BYTES) {
+      return NextResponse.json(
+        { error: "Chat request is too large" },
+        { status: 413 },
+      );
+    }
     const body = await req.json();
     const messages = Array.isArray(body.messages)
       ? (body.messages as ChatMessage[])
       : [];
+    const boundedMessages = messages
+      .slice(-MAX_HISTORY_MESSAGES)
+      .map((message) => ({
+        ...message,
+        content: getText(message).slice(0, MAX_MESSAGE_CHARS),
+      }));
     const { sessionId, pageContext, confirmedActionId } = body;
 
-    const lastUserMessage = [...messages]
+    const lastUserMessage = [...boundedMessages]
       .reverse()
       .find((message) => message.role === "user");
     const userText = lastUserMessage ? getText(lastUserMessage) : "";
@@ -159,7 +176,7 @@ export async function POST(req: NextRequest) {
         sessionId,
         pageContext,
         confirmedActionId,
-        history: messages.slice(-8).map((message) => ({
+        history: boundedMessages.slice(-8).map((message) => ({
           role: message.role,
           content: getText(message),
         })),
@@ -210,7 +227,7 @@ export async function POST(req: NextRequest) {
       model: google(modelName),
       system: ctx.systemPrompt,
       maxRetries: 3,
-      messages: messages
+      messages: boundedMessages
         .filter(
           (message) =>
             message.role === "user" || message.role === "assistant",

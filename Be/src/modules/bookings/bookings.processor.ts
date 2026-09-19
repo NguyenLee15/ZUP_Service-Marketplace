@@ -111,10 +111,12 @@ export class BookingsProcessor extends WorkerHost {
     // Logic: Nếu quá Y ngày -> Cảnh báo. Nếu quá Z ngày -> Tự động chuyển DONE.
     // Giả sử job này được add khi đạt mốc Z ngày.
     await this.prisma.$transaction(async (tx) => {
-      await tx.booking.update({
-        where: { id: bookingId },
+      const claim = await tx.booking.updateMany({
+        where: { id: bookingId, status: 'IN_PROGRESS' },
         data: { status: 'DONE', completedAt: new Date() },
       });
+
+      if (claim.count === 0) return;
 
       await tx.bookingStatusHistory.create({
         data: {

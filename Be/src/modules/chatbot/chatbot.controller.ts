@@ -10,6 +10,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotSessionService } from './chatbot-session.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -26,6 +27,7 @@ export class ChatbotController {
   ) {}
 
   @Post('ask')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @UseGuards(OptionalJwtAuthGuard)
   async askQuestion(
     @CurrentUser('id') userId: number | undefined,
@@ -36,6 +38,7 @@ export class ChatbotController {
   }
 
   @Post('prepare')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @UseGuards(OptionalJwtAuthGuard)
   async prepareContext(
     @CurrentUser('id') userId: number | undefined,
@@ -46,6 +49,7 @@ export class ChatbotController {
   }
 
   @Post('stream-result')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @UseGuards(OptionalJwtAuthGuard)
   async persistStreamResult(
     @CurrentUser('id') userId: number | undefined,
