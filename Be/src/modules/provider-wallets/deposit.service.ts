@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
@@ -12,6 +13,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { WalletLedgerService } from './wallet-ledger.service';
 import { WalletSharedService } from './wallet-shared.service';
 import { VnpayService } from './vnpay.service';
+import { WalletIdempotencyService } from './wallet-idempotency.service';
 
 @Injectable()
 export class DepositService {
@@ -23,54 +25,73 @@ export class DepositService {
     private readonly configService: ConfigService,
     private readonly walletLedgerService: WalletLedgerService,
     private readonly shared: WalletSharedService,
+    @Optional() private readonly idempotency?: WalletIdempotencyService,
   ) {}
 
   async createDepositRequest(
     providerId: number,
     amount: number,
     ipAddress: string,
+    idempotencyKey?: string,
   ) {
     const depositAmount = this.shared.assertAmount(
       amount,
       this.minDepositAmount,
       'Số tiền tối thiểu 10,000đ',
     );
+    const claim =
+      this.idempotency && idempotencyKey
+        ? await this.idempotency.claim(
+            providerId,
+            'wallet:deposit',
+            idempotencyKey,
+            this.idempotency.hashPayload({ amount: depositAmount, ipAddress }),
+          )
+        : undefined;
+    if (claim?.kind === 'REPLAY') return claim.responseBody;
 
-    const wallet = await this.shared.getWalletOrThrow(providerId);
+    try {
+      const wallet = await this.shared.getWalletOrThrow(providerId);
 
-    const txnRef = generateVnpayTxnRef();
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
-    const configuredReturnUrl =
-      this.configService.get<string>('VNPAY_RETURN_URL');
-    const fallbackReturnUrl =
-      this.configService.get<string>('vnpay.returnUrl') ||
-      'http://localhost:3000/payment/return';
-    const returnUrl =
-      configuredReturnUrl ||
-      (frontendUrl
-        ? `${frontendUrl.replace(/\/$/, '')}/payment/return`
-        : fallbackReturnUrl);
+      const txnRef = generateVnpayTxnRef();
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+      const configuredReturnUrl =
+        this.configService.get<string>('VNPAY_RETURN_URL');
+      const fallbackReturnUrl =
+        this.configService.get<string>('vnpay.returnUrl') ||
+        'http://localhost:3000/payment/return';
+      const returnUrl =
+        configuredReturnUrl ||
+        (frontendUrl
+          ? `${frontendUrl.replace(/\/$/, '')}/payment/return`
+          : fallbackReturnUrl);
 
-    await this.prisma.walletTransaction.create({
-      data: {
-        walletId: wallet.id,
-        type: 'DEPOSIT',
+      await this.prisma.walletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          type: 'DEPOSIT',
+          amount: depositAmount,
+          status: 'PENDING',
+          vnpayTxnRef: txnRef,
+          idempotencyKey: `vnpay:${txnRef}`,
+        },
+      });
+
+      const paymentUrl = this.vnpayService.createPaymentUrl({
         amount: depositAmount,
-        status: 'PENDING',
-        vnpayTxnRef: txnRef,
-        idempotencyKey: `vnpay:${txnRef}`,
-      },
-    });
+        txnRef,
+        orderInfo: `Nap vi provider ${providerId}`,
+        returnUrl,
+        ipAddress,
+      });
 
-    const paymentUrl = this.vnpayService.createPaymentUrl({
-      amount: depositAmount,
-      txnRef,
-      orderInfo: `Nap vi provider ${providerId}`,
-      returnUrl,
-      ipAddress,
-    });
-
-    return { data: { paymentUrl, url: paymentUrl, txnRef } };
+      const response = { data: { paymentUrl, url: paymentUrl, txnRef } };
+      if (claim) await this.idempotency?.complete(claim.id, 201, response);
+      return response;
+    } catch (error) {
+      if (claim) await this.idempotency?.fail(claim.id);
+      throw error;
+    }
   }
 
   async createManualDepositRequest(

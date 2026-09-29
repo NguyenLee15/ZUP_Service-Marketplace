@@ -5,6 +5,7 @@ import {
   Body,
   Query,
   Req,
+  Headers,
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -39,6 +40,7 @@ import { DepositService } from './deposit.service';
 import { WithdrawalService } from './withdrawal.service';
 import { PaymentCallbackService } from './payment-callback.service';
 import { PayosService } from './payos.service';
+import { WalletIdempotencyService } from './wallet-idempotency.service';
 
 @Controller('provider-wallets')
 @ApiTags('provider-wallets')
@@ -50,6 +52,7 @@ export class ProviderWalletsController {
     private readonly withdrawalService: WithdrawalService,
     private readonly paymentCallbackService: PaymentCallbackService,
     private readonly payosService: PayosService,
+    private readonly walletIdempotency: WalletIdempotencyService,
   ) {}
 
   @Get('balance')
@@ -89,7 +92,9 @@ export class ProviderWalletsController {
     @CurrentUser('id') userId: number,
     @Body() body: DepositRequestDto,
     @Req() req: Request,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
+    this.walletIdempotency.assertValidKey(idempotencyKey);
     const forwardedFor = req.headers['x-forwarded-for'];
     const ip =
       (Array.isArray(forwardedFor)
@@ -99,7 +104,12 @@ export class ProviderWalletsController {
           : undefined) ||
       req.ip ||
       '127.0.0.1';
-    return this.depositService.createDepositRequest(userId, body.amount, ip);
+    return this.depositService.createDepositRequest(
+      userId,
+      body.amount,
+      ip,
+      idempotencyKey,
+    );
   }
 
   @Post('manual-deposits')
@@ -142,8 +152,14 @@ export class ProviderWalletsController {
   async createWithdrawal(
     @CurrentUser('id') userId: number,
     @Body() body: CreateWithdrawalRequestDto,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
-    return this.withdrawalService.createWithdrawalRequest(userId, body);
+    this.walletIdempotency.assertValidKey(idempotencyKey);
+    return this.withdrawalService.createWithdrawalRequest(
+      userId,
+      body,
+      idempotencyKey,
+    );
   }
 
   @Get('withdrawals')

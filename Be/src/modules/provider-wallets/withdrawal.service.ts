@@ -2,12 +2,14 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WalletLedgerService } from './wallet-ledger.service';
 import { WalletSharedService } from './wallet-shared.service';
+import { WalletIdempotencyService } from './wallet-idempotency.service';
 
 export interface CreateWithdrawalRequestInput {
   amount: number;
@@ -24,11 +26,13 @@ export class WithdrawalService {
     private readonly prisma: PrismaService,
     private readonly walletLedgerService: WalletLedgerService,
     private readonly shared: WalletSharedService,
+    @Optional() private readonly idempotency?: WalletIdempotencyService,
   ) {}
 
   async createWithdrawalRequest(
     providerId: number,
     data: CreateWithdrawalRequestInput,
+    idempotencyKey?: string,
   ) {
     const amount = this.shared.assertAmount(
       data.amount,
@@ -44,50 +48,72 @@ export class WithdrawalService {
       data.bankAccountHolder,
       'Tên chủ tài khoản',
     );
+    const claim =
+      this.idempotency && idempotencyKey
+        ? await this.idempotency.claim(
+            providerId,
+            'wallet:withdrawal',
+            idempotencyKey,
+            this.idempotency.hashPayload({
+              amount,
+              bankName,
+              bankAccountNumber,
+              bankAccountHolder,
+            }),
+          )
+        : undefined;
+    if (claim?.kind === 'REPLAY') return claim.responseBody;
 
-    const request = await this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.providerWallet.findUnique({
-        where: { providerId },
-      });
-      if (!wallet) {
-        throw new NotFoundException({
-          code: ErrorCodes.NOT_FOUND,
-          message: 'Ví không tồn tại',
+    try {
+      const request = await this.prisma.$transaction(async (tx) => {
+        const wallet = await tx.providerWallet.findUnique({
+          where: { providerId },
         });
-      }
-      if (wallet.isRestricted) {
-        throw new BadRequestException({
-          code: ErrorCodes.VALIDATION_ERROR,
-          message: 'Ví đang bị giới hạn hoặc không có số dư để rút',
+        if (!wallet) {
+          throw new NotFoundException({
+            code: ErrorCodes.NOT_FOUND,
+            message: 'Ví không tồn tại',
+          });
+        }
+        if (wallet.isRestricted) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: 'Ví đang bị giới hạn hoặc không có số dư để rút',
+          });
+        }
+
+        const debited = await tx.providerWallet.updateMany({
+          where: { providerId, balance: { gte: amount } },
+          data: { balance: { decrement: amount } },
         });
-      }
+        if (debited.count === 0) {
+          throw new BadRequestException('Số dư ví không đủ để rút tiền');
+        }
 
-      const debited = await tx.providerWallet.updateMany({
-        where: { providerId, balance: { gte: amount } },
-        data: { balance: { decrement: amount } },
+        await this.walletLedgerService.syncWalletRestriction(providerId, tx);
+
+        return tx.withdrawalRequest.create({
+          data: {
+            providerId,
+            amount,
+            bankName,
+            bankAccountNumber,
+            bankAccountHolder,
+          },
+        });
       });
-      if (debited.count === 0) {
-        throw new BadRequestException('Số dư ví không đủ để rút tiền');
-      }
 
-      await this.walletLedgerService.syncWalletRestriction(providerId, tx);
-
-      return tx.withdrawalRequest.create({
-        data: {
-          providerId,
-          amount,
-          bankName,
-          bankAccountNumber,
-          bankAccountHolder,
-        },
-      });
-    });
-
-    return {
-      data: request,
-      message:
-        'Đã gửi yêu cầu rút tiền. Admin sẽ chuyển khoản thủ công sau khi kiểm tra.',
-    };
+      const response = {
+        data: request,
+        message:
+          'Đã gửi yêu cầu rút tiền. Admin sẽ chuyển khoản thủ công sau khi kiểm tra.',
+      };
+      if (claim) await this.idempotency?.complete(claim.id, 201, response);
+      return response;
+    } catch (error) {
+      if (claim) await this.idempotency?.fail(claim.id);
+      throw error;
+    }
   }
 
   async getWithdrawalRequests(providerId: number, page = 1, limit = 20) {

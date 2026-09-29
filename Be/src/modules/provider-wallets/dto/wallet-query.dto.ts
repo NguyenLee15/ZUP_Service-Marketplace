@@ -1,5 +1,12 @@
 import { Transform, Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
 
 const trimString = (value: unknown): unknown =>
@@ -29,7 +36,7 @@ export class ManualDepositRequestDto extends DepositRequestDto {
   @IsOptional()
   transferCode?: string;
 
-  @IsString()
+  @IsUrl({ protocols: ['https'], require_protocol: true })
   @IsOptional()
   receiptUrl?: string;
 }
