@@ -124,10 +124,27 @@ export function DashboardLoadingState({
   label?: string;
 }) {
   return (
-    <div className="flex h-full min-h-[220px] items-center justify-center text-slate-500">
-      <div className="flex flex-col items-center gap-3">
-        <div className="size-6 rounded-full border-2 border-slate-900 border-t-transparent animate-spin" />
-        <span className="text-sm font-medium">{label}</span>
+    <div
+      className="space-y-4"
+      role="status"
+      aria-label={label}
+      aria-live="polite"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <Skeleton className="h-4 w-36" />
+        <Skeleton className="h-8 w-24 rounded-md" />
+      </div>
+      <div className="flex h-[170px] items-end gap-3 rounded-md bg-slate-50/80 px-4 py-4">
+        {[48, 72, 56, 88, 64, 76, 42, 68].map((height, index) => (
+          <Skeleton
+            key={index}
+            className="flex-1 rounded-t-md rounded-b-none"
+            style={{ height: `${height}%` }}
+          />
+        ))}
+      </div>
+      <div className="flex justify-center">
+        <span className="sr-only">{label}</span>
       </div>
     </div>
   );
