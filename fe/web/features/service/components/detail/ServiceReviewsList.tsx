@@ -5,13 +5,27 @@ import { Star } from 'lucide-react';
 
 interface ServiceReviewsListProps {
   reviews: ApiPayload[];
+  total: number;
+  hasMore: boolean;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+  onLoadMore: () => void;
 }
 
-export function ServiceReviewsList({ reviews }: ServiceReviewsListProps) {
+export function ServiceReviewsList({
+  reviews,
+  total,
+  hasMore,
+  loading,
+  error,
+  onRetry,
+  onLoadMore,
+}: ServiceReviewsListProps) {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-4 text-foreground">
-        Đánh giá ({reviews.length})
+        Đánh giá ({total})
       </h2>
       {reviews.length === 0 ? (
         <p className="text-muted-foreground text-sm">Chưa có đánh giá nào</p>
@@ -48,6 +62,24 @@ export function ServiceReviewsList({ reviews }: ServiceReviewsListProps) {
               </div>
             </div>
           ))}
+          {error ? (
+            <div role="alert" className="flex items-center gap-3 text-sm text-rose-600">
+              <span>{error}</span>
+              <button type="button" className="font-semibold underline" onClick={onRetry}>
+                Thử lại
+              </button>
+            </div>
+          ) : null}
+          {hasMore ? (
+            <button
+              type="button"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground disabled:opacity-60"
+              onClick={onLoadMore}
+              disabled={loading}
+            >
+              {loading ? 'Đang tải...' : 'Xem thêm'}
+            </button>
+          ) : null}
         </div>
       )}
     </div>

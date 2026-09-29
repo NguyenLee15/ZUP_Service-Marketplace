@@ -23,6 +23,11 @@ export function ServiceDetailClient({ service }: { service: ApiPayload }) {
     providerStatsUnavailable,
     images,
     reviews,
+    reviewsTotal,
+    reviewsHasMore,
+    reviewsLoading,
+    reviewsError,
+    loadMoreReviews,
     referencePrice,
     estimateLow,
     estimateHigh,
@@ -144,7 +149,15 @@ export function ServiceDetailClient({ service }: { service: ApiPayload }) {
         <Separator />
 
         {/* Customer Reviews */}
-        <ServiceReviewsList reviews={reviews} />
+        <ServiceReviewsList
+          reviews={reviews}
+          total={reviewsTotal}
+          hasMore={reviewsHasMore}
+          loading={reviewsLoading}
+          error={reviewsError}
+          onRetry={loadMoreReviews}
+          onLoadMore={loadMoreReviews}
+        />
       </div>
 
       {/* Sticky Booking CTA Footer */}

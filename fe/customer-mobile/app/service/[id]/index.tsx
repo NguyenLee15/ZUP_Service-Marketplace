@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Avatar, Button, Chip, Text, IconButton } from 'react-native-paper';
@@ -68,9 +68,6 @@ type ProviderStats = {
 type ServiceDetailData = {
   service: ServiceDetail | null;
   stats: ProviderStats | null;
-  reviews: ReviewItem[];
-  reviewsHasMore: boolean;
-  reviewsTotal: number;
   partialError: boolean;
 };
 
@@ -151,41 +148,50 @@ export default function ServiceDetailScreen() {
     queryKey: ['service', serviceId, 'detail'],
     enabled: validServiceId,
     queryFn: async (): Promise<ServiceDetailData> => {
-      const [serviceResult, statsResult, reviewsResult] = await Promise.allSettled([
+      const [serviceResult, statsResult] = await Promise.allSettled([
         serviceApi.getById(serviceId),
         serviceApi.getProviderStats(serviceId),
-        serviceApi.getReviews(serviceId, { page: 1, limit: 5 }),
       ]);
 
       const service =
         serviceResult.status === 'fulfilled'
           ? unwrapData<ServiceDetail>(serviceResult.value)
           : null;
-      const reviews = getReviewList(
-        service?.reviews,
-        reviewsResult.status === 'fulfilled' ? reviewsResult.value : null,
-      );
-
       return {
         service,
         stats:
           statsResult.status === 'fulfilled'
             ? unwrapData<ProviderStats>(statsResult.value)
             : null,
-        reviews: reviews.items,
-        reviewsHasMore: reviews.hasMore,
-        reviewsTotal: reviews.total,
         partialError:
           serviceResult.status === 'rejected' ||
-          statsResult.status === 'rejected' ||
-          reviewsResult.status === 'rejected',
+          statsResult.status === 'rejected',
       };
     },
   });
 
   const service = detailQuery.data?.service;
   const stats = detailQuery.data?.stats;
-  const reviews = detailQuery.data?.reviews || [];
+  const reviewQuery = useInfiniteQuery({
+    queryKey: ['service', serviceId, 'reviews'],
+    enabled: validServiceId,
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) =>
+      serviceApi.getReviews(serviceId, { page: pageParam, limit: 5 }),
+    getNextPageParam: (lastPage, _pages, lastPageParam) => {
+      const page = normalizePaginated<ReviewItem>(lastPage, Number(lastPageParam));
+      return page.hasMore ? Number(lastPageParam) + 1 : undefined;
+    },
+  });
+  const reviewPages = reviewQuery.data?.pages.flatMap((page) =>
+    normalizePaginated<ReviewItem>(page).items,
+  ) || [];
+  const fallbackReviews = getReviewList(service?.reviews, null);
+  const reviews = reviewPages.length > 0 ? reviewPages : fallbackReviews.items;
+  const reviewsTotal = reviewQuery.data?.pages.length
+    ? normalizePaginated<ReviewItem>(reviewQuery.data.pages.at(-1)).total || reviews.length
+    : Number(service?.totalReviews || fallbackReviews.total);
+  const reviewsHasMore = reviewQuery.hasNextPage ?? fallbackReviews.hasMore;
   const provider = getProvider(service);
   const images = useMemo(() => getImages(service), [service]);
   const selectedImage = images[imageIndex] || images[0];
@@ -303,7 +309,13 @@ export default function ServiceDetailScreen() {
         contentContainerStyle={styles.contentWithBottomBar}
         contentInsetAdjustmentBehavior="automatic"
         refreshControl={
-          <RefreshControl refreshing={detailQuery.isRefetching} onRefresh={() => detailQuery.refetch()} />
+          <RefreshControl
+            refreshing={detailQuery.isRefetching || reviewQuery.isRefetching}
+            onRefresh={() => {
+              void detailQuery.refetch();
+              void reviewQuery.refetch();
+            }}
+          />
         }
       >
         <View style={styles.titleBlock}>
@@ -325,7 +337,7 @@ export default function ServiceDetailScreen() {
           }}
         />
 
-        {detailQuery.data?.partialError ? (
+        {detailQuery.data?.partialError || reviewQuery.isError ? (
           <InlineMessage tone="warning" message="Một số dữ liệu phụ chưa tải được. Kéo xuống để thử lại." />
         ) : null}
         {chatError ? <InlineMessage tone="error" message={chatError} /> : null}
@@ -390,14 +402,17 @@ export default function ServiceDetailScreen() {
         <View style={styles.section}>
           <SectionHeader
             title="Đánh giá gần đây"
-            subtitle={detailQuery.data?.reviewsTotal ? `${detailQuery.data.reviewsTotal} đánh giá` : undefined}
-            actionLabel={detailQuery.data?.reviewsHasMore ? 'Xem thêm' : undefined}
-            onAction={detailQuery.data?.reviewsHasMore ? () => detailQuery.refetch() : undefined}
+            subtitle={reviewsTotal ? `${reviewsTotal} đánh giá` : undefined}
+            actionLabel={reviewsHasMore ? (reviewQuery.isFetchingNextPage ? 'Đang tải...' : 'Xem thêm') : undefined}
+            onAction={reviewsHasMore ? () => void reviewQuery.fetchNextPage() : undefined}
           />
+          {reviewQuery.isError ? (
+            <InlineMessage tone="warning" message="Không thể tải thêm đánh giá. Hãy thử lại." />
+          ) : null}
           {reviews.length === 0 ? (
             <EmptyState icon="star-outline" title="Chưa có đánh giá" description="Hãy là khách hàng đầu tiên đánh giá dịch vụ này." />
           ) : (
-            reviews.slice(0, 5).map((review, index) => (
+            reviews.map((review, index) => (
               <ReviewCard key={String(review.id || `review-${index}`)} review={review} />
             ))
           )}

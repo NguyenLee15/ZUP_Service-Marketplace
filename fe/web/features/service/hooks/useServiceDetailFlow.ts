@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { Role } from '@/types';
 import { chatApi } from '@/features/chat/services/chat.api';
 import { authApi } from '@/features/auth/services/auth.api';
+import { serviceApi } from '@/features/service/services/service.api';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getSafeServiceImageSrc } from '@/lib/security/image-sources';
@@ -24,6 +25,20 @@ export function useServiceDetailFlow(service: ApiPayload) {
   const [chatLoading, setChatLoading] = useState(false);
   const [providerStats, setProviderStats] = useState<ProviderStats | null>(null);
   const [providerStatsUnavailable, setProviderStatsUnavailable] = useState(false);
+  const [reviews, setReviews] = useState<ApiPayload[]>(service?.reviews || []);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsTotal, setReviewsTotal] = useState(
+    Number(service?.totalReviews || service?.reviews?.length || 0),
+  );
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setReviews(service?.reviews || []);
+    setReviewsPage(1);
+    setReviewsTotal(Number(service?.totalReviews || service?.reviews?.length || 0));
+    setReviewsError(null);
+  }, [service?.id, service?.reviews, service?.totalReviews]);
 
   useEffect(() => {
     if (!service?.id) return;
@@ -51,7 +66,40 @@ export function useServiceDetailFlow(service: ApiPayload) {
     imageUrl: getSafeServiceImageSrc(image.imageUrl, service),
   }));
 
-  const reviews = service?.reviews || [];
+  const reviewsHasMore = reviews.length < reviewsTotal;
+
+  const loadMoreReviews = async () => {
+    if (!service?.id || reviewsLoading || !reviewsHasMore) return;
+
+    const nextPage = reviewsPage + 1;
+    setReviewsLoading(true);
+    setReviewsError(null);
+    try {
+      const response = await serviceApi.getReviews(service.id, {
+        page: nextPage,
+        limit: 10,
+      });
+      const payload = response.data?.data ?? response.data;
+      const nextReviews = Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload)
+          ? payload
+          : [];
+      const meta = payload?.meta || {};
+
+      setReviews((current) => {
+        const byId = new Map(current.map((review) => [String(review.id), review]));
+        nextReviews.forEach((review: ApiPayload) => byId.set(String(review.id), review));
+        return Array.from(byId.values());
+      });
+      setReviewsPage(nextPage);
+      setReviewsTotal(Number(meta.total ?? reviewsTotal));
+    } catch {
+      setReviewsError('Không thể tải thêm đánh giá. Vui lòng thử lại.');
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
   const referencePrice = Number(service?.referencePrice || 0);
   const estimateLow = referencePrice * 0.9;
   const estimateHigh = referencePrice * 1.1;
@@ -113,6 +161,11 @@ export function useServiceDetailFlow(service: ApiPayload) {
     providerStatsUnavailable,
     images,
     reviews,
+    reviewsTotal,
+    reviewsHasMore,
+    reviewsLoading,
+    reviewsError,
+    loadMoreReviews,
     referencePrice,
     estimateLow,
     estimateHigh,
