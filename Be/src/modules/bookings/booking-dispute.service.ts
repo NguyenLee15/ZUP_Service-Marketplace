@@ -2,11 +2,13 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import {
   BookingStatus,
   DisputeEvidenceType,
   DisputeStatus,
+  Prisma,
   WalletTransactionType,
 } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
@@ -81,115 +83,137 @@ export class BookingDisputeService {
     const uploadedEvidences: Array<{
       type: DisputeEvidenceType;
       fileUrl: string;
+      publicId: string;
     }> = [];
-    if (files && files.length > 0) {
-      for (const file of files) {
-        const uploaded = await this.cloudinaryService.uploadFile(
-          file.buffer,
-          'disputes',
-        );
-        uploadedEvidences.push({
-          type: file.mimetype.startsWith('video')
-            ? DisputeEvidenceType.VIDEO
-            : DisputeEvidenceType.IMAGE,
-          fileUrl: uploaded.url,
-        });
+    try {
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const uploaded = await this.cloudinaryService.uploadFile(
+            file.buffer,
+            'disputes',
+          );
+          uploadedEvidences.push({
+            type: file.mimetype.startsWith('video')
+              ? DisputeEvidenceType.VIDEO
+              : DisputeEvidenceType.IMAGE,
+            fileUrl: uploaded.url,
+            publicId: uploaded.publicId,
+          });
+        }
       }
+    } catch (error) {
+      await this.compensateUploadedAssets(
+        uploadedEvidences.map((evidence) => evidence.publicId),
+        error,
+      );
     }
 
-    const { updated, dispute } = await this.prisma.$transaction(async (tx) => {
-      const existing = await tx.booking.findUnique({
-        where: { id: bookingId },
-        select: {
-          status: true,
-          customerId: true,
-          autoCompletedAt: true,
-          completedAt: true,
-        },
-      });
-
-      if (!existing || existing.customerId !== customerId) {
-        throw new NotFoundException({
-          code: ErrorCodes.NOT_FOUND,
-          message: 'Đơn hàng không tồn tại',
+    let transactionResult: {
+      updated: Prisma.BookingGetPayload<object> | null;
+      dispute: { id: number };
+    };
+    try {
+      transactionResult = await this.prisma.$transaction(async (tx) => {
+        const existing = await tx.booking.findUnique({
+          where: { id: bookingId },
+          select: {
+            status: true,
+            customerId: true,
+            autoCompletedAt: true,
+            completedAt: true,
+          },
         });
-      }
 
-      if (
-        existing.status !== BookingStatus.IN_PROGRESS &&
-        existing.status !== BookingStatus.DONE
-      ) {
-        throw new BadRequestException({
-          code: ErrorCodes.BOOKING_INVALID_STATE,
-          message:
-            'Đơn hàng không ở trạng thái hợp lệ để khiếu nại hoặc đã có khiếu nại trước đó',
+        if (!existing || existing.customerId !== customerId) {
+          throw new NotFoundException({
+            code: ErrorCodes.NOT_FOUND,
+            message: 'Đơn hàng không tồn tại',
+          });
+        }
+
+        if (
+          existing.status !== BookingStatus.IN_PROGRESS &&
+          existing.status !== BookingStatus.DONE
+        ) {
+          throw new BadRequestException({
+            code: ErrorCodes.BOOKING_INVALID_STATE,
+            message:
+              'Đơn hàng không ở trạng thái hợp lệ để khiếu nại hoặc đã có khiếu nại trước đó',
+          });
+        }
+
+        // Đơn hàng đã ở trạng thái DONE và thời hạn nghiệm thu tự động đã trôi qua
+        if (
+          existing.status === BookingStatus.DONE &&
+          existing.autoCompletedAt &&
+          existing.autoCompletedAt <= new Date()
+        ) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message:
+              'Thời hạn mở khiếu nại của đơn hàng đã kết thúc (đơn đã được nghiệm thu tự động)',
+          });
+        }
+
+        const claim = await tx.booking.updateMany({
+          where: {
+            id: bookingId,
+            customerId,
+            status: { in: [BookingStatus.IN_PROGRESS, BookingStatus.DONE] },
+          },
+          data: { status: BookingStatus.DISPUTED },
         });
-      }
+        if (claim.count === 0) {
+          throw new BadRequestException({
+            code: ErrorCodes.BOOKING_INVALID_STATE,
+            message:
+              'Đơn hàng không ở trạng thái hợp lệ để khiếu nại hoặc đã có khiếu nại trước đó',
+          });
+        }
 
-      // Đơn hàng đã ở trạng thái DONE và thời hạn nghiệm thu tự động đã trôi qua
-      if (
-        existing.status === BookingStatus.DONE &&
-        existing.autoCompletedAt &&
-        existing.autoCompletedAt <= new Date()
-      ) {
-        throw new BadRequestException({
-          code: ErrorCodes.VALIDATION_ERROR,
-          message:
-            'Thời hạn mở khiếu nại của đơn hàng đã kết thúc (đơn đã được nghiệm thu tự động)',
+        const updatedBooking = await tx.booking.findUnique({
+          where: { id: bookingId },
         });
-      }
 
-      const claim = await tx.booking.updateMany({
-        where: {
-          id: bookingId,
-          customerId,
-          status: { in: [BookingStatus.IN_PROGRESS, BookingStatus.DONE] },
-        },
-        data: { status: BookingStatus.DISPUTED },
-      });
-      if (claim.count === 0) {
-        throw new BadRequestException({
-          code: ErrorCodes.BOOKING_INVALID_STATE,
-          message:
-            'Đơn hàng không ở trạng thái hợp lệ để khiếu nại hoặc đã có khiếu nại trước đó',
+        const createdDispute = await tx.dispute.create({
+          data: {
+            bookingId,
+            raisedBy: customerId,
+            reason: dto.reason,
+            status: DisputeStatus.PENDING,
+          },
         });
-      }
 
-      const updatedBooking = await tx.booking.findUnique({
-        where: { id: bookingId },
-      });
+        if (uploadedEvidences.length > 0) {
+          await tx.disputeEvidence.createMany({
+            data: uploadedEvidences.map((ev) => ({
+              disputeId: createdDispute.id,
+              type: ev.type,
+              fileUrl: ev.fileUrl,
+              uploadedBy: customerId,
+            })),
+          });
+        }
 
-      const createdDispute = await tx.dispute.create({
-        data: {
+        await this.shared.addStatusHistory(
           bookingId,
-          raisedBy: customerId,
-          reason: dto.reason,
-          status: DisputeStatus.PENDING,
-        },
+          booking.status,
+          'DISPUTED',
+          customerId,
+          dto.reason,
+          tx,
+        );
+
+        return { updated: updatedBooking, dispute: createdDispute };
       });
-
-      if (uploadedEvidences.length > 0) {
-        await tx.disputeEvidence.createMany({
-          data: uploadedEvidences.map((ev) => ({
-            disputeId: createdDispute.id,
-            type: ev.type,
-            fileUrl: ev.fileUrl,
-            uploadedBy: customerId,
-          })),
-        });
-      }
-
-      await this.shared.addStatusHistory(
-        bookingId,
-        booking.status,
-        'DISPUTED',
-        customerId,
-        dto.reason,
-        tx,
+    } catch (error) {
+      await this.compensateUploadedAssets(
+        uploadedEvidences.map((evidence) => evidence.publicId),
+        error,
       );
+    }
 
-      return { updated: updatedBooking, dispute: createdDispute };
-    });
+    const { updated, dispute } = transactionResult!;
 
     const admins = await this.prisma.user.findMany({
       where: { role: { in: ['ADMIN', 'STAFF'] }, status: 'ACTIVE' },
@@ -218,6 +242,22 @@ export class BookingDisputeService {
     });
 
     return { data: { booking: updated, dispute }, message: 'Đã gửi khiếu nại' };
+  }
+
+  private async compensateUploadedAssets(
+    publicIds: string[],
+    originalError: unknown,
+  ): Promise<never> {
+    const { failedPublicIds } =
+      await this.cloudinaryService.cleanupFiles(publicIds);
+    if (failedPublicIds.length > 0) {
+      throw new ServiceUnavailableException({
+        code: ErrorCodes.ASSET_COMPENSATION_FAILED,
+        message:
+          'Không thể hoàn tất việc dọn dẹp tệp đính kèm. Vui lòng thử lại sau.',
+      });
+    }
+    throw originalError;
   }
 
   async resolveDispute(
