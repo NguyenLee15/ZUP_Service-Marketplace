@@ -352,13 +352,14 @@ export default function LoginPage() {
         </form>
       </AuthCard>
 
-      {/* Floating demo account drawer (Recruiters & Thesis Committee) */}
-      <DevAccountDrawer
-        currentEmail={email}
-        onSelectAccount={handleSelectDemoAccount}
-        onFastLogin={handleFastDemoLogin}
-        isLoggingIn={loading}
-      />
+      {process.env.NODE_ENV !== 'production' && (
+        <DevAccountDrawer
+          currentEmail={email}
+          onSelectAccount={handleSelectDemoAccount}
+          onFastLogin={handleFastDemoLogin}
+          isLoggingIn={loading}
+        />
+      )}
     </>
   );
 }
