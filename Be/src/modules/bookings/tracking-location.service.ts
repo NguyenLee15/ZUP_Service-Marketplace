@@ -2,23 +2,21 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../shared/redis/redis.service';
-
-export const TRACKING_LOCATION_KEY_PREFIX = 'tracking:';
-
-export type TrackingLocation = {
-  lat: number;
-  lng: number;
-  heading: number;
-  speed: number;
-  updatedAt: string;
-};
+import {
+  createTrackingLocationStore,
+  TrackingLocationStore,
+} from './tracking-location.store';
 
 @Injectable()
 export class TrackingLocationService {
+  private readonly locationStore: TrackingLocationStore;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-  ) {}
+  ) {
+    this.locationStore = createTrackingLocationStore(redis);
+  }
 
   async getForCustomer(bookingId: number, customerId: number) {
     const booking = await this.prisma.booking.findFirst({
@@ -37,11 +35,7 @@ export class TrackingLocationService {
       });
     }
 
-    const location = this.redis.isEnabled()
-      ? await this.redis.getJson<TrackingLocation>(
-          `${TRACKING_LOCATION_KEY_PREFIX}${bookingId}`,
-        )
-      : null;
+    const location = await this.locationStore.get(bookingId);
 
     return { data: location };
   }

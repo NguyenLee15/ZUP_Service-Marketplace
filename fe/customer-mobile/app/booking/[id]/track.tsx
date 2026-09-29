@@ -199,6 +199,8 @@ export default function TrackingScreen() {
   const [socketError, setSocketError] = useState<string | null>(null);
   const [socketRefreshKey, setSocketRefreshKey] = useState(0);
   const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
+  const [isSocketStale, setIsSocketStale] = useState(false);
+  const [lastLiveLocationAt, setLastLiveLocationAt] = useState(0);
   const lastLiveLocationAtRef = useRef(0);
 
   const bookingQuery = useQuery({
@@ -219,8 +221,9 @@ export default function TrackingScreen() {
       trackable &&
       isOnline === true &&
       isAppActive &&
-      connectionState !== 'connected',
-    refetchInterval: connectionState === 'connected' ? false : 15_000,
+      (connectionState !== 'connected' || isSocketStale),
+    refetchInterval:
+      connectionState === 'connected' && !isSocketStale ? false : 15_000,
     refetchIntervalInBackground: false,
     retry: false,
   });
@@ -237,8 +240,21 @@ export default function TrackingScreen() {
   }, [trackingLocationQuery.data]);
 
   useEffect(() => {
+    if (!validBookingId || !trackable || connectionState !== 'connected' || !isAppActive) {
+      setIsSocketStale(false);
+      return;
+    }
+
+    setIsSocketStale(false);
+    const staleTimer = setTimeout(() => setIsSocketStale(true), 30_000);
+    return () => clearTimeout(staleTimer);
+  }, [connectionState, isAppActive, lastLiveLocationAt, trackable, validBookingId]);
+
+  useEffect(() => {
     setTrackingEnded(null);
     setLocation(null);
+    setIsSocketStale(false);
+    setLastLiveLocationAt(0);
   }, [bookingId]);
 
   useEffect(() => {
@@ -269,6 +285,7 @@ export default function TrackingScreen() {
           if (!active) return;
           setConnectionState('connected');
           setSocketError(null);
+          setLastLiveLocationAt(Date.now());
           socket?.emit('subscribeTracking', { bookingId });
         });
 
@@ -294,6 +311,7 @@ export default function TrackingScreen() {
           const nextLocation = normalizeTrackingLocation(payload, 'live');
           if (nextLocation) {
             lastLiveLocationAtRef.current = Date.now();
+            setLastLiveLocationAt(lastLiveLocationAtRef.current);
             setLocation(nextLocation);
           }
         });
@@ -436,6 +454,13 @@ export default function TrackingScreen() {
 
       {connectionMessage ? (
         <InlineMessage tone={connectionMessage.tone} message={connectionMessage.message} />
+      ) : null}
+
+      {trackingLocationQuery.isError ? (
+        <InlineMessage
+          tone="warning"
+          message="Chưa thể cập nhật vị trí gần nhất. Vẫn giữ dữ liệu vị trí hiện tại; hãy thử Làm mới sau."
+        />
       ) : null}
 
       <SummaryCard booking={booking} statusColor={statusColor} />

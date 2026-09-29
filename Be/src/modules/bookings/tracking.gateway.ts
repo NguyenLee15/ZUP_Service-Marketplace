@@ -21,11 +21,14 @@ import {
   toAuthenticatedUser,
 } from '../../common/types/auth.types';
 import type { AuthenticatedSocket } from '../../common/types/auth.types';
+import {
+  createTrackingLocationStore,
+  TrackingLocationStore,
+} from './tracking-location.store';
 
 // ---- Constants ----
 const LOCATION_TTL_SECONDS = 300; // 5 minutes
 const MIN_UPDATE_INTERVAL_MS = 2000; // Rate-limit: 2s between updates
-const REDIS_KEY_PREFIX = 'tracking:';
 const TRACKABLE_STATUSES: BookingStatus[] = [
   BookingStatus.CONFIRMED,
   BookingStatus.IN_PROGRESS,
@@ -34,13 +37,10 @@ const TRACKABLE_STATUSES: BookingStatus[] = [
 interface LocationPayload {
   lat: number;
   lng: number;
-  heading?: number;
-  speed?: number;
+  heading: number;
+  speed: number;
   updatedAt: string;
 }
-
-// ---- In-memory fallback when Redis is disabled ----
-const memoryStore = new Map<string, LocationPayload>();
 
 @WebSocketGateway({
   cors: { origin: resolveWebsocketCorsOrigin(), credentials: true },
@@ -52,12 +52,15 @@ export class TrackingGateway
   @WebSocketServer() server: Server;
   private readonly logger = new Logger('TrackingGateway');
   private lastUpdateTime = new Map<number, number>(); // bookingId → timestamp
+  private readonly locationStore: TrackingLocationStore;
 
   constructor(
     private jwtService: JwtService,
     private prisma: PrismaService,
     private redis: RedisService,
-  ) {}
+  ) {
+    this.locationStore = createTrackingLocationStore(redis);
+  }
 
   // ========== Connection Lifecycle ==========
 
@@ -143,13 +146,11 @@ export class TrackingGateway
       updatedAt: new Date().toISOString(),
     };
 
-    const redisKey = `${REDIS_KEY_PREFIX}${data.bookingId}`;
-
-    if (this.redis.isEnabled()) {
-      await this.redis.setJson(redisKey, locationPayload, LOCATION_TTL_SECONDS);
-    } else {
-      memoryStore.set(redisKey, locationPayload);
-    }
+    await this.locationStore.set(
+      data.bookingId,
+      locationPayload,
+      LOCATION_TTL_SECONDS,
+    );
 
     this.lastUpdateTime.set(data.bookingId, now);
 
@@ -191,14 +192,7 @@ export class TrackingGateway
     );
 
     // Send last known location if available
-    const redisKey = `${REDIS_KEY_PREFIX}${data.bookingId}`;
-    let lastLocation: LocationPayload | null = null;
-
-    if (this.redis.isEnabled()) {
-      lastLocation = await this.redis.getJson<LocationPayload>(redisKey);
-    } else {
-      lastLocation = memoryStore.get(redisKey) || null;
-    }
+    const lastLocation = await this.locationStore.get(data.bookingId);
 
     client.emit('lastKnownLocation', {
       bookingId: data.bookingId,
@@ -243,12 +237,7 @@ export class TrackingGateway
       });
 
       // Cleanup Redis
-      const redisKey = `${REDIS_KEY_PREFIX}${payload.bookingId}`;
-      if (this.redis.isEnabled()) {
-        await this.redis.del(redisKey);
-      } else {
-        memoryStore.delete(redisKey);
-      }
+      await this.locationStore.delete(payload.bookingId);
 
       this.lastUpdateTime.delete(payload.bookingId);
       this.logger.log(
