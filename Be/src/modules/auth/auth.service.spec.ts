@@ -20,8 +20,7 @@ jest.mock('../../common/utils/hash.util', () => ({
 type RefreshTokenRecord = {
   id: number;
   userId: number;
-  token: string;
-  tokenHash: string | null;
+  tokenHash: string;
   revoked: boolean;
   expiresAt: Date;
   user: {
@@ -34,8 +33,7 @@ type RefreshTokenRecord = {
 type PasswordResetRecord = {
   id: number;
   userId: number;
-  token: string;
-  tokenHash: string | null;
+  tokenHash: string;
   used: boolean;
   expiresAt: Date;
 };
@@ -84,16 +82,14 @@ type AuthPrismaMock = {
 type RefreshTokenCreateArg = {
   data: {
     userId: number;
-    token: string;
-    tokenHash?: string | null;
+    tokenHash: string;
   };
 };
 
 type PasswordResetCreateArg = {
   data: {
     userId: number;
-    token: string;
-    tokenHash?: string | null;
+    tokenHash: string;
   };
 };
 
@@ -198,7 +194,6 @@ describe('AuthService token hardening', () => {
       prisma.refreshToken.create as jest.Mock<unknown, [RefreshTokenCreateArg]>,
     );
     expect(createArg.data.userId).toBe(10);
-    expect(createArg.data.token).toBe('');
     expect(typeof createArg.data.tokenHash).toBe('string');
   });
 
@@ -295,7 +290,6 @@ describe('AuthService token hardening', () => {
       >,
     );
     expect(createArg.data.userId).toBe(10);
-    expect(createArg.data.token).toBe('');
     expect(typeof createArg.data.tokenHash).toBe('string');
   });
 
@@ -541,7 +535,6 @@ function refreshRecord(
   return {
     id: 1,
     userId: 10,
-    token: '',
     tokenHash: hashToken('raw-refresh'),
     revoked: false,
     expiresAt: new Date(Date.now() + 60_000),
@@ -560,7 +553,6 @@ function passwordResetRecord(
   return {
     id: 1,
     userId: 10,
-    token: '',
     tokenHash: hashToken('reset-token'),
     used: false,
     expiresAt: new Date(Date.now() + 60_000),

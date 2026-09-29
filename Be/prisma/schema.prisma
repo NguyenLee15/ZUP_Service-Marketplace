@@ -211,8 +211,7 @@ model OtpAttempt {
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  token     String   @db.Text
-  tokenHash String?  @unique @map("token_hash") @db.VarChar(64)
+  tokenHash String   @unique @map("token_hash") @db.VarChar(64)
   expiresAt DateTime @map("expires_at")
   revoked   Boolean  @default(false)
   user      User     @relation(fields: [userId], references: [id])
@@ -224,8 +223,7 @@ model RefreshToken {
 model PasswordReset {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  token     String   @db.VarChar(255)
-  tokenHash String?  @unique @map("token_hash") @db.VarChar(64)
+  tokenHash String   @unique @map("token_hash") @db.VarChar(64)
   expiresAt DateTime @map("expires_at")
   used      Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")

@@ -584,7 +584,6 @@ export class AuthService {
     await this.prisma.passwordReset.create({
       data: {
         userId: user.id,
-        token: '',
         tokenHash: hashToken(token),
         expiresAt,
       },
@@ -926,7 +925,6 @@ export class AuthService {
     await tx.refreshToken.create({
       data: {
         userId,
-        token: '',
         tokenHash: hashToken(refreshToken),
         expiresAt,
       },
