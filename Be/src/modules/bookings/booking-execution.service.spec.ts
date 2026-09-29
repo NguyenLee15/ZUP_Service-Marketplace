@@ -48,7 +48,7 @@ describe('BookingExecutionService completion compensation', () => {
         addStatusHistory: jest.fn(),
         notify: jest.fn(),
       } as unknown as BookingSharedService,
-      { assertTransition: jest.fn() } as unknown as BookingStatePolicy,
+      { assertTransition: jest.fn() },
       {} as BookingCommissionService,
     );
   });

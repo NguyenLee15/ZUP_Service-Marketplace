@@ -40,7 +40,7 @@ describe('BookingDisputeService evidence compensation', () => {
       prisma as unknown as PrismaService,
       cloudinary as unknown as CloudinaryService,
       { enqueue: jest.fn() } as unknown as JobsService,
-      { assertTransition: jest.fn() } as unknown as BookingStatePolicy,
+      { assertTransition: jest.fn() },
       {} as BookingCommissionService,
       {
         checkBooking: jest.fn().mockResolvedValue({

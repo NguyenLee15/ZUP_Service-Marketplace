@@ -27,12 +27,18 @@ describe('ReviewsService rating integrity', () => {
         }),
       },
       review: { findUnique: jest.fn().mockResolvedValue(null) },
-      $transaction: jest.fn(async (callback: (client: typeof tx) => unknown) => callback(tx)),
+      $transaction: jest.fn(async (callback: (client: typeof tx) => unknown) =>
+        callback(tx),
+      ),
     };
     const service = new ReviewsService(
       prisma as unknown as PrismaService,
-      { enqueue: jest.fn().mockResolvedValue(undefined) } as unknown as JobsService,
-      { moderateReview: jest.fn().mockResolvedValue(false) } as unknown as AiService,
+      {
+        enqueue: jest.fn().mockResolvedValue(undefined),
+      } as unknown as JobsService,
+      {
+        moderateReview: jest.fn().mockResolvedValue(false),
+      } as unknown as AiService,
     );
 
     await service.createReview(7, 99, 5, 'Great service');

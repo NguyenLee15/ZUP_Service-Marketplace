@@ -54,13 +54,17 @@ describe('TrackingLocationService', () => {
       booking: { findFirst: jest.fn().mockResolvedValue({ id: 42 }) },
     };
     const redis = { isEnabled: jest.fn().mockReturnValue(false) };
-    await memoryTrackingLocationStore.set(42, {
-      lat: 21.0285,
-      lng: 105.8542,
-      heading: 90,
-      speed: 25,
-      updatedAt: '2030-01-01T10:00:00.000Z',
-    }, 300);
+    await memoryTrackingLocationStore.set(
+      42,
+      {
+        lat: 21.0285,
+        lng: 105.8542,
+        heading: 90,
+        speed: 25,
+        updatedAt: '2030-01-01T10:00:00.000Z',
+      },
+      300,
+    );
     const service = new TrackingLocationService(
       prisma as unknown as PrismaService,
       redis as unknown as RedisService,

@@ -19,13 +19,17 @@ describe('TrackingLocationStore', () => {
       redis as unknown as RedisService,
     );
 
-    await gatewayStore.set(42, {
-      lat: 21.0285,
-      lng: 105.8542,
-      heading: 90,
-      speed: 25,
-      updatedAt: '2030-01-01T10:00:00.000Z',
-    }, 300);
+    await gatewayStore.set(
+      42,
+      {
+        lat: 21.0285,
+        lng: 105.8542,
+        heading: 90,
+        speed: 25,
+        updatedAt: '2030-01-01T10:00:00.000Z',
+      },
+      300,
+    );
 
     await expect(httpStore.get(42)).resolves.toEqual({
       lat: 21.0285,

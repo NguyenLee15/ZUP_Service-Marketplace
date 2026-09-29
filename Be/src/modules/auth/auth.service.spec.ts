@@ -141,11 +141,7 @@ describe('AuthService token hardening', () => {
       }),
     };
 
-    const hash = jest.requireMock('../../common/utils/hash.util') as {
-      comparePassword: jest.Mock;
-      needsPasswordRehash: jest.Mock;
-      hashPassword: jest.Mock;
-    };
+    const hash = jest.requireMock('../../common/utils/hash.util');
     hash.comparePassword.mockReset();
     hash.comparePassword.mockResolvedValue(false);
     hash.needsPasswordRehash.mockReset();
@@ -198,11 +194,7 @@ describe('AuthService token hardening', () => {
   });
 
   it('rehashes a valid low-cost password after successful login', async () => {
-    const hash = jest.requireMock('../../common/utils/hash.util') as {
-      comparePassword: jest.Mock;
-      needsPasswordRehash: jest.Mock;
-      hashPassword: jest.Mock;
-    };
+    const hash = jest.requireMock('../../common/utils/hash.util');
     hash.comparePassword.mockResolvedValue(true);
     hash.needsPasswordRehash.mockReturnValue(true);
     hash.hashPassword.mockResolvedValue('rehash-at-12');
