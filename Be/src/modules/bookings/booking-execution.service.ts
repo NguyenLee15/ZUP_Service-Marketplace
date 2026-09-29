@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -139,50 +143,59 @@ export class BookingExecutionService {
 
     const now = new Date();
 
-    const uploadedFiles = await Promise.all(
-      files.map((file) =>
-        this.cloudinaryService.uploadFile(file.buffer, 'bookings'),
-      ),
-    );
-
-    this.bookingStatePolicy.assertTransition(
-      booking.status,
-      BookingStatus.DONE,
-    );
-
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const claim = await tx.booking.updateMany({
-        where: {
-          id: bookingId,
-          providerId,
-          status: BookingStatus.IN_PROGRESS,
-        },
-        data: {
-          status: BookingStatus.DONE,
-          completedAt: now,
-          autoCompletedAt: null,
-        },
-      });
-      if (claim.count === 0) {
-        throw new BadRequestException({
-          code: ErrorCodes.BOOKING_INVALID_STATE,
-          message:
-            'Đơn hàng không ở trạng thái đang thực hiện hoặc đã được cập nhật',
-        });
+    const uploadedFiles: Array<{ url: string; publicId: string }> = [];
+    try {
+      for (const file of files) {
+        uploadedFiles.push(
+          await this.cloudinaryService.uploadFile(file.buffer, 'bookings'),
+        );
       }
 
-      if (uploadedFiles.length > 0) {
-        await tx.bookingAttachment.createMany({
-          data: uploadedFiles.map((uploaded) => ({
-            bookingId,
-            type: 'RESULT',
-            fileUrl: uploaded.url,
-          })),
-        });
-      }
+      this.bookingStatePolicy.assertTransition(
+        booking.status,
+        BookingStatus.DONE,
+      );
+    } catch (error) {
+      await this.compensateUploadedAssets(uploadedFiles, error);
+    }
 
-      return tx.booking.findUnique({ where: { id: bookingId } });
-    });
+    const updated = await this.prisma
+      .$transaction(async (tx) => {
+        const claim = await tx.booking.updateMany({
+          where: {
+            id: bookingId,
+            providerId,
+            status: BookingStatus.IN_PROGRESS,
+          },
+          data: {
+            status: BookingStatus.DONE,
+            completedAt: now,
+            autoCompletedAt: null,
+          },
+        });
+        if (claim.count === 0) {
+          throw new BadRequestException({
+            code: ErrorCodes.BOOKING_INVALID_STATE,
+            message:
+              'Đơn hàng không ở trạng thái đang thực hiện hoặc đã được cập nhật',
+          });
+        }
+
+        if (uploadedFiles.length > 0) {
+          await tx.bookingAttachment.createMany({
+            data: uploadedFiles.map((uploaded) => ({
+              bookingId,
+              type: 'RESULT',
+              fileUrl: uploaded.url,
+            })),
+          });
+        }
+
+        return tx.booking.findUnique({ where: { id: bookingId } });
+      })
+      .catch((error: unknown) =>
+        this.compensateUploadedAssets(uploadedFiles, error),
+      );
 
     await this.shared.addStatusHistory(
       bookingId,
@@ -200,6 +213,23 @@ export class BookingExecutionService {
     );
 
     return { data: updated, message: 'Đã báo hoàn thành' };
+  }
+
+  private async compensateUploadedAssets(
+    assets: Array<{ publicId: string }>,
+    originalError: unknown,
+  ): Promise<never> {
+    const { failedPublicIds } = await this.cloudinaryService.cleanupFiles(
+      assets.map((asset) => asset.publicId),
+    );
+    if (failedPublicIds.length > 0) {
+      throw new ServiceUnavailableException({
+        code: ErrorCodes.ASSET_COMPENSATION_FAILED,
+        message:
+          'Không thể hoàn tất việc dọn dẹp tệp kết quả. Vui lòng thử lại sau.',
+      });
+    }
+    throw originalError;
   }
 
   async customerAccept(customerId: number, bookingId: number) {
