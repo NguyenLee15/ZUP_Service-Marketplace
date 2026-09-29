@@ -108,7 +108,7 @@ export class ReviewsService {
 
         // Cập nhật avgRating + totalReviews trên Service
         const stats = await tx.review.aggregate({
-          where: { serviceId: booking.serviceId },
+          where: { serviceId: booking.serviceId, isFlagged: false },
           _avg: { rating: true },
           _count: { rating: true },
         });

@@ -41,4 +41,40 @@ describe('ProviderPublicService reviews', () => {
       }),
     );
   });
+
+  it('excludes flagged reviews from provider rating aggregates', async () => {
+    const prisma = {
+      user: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: 7,
+          fullName: 'Provider',
+          phone: null,
+          addresses: [],
+        }),
+      },
+      review: {
+        aggregate: jest.fn().mockResolvedValue({
+          _avg: { rating: 4.5 },
+          _count: { rating: 2 },
+        }),
+      },
+      service: { count: jest.fn().mockResolvedValue(1) },
+      booking: { groupBy: jest.fn().mockResolvedValue([]) },
+      $queryRaw: jest.fn().mockResolvedValue([]),
+    };
+    const service = new ProviderPublicService(
+      prisma as unknown as PrismaService,
+    );
+
+    await service.getPublicProviderProfile(7);
+
+    expect(prisma.review.aggregate).toHaveBeenCalledWith({
+      where: {
+        isFlagged: false,
+        service: { providerId: 7, isDeleted: false },
+      },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+  });
 });

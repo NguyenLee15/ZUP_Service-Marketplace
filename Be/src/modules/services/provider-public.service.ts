@@ -181,6 +181,7 @@ export class ProviderPublicService {
     const [aggregateReviews, totalServices, metricsResult] = await Promise.all([
       this.prisma.review.aggregate({
         where: {
+          isFlagged: false,
           service: {
             providerId: provider.id,
             isDeleted: false,
