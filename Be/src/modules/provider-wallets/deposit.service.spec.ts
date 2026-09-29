@@ -112,4 +112,27 @@ describe('DepositService admin manual deposit processing', () => {
 
     expect(ledger.creditWallet).not.toHaveBeenCalled();
   });
+
+  it('stores the real client IP when rejecting a manual deposit', async () => {
+    tx.manualDepositRequest.findUnique.mockResolvedValue({
+      id: 9,
+      providerId: 2,
+      status: 'PENDING',
+    });
+    tx.manualDepositRequest.updateMany.mockResolvedValue({ count: 1 });
+    tx.manualDepositRequest.findUniqueOrThrow.mockResolvedValue({ id: 9 });
+
+    await service.adminRejectManualDeposit(
+      1,
+      9,
+      'Invalid proof',
+      '203.0.113.4',
+    );
+
+    expect(tx.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ ipAddress: '203.0.113.4' }),
+      }),
+    );
+  });
 });

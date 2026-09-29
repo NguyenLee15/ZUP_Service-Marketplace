@@ -65,11 +65,13 @@ export class AdminWalletDepositsController {
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() body?: AdminWalletActionDto,
+    @Ip() ip?: string,
   ) {
     return this.depositService.adminRejectManualDeposit(
       adminId,
       id,
       body?.note,
+      ip,
     );
   }
 }

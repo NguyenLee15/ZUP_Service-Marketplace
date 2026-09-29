@@ -8,6 +8,7 @@ describe('StaffAdminService permissions', () => {
     user: {
       findUnique: jest.Mock;
     };
+    $transaction: jest.Mock;
   };
   let service: StaffAdminService;
 
@@ -16,6 +17,7 @@ describe('StaffAdminService permissions', () => {
       user: {
         findUnique: jest.fn(),
       },
+      $transaction: jest.fn(),
     };
     service = new StaffAdminService(prisma as unknown as PrismaService);
   });
@@ -38,5 +40,25 @@ describe('StaffAdminService permissions', () => {
         permissions: ['invalid_permission'],
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects updating a non-staff target', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 2,
+      role: 'CUSTOMER',
+      status: 'ACTIVE',
+    });
+
+    await expect(
+      service.updateStaff(1, '127.0.0.1', 2, { fullName: 'Changed' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects an admin updating their own account', async () => {
+    await expect(
+      service.updateStaff(1, '127.0.0.1', 1, { fullName: 'Changed' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 });

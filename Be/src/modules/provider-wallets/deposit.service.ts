@@ -242,7 +242,12 @@ export class DepositService {
     return { data: approved, message: 'Đã xác nhận nạp tiền' };
   }
 
-  async adminRejectManualDeposit(adminId: number, id: number, note?: string) {
+  async adminRejectManualDeposit(
+    adminId: number,
+    id: number,
+    note?: string,
+    ipAddress?: string,
+  ) {
     const updated = await this.prisma.$transaction(async (tx) => {
       await this.shared.expireStaleManualDeposits(tx);
 
@@ -306,7 +311,7 @@ export class DepositService {
           targetType: 'WALLET',
           targetId: id,
           description: `Từ chối nạp thủ công cho provider ${request.providerId}`,
-          ipAddress: 'System',
+          ipAddress: ipAddress || 'System',
         },
       });
 

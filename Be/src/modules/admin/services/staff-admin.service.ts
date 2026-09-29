@@ -124,6 +124,24 @@ export class StaffAdminService {
   ) {
     this.assertKnownPermissions(body.permissions);
 
+    if (adminId === id) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Không thể tự cập nhật tài khoản của chính mình',
+      });
+    }
+
+    const target = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true },
+    });
+    if (!target || target.role !== UserRole.STAFF) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Chỉ có thể cập nhật tài khoản nhân viên',
+      });
+    }
+
     const data: Prisma.UserUpdateInput = {};
     if (body.fullName) data.fullName = body.fullName;
     if (body.phone) data.phone = body.phone;
