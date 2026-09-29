@@ -1,8 +1,11 @@
 import api from "@/lib/axios";
+import type { AxiosRequestConfig } from "axios";
 import {
   AdminCommissionSettings,
   AdminPaginationParams,
 } from "../types/admin.types";
+
+type AdminRequestConfig = Pick<AxiosRequestConfig, "signal">;
 
 export const adminApi = {
   // Dashboard
@@ -16,8 +19,8 @@ export const adminApi = {
     api.get("/admin/dashboard/export-excel", { params, responseType: "blob" }),
 
   // Users
-  getUsers: (params?: AdminPaginationParams) =>
-    api.get("/admin/users", { params }),
+  getUsers: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
+    api.get("/admin/users", { params, ...config }),
   lockUser: (id: number, data?: { reason: string }) =>
     api.patch(`/admin/users/${id}/lock`, data),
   unlockUser: (id: number) => api.patch(`/admin/users/${id}/unlock`),
@@ -33,8 +36,8 @@ export const adminApi = {
 
   // Staffs — UC07
   getPermissions: () => api.get("/admin/permissions"),
-  getStaffs: (params?: AdminPaginationParams) =>
-    api.get("/admin/staffs", { params }),
+  getStaffs: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
+    api.get("/admin/staffs", { params, ...config }),
   createStaff: (data: {
     fullName: string;
     email: string;
@@ -69,11 +72,10 @@ export const adminApi = {
   hideService: (id: number, reason: string = "") =>
     api.patch(`/admin/services/${id}/hide`, { reason }),
   showService: (id: number) => api.patch(`/admin/services/${id}/show`),
-  deleteService: (id: number) => api.delete(`/admin/services/${id}`),
 
   // Bookings
-  getBookings: (params?: AdminPaginationParams) =>
-    api.get("/admin/bookings", { params }),
+  getBookings: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
+    api.get("/admin/bookings", { params, ...config }),
   getBookingDetail: (id: number) => api.get(`/admin/bookings/${id}`),
   getBookingTimeline: (id: number) => api.get(`/admin/bookings/${id}/timeline`),
   cancelBooking: (id: number, reason: string) =>
@@ -94,8 +96,8 @@ export const adminApi = {
     api.patch(`/admin/wallet-withdrawals/${id}/reject`, { note }),
 
   // Disputes — UC09
-  getDisputes: (params?: AdminPaginationParams) =>
-    api.get("/admin/disputes", { params }),
+  getDisputes: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
+    api.get("/admin/disputes", { params, ...config }),
   getDisputeDetail: (id: number) => api.get(`/admin/disputes/${id}`),
   resolveDispute: (
     id: number,
@@ -107,8 +109,8 @@ export const adminApi = {
   ) => api.patch(`/admin/disputes/${id}/resolve`, data),
 
   // Audit logs
-  getAuditLogs: (params?: AdminPaginationParams) =>
-    api.get("/admin/audit-logs", { params }),
+  getAuditLogs: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
+    api.get("/admin/audit-logs", { params, ...config }),
   exportAuditLogs: (params?: AdminPaginationParams) =>
     api.get("/admin/audit-logs/export", { params, responseType: "blob" }),
 
