@@ -29,6 +29,7 @@ export default function AddressesPage() {
     wardField,
     handleProvinceSelect,
     closeModal,
+    retryAddresses,
     onSubmit,
     deleteAddress,
     setDefaultAddress,
@@ -67,6 +68,14 @@ export default function AddressesPage() {
         >
           <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />
           <span className="text-sm font-medium">{errorMessage}</span>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={retryAddresses}
+            className="ml-auto shrink-0 rounded-lg border-rose-300 bg-transparent text-rose-800 hover:bg-rose-100 dark:border-rose-700 dark:text-rose-200 dark:hover:bg-rose-950/60"
+          >
+            Thử lại
+          </Button>
         </div>
       )}
 

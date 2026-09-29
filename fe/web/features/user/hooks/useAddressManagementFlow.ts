@@ -228,6 +228,7 @@ export function useAddressManagementFlow() {
     wardField,
     handleProvinceSelect,
     closeModal,
+    retryAddresses: loadAddresses,
     onSubmit,
     deleteAddress,
     setDefaultAddress,
