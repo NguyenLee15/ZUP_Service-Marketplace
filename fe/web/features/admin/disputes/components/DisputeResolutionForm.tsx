@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { DisputeDetailData } from '../types/dispute-detail.types';
+import { AdminActionConfirmDialog } from '../../components/AdminActionConfirmDialog';
 
 interface DisputeResolutionFormProps {
   dispute: DisputeDetailData;
@@ -42,6 +43,7 @@ export function DisputeResolutionForm({
   onSubmit,
 }: DisputeResolutionFormProps) {
   const isResolved = dispute.status === 'RESOLVED';
+  const [confirmationOpen, setConfirmationOpen] = React.useState(false);
 
   const formatPrice = (p: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
@@ -171,7 +173,7 @@ export function DisputeResolutionForm({
 
             {/* Submit Button */}
             <Button
-              onClick={onSubmit}
+              onClick={() => setConfirmationOpen(true)}
               disabled={submitting || !decision}
               className={`h-12 w-full rounded-xl text-sm font-bold shadow-lg transition-all ${
                 decision === 'PENALIZE'
@@ -237,6 +239,23 @@ export function DisputeResolutionForm({
             </div>
           </div>
         )}
+        <AdminActionConfirmDialog
+          open={confirmationOpen}
+          onOpenChange={setConfirmationOpen}
+          title={decision === 'PENALIZE' ? 'Xác nhận phạt nhà cung cấp?' : 'Xác nhận phán quyết?'}
+          description={
+            decision === 'PENALIZE'
+              ? 'Thao tác này sẽ trừ tiền khỏi ví nhà cung cấp và không thể hoàn tác.'
+              : 'Thao tác này sẽ chốt trạng thái tranh chấp và không thể hoàn tác.'
+          }
+          confirmLabel="Chốt phán quyết"
+          destructive={decision === 'PENALIZE'}
+          loading={submitting}
+          onConfirm={() => {
+            setConfirmationOpen(false);
+            onSubmit();
+          }}
+        />
       </CardContent>
     </Card>
   );

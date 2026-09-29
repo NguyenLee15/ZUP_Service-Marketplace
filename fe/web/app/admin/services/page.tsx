@@ -34,6 +34,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { adminApi } from '@/features/auth/services/api';
 import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminActionConfirmDialog } from '@/features/admin/components/AdminActionConfirmDialog';
 import { AdminPermission } from '@/types/admin-permissions';
 
 const statusConfig: Record<string, { label: string; color: string; icon: ApiPayload }> = {
@@ -59,6 +60,10 @@ export default function AdminServicesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [confirmation, setConfirmation] = useState<{
+    action: 'approve' | 'reject' | 'hide' | 'show';
+    id: number;
+  } | null>(null);
 
   const fetchRequestIdRef = useRef(0);
 
@@ -157,6 +162,16 @@ export default function AdminServicesPage() {
     } finally {
       setTogglingId(null);
     }
+  };
+
+  const confirmAction = async () => {
+    if (!confirmation) return;
+    const { action, id } = confirmation;
+    setConfirmation(null);
+    if (action === 'approve') await handleApprove(id);
+    if (action === 'reject') await handleReject(id);
+    if (action === 'hide') await handleHide(id);
+    if (action === 'show') await handleShow(id);
   };
 
   const formatPrice = (p: number) => new Intl.NumberFormat('vi-VN').format(p) + '₫';
@@ -276,7 +291,7 @@ export default function AdminServicesPage() {
                               variant="ghost"
                               size="sm"
                               disabled={togglingId === service.id}
-                              onClick={() => handleHide(service.id)}
+                              onClick={() => setConfirmation({ action: 'hide', id: service.id })}
                               aria-label="Ẩn dịch vụ"
                               title="Ẩn dịch vụ"
                             >
@@ -292,7 +307,7 @@ export default function AdminServicesPage() {
                               variant="ghost"
                               size="sm"
                               disabled={togglingId === service.id}
-                              onClick={() => handleShow(service.id)}
+                              onClick={() => setConfirmation({ action: 'show', id: service.id })}
                               aria-label="Mở ẩn dịch vụ"
                               title="Mở ẩn dịch vụ"
                             >
@@ -417,11 +432,11 @@ export default function AdminServicesPage() {
                   {selectedService.status === 'PENDING' && (
                     <>
                       <Button className="bg-green-600 hover:bg-green-700" disabled={actionLoading}
-                        onClick={() => handleApprove(selectedService.id)}>
+                        onClick={() => setConfirmation({ action: 'approve', id: selectedService.id })}>
                         <CheckCircle className="w-4 h-4 mr-1" /> Duyệt
                       </Button>
                       <Button variant="destructive" disabled={!rejectReason || actionLoading}
-                        onClick={() => handleReject(selectedService.id)}>
+                        onClick={() => setConfirmation({ action: 'reject', id: selectedService.id })}>
                         <XCircle className="w-4 h-4 mr-1" /> Từ Chối
                       </Button>
                     </>
@@ -432,6 +447,26 @@ export default function AdminServicesPage() {
           )}
         </DialogContent>
       </Dialog>
+      <AdminActionConfirmDialog
+        open={confirmation !== null}
+        onOpenChange={(open) => {
+          if (!open && !actionLoading && !togglingId) setConfirmation(null);
+        }}
+        title={
+          confirmation?.action === 'approve'
+            ? 'Duyệt dịch vụ?'
+            : confirmation?.action === 'reject'
+              ? 'Từ chối dịch vụ?'
+              : confirmation?.action === 'hide'
+                ? 'Ẩn dịch vụ?'
+                : 'Hiện dịch vụ?'
+        }
+        description="Thao tác này sẽ thay đổi trạng thái hiển thị của dịch vụ trong hệ thống. Vui lòng xác nhận trước khi tiếp tục."
+        confirmLabel={confirmation?.action === 'reject' || confirmation?.action === 'hide' ? 'Xác nhận thay đổi' : 'Xác nhận'}
+        destructive={confirmation?.action === 'reject' || confirmation?.action === 'hide'}
+        loading={actionLoading || togglingId !== null}
+        onConfirm={confirmAction}
+      />
       </div>
     </AdminPermissionGuard>
   );

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KycDetail } from "../types/kyc.types";
+import { AdminActionConfirmDialog } from "../../components/AdminActionConfirmDialog";
 
 interface KycDecisionCardProps {
   kyc: KycDetail;
@@ -26,10 +27,11 @@ export function KycDecisionCard({
 }: KycDecisionCardProps) {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [confirmation, setConfirmation] = useState<"approve" | "reject" | null>(null);
 
   const handleConfirmReject = () => {
     if (!rejectReason.trim()) return;
-    onReject(rejectReason.trim());
+    setConfirmation("reject");
   };
 
   return (
@@ -54,7 +56,7 @@ export function KycDecisionCard({
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-sm disabled:opacity-50"
                   disabled={actionLoading || !canApprove}
                   title={!canApprove ? "Yêu cầu quyền Duyệt hồ sơ (KYC_APPROVE)" : undefined}
-                  onClick={onApprove}
+                  onClick={() => setConfirmation("approve")}
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>Duyệt hồ sơ này</span>
@@ -137,6 +139,22 @@ export function KycDecisionCard({
           </div>
         )}
       </CardContent>
+      <AdminActionConfirmDialog
+        open={confirmation !== null}
+        onOpenChange={(open) => {
+          if (!open && !actionLoading) setConfirmation(null);
+        }}
+        title={confirmation === "approve" ? "Duyệt hồ sơ KYC?" : "Từ chối hồ sơ KYC?"}
+        description="Quyết định này thay đổi trạng thái xác minh của nhà cung cấp và không nên thực hiện nhầm."
+        confirmLabel={confirmation === "approve" ? "Duyệt hồ sơ" : "Từ chối hồ sơ"}
+        destructive={confirmation === "reject"}
+        loading={actionLoading}
+        onConfirm={() => {
+          if (confirmation === "approve") onApprove();
+          if (confirmation === "reject") onReject(rejectReason.trim());
+          setConfirmation(null);
+        }}
+      />
     </Card>
   );
 }
