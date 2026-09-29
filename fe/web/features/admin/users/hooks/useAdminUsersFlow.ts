@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
+import { parseAdminUsersResponse } from "@/features/admin/schemas/admin-response.schemas";
 import {
   AdminUserItem,
   AdminUserRoleFilter,
@@ -46,15 +47,11 @@ export function useAdminUsersFlow() {
       })
       .then((res) => {
         if (currentRequestId !== requestIdRef.current) return;
-        setUsers((res.data?.data || []) as AdminUserItem[]);
-        setTotalPages(res.data?.meta?.totalPages || 1);
+        const payload = parseAdminUsersResponse(res.data);
+        setUsers(payload.data as AdminUserItem[]);
+        setTotalPages(payload.meta.totalPages);
         setStatusCounts(
-          res.data?.meta?.statusCounts || {
-            total: 0,
-            active: 0,
-            pending: 0,
-            locked: 0,
-          },
+          payload.meta.statusCounts,
         );
       })
       .catch((err) => {

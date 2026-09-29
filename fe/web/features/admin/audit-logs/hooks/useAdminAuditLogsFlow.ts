@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
+import { parseAdminAuditLogsResponse } from "@/features/admin/schemas/admin-response.schemas";
 import { AuditFilters, AuditLogItem } from "../types/audit-log.types";
 
 export const initialAuditFilters: AuditFilters = {
@@ -16,21 +17,6 @@ export const initialAuditFilters: AuditFilters = {
   page: 1,
   limit: 20,
 };
-
-function unwrapList(payload: unknown): { data: AuditLogItem[]; meta: { total?: number; totalPages?: number } } {
-  const p = payload as { data?: unknown; meta?: { total?: number; totalPages?: number } };
-  if (Array.isArray(p?.data)) {
-    return { data: p.data as AuditLogItem[], meta: p?.meta || {} };
-  }
-  const nested = p?.data as { data?: unknown; meta?: { total?: number; totalPages?: number } };
-  if (Array.isArray(nested?.data)) {
-    return {
-      data: nested.data as AuditLogItem[],
-      meta: nested.meta || p?.meta || {},
-    };
-  }
-  return { data: [], meta: p?.meta || nested?.meta || {} };
-}
 
 function compactFilters(filters: AuditFilters) {
   return {
@@ -70,7 +56,7 @@ export function useAdminAuditLogsFlow() {
     try {
       const res = await adminApi.getAuditLogs(queryParams);
       if (currentRequestId !== fetchRequestIdRef.current) return;
-      const unwrapped = unwrapList(res.data);
+      const unwrapped = parseAdminAuditLogsResponse(res.data);
       setLogs(unwrapped.data);
       setMeta(unwrapped.meta);
     } catch (err: unknown) {
