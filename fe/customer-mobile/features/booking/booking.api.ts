@@ -16,6 +16,8 @@ export const bookingApi = {
   getMyBookings: (params?: Record<string, unknown>) =>
     api.get("/bookings", { params }),
   getById: (id: number) => api.get(`/bookings/${id}`),
+  getTrackingLocation: (id: number) =>
+    api.get(`/bookings/${id}/tracking/location`),
   exportHistoryPdf: (params?: Record<string, unknown>) =>
     api.get("/bookings/export-pdf", { params, responseType: "arraybuffer" }),
   exportReceiptPdf: (id: number) =>

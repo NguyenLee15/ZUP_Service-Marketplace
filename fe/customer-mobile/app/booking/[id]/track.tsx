@@ -2,7 +2,6 @@ import { useActiveColors } from '../../../hooks/useActiveColors';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, AppState, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { io } from 'socket.io-client';
 import { useQuery } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -17,7 +16,6 @@ import {
 } from '../../../components/customer/customer-ui';
 import { BOOKING_STATUS_LABEL, getBookingStatusColor } from '../../../constants/booking-status';
 import { Colors } from '../../../constants/colors';
-import { WS_URL } from '../../../constants/api';
 import { bookingApi } from '../../../features/booking/booking.api';
 import { getApiErrorMessage, unwrapData } from '../../../lib/api-response';
 import { formatDateTime } from '../../../lib/format';
@@ -200,6 +198,8 @@ export default function TrackingScreen() {
   const [connectionState, setConnectionState] = useState<TrackingConnectionState>('idle');
   const [socketError, setSocketError] = useState<string | null>(null);
   const [socketRefreshKey, setSocketRefreshKey] = useState(0);
+  const [isAppActive, setIsAppActive] = useState(AppState.currentState === 'active');
+  const lastLiveLocationAtRef = useRef(0);
 
   const bookingQuery = useQuery({
     queryKey: ['booking', bookingId],
@@ -209,6 +209,32 @@ export default function TrackingScreen() {
 
   const booking = bookingQuery.data;
   const trackable = isTrackableStatus(booking);
+
+  const trackingLocationQuery = useQuery({
+    queryKey: ['booking-tracking-location', bookingId],
+    queryFn: async () =>
+      unwrapData<unknown>(await bookingApi.getTrackingLocation(bookingId)),
+    enabled:
+      validBookingId &&
+      trackable &&
+      isOnline === true &&
+      isAppActive &&
+      connectionState !== 'connected',
+    refetchInterval: connectionState === 'connected' ? false : 15_000,
+    refetchIntervalInBackground: false,
+    retry: false,
+  });
+
+  useEffect(() => {
+    const nextLocation = normalizeTrackingLocation(
+      trackingLocationQuery.data,
+      'lastKnown',
+    );
+    if (!nextLocation || Date.now() - lastLiveLocationAtRef.current < 30_000) {
+      return;
+    }
+    setLocation(nextLocation);
+  }, [trackingLocationQuery.data]);
 
   useEffect(() => {
     setTrackingEnded(null);
@@ -222,14 +248,14 @@ export default function TrackingScreen() {
     }
 
     let active = true;
-    let socket: ReturnType<typeof io> | null = null;
+    let socket: Awaited<ReturnType<typeof getTrackingSocket>> | null = null;
 
     setConnectionState('connecting');
     setSocketError(null);
 
     storage
       .getAccessToken()
-      .then((token) => {
+      .then(async (token) => {
         if (!active) return;
         if (!token) {
           setConnectionState('error');
@@ -237,12 +263,7 @@ export default function TrackingScreen() {
           return;
         }
 
-        socket = io(`${WS_URL}/tracking`, {
-          transports: ['websocket'],
-          auth: (cb) => {
-            storage.getAccessToken().then(t => cb({ token: t }));
-          },
-        });
+        socket = await getTrackingSocket();
 
         socket.on('connect', () => {
           if (!active) return;
@@ -271,13 +292,22 @@ export default function TrackingScreen() {
         socket.on('providerLocation', (payload: any) => {
           if (!active || Number(payload?.bookingId) !== bookingId) return;
           const nextLocation = normalizeTrackingLocation(payload, 'live');
-          if (nextLocation) setLocation(nextLocation);
+          if (nextLocation) {
+            lastLiveLocationAtRef.current = Date.now();
+            setLocation(nextLocation);
+          }
         });
 
         socket.on('trackingEnded', (payload: any) => {
           if (!active || Number(payload?.bookingId) !== bookingId) return;
           setTrackingEnded(payload?.reason || 'Đã kết thúc theo dõi');
           setConnectionState('disconnected');
+        });
+
+        socket.on('error', (error: Error) => {
+          if (!active) return;
+          setConnectionState('error');
+          setSocketError(error?.message || 'Không thể kết nối tracking realtime.');
         });
       })
       .catch((error) => {
@@ -287,6 +317,8 @@ export default function TrackingScreen() {
       });
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
+      const nextIsActive = nextAppState === 'active';
+      setIsAppActive(nextIsActive);
       if (nextAppState === 'active' && socket) {
         if (!socket.connected) {
           socket.connect();
@@ -298,6 +330,13 @@ export default function TrackingScreen() {
       active = false;
       subscription.remove();
       socket?.emit('unsubscribeTracking', { bookingId });
+      socket?.off('connect');
+      socket?.off('disconnect');
+      socket?.off('connect_error');
+      socket?.off('error');
+      socket?.off('lastKnownLocation');
+      socket?.off('providerLocation');
+      socket?.off('trackingEnded');
       socket?.disconnect();
     };
   }, [bookingId, socketRefreshKey, trackable, validBookingId]);
@@ -323,6 +362,7 @@ export default function TrackingScreen() {
   const refreshTracking = () => {
     Haptics.selectionAsync().catch(() => {});
     bookingQuery.refetch();
+    trackingLocationQuery.refetch();
     setSocketRefreshKey((value) => value + 1);
   };
 
