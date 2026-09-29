@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface PublicSocialConfig {
@@ -28,6 +29,11 @@ const SOCIAL_KEYS = [
   'social.tiktok.videoUrl',
 ] as const;
 
+export interface SocialSettingsAuditContext {
+  adminId: number;
+  ip?: string;
+}
+
 @Injectable()
 export class SettingsService {
   constructor(
@@ -54,7 +60,10 @@ export class SettingsService {
     };
   }
 
-  async updatePublicSocialConfig(input: Partial<PublicSocialConfig>) {
+  async updatePublicSocialConfig(
+    input: Partial<PublicSocialConfig>,
+    auditContext?: SocialSettingsAuditContext,
+  ) {
     const entries: Array<{ key: string; value: string }> = [];
 
     if (typeof input.enabled === 'boolean') {
@@ -91,15 +100,34 @@ export class SettingsService {
       });
     }
 
-    await Promise.all(
-      entries.map((entry) =>
-        this.prisma.systemSetting.upsert({
-          where: { key: entry.key },
-          create: entry,
-          update: { value: entry.value },
-        }),
-      ),
-    );
+    if (entries.length > 0) {
+      await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        await Promise.all(
+          entries.map((entry) =>
+            tx.systemSetting.upsert({
+              where: { key: entry.key },
+              create: entry,
+              update: { value: entry.value },
+            }),
+          ),
+        );
+
+        if (auditContext) {
+          await tx.auditLog.create({
+            data: {
+              actorId: auditContext.adminId,
+              action: 'UPDATE_SOCIAL_SETTINGS',
+              targetType: 'SYSTEM_SETTING',
+              targetId: 0,
+              description: `Cập nhật cấu hình mạng xã hội: ${entries
+                .map((entry) => entry.key.replace('social.', ''))
+                .join(', ')}`,
+              ipAddress: auditContext.ip,
+            },
+          });
+        }
+      });
+    }
 
     return this.getPublicSocialConfig();
   }

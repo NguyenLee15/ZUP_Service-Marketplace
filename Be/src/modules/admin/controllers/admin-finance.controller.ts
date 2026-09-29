@@ -59,8 +59,15 @@ export class AdminFinanceController {
   @Patch('social')
   @Permissions(AdminPermission.SETTINGS_MANAGE)
   @ApiOperation({ summary: 'Update public social configuration' })
-  async updateSocialSettings(@Body() body: UpdateSocialConfigDto) {
-    const data = await this.settingsService.updatePublicSocialConfig(body);
+  async updateSocialSettings(
+    @CurrentUser('id') adminId: number,
+    @Body() body: UpdateSocialConfigDto,
+    @Ip() ip: string,
+  ) {
+    const data = await this.settingsService.updatePublicSocialConfig(body, {
+      adminId,
+      ip,
+    });
     return { data, message: 'Đã cập nhật cấu hình mạng xã hội' };
   }
 }
