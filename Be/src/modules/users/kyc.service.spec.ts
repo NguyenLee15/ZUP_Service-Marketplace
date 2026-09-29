@@ -1,4 +1,5 @@
 import { KycService } from './kyc.service';
+import { BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -13,7 +14,7 @@ function file(name: string): Express.Multer.File {
     destination: '',
     filename: name,
     path: '',
-    buffer: Buffer.from('image'),
+    buffer: Buffer.from([0xff, 0xd8, 0xff, 0x00]),
     stream: undefined as never,
   };
 }
@@ -47,6 +48,23 @@ describe('KycService upload compensation', () => {
       cloudinary as unknown as CloudinaryService,
       { emit: jest.fn() } as unknown as EventEmitter2,
     );
+  });
+
+  it('rejects an image with a forged MIME type before Cloudinary upload', async () => {
+    cloudinary.uploadFile.mockResolvedValue({
+      url: 'https://cdn/front',
+      publicId: 'kyc-front',
+    });
+
+    await expect(
+      service.submitKyc(7, {
+        cccdFront: { ...file('front.jpg'), buffer: Buffer.from('not-jpeg') },
+        cccdBack: file('back.jpg'),
+        portrait: file('portrait.jpg'),
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(cloudinary.uploadFile).not.toHaveBeenCalled();
   });
 
   it('cleans completed KYC uploads when a later upload fails', async () => {

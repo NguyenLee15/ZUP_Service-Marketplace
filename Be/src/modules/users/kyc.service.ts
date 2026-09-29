@@ -11,6 +11,7 @@ import { KycStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
+import { hasValidImageSignature } from '../../common/constants/upload-limits.constant';
 
 @Injectable()
 export class KycService {
@@ -44,6 +45,23 @@ export class KycService {
       throw new BadRequestException({
         code: ErrorCodes.DUPLICATE_KYC,
         message: 'Bạn đã có yêu cầu KYC đang chờ duyệt',
+      });
+    }
+
+    const filesToValidate = [
+      files.cccdFront,
+      files.cccdBack,
+      files.portrait,
+      ...(files.certificate ? [files.certificate] : []),
+    ];
+    if (
+      filesToValidate.some(
+        (file) => !hasValidImageSignature(file.mimetype, file.buffer),
+      )
+    ) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_ERROR,
+        message: 'Nội dung tệp hình ảnh không hợp lệ',
       });
     }
 
