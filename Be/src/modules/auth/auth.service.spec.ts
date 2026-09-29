@@ -187,9 +187,7 @@ describe('AuthService token hardening', () => {
 
     expect(result.data.accessToken).toBe('access-token');
     expect(prisma.refreshToken.findFirst).toHaveBeenCalledWith({
-      where: {
-        OR: [{ tokenHash: hashToken('raw-refresh') }, { token: 'raw-refresh' }],
-      },
+      where: { tokenHash: hashToken('raw-refresh') },
       include: { user: true },
     });
     expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
@@ -271,20 +269,15 @@ describe('AuthService token hardening', () => {
     expect(prisma.refreshToken.create).not.toHaveBeenCalled();
   });
 
-  it('keeps legacy raw refresh token fallback until expiry', async () => {
-    prisma.refreshToken.findFirst.mockResolvedValue(
-      refreshRecord({ token: 'legacy-refresh', tokenHash: null }),
+  it('rejects refresh tokens that have no persisted hash', async () => {
+    prisma.refreshToken.findFirst.mockResolvedValue(null);
+
+    await expect(service.refreshToken('legacy-refresh')).rejects.toBeInstanceOf(
+      UnauthorizedException,
     );
 
-    await service.refreshToken('legacy-refresh');
-
     expect(prisma.refreshToken.findFirst).toHaveBeenCalledWith({
-      where: {
-        OR: [
-          { tokenHash: hashToken('legacy-refresh') },
-          { token: 'legacy-refresh' },
-        ],
-      },
+      where: { tokenHash: hashToken('legacy-refresh') },
       include: { user: true },
     });
   });
@@ -317,9 +310,7 @@ describe('AuthService token hardening', () => {
     });
 
     expect(prisma.passwordReset.findFirst).toHaveBeenCalledWith({
-      where: {
-        OR: [{ tokenHash: hashToken('reset-token') }, { token: 'reset-token' }],
-      },
+      where: { tokenHash: hashToken('reset-token') },
     });
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 10 },
@@ -368,23 +359,18 @@ describe('AuthService token hardening', () => {
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('keeps legacy raw password reset token fallback until expiry', async () => {
-    prisma.passwordReset.findFirst.mockResolvedValue(
-      passwordResetRecord({ token: 'legacy-reset', tokenHash: null }),
-    );
+  it('rejects password reset tokens that have no persisted hash', async () => {
+    prisma.passwordReset.findFirst.mockResolvedValue(null);
 
-    await service.resetPassword({
-      token: 'legacy-reset',
-      newPassword: 'Password123!',
-    });
+    await expect(
+      service.resetPassword({
+        token: 'legacy-reset',
+        newPassword: 'Password123!',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(prisma.passwordReset.findFirst).toHaveBeenCalledWith({
-      where: {
-        OR: [
-          { tokenHash: hashToken('legacy-reset') },
-          { token: 'legacy-reset' },
-        ],
-      },
+      where: { tokenHash: hashToken('legacy-reset') },
     });
   });
 

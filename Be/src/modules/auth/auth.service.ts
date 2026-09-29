@@ -470,11 +470,9 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     const tokenHash = hashToken(refreshToken);
 
-    // 1. Tìm token hash mới, fallback legacy raw token cho phiên cũ
+    // 1. Chỉ tra cứu token hash sau phase A của migration
     const tokenRecord = await this.prisma.refreshToken.findFirst({
-      where: {
-        OR: [{ tokenHash }, { token: refreshToken }],
-      },
+      where: { tokenHash },
       include: { user: true },
     });
 
@@ -611,11 +609,9 @@ export class AuthService {
   async resetPassword(dto: ResetPasswordDto) {
     const tokenHash = hashToken(dto.token);
 
-    // 1. Tìm token hash mới, fallback legacy raw token
+    // 1. Chỉ tra cứu token hash sau phase A của migration
     const resetRecord = await this.prisma.passwordReset.findFirst({
-      where: {
-        OR: [{ tokenHash }, { token: dto.token }],
-      },
+      where: { tokenHash },
     });
 
     if (
