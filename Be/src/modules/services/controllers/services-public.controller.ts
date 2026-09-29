@@ -27,6 +27,7 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { IMAGE_UPLOAD_LIMITS } from '../../../common/constants/upload-limits.constant';
+import { ServiceReviewsQueryDto } from '../dto/service-reviews-query.dto';
 import {
   ApiErrorResponses,
   ApiSuccessResponse,
@@ -111,15 +112,13 @@ export class ServicesController {
   @Get(':id/reviews')
   async getReviews(
     @Param('id', ParseIntPipe) serviceId: number,
-    @Query('rating') rating?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: ServiceReviewsQueryDto,
   ) {
     return this.providerPublicService.getServiceReviews(
       serviceId,
-      rating ? parseInt(rating, 10) : undefined,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 10,
+      query.rating,
+      query.page,
+      query.limit,
     );
   }
 
