@@ -25,7 +25,7 @@ function authCookieOptions(maxAge?: number) {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
+    sameSite: "strict" as const,
     path: "/",
     ...(maxAge === undefined ? {} : { maxAge }),
   };
