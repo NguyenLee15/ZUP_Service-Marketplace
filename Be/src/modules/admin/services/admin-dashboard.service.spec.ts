@@ -5,6 +5,7 @@ import { AdminDashboardExportService } from './admin-dashboard-export.service';
 
 describe('AdminDashboardService', () => {
   let prisma: {
+    $queryRaw: jest.Mock;
     booking: {
       count: jest.Mock;
       groupBy: jest.Mock;
@@ -34,6 +35,7 @@ describe('AdminDashboardService', () => {
 
   beforeEach(() => {
     prisma = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
       booking: {
         count: jest.fn().mockResolvedValue(10),
         groupBy: jest.fn().mockResolvedValue([]),
@@ -98,5 +100,14 @@ describe('AdminDashboardService', () => {
       expect.any(Array),
       filters,
     );
+  });
+
+  it('uses database aggregation without loading historical rows into Node', async () => {
+    await service.getDashboardStats({ groupBy: 'month' });
+    await service.getDashboardChartData({ groupBy: 'month' });
+
+    expect(prisma.$queryRaw).toHaveBeenCalled();
+    expect(prisma.quotation.findMany).not.toHaveBeenCalled();
+    expect(prisma.booking.findMany).not.toHaveBeenCalled();
   });
 });

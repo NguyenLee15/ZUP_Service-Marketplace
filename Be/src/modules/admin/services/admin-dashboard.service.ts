@@ -54,8 +54,7 @@ export class AdminDashboardService {
       totalProviders,
       totalServices,
       statusCounts,
-      quotationAggregate,
-      quotations,
+      financialAggregate,
     ] = await Promise.all([
       this.prisma.booking.count({ where: bookingWhere }),
       this.prisma.user.count({
@@ -70,32 +69,20 @@ export class AdminDashboardService {
         where: bookingWhere,
         _count: { id: true },
       }),
-      this.prisma.quotation.aggregate({
-        where: {
-          booking: { ...bookingWhere, status: BookingStatus.DONE },
-          status: 'ACCEPTED',
-        },
-        _sum: { actualPrice: true },
-        _count: { id: true },
-      }),
-      this.prisma.quotation.findMany({
-        where: {
-          booking: { ...bookingWhere, status: BookingStatus.DONE },
-          status: 'ACCEPTED',
-        },
-        select: { actualPrice: true, commissionRateSnapshot: true },
-      }),
+      this.prisma.$queryRaw<
+        Array<{
+          totalRevenue: number | string | null;
+          commissionRevenue: number | string | null;
+          quotationCount: number;
+        }>
+      >(this.buildFinancialAggregateQuery(normalized)),
     ]);
 
     const statsMap = this.toStatusMap(statusCounts);
-    const totalRevenue = Number(quotationAggregate._sum.actualPrice || 0);
-    const commissionRevenue = quotations.reduce(
-      (sum, item) =>
-        sum +
-        (Number(item.actualPrice) * Number(item.commissionRateSnapshot)) / 100,
-      0,
-    );
-    const quotationCount = quotationAggregate._count.id || 0;
+    const financial = financialAggregate[0];
+    const totalRevenue = Number(financial?.totalRevenue || 0);
+    const commissionRevenue = Number(financial?.commissionRevenue || 0);
+    const quotationCount = financial?.quotationCount || 0;
 
     return {
       totalBookings,
@@ -121,78 +108,155 @@ export class AdminDashboardService {
     const normalized = this.normalizeFilters(filters);
     const bookingWhere = this.buildBookingWhere(normalized);
 
-    const [statusCounts, quotations, bookings, filterOptions] =
-      await Promise.all([
-        this.prisma.booking.groupBy({
-          by: ['status'],
-          where: bookingWhere,
-          _count: { id: true },
-        }),
-        this.prisma.quotation.findMany({
-          where: {
-            booking: { ...bookingWhere, status: BookingStatus.DONE },
-            status: 'ACCEPTED',
-          },
-          select: {
-            actualPrice: true,
-            commissionRateSnapshot: true,
-            booking: { select: { createdAt: true } },
-          },
-          orderBy: { booking: { createdAt: 'asc' } },
-        }),
-        this.prisma.booking.findMany({
-          where: bookingWhere,
-          select: {
-            province: true,
-            service: {
-              select: {
-                id: true,
-                name: true,
-                category: { select: { id: true, name: true } },
-              },
-            },
-          },
-        }),
-        this.getFilterOptions(),
-      ]);
-
-    const revenueMap = new Map<string, number>();
-    for (const item of quotations) {
-      const label = this.periodLabel(
-        item.booking.createdAt,
-        normalized.groupBy,
-      );
-      const commission =
-        (Number(item.actualPrice) * Number(item.commissionRateSnapshot)) / 100;
-      revenueMap.set(label, (revenueMap.get(label) || 0) + commission);
-    }
+    const [
+      statusCounts,
+      revenueRows,
+      provinceRows,
+      categoryRows,
+      serviceRows,
+      filterOptions,
+    ] = await Promise.all([
+      this.prisma.booking.groupBy({
+        by: ['status'],
+        where: bookingWhere,
+        _count: { id: true },
+      }),
+      this.prisma.$queryRaw<
+        Array<{ period: Date; commission: number | string }>
+      >(this.buildRevenueChartQuery(normalized)),
+      this.prisma.$queryRaw<Array<{ name: string; count: number }>>(
+        this.buildProvinceChartQuery(normalized),
+      ),
+      this.prisma.$queryRaw<Array<{ name: string; count: number }>>(
+        this.buildCategoryChartQuery(normalized),
+      ),
+      this.prisma.$queryRaw<Array<{ name: string; count: number }>>(
+        this.buildServiceChartQuery(normalized),
+      ),
+      this.getFilterOptions(),
+    ]);
 
     return {
-      revenueData: Array.from(revenueMap.entries()).map(
-        ([month, commission]) => ({
-          month,
-          commission,
-        }),
-      ),
+      revenueData: revenueRows.map((row) => ({
+        month: this.periodLabel(new Date(row.period), normalized.groupBy),
+        commission: Number(row.commission),
+      })),
       statusData: statusCounts.map((item) => ({
         status: STATUS_LABELS[item.status] || item.status,
         count: item._count.id,
       })),
-      provinceData: this.groupCount(
-        bookings.map((item) => item.province || 'Chưa có tỉnh/thành'),
-      ),
-      categoryData: this.groupCount(
-        bookings.map(
-          (item) => item.service?.category?.name || 'Chưa có danh mục',
-        ),
-      ),
-      serviceData: this.groupCount(
-        bookings.map((item) => item.service?.name || 'Chưa có dịch vụ'),
-        8,
-      ),
+      provinceData: provinceRows,
+      categoryData: categoryRows,
+      serviceData: serviceRows,
       filterOptions,
       filterSummary: this.describeFilters(normalized),
     };
+  }
+
+  private buildFinancialAggregateQuery(filters: NormalizedFilters) {
+    const conditions = this.buildDashboardSqlConditions(filters, false);
+    return Prisma.sql`
+      SELECT
+        COALESCE(SUM(q.actual_price), 0)::numeric AS "totalRevenue",
+        COALESCE(SUM(q.actual_price * q.commission_rate_snapshot / 100), 0)::numeric AS "commissionRevenue",
+        COUNT(*)::int AS "quotationCount"
+      FROM quotations q
+      INNER JOIN bookings b ON b.id = q.booking_id
+      INNER JOIN services s ON s.id = b.service_id
+      WHERE q.status = 'ACCEPTED'
+        AND b.status = 'DONE'
+        AND ${Prisma.join(conditions, ' AND ')}
+    `;
+  }
+
+  private buildRevenueChartQuery(filters: NormalizedFilters) {
+    const conditions = this.buildDashboardSqlConditions(filters, false);
+    const periodExpression = this.buildPeriodExpression(filters.groupBy);
+    return Prisma.sql`
+      SELECT
+        ${periodExpression} AS period,
+        COALESCE(SUM(q.actual_price * q.commission_rate_snapshot / 100), 0)::numeric AS commission
+      FROM quotations q
+      INNER JOIN bookings b ON b.id = q.booking_id
+      INNER JOIN services s ON s.id = b.service_id
+      WHERE q.status = 'ACCEPTED'
+        AND b.status = 'DONE'
+        AND ${Prisma.join(conditions, ' AND ')}
+      GROUP BY ${periodExpression}
+      ORDER BY ${periodExpression} ASC
+    `;
+  }
+
+  private buildProvinceChartQuery(filters: NormalizedFilters) {
+    const conditions = this.buildDashboardSqlConditions(filters);
+    return Prisma.sql`
+      SELECT COALESCE(b.province, 'Chưa có tỉnh/thành') AS name,
+        COUNT(*)::int AS count
+      FROM bookings b
+      INNER JOIN services s ON s.id = b.service_id
+      WHERE ${Prisma.join(conditions, ' AND ')}
+      GROUP BY b.province
+      ORDER BY count DESC
+      LIMIT 10
+    `;
+  }
+
+  private buildCategoryChartQuery(filters: NormalizedFilters) {
+    const conditions = this.buildDashboardSqlConditions(filters);
+    return Prisma.sql`
+      SELECT COALESCE(c.name, 'Chưa có danh mục') AS name,
+        COUNT(*)::int AS count
+      FROM bookings b
+      INNER JOIN services s ON s.id = b.service_id
+      LEFT JOIN service_categories c ON c.id = s.category_id
+      WHERE ${Prisma.join(conditions, ' AND ')}
+      GROUP BY c.name
+      ORDER BY count DESC
+      LIMIT 10
+    `;
+  }
+
+  private buildServiceChartQuery(filters: NormalizedFilters) {
+    const conditions = this.buildDashboardSqlConditions(filters);
+    return Prisma.sql`
+      SELECT COALESCE(s.name, 'Chưa có dịch vụ') AS name,
+        COUNT(*)::int AS count
+      FROM bookings b
+      INNER JOIN services s ON s.id = b.service_id
+      WHERE ${Prisma.join(conditions, ' AND ')}
+      GROUP BY s.name
+      ORDER BY count DESC
+      LIMIT 8
+    `;
+  }
+
+  private buildDashboardSqlConditions(
+    filters: NormalizedFilters,
+    includeStatus = true,
+  ): Prisma.Sql[] {
+    const conditions: Prisma.Sql[] = [Prisma.sql`TRUE`];
+    if (filters.from)
+      conditions.push(Prisma.sql`b.created_at >= ${filters.from}`);
+    if (filters.to) conditions.push(Prisma.sql`b.created_at <= ${filters.to}`);
+    if (includeStatus && filters.status) {
+      conditions.push(Prisma.sql`b.status = ${filters.status}`);
+    }
+    if (filters.providerId) {
+      conditions.push(Prisma.sql`b.provider_id = ${filters.providerId}`);
+    }
+    if (filters.serviceId) {
+      conditions.push(Prisma.sql`b.service_id = ${filters.serviceId}`);
+    }
+    if (filters.categoryId) {
+      conditions.push(Prisma.sql`s.category_id = ${filters.categoryId}`);
+    }
+    return conditions;
+  }
+
+  private buildPeriodExpression(groupBy: DashboardGroupBy) {
+    if (groupBy === 'day') return Prisma.sql`DATE_TRUNC('day', b.created_at)`;
+    if (groupBy === 'week') return Prisma.sql`DATE_TRUNC('week', b.created_at)`;
+    return Prisma.sql`DATE_TRUNC('month', b.created_at)`;
   }
 
   async exportDashboardPdf(

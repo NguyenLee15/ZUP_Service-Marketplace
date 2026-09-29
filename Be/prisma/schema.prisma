@@ -368,6 +368,9 @@ model Booking {
 
   @@index([customerId, status])
   @@index([providerId, status])
+  @@index([status, createdAt])
+  @@index([providerId, status, createdAt])
+  @@index([serviceId, status, createdAt])
   @@index([status, providerAcceptedAt, providerResponseDeadline])
   @@index([bookingCode])
   @@map("bookings")
@@ -627,6 +630,8 @@ model AuditLog {
 
   @@index([actorId, createdAt])
   @@index([targetType, targetId])
+  @@index([createdAt])
+  @@index([action, targetType, createdAt])
   @@map("audit_logs")
 }
 
