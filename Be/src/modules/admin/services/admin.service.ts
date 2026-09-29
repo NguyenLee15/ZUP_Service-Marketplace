@@ -302,9 +302,12 @@ export class AdminService {
     const statusCounts = statusGroups.reduce(
       (counts, group) => {
         counts.total += group._count._all;
-        if (group.status === UserStatus.ACTIVE) counts.active = group._count._all;
-        if (group.status === UserStatus.PENDING) counts.pending = group._count._all;
-        if (group.status === UserStatus.LOCKED) counts.locked = group._count._all;
+        if (group.status === UserStatus.ACTIVE)
+          counts.active = group._count._all;
+        if (group.status === UserStatus.PENDING)
+          counts.pending = group._count._all;
+        if (group.status === UserStatus.LOCKED)
+          counts.locked = group._count._all;
         return counts;
       },
       { total: 0, active: 0, pending: 0, locked: 0 },
