@@ -169,7 +169,7 @@ export class ReviewsService {
       this.prisma.review.count({ where }),
       this.prisma.review.groupBy({
         by: ['rating'],
-        where: { serviceId },
+        where: { serviceId, isFlagged: false },
         _count: { rating: true },
       }),
     ]);

@@ -43,4 +43,33 @@ describe('ReviewsService rating integrity', () => {
       _count: { rating: true },
     });
   });
+
+  it('excludes flagged reviews from service review results and aggregates', async () => {
+    const prisma = {
+      review: {
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
+        groupBy: jest.fn().mockResolvedValue([]),
+      },
+    };
+    const service = new ReviewsService(
+      prisma as unknown as PrismaService,
+      {} as JobsService,
+      {} as AiService,
+    );
+
+    await service.getServiceReviews(42);
+
+    expect(prisma.review.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { serviceId: 42, isFlagged: false } }),
+    );
+    expect(prisma.review.count).toHaveBeenCalledWith({
+      where: { serviceId: 42, isFlagged: false },
+    });
+    expect(prisma.review.groupBy).toHaveBeenCalledWith({
+      by: ['rating'],
+      where: { serviceId: 42, isFlagged: false },
+      _count: { rating: true },
+    });
+  });
 });
