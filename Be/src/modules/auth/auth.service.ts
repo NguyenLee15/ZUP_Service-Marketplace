@@ -89,7 +89,8 @@ export class AuthService {
       data: {
         email: dto.email,
         type: 'REGISTER',
-        code: otp,
+        code: null,
+        codeHash: hashToken(otp),
         lastSentAt: new Date(),
         expiresAt,
       },
@@ -141,7 +142,7 @@ export class AuthService {
     }
 
     // 3. So khớp OTP
-    if (otpRecord.code !== dto.otp) {
+    if (!otpRecord.codeHash || otpRecord.codeHash !== hashToken(dto.otp)) {
       await this.prisma.otpAttempt.update({
         where: { id: otpRecord.id },
         data: { wrongAttempts: { increment: 1 } },
@@ -218,7 +219,8 @@ export class AuthService {
       data: {
         email,
         type: 'REGISTER',
-        code: otp,
+        code: null,
+        codeHash: hashToken(otp),
         lastSentAt: new Date(),
         expiresAt,
       },

@@ -38,6 +38,13 @@ type PasswordResetRecord = {
   expiresAt: Date;
 };
 
+type OtpRecord = {
+  id: number;
+  code: string | null;
+  codeHash: string | null;
+  wrongAttempts: number;
+};
+
 type GoogleUserRecord = {
   id: number;
   email: string;
@@ -62,6 +69,10 @@ type AuthPrismaMock = {
     create: jest.Mock;
     update: jest.Mock;
     updateMany: jest.Mock;
+  };
+  otpAttempt: {
+    findFirst: jest.Mock;
+    update: jest.Mock;
   };
   user: {
     findUnique: jest.Mock;
@@ -119,6 +130,10 @@ describe('AuthService token hardening', () => {
         create: jest.fn().mockResolvedValue({ id: 1 }),
         update: jest.fn().mockResolvedValue({}),
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      otpAttempt: {
+        findFirst: jest.fn(),
+        update: jest.fn().mockResolvedValue({}),
       },
       user: {
         findUnique: jest.fn(),
@@ -358,6 +373,23 @@ describe('AuthService token hardening', () => {
     expect(prisma.passwordReset.findFirst).toHaveBeenCalledWith({
       where: { tokenHash: hashToken('legacy-reset') },
     });
+  });
+
+  it('rejects legacy raw-only OTP rows instead of comparing the raw code', async () => {
+    const otp: OtpRecord = {
+      id: 1,
+      code: '123456',
+      codeHash: null,
+      wrongAttempts: 0,
+    };
+    prisma.otpAttempt.findFirst.mockResolvedValue(otp);
+
+    await expect(
+      service.verifyOtp({ email: 'user@test.local', otp: '123456' }),
+    ).rejects.toMatchObject({
+      response: { code: 'OTP_INVALID' },
+    });
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('treats Google login for privileged email as a customer account', async () => {
