@@ -54,21 +54,27 @@ export class CreateBookingDto {
   serviceId!: number;
 
   @IsString()
+  @IsNotEmpty()
+  @MinLength(10)
   description!: string;
 
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50)
   province!: string;
 
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50)
   district!: string;
 
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50)
   ward!: string;
 
   @IsString()
+  @IsNotEmpty()
   addressDetail!: string;
 
   @IsDateString()

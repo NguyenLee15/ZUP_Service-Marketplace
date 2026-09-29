@@ -39,6 +39,15 @@ export function BookingSchedulePicker({
 }: BookingSchedulePickerProps) {
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
+      <div
+        role="status"
+        className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100"
+      >
+        <p className="font-semibold">Thanh toán sau khi nhận báo giá</p>
+        <p className="mt-1 text-xs text-sky-800 dark:text-sky-200">
+          Nhà cung cấp sẽ khảo sát và gửi báo giá chi tiết trước khi bạn xác nhận sử dụng dịch vụ.
+        </p>
+      </div>
       <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-xs space-y-4">
         <Label className="font-semibold text-sm text-slate-900 dark:text-slate-100">
           Thời gian mong muốn thực hiện *
