@@ -6,6 +6,7 @@ import {
   Res,
   HttpStatus,
 } from '@nestjs/common';
+import { once } from 'node:events';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -67,12 +68,15 @@ export class AdminAuditLogsController {
     @Query() query: AdminAuditLogsQueryDto,
     @Res() res: Response,
   ) {
-    const csv = await this.auditLogService.exportAuditLogsCsv(query);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
       'attachment; filename="audit-logs.csv"',
     );
-    return res.status(HttpStatus.OK).send(csv);
+    res.status(HttpStatus.OK);
+    for await (const chunk of this.auditLogService.streamAuditLogsCsv(query)) {
+      if (!res.write(chunk)) await once(res, 'drain');
+    }
+    res.end();
   }
 }

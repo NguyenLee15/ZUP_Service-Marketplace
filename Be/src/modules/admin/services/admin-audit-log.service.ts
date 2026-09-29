@@ -52,26 +52,28 @@ export class AdminAuditLogService {
     };
   }
 
-  async exportAuditLogsCsv(query: AdminAuditLogsQueryDto) {
+  async *streamAuditLogsCsv(query: AdminAuditLogsQueryDto) {
     const where = this.buildWhere(query);
-    const [rows, total] = await Promise.all([
-      this.prisma.auditLog.findMany({
+    const total = await this.prisma.auditLog.count({ where });
+    const exportLimit = 5000;
+    if (total > exportLimit) {
+      yield `# CANH BAO: Du lieu xuat gioi han 5000 dong. Tong so ban ghi: ${total}. Vui long thu hep bo loc.\n`;
+    }
+
+    yield `${this.csvHeader()}\n`;
+    for (let skip = 0; skip < Math.min(total, exportLimit); skip += 500) {
+      const rows = await this.prisma.auditLog.findMany({
         where,
         include: {
           actor: { select: auditLogActorSelect },
         },
         orderBy: { createdAt: 'desc' },
-        take: 5000,
-      }),
-      this.prisma.auditLog.count({ where }),
-    ]);
-
-    const isTruncated = total > rows.length;
-    const csvContent = this.toCsv(rows);
-    if (isTruncated) {
-      return `# CANH BAO: Du lieu xuat gioi han 5000 dong. Tong so ban ghi: ${total}. Vui long thu hep bo loc.\n${csvContent}`;
+        skip,
+        take: Math.min(500, exportLimit - skip),
+      });
+      if (rows.length === 0) break;
+      yield `${this.toCsvRows(rows)}\n`;
     }
-    return csvContent;
   }
 
   private buildWhere(query: AdminAuditLogsQueryDto): Prisma.AuditLogWhereInput {
@@ -130,8 +132,8 @@ export class AdminAuditLogService {
     return date;
   }
 
-  private toCsv(rows: AuditLogWithActor[]) {
-    const header = [
+  private csvHeader() {
+    return [
       'id',
       'createdAt',
       'actorEmail',
@@ -142,25 +144,28 @@ export class AdminAuditLogService {
       'targetId',
       'ipAddress',
       'description',
-    ];
-    const body = rows.map((row) =>
-      [
-        row.id,
-        row.createdAt.toISOString(),
-        row.actor.email,
-        row.actor.fullName,
-        row.actor.role,
-        row.action,
-        row.targetType,
-        row.targetId,
-        row.ipAddress ?? '',
-        row.description ?? '',
-      ]
-        .map((value) => this.escapeCsvValue(value))
-        .join(','),
-    );
+    ].join(',');
+  }
 
-    return [header.join(','), ...body].join('\n');
+  private toCsvRows(rows: AuditLogWithActor[]) {
+    return rows
+      .map((row) =>
+        [
+          row.id,
+          row.createdAt.toISOString(),
+          row.actor.email,
+          row.actor.fullName,
+          row.actor.role,
+          row.action,
+          row.targetType,
+          row.targetId,
+          row.ipAddress ?? '',
+          row.description ?? '',
+        ]
+          .map((value) => this.escapeCsvValue(value))
+          .join(','),
+      )
+      .join('\n');
   }
 
   private escapeCsvValue(value: string | number) {

@@ -89,7 +89,7 @@ describe('AdminAuditLogService', () => {
     expect(Array.isArray(countArg.where?.OR)).toBe(true);
   });
 
-  it('exports filtered audit logs as escaped CSV', async () => {
+  it('streams filtered audit logs as escaped CSV in bounded batches', async () => {
     prisma.auditLog.findMany.mockResolvedValue([
       {
         id: 1,
@@ -107,11 +107,16 @@ describe('AdminAuditLogService', () => {
       },
     ]);
 
-    const csv = await service.exportAuditLogsCsv({
+    prisma.auditLog.count.mockResolvedValue(1);
+    const chunks: string[] = [];
+    for await (const chunk of service.streamAuditLogsCsv({
       page: 1,
       limit: 20,
       keyword: 'staff',
-    });
+    })) {
+      chunks.push(chunk);
+    }
+    const csv = chunks.join('');
 
     expect(csv).toContain(
       'id,createdAt,actorEmail,actorName,actorRole,action,targetType,targetId,ipAddress,description',
@@ -121,7 +126,8 @@ describe('AdminAuditLogService', () => {
     expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: { createdAt: 'desc' },
-        take: 5000,
+        skip: 0,
+        take: 500,
       }),
     );
   });
