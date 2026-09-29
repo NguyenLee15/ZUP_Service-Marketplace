@@ -7,7 +7,12 @@ import { useCreateBookingFlow } from '@/features/booking/hooks/useCreateBookingF
 import { BookingStepIndicator } from '@/features/booking/components/create/BookingStepIndicator';
 import { BookingServiceCard } from '@/features/booking/components/create/BookingServiceCard';
 import { BookingItemsSelector } from '@/features/booking/components/create/BookingItemsSelector';
-import { BookingAddressSelector } from '@/features/booking/components/create/BookingAddressSelector';
+import {
+  BookingAddressSelector,
+  type BookingAddressActions,
+  type BookingAddressOptions,
+  type BookingAddressState,
+} from '@/features/booking/components/create/BookingAddressSelector';
 import { BookingSchedulePicker } from '@/features/booking/components/create/BookingSchedulePicker';
 import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
@@ -119,28 +124,40 @@ function CreateBookingContent() {
         {/* STEP 2: Địa chỉ thực hiện */}
         {step === 2 && (
           <BookingAddressSelector
-            addressMode={addressMode}
-            setAddressMode={setAddressMode}
-            selectedAddressId={selectedAddressId}
-            defaultAddress={defaultAddress}
-            addressesLoading={addressesLoading}
-            addressOptionsLoading={addressOptionsLoading}
-            addressOptionsFallback={addressOptionsFallback}
-            applyAddress={applyAddress}
-            useCustomAddress={useCustomAddress}
-            gpsLoading={gpsLoading}
-            handleAutoLocate={handleAutoLocate}
-            province={province}
-            district={district}
-            ward={ward}
-            addressDetail={addressDetail}
-            setAddressDetail={setAddressDetail}
-            fieldErrors={fieldErrors}
-            validate={validate}
-            handleProvinceChange={handleProvinceChange}
-            handleWardChange={handleWardChange}
-            provinceOptions={provinceOptions}
-            wardOptions={wardOptions}
+            state={
+              {
+                addressMode,
+                selectedAddressId,
+                defaultAddress,
+                addressesLoading,
+                province,
+                district,
+                ward,
+                addressDetail,
+                fieldErrors,
+              } satisfies BookingAddressState
+            }
+            actions={
+              {
+                setAddressMode,
+                applyAddress,
+                useCustomAddress,
+                gpsLoading,
+                handleAutoLocate,
+                setAddressDetail,
+                validate,
+                handleProvinceChange,
+                handleWardChange,
+              } satisfies BookingAddressActions
+            }
+            options={
+              {
+                addressOptionsLoading,
+                addressOptionsFallback,
+                provinceOptions,
+                wardOptions,
+              } satisfies BookingAddressOptions
+            }
           />
         )}
 

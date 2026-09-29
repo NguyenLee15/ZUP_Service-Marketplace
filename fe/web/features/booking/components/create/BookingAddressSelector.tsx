@@ -16,55 +16,71 @@ import {
 import { formatAdministrativeArea } from '@/lib/address-options';
 import type { AddressMode, UserAddress } from '@/features/booking/hooks/useCreateBookingFlow';
 
-interface BookingAddressSelectorProps {
+export interface BookingAddressState {
   addressMode: AddressMode;
-  setAddressMode: (mode: AddressMode) => void;
   selectedAddressId: number | null;
   defaultAddress?: UserAddress;
   addressesLoading: boolean;
-  addressOptionsLoading: boolean;
-  addressOptionsFallback: boolean;
-  applyAddress: (address: UserAddress) => void;
-  useCustomAddress: () => void;
-  gpsLoading: boolean;
-  handleAutoLocate: () => void;
   province: string;
   district: string;
   ward: string;
   addressDetail: string;
-  setAddressDetail: (val: string) => void;
   fieldErrors: Record<string, string>;
+}
+
+export interface BookingAddressActions {
+  setAddressMode: (mode: AddressMode) => void;
+  applyAddress: (address: UserAddress) => void;
+  useCustomAddress: () => void;
+  gpsLoading: boolean;
+  handleAutoLocate: () => void;
+  setAddressDetail: (val: string) => void;
   validate: (name: string, val: string) => void;
   handleProvinceChange: (val: string) => void;
   handleWardChange: (val: string) => void;
+}
+
+export interface BookingAddressOptions {
+  addressOptionsLoading: boolean;
+  addressOptionsFallback: boolean;
   provinceOptions: string[];
   wardOptions: string[];
 }
 
+interface BookingAddressSelectorProps {
+  state: BookingAddressState;
+  actions: BookingAddressActions;
+  options: BookingAddressOptions;
+}
+
 export function BookingAddressSelector({
-  addressMode,
-  setAddressMode,
-  selectedAddressId,
-  defaultAddress,
-  addressesLoading,
-  addressOptionsLoading,
-  addressOptionsFallback,
-  applyAddress,
-  useCustomAddress,
-  gpsLoading,
-  handleAutoLocate,
-  province,
-  district,
-  ward,
-  addressDetail,
-  setAddressDetail,
-  fieldErrors,
-  validate,
-  handleProvinceChange,
-  handleWardChange,
-  provinceOptions,
-  wardOptions,
+  state,
+  actions,
+  options,
 }: BookingAddressSelectorProps) {
+  const {
+    addressMode,
+    selectedAddressId,
+    defaultAddress,
+    addressesLoading,
+    province,
+    district,
+    ward,
+    addressDetail,
+    fieldErrors,
+  } = state;
+  const {
+    setAddressMode,
+    applyAddress,
+    useCustomAddress,
+    gpsLoading,
+    handleAutoLocate,
+    setAddressDetail,
+    validate,
+    handleProvinceChange,
+    handleWardChange,
+  } = actions;
+  const { addressOptionsLoading, addressOptionsFallback, provinceOptions, wardOptions } = options;
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
       <div className="rounded-xl border border-border bg-card space-y-4 p-4 sm:p-6 shadow-sm">
