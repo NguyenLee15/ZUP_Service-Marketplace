@@ -113,7 +113,10 @@ export class KycService {
         return created;
       })
       .catch((error: unknown) =>
-        this.compensateUploadedAssets(uploadedAssets, error),
+        this.compensateUploadedAssets(
+          uploadedAssets,
+          this.mapKycPersistenceError(error),
+        ),
       );
 
     // Gửi notification cho tất cả Admin + Staff
@@ -157,6 +160,22 @@ export class KycService {
       });
     }
     throw originalError;
+  }
+
+  private mapKycPersistenceError(error: unknown): unknown {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002'
+    ) {
+      return new BadRequestException({
+        code: ErrorCodes.DUPLICATE_KYC,
+        message: 'Bạn đã có yêu cầu KYC đang chờ duyệt',
+      });
+    }
+
+    return error;
   }
 
   /**

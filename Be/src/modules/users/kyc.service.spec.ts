@@ -117,6 +117,30 @@ describe('KycService upload compensation', () => {
     ]);
   });
 
+  it('maps a concurrent pending KYC unique violation to a duplicate error', async () => {
+    cloudinary.uploadFile.mockResolvedValue({
+      url: 'https://cdn/kyc',
+      publicId: 'kyc-asset',
+    });
+    prisma.kycProfile.create.mockRejectedValue({ code: 'P2002' });
+
+    await expect(
+      service.submitKyc(7, {
+        cccdFront: file('front.jpg'),
+        cccdBack: file('back.jpg'),
+        portrait: file('portrait.jpg'),
+      }),
+    ).rejects.toMatchObject({
+      response: { code: 'DUPLICATE_KYC' },
+    });
+
+    expect(cloudinary.cleanupFiles).toHaveBeenCalledWith([
+      'kyc-asset',
+      'kyc-asset',
+      'kyc-asset',
+    ]);
+  });
+
   it('returns a controlled error when KYC cleanup fails', async () => {
     cloudinary.uploadFile.mockResolvedValue({
       url: 'https://cdn/front',
