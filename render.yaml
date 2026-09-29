@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: service-marketplace-prod-free
+    name: service-marketplace-prod
     runtime: node
     repo: https://gitlab.com/Nguyenlee150804/service-marketplace
     branch: main
@@ -16,17 +16,17 @@ services:
       - key: NODE_ENV
         value: production
       - key: RUNTIME_PROFILE
-        value: free
+        value: prod
       - key: REDIS_ENABLED
-        value: "false"
+        value: "true"
       - key: QUEUE_MODE
-        value: inline
+        value: redis
       - key: WORKER_ENABLED
         value: "false"
       - key: CRON_ENABLED
         value: "false"
       - key: CORS_ALLOWED_HEADERS
-        value: Content-Type,Authorization,x-request-id
+        value: Content-Type,Authorization,x-request-id,Idempotency-Key
       - key: CORS_CREDENTIALS
         value: "true"
       - key: THROTTLE_TTL
@@ -83,6 +83,66 @@ services:
         sync: false
       - key: BREVO_SENDER_EMAIL
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_ANDROID_CLIENT_ID
+        sync: false
+      - key: GOOGLE_IOS_CLIENT_ID
+        sync: false
+      - key: REDIS_URL
+        sync: false
+
+  - type: worker
+    name: service-marketplace-worker
+    runtime: node
+    repo: https://gitlab.com/Nguyenlee150804/service-marketplace
+    branch: main
+    rootDir: Be
+    region: singapore
+    plan: free
+    buildCommand: npm ci --include=dev && npx prisma generate && npm run build
+    startCommand: npm run start:worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RUNTIME_PROFILE
+        value: prod
+      - key: REDIS_ENABLED
+        value: "true"
+      - key: QUEUE_MODE
+        value: redis
+      - key: WORKER_ENABLED
+        value: "true"
+      - key: CRON_ENABLED
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: Service Marketplace
       - key: GEMINI_API_KEY
         sync: false
       - key: GOOGLE_CLIENT_ID

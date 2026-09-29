@@ -18,6 +18,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BookingStatePolicy } from './booking-state.policy';
 import { BookingCreationService } from './booking-creation.service';
+import { BookingIdempotencyService } from './booking-idempotency.service';
 import { BookingQuotationService } from './booking-quotation.service';
 import { BookingExecutionService } from './booking-execution.service';
 import { BookingCancellationService } from './booking-cancellation.service';
@@ -63,6 +64,7 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
     BookingTimeoutService,
     BookingStatePolicy,
     BookingCreationService,
+    BookingIdempotencyService,
     BookingQuotationService,
     BookingExecutionService,
     BookingCancellationService,
@@ -78,6 +80,7 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
   ],
   exports: [
     BookingCreationService,
+    BookingIdempotencyService,
     BookingQuotationService,
     BookingExecutionService,
     BookingCancellationService,

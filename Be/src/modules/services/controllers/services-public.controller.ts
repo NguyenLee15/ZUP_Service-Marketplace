@@ -41,6 +41,7 @@ import {
   SearchServiceDto,
   AiSearchDto,
   PublicProviderServicesQueryDto,
+  ProviderServicesQueryDto,
   PurchaseFeaturedListingDto,
   AiGenerateDescriptionDto,
 } from '../dto/services.dto';
@@ -153,9 +154,14 @@ export class ServicesController {
   @Roles('PROVIDER')
   async getMyServices(
     @CurrentUser('id') providerId: number,
-    @Query('status') status?: string,
+    @Query() query: ProviderServicesQueryDto,
   ) {
-    return this.commandService.getMyServices(providerId, status);
+    return this.commandService.getMyServices(
+      providerId,
+      query.status,
+      query.page,
+      query.limit,
+    );
   }
 
   /** POST /services/ai-generate-description - Sinh mô tả dịch vụ bằng AI */

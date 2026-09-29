@@ -39,50 +39,76 @@ export class ServiceCommandService {
       });
     }
 
-    const service = await this.prisma.$transaction(async (tx) => {
-      const createdService = await tx.service.create({
-        data: {
-          providerId,
-          categoryId: dto.categoryId,
-          name: dto.name,
-          description: dto.description,
-          referencePrice: dto.items?.length
-            ? Math.min(...dto.items.map((i) => Number(i.price)))
-            : 0,
-          status: ServiceStatus.PENDING,
-        },
-      });
-
-      if (dto.items && dto.items.length > 0) {
-        const serviceItems = dto.items.map((item) => ({
-          serviceId: createdService.id,
-          name: item.name,
-          unit: item.unit,
-          price: item.price,
-        }));
-        await tx.serviceItem.createMany({ data: serviceItems });
+    const uploadedImages: Array<{
+      imageUrl: string;
+      cloudinaryId: string;
+      displayOrder: number;
+    }> = [];
+    try {
+      for (const [index, file] of (files ?? []).entries()) {
+        const uploaded = await this.cloudinaryService.uploadFile(
+          file.buffer,
+          'services',
+        );
+        uploadedImages.push({
+          imageUrl: uploaded.url,
+          cloudinaryId: uploaded.publicId,
+          displayOrder: index,
+        });
       }
-
-      return createdService;
-    });
-
-    if (files && files.length > 0) {
-      const images = await Promise.all(
-        files.map(async (file, index) => {
-          const uploaded = await this.cloudinaryService.uploadFile(
-            file.buffer,
-            'services',
-          );
-          return {
-            serviceId: service.id,
-            imageUrl: uploaded.url,
-            cloudinaryId: uploaded.publicId,
-            displayOrder: index,
-          };
-        }),
+    } catch (error) {
+      await Promise.all(
+        uploadedImages.map((image) =>
+          this.cloudinaryService.deleteFile(image.cloudinaryId),
+        ),
       );
-      await this.prisma.serviceImage.createMany({ data: images });
+      throw error;
     }
+
+    const service = await this.prisma
+      .$transaction(async (tx) => {
+        const createdService = await tx.service.create({
+          data: {
+            providerId,
+            categoryId: dto.categoryId,
+            name: dto.name,
+            description: dto.description,
+            referencePrice: dto.items?.length
+              ? Math.min(...dto.items.map((i) => Number(i.price)))
+              : 0,
+            status: ServiceStatus.PENDING,
+          },
+        });
+
+        if (dto.items && dto.items.length > 0) {
+          const serviceItems = dto.items.map((item) => ({
+            serviceId: createdService.id,
+            name: item.name,
+            unit: item.unit,
+            price: item.price,
+          }));
+          await tx.serviceItem.createMany({ data: serviceItems });
+        }
+
+        if (uploadedImages.length > 0) {
+          await tx.serviceImage.createMany({
+            data: uploadedImages.map((image) => ({
+              ...image,
+              serviceId: createdService.id,
+            })),
+          });
+        }
+
+        return createdService;
+      })
+      .catch(async (error) => {
+        await Promise.all(
+          uploadedImages.map((image) =>
+            this.cloudinaryService.deleteFile(image.cloudinaryId),
+          ),
+        );
+        throw error;
+      });
 
     await this.shared.notifyAdmins(
       'SERVICE_CREATED',
@@ -137,53 +163,75 @@ export class ServiceCommandService {
       updateData.status = ServiceStatus.PENDING;
     }
 
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const updatedService = await tx.service.update({
-        where: { id: serviceId },
-        data: updateData,
-      });
+    const currentImages = files?.length
+      ? await this.prisma.serviceImage.count({ where: { serviceId } })
+      : 0;
+    const uploadedImages: Array<{
+      imageUrl: string;
+      cloudinaryId: string;
+      displayOrder: number;
+    }> = [];
+    try {
+      for (const [index, file] of (files ?? []).entries()) {
+        const uploaded = await this.cloudinaryService.uploadFile(
+          file.buffer,
+          'services',
+        );
+        uploadedImages.push({
+          imageUrl: uploaded.url,
+          cloudinaryId: uploaded.publicId,
+          displayOrder: currentImages + index,
+        });
+      }
+    } catch (error) {
+      await Promise.all(
+        uploadedImages.map((image) =>
+          this.cloudinaryService.deleteFile(image.cloudinaryId),
+        ),
+      );
+      throw error;
+    }
 
-      if (dto.items) {
-        // Delete all old service items and insert new ones
-        await tx.serviceItem.deleteMany({
-          where: { serviceId },
+    const updated = await this.prisma
+      .$transaction(async (tx) => {
+        const updatedService = await tx.service.update({
+          where: { id: serviceId },
+          data: updateData,
         });
 
-        if (dto.items.length > 0) {
-          const serviceItems = dto.items.map((item) => ({
-            serviceId,
-            name: item.name,
-            unit: item.unit,
-            price: item.price,
-          }));
-          await tx.serviceItem.createMany({ data: serviceItems });
+        if (dto.items) {
+          // Delete all old service items and insert new ones
+          await tx.serviceItem.deleteMany({
+            where: { serviceId },
+          });
+
+          if (dto.items.length > 0) {
+            const serviceItems = dto.items.map((item) => ({
+              serviceId,
+              name: item.name,
+              unit: item.unit,
+              price: item.price,
+            }));
+            await tx.serviceItem.createMany({ data: serviceItems });
+          }
         }
-      }
 
-      return updatedService;
-    });
+        if (uploadedImages.length > 0) {
+          await tx.serviceImage.createMany({
+            data: uploadedImages.map((image) => ({ ...image, serviceId })),
+          });
+        }
 
-    if (files && files.length > 0) {
-      const currentImages = await this.prisma.serviceImage.count({
-        where: { serviceId },
+        return updatedService;
+      })
+      .catch(async (error) => {
+        await Promise.all(
+          uploadedImages.map((image) =>
+            this.cloudinaryService.deleteFile(image.cloudinaryId),
+          ),
+        );
+        throw error;
       });
-
-      const images = await Promise.all(
-        files.map(async (file, index) => {
-          const uploaded = await this.cloudinaryService.uploadFile(
-            file.buffer,
-            'services',
-          );
-          return {
-            serviceId,
-            imageUrl: uploaded.url,
-            cloudinaryId: uploaded.publicId,
-            displayOrder: currentImages + index,
-          };
-        }),
-      );
-      await this.prisma.serviceImage.createMany({ data: images });
-    }
 
     if (updateData.status === ServiceStatus.PENDING) {
       await this.shared.notifyAdmins(
@@ -317,21 +365,46 @@ export class ServiceCommandService {
     return { data: updated, message: 'Đã hiện dịch vụ' };
   }
 
-  async getMyServices(providerId: number, status?: string) {
+  async getMyServices(
+    providerId: number,
+    status?: string,
+    page = 1,
+    limit = 20,
+  ) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 50);
     const where: Prisma.ServiceWhereInput = { providerId, isDeleted: false };
     if (this.shared.isServiceStatus(status)) where.status = status;
 
-    const services = await this.prisma.service.findMany({
-      where,
-      include: {
-        category: { select: { id: true, name: true } },
-        images: { orderBy: { displayOrder: 'asc' } },
-        items: true,
-      },
-      orderBy: { id: 'desc' },
-    });
+    const [services, total] = await Promise.all([
+      this.prisma.service.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          referencePrice: true,
+          status: true,
+          category: { select: { id: true, name: true } },
+          images: {
+            select: { id: true, imageUrl: true, displayOrder: true },
+            orderBy: { displayOrder: 'asc' },
+          },
+          items: {
+            select: { id: true, name: true, unit: true, price: true },
+          },
+        },
+        orderBy: { id: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.service.count({ where }),
+    ]);
 
-    return { data: services };
+    return {
+      data: services,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async deleteByProvider(providerId: number, serviceId: number) {

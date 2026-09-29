@@ -8,6 +8,8 @@ type ServiceCommandPrismaMock = {
   service: {
     update: jest.Mock;
     findUnique: jest.Mock;
+    findMany: jest.Mock;
+    count: jest.Mock;
   };
   providerWallet: {
     findUnique: jest.Mock;
@@ -19,6 +21,7 @@ type ServiceSharedMock = {
   checkActiveUser: jest.Mock;
   checkOwnership: jest.Mock;
   notifyAdmins: jest.Mock;
+  isServiceStatus: jest.Mock;
 };
 
 describe('ServiceCommandService ownership', () => {
@@ -31,6 +34,8 @@ describe('ServiceCommandService ownership', () => {
       service: {
         update: jest.fn(),
         findUnique: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
       },
       providerWallet: {
         findUnique: jest.fn(),
@@ -43,6 +48,7 @@ describe('ServiceCommandService ownership', () => {
         .fn()
         .mockRejectedValue(new NotFoundException('Dịch vụ không tồn tại')),
       notifyAdmins: jest.fn(),
+      isServiceStatus: jest.fn().mockReturnValue(false),
     };
 
     service = new ServiceCommandService(
@@ -52,6 +58,23 @@ describe('ServiceCommandService ownership', () => {
       {} as any,
       {} as any,
     );
+  });
+
+  it('returns a bounded paginated provider service projection', async () => {
+    prisma.service.count.mockResolvedValue(51);
+    prisma.service.findMany.mockResolvedValue([{ id: 1 }]);
+
+    const result = await service.getMyServices(1, undefined, 2, 50);
+
+    expect(prisma.service.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 50, take: 50 }),
+    );
+    expect(result.meta).toEqual({
+      page: 2,
+      limit: 50,
+      total: 51,
+      totalPages: 2,
+    });
   });
 
   it.each([

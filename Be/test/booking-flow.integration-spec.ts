@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -126,15 +127,19 @@ describe('Booking flow integration', () => {
   it('completes booking flow and deducts commission from provider wallet', async () => {
     const seed = await seedActiveService(prisma);
 
-    const created = await lifecycle.create(seed.customer.id, {
-      serviceId: seed.service.id,
-      description: 'Sửa điều hòa',
-      province: 'HCM',
-      district: 'Quận 1',
-      ward: 'Bến Nghé',
-      addressDetail: '1 Lê Lợi',
-      desiredTime: new Date(Date.now() + 86_400_000).toISOString(),
-    });
+    const created = await lifecycle.create(
+      seed.customer.id,
+      {
+        serviceId: seed.service.id,
+        description: 'Sửa điều hòa',
+        province: 'HCM',
+        district: 'Quận 1',
+        ward: 'Bến Nghé',
+        addressDetail: '1 Lê Lợi',
+        desiredTime: new Date(Date.now() + 86_400_000).toISOString(),
+      },
+      randomUUID(),
+    );
 
     const bookingId = (created.data as { id: number }).id;
     await lifecycle.acceptByProvider(seed.provider.id, bookingId);

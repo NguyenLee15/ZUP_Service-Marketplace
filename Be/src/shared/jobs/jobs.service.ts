@@ -133,13 +133,17 @@ export class JobsService {
     }
 
     if (!queue) {
-      this.logger.warn(
-        `Queue "${queueName}" is not registered. Skipping "${jobName}".`,
+      throw new Error(
+        `Queue "${queueName}" is not registered for job "${jobName}"`,
       );
-      return;
     }
 
-    await queue.add(jobName, payload);
+    await queue.add(jobName, payload, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 1000 },
+      removeOnComplete: { age: 24 * 60 * 60, count: 1000 },
+      removeOnFail: { age: 7 * 24 * 60 * 60, count: 5000 },
+    });
   }
 
   private async runInline(

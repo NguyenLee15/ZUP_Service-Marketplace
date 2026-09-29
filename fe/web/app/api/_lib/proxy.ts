@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { z } from "zod";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const ACCESS_TOKEN_COOKIE = "hs_access_token";
@@ -11,6 +12,14 @@ const AUTH_TOKEN_PATHS = new Set([
   "/auth/verify-otp",
   "/auth/refresh",
 ]);
+const BackendPayloadSchema = z
+  .object({
+    success: z.boolean().optional(),
+    data: z.unknown().optional(),
+    message: z.string().optional(),
+    error: z.unknown().optional(),
+  })
+  .passthrough();
 
 function authCookieOptions(maxAge?: number) {
   return {
@@ -45,9 +54,9 @@ function getPayloadData(payload: ApiPayload) {
 
 function decodeJwtRole(token: string): string | null {
   try {
-    const payloadBase64 = token.split('.')[1];
+    const payloadBase64 = token.split(".")[1];
     if (!payloadBase64) return null;
-    const payloadString = Buffer.from(payloadBase64, 'base64').toString('utf8');
+    const payloadString = Buffer.from(payloadBase64, "base64").toString("utf8");
     const payload = JSON.parse(payloadString);
     return payload.role || null;
   } catch {
@@ -57,9 +66,11 @@ function decodeJwtRole(token: string): string | null {
 
 function getAuthTokens(payload: ApiPayload) {
   const data = getPayloadData(payload);
-  const accessToken = typeof data?.accessToken === "string" ? data.accessToken : null;
-  const refreshToken = typeof data?.refreshToken === "string" ? data.refreshToken : null;
-  
+  const accessToken =
+    typeof data?.accessToken === "string" ? data.accessToken : null;
+  const refreshToken =
+    typeof data?.refreshToken === "string" ? data.refreshToken : null;
+
   return {
     accessToken,
     refreshToken,
@@ -76,7 +87,11 @@ function stripRefreshToken(payload: ApiPayload) {
 
 function storeAuthCookies(
   response: NextResponse,
-  tokens: { accessToken: string | null; refreshToken: string | null; role: string | null },
+  tokens: {
+    accessToken: string | null;
+    refreshToken: string | null;
+    role: string | null;
+  },
   rememberMe: boolean,
 ) {
   const isAdminOrStaff = tokens.role === "ADMIN" || tokens.role === "STAFF";
@@ -156,7 +171,8 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
             success: false,
             error: {
               code: "PAYLOAD_TOO_LARGE",
-              message: "Kích thước tệp tải lên vượt quá giới hạn cho phép (tối đa 50MB).",
+              message:
+                "Kích thước tệp tải lên vượt quá giới hạn cho phép (tối đa 50MB).",
             },
           },
           { status: 413 },
@@ -243,7 +259,9 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
 
     if (responseContentType.includes("application/json")) {
       try {
-        parsedPayload = JSON.parse(data);
+        parsedPayload = BackendPayloadSchema.parse(
+          JSON.parse(data),
+        ) as ApiPayload;
         if (response.ok && AUTH_TOKEN_PATHS.has(backendPath)) {
           authTokens = getAuthTokens(parsedPayload);
           stripRefreshToken(parsedPayload);
@@ -257,21 +275,28 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
       responseBody = JSON.stringify(parsedPayload);
     }
 
-    const isNoContent = response.status === 204 || response.status === 205 || response.status === 304;
-    const proxiedResponse = new NextResponse(isNoContent ? null : responseBody, {
-      status: response.status,
-      headers: isNoContent
-        ? undefined
-        : {
-            "Content-Type": responseContentType,
-          },
-    });
+    const isNoContent =
+      response.status === 204 ||
+      response.status === 205 ||
+      response.status === 304;
+    const proxiedResponse = new NextResponse(
+      isNoContent ? null : responseBody,
+      {
+        status: response.status,
+        headers: isNoContent
+          ? undefined
+          : {
+              "Content-Type": responseContentType,
+            },
+      },
+    );
 
     if (authTokens) {
       const requestedRememberMe = req.headers.get("x-remember-me");
-      const rememberMe = requestedRememberMe === null
-        ? cookieStore.get(SESSION_MODE_COOKIE)?.value !== "session"
-        : requestedRememberMe === "true";
+      const rememberMe =
+        requestedRememberMe === null
+          ? cookieStore.get(SESSION_MODE_COOKIE)?.value !== "session"
+          : requestedRememberMe === "true";
       storeAuthCookies(proxiedResponse, authTokens, rememberMe);
     }
 

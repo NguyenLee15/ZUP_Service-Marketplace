@@ -182,6 +182,25 @@ export class SearchServiceDto {
   limit?: number;
 }
 
+export class ProviderServicesQueryDto {
+  @IsString()
+  @IsOptional()
+  status?: string;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  page = 1;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  @Max(50)
+  limit = 20;
+}
+
 export class AdminRejectDto {
   @IsString()
   @IsNotEmpty()

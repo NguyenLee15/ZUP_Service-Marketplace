@@ -104,6 +104,12 @@ enum FeaturedListingStatus {
   CANCELLED
 }
 
+enum IdempotencyStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 // ===== MODELS =====
 
 /// Bảng users — KHÔNG có kycStatus, isLocked, lockUntil, deletedAt
@@ -149,9 +155,29 @@ model User {
   disputeEvidences        DisputeEvidence[]
   featuredListings        FeaturedListing[]
   expoPushToken           String?                @map("expo_push_token") @db.VarChar(255)
+  idempotencyKeys         IdempotencyKey[]
 
   @@index([role, status])
   @@map("users")
+}
+
+model IdempotencyKey {
+  id           Int              @id @default(autoincrement())
+  customerId   Int              @map("customer_id")
+  scope        String           @db.VarChar(80)
+  key          String           @db.VarChar(36)
+  requestHash  String           @map("request_hash") @db.VarChar(64)
+  status       IdempotencyStatus
+  statusCode   Int?             @map("status_code")
+  responseBody Json?            @map("response_body")
+  expiresAt    DateTime         @map("expires_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  customer     User             @relation(fields: [customerId], references: [id])
+
+  @@unique([customerId, scope, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
 }
 
 /// Bảng login_attempts — rate-limit đăng nhập/đổi mật khẩu không phụ thuộc Redis

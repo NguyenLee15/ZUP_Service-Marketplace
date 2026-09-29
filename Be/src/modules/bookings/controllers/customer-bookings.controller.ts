@@ -12,6 +12,7 @@ import {
   UploadedFiles,
   Res,
   Headers,
+  BadRequestException,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -82,6 +83,17 @@ export class BookingsController {
     @Body() dto: CreateBookingDto,
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
+    if (
+      !idempotencyKey ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        idempotencyKey.trim(),
+      )
+    ) {
+      throw new BadRequestException({
+        code: 'INVALID_IDEMPOTENCY_KEY',
+        message: 'Idempotency-Key phải là UUIDv4 hợp lệ.',
+      });
+    }
     return this.bookingLifecycleService.create(customerId, dto, idempotencyKey);
   }
 

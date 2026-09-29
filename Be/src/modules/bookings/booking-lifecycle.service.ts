@@ -35,7 +35,7 @@ export class BookingLifecycleService {
   create(
     customerId: number,
     dto: CreateBookingDto,
-    idempotencyKey?: string,
+    idempotencyKey: string,
   ): Promise<BookingCreationResult> {
     return this.creationService.create(customerId, dto, idempotencyKey);
   }

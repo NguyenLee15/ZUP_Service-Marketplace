@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ErrorCodes } from '../../../common/errors/error-codes';
-import * as bcrypt from 'bcrypt';
+import { hashPassword } from '../../../common/utils/hash.util';
 import { Prisma, UserRole, UserStatus } from '@prisma/client';
 import {
   ADMIN_PERMISSION_VALUES,
@@ -81,7 +81,7 @@ export class StaffAdminService {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(body.password, 10);
+    const hashedPassword = await hashPassword(body.password);
     return this.prisma.$transaction(async (tx) => {
       const u = await tx.user.create({
         data: {

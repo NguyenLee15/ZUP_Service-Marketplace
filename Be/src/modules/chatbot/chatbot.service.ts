@@ -19,11 +19,11 @@ import { BookingLifecycleService } from '../bookings/booking-lifecycle.service';
 import { BookingQueryService } from '../bookings/booking-query.service';
 import { ChatsService } from '../chats/chats.service';
 import { ServicesService } from '../services/services.service';
-import { calculateHaversineDistance } from '../../shared/utils/geo';
 import { ChatbotIntentService } from './chatbot-intent.service';
 import { ChatbotPersistenceService } from './chatbot-persistence.service';
 import { ChatbotDraftService } from './chatbot-draft.service';
 import { ChatbotFormatterService } from './chatbot-formatter.service';
+import { ChatbotRetrievalService } from './chatbot-retrieval.service';
 import type {
   BookingDraft,
   ChatbotAction,
@@ -104,13 +104,6 @@ type ServiceWithRelations = Prisma.ServiceGetPayload<{
   include: typeof serviceCardInclude;
 }>;
 
-type UserAddressRecord = Prisma.UserAddressGetPayload<object>;
-
-type ServiceWithGeo = ServiceWithRelations & {
-  distanceKm?: number;
-  providerAddress?: string;
-};
-
 @Injectable()
 export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
@@ -126,6 +119,7 @@ export class ChatbotService {
     private readonly intentService: ChatbotIntentService,
     private readonly draftService: ChatbotDraftService,
     private readonly formatter: ChatbotFormatterService,
+    private readonly retrievalService: ChatbotRetrievalService,
   ) {}
 
   async askQuestion(
@@ -353,7 +347,7 @@ export class ChatbotService {
     }
 
     // Intent 'search' — cần AI stream
-    const services = await this.findRelevantServices(
+    const services = await this.retrievalService.findRelevantServices(
       message,
       input.pageContext,
       customerCoords,
@@ -453,7 +447,7 @@ export class ChatbotService {
       );
     }
 
-    const services = await this.findRelevantServices(
+    const services = await this.retrievalService.findRelevantServices(
       message,
       pageContext,
       customerCoords,
@@ -789,7 +783,7 @@ export class ChatbotService {
 
     await this.ensureCustomer(userId);
 
-    const services = await this.findRelevantServices(
+    const services = await this.retrievalService.findRelevantServices(
       message,
       pageContext,
       customerCoords,
@@ -947,7 +941,11 @@ export class ChatbotService {
         }
       }
       const dto = this.draftService.toCreateBookingDto(draft);
-      const result = await this.bookingLifecycleService.create(userId, dto);
+      const result = await this.bookingLifecycleService.create(
+        userId,
+        dto,
+        randomUUID(),
+      );
       const booking = toBookingActionSummary(result.data);
       if (!booking) {
         throw new BadRequestException('Không thể tạo đặt lịch');
@@ -1072,166 +1070,6 @@ export class ChatbotService {
     }
 
     throw new BadRequestException('Action không được hỗ trợ');
-  }
-
-  private async findRelevantServices(
-    query: string,
-    pageContext?: ChatbotPageContext,
-    customerCoords?: { lat: number; lng: number },
-  ): Promise<
-    (ServiceWithRelations & { distanceKm?: number; providerAddress?: string })[]
-  > {
-    const results: ServiceWithRelations[] = [];
-    const contextServiceId = this.intentService.parsePositiveInt(
-      pageContext?.serviceId,
-    );
-
-    if (contextServiceId) {
-      const service = await this.prisma.service.findFirst({
-        where: {
-          id: contextServiceId,
-          status: ServiceStatus.ACTIVE,
-          isDeleted: false,
-          provider: {
-            status: UserStatus.ACTIVE,
-          },
-        },
-        include: serviceCardInclude,
-      });
-      if (service) results.push(service);
-    }
-
-    if (query.trim()) {
-      try {
-        const aiResult = await this.servicesService.aiSearch(query);
-        const ids: number[] = (aiResult.data || [])
-          .map((item: { id?: number }) => Number(item.id))
-          .filter((id: number) => Number.isInteger(id) && id > 0)
-          .slice(0, 8);
-
-        if (ids.length > 0) {
-          const hydrated = await this.prisma.service.findMany({
-            where: {
-              id: { in: ids },
-              status: ServiceStatus.ACTIVE,
-              isDeleted: false,
-              provider: {
-                status: UserStatus.ACTIVE,
-              },
-            },
-            include: serviceCardInclude,
-          });
-          const order = new Map<number, number>(
-            ids.map((id: number, index: number) => [id, index]),
-          );
-          results.push(
-            ...hydrated.sort(
-              (a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999),
-            ),
-          );
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        this.logger.warn(`Semantic service search failed: ${message}`);
-      }
-
-      if (results.length < 3) {
-        const keywords = this.extractKeywords(query);
-        const fallback = await this.prisma.service.findMany({
-          where: {
-            status: ServiceStatus.ACTIVE,
-            isDeleted: false,
-            provider: {
-              status: UserStatus.ACTIVE,
-            },
-            OR:
-              keywords.length > 0
-                ? keywords.map((keyword) => ({
-                    OR: [
-                      {
-                        name: {
-                          contains: keyword,
-                          mode: Prisma.QueryMode.insensitive,
-                        },
-                      },
-                      {
-                        description: {
-                          contains: keyword,
-                          mode: Prisma.QueryMode.insensitive,
-                        },
-                      },
-                      {
-                        category: {
-                          name: {
-                            contains: keyword,
-                            mode: Prisma.QueryMode.insensitive,
-                          },
-                        },
-                      },
-                    ],
-                  }))
-                : [
-                    {
-                      name: {
-                        contains: query,
-                        mode: Prisma.QueryMode.insensitive,
-                      },
-                    },
-                  ],
-          },
-          include: serviceCardInclude,
-          orderBy: [{ avgRating: 'desc' }, { totalReviews: 'desc' }],
-          take: 8,
-        });
-        results.push(...fallback);
-      }
-    }
-
-    const unique = this.uniqueServices(results);
-    const providerIds = Array.from(new Set(unique.map((s) => s.providerId)));
-    const addresses = await this.prisma.userAddress.findMany({
-      where: {
-        userId: { in: providerIds },
-      },
-      orderBy: [{ isDefault: 'desc' }, { id: 'desc' }],
-    });
-
-    const addressMap = new Map<number, UserAddressRecord>();
-    for (const addr of addresses) {
-      if (!addressMap.has(addr.userId)) {
-        addressMap.set(addr.userId, addr);
-      }
-    }
-
-    const servicesWithGeo = unique.map((service) => {
-      const geoService: ServiceWithGeo = { ...service };
-      const addr = addressMap.get(service.providerId);
-      if (addr) {
-        geoService.providerAddress = `${addr.addressDetail}, ${addr.ward}, ${addr.district}, ${addr.province}`;
-        if (customerCoords && addr.latitude && addr.longitude) {
-          geoService.distanceKm = calculateHaversineDistance(
-            customerCoords.lat,
-            customerCoords.lng,
-            Number(addr.latitude),
-            Number(addr.longitude),
-          );
-        }
-      }
-      return geoService;
-    });
-
-    if (customerCoords) {
-      servicesWithGeo.sort((a, b) => {
-        if (a.distanceKm !== undefined && b.distanceKm !== undefined) {
-          return a.distanceKm - b.distanceKm;
-        }
-        if (a.distanceKm !== undefined) return -1;
-        if (b.distanceKm !== undefined) return 1;
-        return 0;
-      });
-    }
-
-    return servicesWithGeo.slice(0, 5);
   }
 
   private async getActiveServiceOrThrow(serviceId: number) {
@@ -1409,63 +1247,6 @@ export class ChatbotService {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
-  }
-
-  private uniqueServices(services: ServiceWithRelations[]) {
-    const seen = new Set<number>();
-    return services.filter((service) => {
-      if (seen.has(service.id)) return false;
-      seen.add(service.id);
-      return true;
-    });
-  }
-
-  private extractKeywords(message: string) {
-    const stopwords = new Set([
-      'toi',
-      'minh',
-      'ban',
-      'cua',
-      'va',
-      'la',
-      'co',
-      'khong',
-      'duoc',
-      'nay',
-      'cho',
-      'voi',
-      'cac',
-      'mot',
-      'nhung',
-      'muon',
-      'can',
-      'tim',
-      'kiem',
-      'tho',
-      'dich',
-      'vu',
-      'gia',
-      'nhat',
-      'tot',
-      'gan',
-      'ngay',
-      'hom',
-      'giup',
-      'ho',
-      'tro',
-      'hoi',
-      'dau',
-      'nao',
-      'gi',
-      'sao',
-      'lam',
-    ]);
-
-    return this.intentService
-      .normalize(message)
-      .split(/\s+/)
-      .filter((word) => word.length > 1 && !stopwords.has(word))
-      .slice(0, 8);
   }
 
   private async getCustomerCoords(

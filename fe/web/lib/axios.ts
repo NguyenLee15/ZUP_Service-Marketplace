@@ -1,11 +1,11 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '@/store/auth.store';
-import { connectSockets, disconnectSockets } from './socket';
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { useAuthStore } from "@/store/auth.store";
+import { connectSockets, disconnectSockets } from "./socket";
 
 const instance = axios.create({
-  baseURL: '/api',
+  baseURL: "/api",
   timeout: 60000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
 });
 
 let isRefreshing = false;
@@ -14,13 +14,25 @@ let failedQueue: Array<{
   reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: AxiosError | null, token: string | null = null) => {
+const processQueue = (
+  error: AxiosError | null,
+  token: string | null = null,
+) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token);
   });
   failedQueue = [];
 };
+
+export function calculateRetryDelay(
+  attempt: number,
+  random = Math.random(),
+): number {
+  const cap = 30_000;
+  const exponentialDelay = Math.min(cap, 1_000 * 2 ** attempt);
+  return Math.floor(Math.max(0, Math.min(1, random)) * exponentialDelay);
+}
 
 // 1. Tự động đính kèm Access Token trong memory.
 // Refresh token nằm trong httpOnly cookie do BFF quản lý.
@@ -44,12 +56,16 @@ instance.interceptors.response.use(
     };
 
     const isAuthEndpoint =
-      originalRequest.url?.includes('/auth/login') ||
-      originalRequest.url?.includes('/auth/google') ||
-      originalRequest.url?.includes('/auth/refresh') ||
-      originalRequest.url?.includes('/auth/register');
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/google") ||
+      originalRequest.url?.includes("/auth/refresh") ||
+      originalRequest.url?.includes("/auth/register");
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint
+    ) {
       // Nếu đang refresh rồi → đưa vào hàng đợi
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -66,11 +82,11 @@ instance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post('/api/auth/refresh', {});
+        const { data } = await axios.post("/api/auth/refresh", {});
 
         const newAccessToken = data.data?.accessToken || data.accessToken;
         if (!newAccessToken) {
-          throw new Error('No access token returned from refresh');
+          throw new Error("No access token returned from refresh");
         }
 
         useAuthStore.getState().setTokens(newAccessToken);
@@ -83,9 +99,9 @@ instance.interceptors.response.use(
         processQueue(err as AxiosError, null);
         useAuthStore.getState().logout();
         disconnectSockets();
-        if (typeof window !== 'undefined') {
-          console.warn('Unauthorized, user logged out.');
-          window.location.href = '/login';
+        if (typeof window !== "undefined") {
+          console.warn("Unauthorized, user logged out.");
+          window.location.href = "/login";
         }
         return Promise.reject(err);
       } finally {
@@ -95,23 +111,28 @@ instance.interceptors.response.use(
 
     // 3. Xử lý Transient Server Errors (502, 503, 504, Timeout) + Auto Retry với Exponential Backoff
     // An toàn giao dịch: Chỉ retry các request idempotent (GET, HEAD, OPTIONS) hoặc khi có Idempotency-Key
-    const method = (originalRequest.method || 'get').toLowerCase();
+    const method = (originalRequest.method || "get").toLowerCase();
     const hasIdempotencyKey = Boolean(
-      originalRequest.headers?.['Idempotency-Key'] ||
-      originalRequest.headers?.['idempotency-key'],
+      originalRequest.headers?.["Idempotency-Key"] ||
+      originalRequest.headers?.["idempotency-key"],
     );
-    const isIdempotent = ['get', 'head', 'options'].includes(method) || hasIdempotencyKey;
+    const isIdempotent =
+      ["get", "head", "options"].includes(method) || hasIdempotencyKey;
 
     const isTransient =
       error.response?.status === 502 ||
       error.response?.status === 503 ||
       error.response?.status === 504 ||
-      error.code === 'ECONNABORTED';
+      error.code === "ECONNABORTED";
 
     const retryConfig = originalRequest as Record<string, ApiPayload>;
-    if (isIdempotent && isTransient && (!retryConfig._retryCount || retryConfig._retryCount < 3)) {
+    if (
+      isIdempotent &&
+      isTransient &&
+      (!retryConfig._retryCount || retryConfig._retryCount < 3)
+    ) {
       retryConfig._retryCount = (retryConfig._retryCount || 0) + 1;
-      const delay = Math.pow(2, retryConfig._retryCount) * 1000;
+      const delay = calculateRetryDelay(retryConfig._retryCount);
       await new Promise((resolve) => setTimeout(resolve, delay));
       return instance(originalRequest);
     }

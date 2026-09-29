@@ -6,6 +6,7 @@ import { ChatbotIntentService } from './chatbot-intent.service';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotPersistenceService } from './chatbot-persistence.service';
 import { ChatbotSessionService } from './chatbot-session.service';
+import { ChatbotRetrievalService } from './chatbot-retrieval.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 import { AiModule } from '../../shared/ai/ai.module';
@@ -29,6 +30,7 @@ import { ServicesModule } from '../services/services.module';
     ChatbotIntentService,
     ChatbotPersistenceService,
     ChatbotSessionService,
+    ChatbotRetrievalService,
   ],
 })
 export class ChatbotModule {}

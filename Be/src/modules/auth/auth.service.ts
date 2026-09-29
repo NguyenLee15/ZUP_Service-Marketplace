@@ -13,7 +13,11 @@ import { Prisma, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { ErrorCodes } from '../../common/errors/error-codes';
-import { hashPassword, comparePassword } from '../../common/utils/hash.util';
+import {
+  hashPassword,
+  comparePassword,
+  needsPasswordRehash,
+} from '../../common/utils/hash.util';
 import { generateOtp, generateToken } from '../../common/utils/generate.util';
 import { hashToken } from '../../common/utils/token-hash.util';
 import {
@@ -282,6 +286,14 @@ export class AuthService {
     }
 
     // 5. Xóa brute-force counter
+    if (needsPasswordRehash(user.password)) {
+      const upgradedHash = await hashPassword(dto.password);
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { password: upgradedHash },
+      });
+    }
+
     await this.clearLoginAttempts(loginAttemptKey);
 
     // 6. Tạo token pair

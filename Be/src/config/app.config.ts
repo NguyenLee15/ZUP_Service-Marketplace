@@ -12,10 +12,14 @@ function parseNumber(value: string | undefined, fallback: number) {
 
 function getSecret(name: string, developmentFallback: string) {
   const value = process.env[name];
-  if (value) return value;
+  if (value && (process.env.NODE_ENV !== 'production' || value.length >= 32)) {
+    return value;
+  }
 
   if (process.env.NODE_ENV === 'production') {
-    throw new Error(`${name} is required in production`);
+    throw new Error(
+      `${name} is required in production and must be at least 32 characters`,
+    );
   }
 
   return developmentFallback;

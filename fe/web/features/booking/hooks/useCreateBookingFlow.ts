@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import type { FormEvent } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { z } from 'zod';
-import { servicesApi, bookingsApi } from '@/features/auth/services/api';
-import { useToast } from '@/components/ui/use-toast';
-import { userApi } from '@/features/user/services/user.api';
+import { useState, useEffect, useRef } from "react";
+import type { FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { z } from "zod";
+import { servicesApi, bookingsApi } from "@/features/auth/services/api";
+import { useToast } from "@/components/ui/use-toast";
+import { userApi } from "@/features/user/services/user.api";
 import {
   getProvinceOptions,
   getWardOptions,
   NEW_ADMIN_DISTRICT_VALUE,
   withCurrentOption,
-} from '@/lib/address-options';
-import { useAddressOptions } from '@/hooks/use-address-options';
+} from "@/lib/address-options";
+import { useAddressOptions } from "@/hooks/use-address-options";
 
-export type AddressMode = 'default' | 'custom';
+export type AddressMode = "default" | "custom";
 
 export interface UserAddress {
   id: number;
@@ -42,49 +42,67 @@ function normalizeAddresses(payload: unknown): UserAddress[] {
 }
 
 export const formatPrice = (price: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+    price,
+  );
 
 export function useCreateBookingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { addressOptions, loading: addressOptionsLoading, fallback: addressOptionsFallback } = useAddressOptions();
-  const serviceId = searchParams.get('serviceId');
-  const reorderId = searchParams.get('reorderId');
+  const {
+    addressOptions,
+    loading: addressOptionsLoading,
+    fallback: addressOptionsFallback,
+  } = useAddressOptions();
+  const serviceId = searchParams.get("serviceId");
+  const reorderId = searchParams.get("reorderId");
 
   const [service, setService] = useState<ApiPayload>(null);
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [addressesLoading, setAddressesLoading] = useState(true);
-  const [addressMode, setAddressMode] = useState<AddressMode>('custom');
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [addressMode, setAddressMode] = useState<AddressMode>("custom");
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+    null,
+  );
 
-  const [description, setDescription] = useState('');
-  const [province, setProvince] = useState('');
+  const [description, setDescription] = useState("");
+  const [province, setProvince] = useState("");
   const [district, setDistrict] = useState(NEW_ADMIN_DISTRICT_VALUE);
-  const [ward, setWard] = useState('');
-  const [addressDetail, setAddressDetail] = useState('');
-  const [desiredTime, setDesiredTime] = useState('');
-  const [timeMode, setTimeMode] = useState<'now' | 'scheduled'>('now');
+  const [ward, setWard] = useState("");
+  const [addressDetail, setAddressDetail] = useState("");
+  const [desiredTime, setDesiredTime] = useState("");
+  const [timeMode, setTimeMode] = useState<"now" | "scheduled">("now");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [selectedItems, setSelectedItems] = useState<Record<number, SelectedItem>>({});
+  const [selectedItems, setSelectedItems] = useState<
+    Record<number, SelectedItem>
+  >({});
 
   // Wizard steps: 1 = Hạng mục & Mô tả, 2 = Địa chỉ thực hiện, 3 = Thời gian & Xác nhận
   const [step, setStep] = useState(1);
   const [gpsLoading, setGpsLoading] = useState(false);
   const submittedRef = useRef(false);
   const idempotencyKeyRef = useRef<string>(
-    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
       ? crypto.randomUUID()
-      : `bk_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+      : `00000000-0000-4000-8000-${Math.floor(Math.random() * 1e12)
+          .toString(16)
+          .padStart(12, "0")}`,
   );
 
   const [showSmartInput, setShowSmartInput] = useState(!serviceId);
   const [aiIntentResult, setAiIntentResult] = useState<ApiPayload>(null);
 
   const defaultAddress = addresses.find((address) => address.isDefault);
-  const provinceOptions = withCurrentOption(getProvinceOptions(addressOptions), province);
-  const wardOptions = withCurrentOption(getWardOptions(province, addressOptions), ward);
+  const provinceOptions = withCurrentOption(
+    getProvinceOptions(addressOptions),
+    province,
+  );
+  const wardOptions = withCurrentOption(
+    getWardOptions(province, addressOptions),
+    ward,
+  );
 
   const clearAddressErrors = () => {
     setFieldErrors((prev) => {
@@ -106,30 +124,33 @@ export function useCreateBookingFlow() {
   };
 
   const useCustomAddress = () => {
-    setAddressMode('custom');
+    setAddressMode("custom");
     setSelectedAddressId(null);
-    setProvince('');
+    setProvince("");
     setDistrict(NEW_ADMIN_DISTRICT_VALUE);
-    setWard('');
-    setAddressDetail('');
+    setWard("");
+    setAddressDetail("");
   };
 
   const validate = (name: string, value: string) => {
     setFieldErrors((prev) => {
       const newErrors = { ...prev };
-      if (name === 'description') {
-        if (!value) newErrors.description = 'Vui lòng mô tả yêu cầu';
-        else if (value.length < 10) newErrors.description = 'Mô tả quá ngắn (tối thiểu 10 ký tự)';
+      if (name === "description") {
+        if (!value) newErrors.description = "Vui lòng mô tả yêu cầu";
+        else if (value.length < 10)
+          newErrors.description = "Mô tả quá ngắn (tối thiểu 10 ký tự)";
         else delete newErrors.description;
       }
-      if (['province', 'ward', 'addressDetail'].includes(name)) {
-        if (!value) newErrors[name] = 'Bắt buộc';
+      if (["province", "ward", "addressDetail"].includes(name)) {
+        if (!value) newErrors[name] = "Bắt buộc";
         else delete newErrors[name];
       }
-      if (name === 'desiredTime') {
+      if (name === "desiredTime") {
         const selectedDate = new Date(value);
-        if (isNaN(selectedDate.getTime())) newErrors.desiredTime = 'Thời gian không hợp lệ';
-        else if (selectedDate < new Date()) newErrors.desiredTime = 'Thời gian phải ở tương lai';
+        if (isNaN(selectedDate.getTime()))
+          newErrors.desiredTime = "Thời gian không hợp lệ";
+        else if (selectedDate < new Date())
+          newErrors.desiredTime = "Thời gian phải ở tương lai";
         else delete newErrors.desiredTime;
       }
       return newErrors;
@@ -139,33 +160,39 @@ export function useCreateBookingFlow() {
   const handleProvinceChange = (value: string) => {
     setProvince(value);
     setDistrict(NEW_ADMIN_DISTRICT_VALUE);
-    setWard('');
-    validate('province', value);
-    validate('ward', '');
+    setWard("");
+    validate("province", value);
+    validate("ward", "");
   };
 
   const handleWardChange = (value: string) => {
     setWard(value);
-    validate('ward', value);
+    validate("ward", value);
   };
 
   useEffect(() => {
     if (!serviceId) return;
-    servicesApi.getDetail(Number(serviceId)).then((res) => setService(res.data.data)).catch(() => router.push('/services'));
+    servicesApi
+      .getDetail(Number(serviceId))
+      .then((res) => setService(res.data.data))
+      .catch(() => router.push("/services"));
 
     if (reorderId) {
-      bookingsApi.getById(Number(reorderId)).then((res) => {
-        const old = res.data.data;
-        if (old) {
-          setDescription(old.description || '');
-          setAddressMode('custom');
-          setSelectedAddressId(null);
-          setProvince(old.province || '');
-          setDistrict(old.district || '');
-          setWard(old.ward || '');
-          setAddressDetail(old.addressDetail || '');
-        }
-      }).catch(console.error);
+      bookingsApi
+        .getById(Number(reorderId))
+        .then((res) => {
+          const old = res.data.data;
+          if (old) {
+            setDescription(old.description || "");
+            setAddressMode("custom");
+            setSelectedAddressId(null);
+            setProvince(old.province || "");
+            setDistrict(old.district || "");
+            setWard(old.ward || "");
+            setAddressDetail(old.addressDetail || "");
+          }
+        })
+        .catch(console.error);
     }
   }, [serviceId, reorderId, router]);
 
@@ -181,14 +208,14 @@ export function useCreateBookingFlow() {
 
         const preferred = normalized.find((address) => address.isDefault);
         if (!reorderId && preferred) {
-          setAddressMode('default');
+          setAddressMode("default");
           applyAddress(preferred);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setAddresses([]);
-          setAddressMode('custom');
+          setAddressMode("custom");
         }
       })
       .finally(() => {
@@ -203,9 +230,9 @@ export function useCreateBookingFlow() {
   const handleAutoLocate = () => {
     if (!navigator.geolocation) {
       toast({
-        title: 'Trình duyệt không hỗ trợ định vị',
-        description: 'Vui lòng nhập địa chỉ thực hiện theo cách thủ công.',
-        variant: 'destructive',
+        title: "Trình duyệt không hỗ trợ định vị",
+        description: "Vui lòng nhập địa chỉ thực hiện theo cách thủ công.",
+        variant: "destructive",
       });
       return;
     }
@@ -215,21 +242,26 @@ export function useCreateBookingFlow() {
       async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          const res = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
+          const res = await fetch(
+            `/api/geocode?lat=${latitude}&lng=${longitude}`,
+          );
           const data = await res.json();
           if (data.results && data.results.length > 0) {
             const loc = data.results[0];
-            const formatted = loc.formatted_address || '';
+            const formatted = loc.formatted_address || "";
             const components = loc.address_components || [];
 
-            const pComp = components.find((c: { types: string[]; long_name: string }) =>
-              c.types.includes('administrative_area_level_1'),
+            const pComp = components.find(
+              (c: { types: string[]; long_name: string }) =>
+                c.types.includes("administrative_area_level_1"),
             );
-            const dComp = components.find((c: { types: string[]; long_name: string }) =>
-              c.types.includes('administrative_area_level_2'),
+            const dComp = components.find(
+              (c: { types: string[]; long_name: string }) =>
+                c.types.includes("administrative_area_level_2"),
             );
-            const wComp = components.find((c: { types: string[]; long_name: string }) =>
-              c.types.includes('administrative_area_level_3'),
+            const wComp = components.find(
+              (c: { types: string[]; long_name: string }) =>
+                c.types.includes("administrative_area_level_3"),
             );
 
             if (pComp?.long_name) setProvince(pComp.long_name);
@@ -237,20 +269,24 @@ export function useCreateBookingFlow() {
             if (wComp?.long_name) setWard(wComp.long_name);
             setAddressDetail(formatted);
           } else {
-            setAddressDetail(`Tọa độ: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+            setAddressDetail(
+              `Tọa độ: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
+            );
           }
-          setAddressMode('custom');
+          setAddressMode("custom");
           setSelectedAddressId(null);
           clearAddressErrors();
           toast({
-            title: 'Đã nhận được vị trí hiện tại',
-            description: 'Địa chỉ đã được tự động điền. Vui lòng kiểm tra lại số nhà/ngõ.',
+            title: "Đã nhận được vị trí hiện tại",
+            description:
+              "Địa chỉ đã được tự động điền. Vui lòng kiểm tra lại số nhà/ngõ.",
           });
         } catch {
           toast({
-            title: 'Không thể phân giải địa chỉ',
-            description: 'Vui lòng kiểm tra và nhập địa chỉ chi tiết theo cách thủ công.',
-            variant: 'destructive',
+            title: "Không thể phân giải địa chỉ",
+            description:
+              "Vui lòng kiểm tra và nhập địa chỉ chi tiết theo cách thủ công.",
+            variant: "destructive",
           });
         } finally {
           setGpsLoading(false);
@@ -258,9 +294,9 @@ export function useCreateBookingFlow() {
       },
       () => {
         toast({
-          title: 'Không thể lấy vị trí',
-          description: 'Vui lòng cấp quyền vị trí hoặc nhập địa chỉ thủ công.',
-          variant: 'destructive',
+          title: "Không thể lấy vị trí",
+          description: "Vui lòng cấp quyền vị trí hoặc nhập địa chỉ thủ công.",
+          variant: "destructive",
         });
         setGpsLoading(false);
       },
@@ -273,61 +309,61 @@ export function useCreateBookingFlow() {
       description: z
         .string()
         .trim()
-        .min(10, 'Mô tả quá ngắn (tối thiểu 10 ký tự)')
-        .max(2000, 'Mô tả không được vượt quá 2000 ký tự'),
-      addressMode: z.enum(['default', 'custom']),
+        .min(10, "Mô tả quá ngắn (tối thiểu 10 ký tự)")
+        .max(2000, "Mô tả không được vượt quá 2000 ký tự"),
+      addressMode: z.enum(["default", "custom"]),
       selectedAddressId: z.number().nullable().optional(),
       province: z.string().optional(),
       ward: z.string().optional(),
       addressDetail: z.string().optional(),
-      timeMode: z.enum(['now', 'asap', 'scheduled']),
+      timeMode: z.enum(["now", "asap", "scheduled"]),
       desiredTime: z.string().optional(),
     })
     .superRefine((data, ctx) => {
-      if (!(data.addressMode === 'default' && data.selectedAddressId)) {
+      if (!(data.addressMode === "default" && data.selectedAddressId)) {
         if (!data.province?.trim()) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ['province'],
-            message: 'Bắt buộc',
+            path: ["province"],
+            message: "Bắt buộc",
           });
         }
         if (!data.ward?.trim()) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ['ward'],
-            message: 'Bắt buộc',
+            path: ["ward"],
+            message: "Bắt buộc",
           });
         }
         if (!data.addressDetail?.trim()) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ['addressDetail'],
-            message: 'Bắt buộc',
+            path: ["addressDetail"],
+            message: "Bắt buộc",
           });
         }
       }
 
-      if (data.timeMode === 'scheduled') {
+      if (data.timeMode === "scheduled") {
         if (!data.desiredTime) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ['desiredTime'],
-            message: 'Vui lòng chọn thời gian',
+            path: ["desiredTime"],
+            message: "Vui lòng chọn thời gian",
           });
         } else {
           const selectedDate = new Date(data.desiredTime);
           if (isNaN(selectedDate.getTime())) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              path: ['desiredTime'],
-              message: 'Thời gian không hợp lệ',
+              path: ["desiredTime"],
+              message: "Thời gian không hợp lệ",
             });
           } else if (selectedDate.getTime() <= Date.now()) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              path: ['desiredTime'],
-              message: 'Thời gian phải ở tương lai',
+              path: ["desiredTime"],
+              message: "Thời gian phải ở tương lai",
             });
           }
         }
@@ -361,19 +397,19 @@ export function useCreateBookingFlow() {
   const focusBookingError = (errors: Record<string, string>) => {
     const firstError = Object.keys(errors)[0];
     const focusTarget: Record<string, string> = {
-      description: 'booking-description',
-      province: 'booking-province',
-      ward: 'booking-ward',
-      addressDetail: 'booking-address-detail',
-      desiredTime: 'booking-desired-time',
+      description: "booking-description",
+      province: "booking-province",
+      ward: "booking-ward",
+      addressDetail: "booking-address-detail",
+      desiredTime: "booking-desired-time",
     };
 
-    if (firstError === 'description') setStep(1);
-    else if (['province', 'ward', 'addressDetail'].includes(firstError)) {
-      setAddressMode('custom');
+    if (firstError === "description") setStep(1);
+    else if (["province", "ward", "addressDetail"].includes(firstError)) {
+      setAddressMode("custom");
       setStep(2);
-    } else if (firstError === 'desiredTime') {
-      setTimeMode('scheduled');
+    } else if (firstError === "desiredTime") {
+      setTimeMode("scheduled");
       setStep(3);
     }
 
@@ -410,15 +446,25 @@ export function useCreateBookingFlow() {
           district: district || NEW_ADMIN_DISTRICT_VALUE,
           ward,
           addressDetail,
-          desiredTime: timeMode === 'now' ? new Date().toISOString() : new Date(desiredTime).toISOString(),
+          desiredTime:
+            timeMode === "now"
+              ? new Date().toISOString()
+              : new Date(desiredTime).toISOString(),
           items: itemsPayload.length > 0 ? itemsPayload : undefined,
         },
         idempotencyKeyRef.current,
       );
-      toast({ title: 'Đặt dịch vụ thành công', description: 'Nhà cung cấp sẽ liên hệ bạn sớm.' });
-      router.push('/bookings');
+      toast({
+        title: "Đặt dịch vụ thành công",
+        description: "Nhà cung cấp sẽ liên hệ bạn sớm.",
+      });
+      router.push("/bookings");
     } catch (err: ApiPayload) {
-      toast({ title: 'Lỗi', description: err.response?.data?.error?.message || 'Đã xảy ra lỗi', variant: 'destructive' });
+      toast({
+        title: "Lỗi",
+        description: err.response?.data?.error?.message || "Đã xảy ra lỗi",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
       submittedRef.current = false;
@@ -426,24 +472,34 @@ export function useCreateBookingFlow() {
   };
 
   // Step validation helpers
-  const isStep1Valid = description.trim().length >= 10 && !fieldErrors.description;
+  const isStep1Valid =
+    description.trim().length >= 10 && !fieldErrors.description;
   const isStep2Valid =
-    addressMode === 'default' && selectedAddressId
+    addressMode === "default" && selectedAddressId
       ? true
-      : Boolean(province && ward && addressDetail && !fieldErrors.province && !fieldErrors.ward && !fieldErrors.addressDetail);
+      : Boolean(
+          province &&
+          ward &&
+          addressDetail &&
+          !fieldErrors.province &&
+          !fieldErrors.ward &&
+          !fieldErrors.addressDetail,
+        );
 
   const handleNextStep = () => {
     if (step === 1) {
       if (!description.trim()) {
-        const err = { description: 'Vui lòng mô tả chi tiết yêu cầu công việc' };
+        const err = {
+          description: "Vui lòng mô tả chi tiết yêu cầu công việc",
+        };
         setFieldErrors((prev) => ({ ...prev, ...err }));
-        document.getElementById('booking-description')?.focus();
+        document.getElementById("booking-description")?.focus();
         return false;
       }
       if (description.trim().length < 10) {
-        const err = { description: 'Mô tả quá ngắn (tối thiểu 10 ký tự)' };
+        const err = { description: "Mô tả quá ngắn (tối thiểu 10 ký tự)" };
         setFieldErrors((prev) => ({ ...prev, ...err }));
-        document.getElementById('booking-description')?.focus();
+        document.getElementById("booking-description")?.focus();
         return false;
       }
       setStep(2);
@@ -451,16 +507,22 @@ export function useCreateBookingFlow() {
     }
 
     if (step === 2) {
-      if (addressMode === 'default') {
+      if (addressMode === "default") {
         if (!selectedAddressId) {
-          toast({ title: 'Chưa chọn địa chỉ', description: 'Vui lòng chọn một địa chỉ đã lưu hoặc nhập địa chỉ mới.', variant: 'destructive' });
+          toast({
+            title: "Chưa chọn địa chỉ",
+            description:
+              "Vui lòng chọn một địa chỉ đã lưu hoặc nhập địa chỉ mới.",
+            variant: "destructive",
+          });
           return false;
         }
       } else {
         const newErrors: Record<string, string> = {};
-        if (!province) newErrors.province = 'Vui lòng chọn tỉnh / thành phố';
-        if (!ward) newErrors.ward = 'Vui lòng chọn phường / xã';
-        if (!addressDetail.trim()) newErrors.addressDetail = 'Vui lòng nhập số nhà, tên đường';
+        if (!province) newErrors.province = "Vui lòng chọn tỉnh / thành phố";
+        if (!ward) newErrors.ward = "Vui lòng chọn phường / xã";
+        if (!addressDetail.trim())
+          newErrors.addressDetail = "Vui lòng nhập số nhà, tên đường";
         if (Object.keys(newErrors).length > 0) {
           setFieldErrors((prev) => ({ ...prev, ...newErrors }));
           focusBookingError(newErrors);

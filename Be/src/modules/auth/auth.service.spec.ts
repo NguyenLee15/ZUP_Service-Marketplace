@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 jest.mock('../../common/utils/hash.util', () => ({
   hashPassword: jest.fn().mockResolvedValue('hashed-password'),
   comparePassword: jest.fn(),
+  needsPasswordRehash: jest.fn(),
 }));
 
 type RefreshTokenRecord = {
@@ -70,6 +71,13 @@ type AuthPrismaMock = {
     create: jest.Mock<Promise<GoogleUserRecord>, unknown[]>;
     update: jest.Mock;
   };
+  loginAttempt: {
+    findUnique: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+    deleteMany: jest.Mock;
+  };
   $transaction: jest.Mock;
 };
 
@@ -122,6 +130,13 @@ describe('AuthService token hardening', () => {
         create: jest.fn<Promise<GoogleUserRecord>, unknown[]>(),
         update: jest.fn().mockResolvedValue({}),
       },
+      loginAttempt: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({}),
+        update: jest.fn().mockResolvedValue({}),
+        delete: jest.fn().mockResolvedValue({}),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
       $transaction: jest.fn<Promise<unknown>, [unknown]>((input) => {
         if (isTransactionCallback(input)) {
           return input(prisma);
@@ -129,6 +144,18 @@ describe('AuthService token hardening', () => {
         return Promise.all(input as Promise<unknown>[]);
       }),
     };
+
+    const hash = jest.requireMock('../../common/utils/hash.util') as {
+      comparePassword: jest.Mock;
+      needsPasswordRehash: jest.Mock;
+      hashPassword: jest.Mock;
+    };
+    hash.comparePassword.mockReset();
+    hash.comparePassword.mockResolvedValue(false);
+    hash.needsPasswordRehash.mockReset();
+    hash.needsPasswordRehash.mockReturnValue(false);
+    hash.hashPassword.mockReset();
+    hash.hashPassword.mockResolvedValue('hashed-password');
 
     service = new AuthService(
       prisma as unknown as PrismaService,
@@ -175,6 +202,32 @@ describe('AuthService token hardening', () => {
     expect(createArg.data.userId).toBe(10);
     expect(createArg.data.token).toBe('');
     expect(typeof createArg.data.tokenHash).toBe('string');
+  });
+
+  it('rehashes a valid low-cost password after successful login', async () => {
+    const hash = jest.requireMock('../../common/utils/hash.util') as {
+      comparePassword: jest.Mock;
+      needsPasswordRehash: jest.Mock;
+      hashPassword: jest.Mock;
+    };
+    hash.comparePassword.mockResolvedValue(true);
+    hash.needsPasswordRehash.mockReturnValue(true);
+    hash.hashPassword.mockResolvedValue('rehash-at-12');
+    prisma.user.findUnique.mockResolvedValue({
+      id: 10,
+      email: 'user@test.local',
+      password: 'old-hash',
+      role: UserRole.CUSTOMER,
+      status: UserStatus.ACTIVE,
+      emailVerified: true,
+    });
+
+    await service.login({ email: 'user@test.local', password: 'secret' });
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: { password: 'rehash-at-12' },
+    });
   });
 
   it('rejects when refresh token CAS loses a concurrent rotation', async () => {

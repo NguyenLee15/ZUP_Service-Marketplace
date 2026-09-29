@@ -95,26 +95,9 @@ export class ServiceSearchService {
     if (dto.minRating) where.avgRating = { gte: dto.minRating };
 
     if (isLocationSearch) {
-      const lat = dto.lat as number;
-      const lng = dto.lng as number;
-      const deltaLat = radiusKm / 111;
-      const deltaLng = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
-      const minLat = lat - deltaLat;
-      const maxLat = lat + deltaLat;
-      const minLng = lng - deltaLng;
-      const maxLng = lng + deltaLng;
-
-      const nearbyAddresses = await this.prisma.userAddress.findMany({
-        where: {
-          isDefault: true,
-          latitude: { gte: minLat, lte: maxLat },
-          longitude: { gte: minLng, lte: maxLng },
-        },
-        select: { userId: true },
-      });
-
-      const nearbyProviderIds = nearbyAddresses.map((a) => a.userId);
-      where.providerId = { in: nearbyProviderIds };
+      const result = await this.searchByLocation(dto, page, limit, radiusKm);
+      this.setCachedSearchResult(cacheKey, result);
+      return result;
     }
 
     const orderBy: Prisma.ServiceOrderByWithRelationInput[] = [
@@ -144,69 +127,21 @@ export class ServiceSearchService {
         },
       },
       orderBy,
-      skip: isLocationSearch ? undefined : (page - 1) * limit,
-      take: isLocationSearch ? 200 : limit,
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    const totalBeforeLocationFilter = isLocationSearch
-      ? data.length
-      : await this.prisma.service.count({ where });
+    const totalBeforeLocationFilter = await this.prisma.service.count({
+      where,
+    });
 
-    let mappedData: SearchServiceItem[] = data.map((service) => ({
+    const mappedData: SearchServiceItem[] = data.map((service) => ({
       ...service,
       isFeatured: service.featuredListings.length > 0,
     }));
 
-    const locationExpanded = false;
-    if (isLocationSearch) {
-      const providerIds = [
-        ...new Set(mappedData.map((service) => service.providerId)),
-      ];
-      const addressMap = await this.getProviderAddressMap(providerIds);
-
-      mappedData = mappedData
-        .map((service) => {
-          const address = addressMap.get(service.providerId);
-          if (!address) return service;
-
-          const distanceKm = calculateHaversineDistance(
-            dto.lat as number,
-            dto.lng as number,
-            Number(address.latitude),
-            Number(address.longitude),
-          );
-
-          return {
-            ...service,
-            latitude: Number(address.latitude),
-            longitude: Number(address.longitude),
-            distance: distanceKm,
-            distanceKm,
-            providerAddress: `${address.addressDetail}, ${address.ward}, ${address.district}, ${address.province}`,
-          };
-        })
-        .filter((service) => service.distanceKm !== undefined)
-        .sort((a, b) => {
-          const distanceDiff = (a.distanceKm ?? 0) - (b.distanceKm ?? 0);
-          if (distanceDiff !== 0) return distanceDiff;
-          if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
-          return this.compareBySearchSort(a, b, dto.sortBy);
-        });
-
-      const nearbyData = mappedData.filter(
-        (service) =>
-          (service.distanceKm ?? Number.POSITIVE_INFINITY) <= radiusKm,
-      );
-
-      mappedData = nearbyData;
-    }
-
-    const total = isLocationSearch
-      ? mappedData.length
-      : totalBeforeLocationFilter;
-    const pagedData = isLocationSearch
-      ? mappedData.slice((page - 1) * limit, page * limit)
-      : mappedData;
+    const total = totalBeforeLocationFilter;
+    const pagedData = mappedData;
 
     const result = {
       data: pagedData,
@@ -215,7 +150,6 @@ export class ServiceSearchService {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
-        ...(isLocationSearch ? { radiusKm, locationExpanded } : {}),
       },
     };
 
@@ -511,6 +445,157 @@ export class ServiceSearchService {
       expiresAt: now + this.searchCacheTtlMs,
       result,
     });
+  }
+
+  private async searchByLocation(
+    dto: SearchServiceDto,
+    page: number,
+    limit: number,
+    radiusKm: number,
+  ): Promise<SearchServicesResult> {
+    const lat = dto.lat as number;
+    const lng = dto.lng as number;
+    const deltaLat = radiusKm / 111;
+    const deltaLng = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+    const conditions: Prisma.Sql[] = [
+      Prisma.sql`s.status = 'ACTIVE'`,
+      Prisma.sql`s.is_deleted = false`,
+      Prisma.sql`u.status = 'ACTIVE'`,
+      Prisma.sql`u.is_online = true`,
+      Prisma.sql`pw.is_restricted = false`,
+      Prisma.sql`a.is_default = true`,
+      Prisma.sql`a.latitude BETWEEN ${lat - deltaLat} AND ${lat + deltaLat}`,
+      Prisma.sql`a.longitude BETWEEN ${lng - deltaLng} AND ${lng + deltaLng}`,
+    ];
+
+    const words = dto.keyword?.trim().split(/\s+/).filter(Boolean) ?? [];
+    for (const word of words) {
+      const pattern = `%${word}%`;
+      conditions.push(
+        Prisma.sql`(s.name ILIKE ${pattern} OR s.description ILIKE ${pattern})`,
+      );
+    }
+    const categoryIds = this.getRequestedCategoryIds(dto);
+    if (categoryIds.length > 0) {
+      conditions.push(
+        Prisma.sql`s.category_id IN (${Prisma.join(categoryIds)})`,
+      );
+    }
+    if (dto.minPrice !== undefined) {
+      conditions.push(Prisma.sql`s.reference_price >= ${dto.minPrice}`);
+    }
+    if (dto.maxPrice !== undefined) {
+      conditions.push(Prisma.sql`s.reference_price <= ${dto.maxPrice}`);
+    }
+    if (dto.minRating !== undefined) {
+      conditions.push(Prisma.sql`s.avg_rating >= ${dto.minRating}`);
+    }
+    if (dto.province?.trim()) {
+      conditions.push(Prisma.sql`a.province = ${dto.province.trim()}`);
+    }
+
+    const sortSql =
+      dto.sortBy === 'rating'
+        ? Prisma.sql`s.avg_rating DESC`
+        : dto.sortBy === 'price_asc'
+          ? Prisma.sql`s.reference_price ASC`
+          : dto.sortBy === 'price_desc'
+            ? Prisma.sql`s.reference_price DESC`
+            : Prisma.sql`s.id DESC`;
+
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        id: number;
+        distanceKm: number;
+        totalCount: number;
+        providerAddress: string;
+      }>
+    >(Prisma.sql`
+      SELECT id, distance_km AS "distanceKm", provider_address AS "providerAddress",
+        COUNT(*) OVER()::int AS "totalCount"
+      FROM (
+        SELECT
+          s.id,
+          s.avg_rating,
+          s.reference_price,
+          CASE WHEN EXISTS (
+            SELECT 1 FROM featured_listings fl
+            WHERE fl.service_id = s.id
+              AND fl.status = 'ACTIVE'
+              AND fl.end_date > NOW()
+          ) THEN true ELSE false END AS is_featured,
+          CONCAT(a.address_detail, ', ', a.ward, ', ', a.district, ', ', a.province) AS provider_address,
+          6371 * 2 * ASIN(SQRT(
+            POWER(SIN(RADIANS(CAST(a.latitude AS double precision) - ${lat}) / 2), 2) +
+            COS(RADIANS(${lat})) * COS(RADIANS(CAST(a.latitude AS double precision))) *
+            POWER(SIN(RADIANS(CAST(a.longitude AS double precision) - ${lng}) / 2), 2)
+          )) AS distance_km
+        FROM services s
+        INNER JOIN users u ON u.id = s.provider_id
+        INNER JOIN provider_wallets pw ON pw.provider_id = u.id
+        INNER JOIN user_addresses a ON a.user_id = u.id
+        WHERE ${Prisma.join(conditions, ' AND ')}
+      ) candidates
+      WHERE distance_km <= ${radiusKm}
+      ORDER BY distance_km ASC, is_featured DESC, ${sortSql}
+      LIMIT ${limit} OFFSET ${(page - 1) * limit}
+    `);
+
+    const serviceIds = rows.map((row) => row.id);
+    if (serviceIds.length === 0) {
+      return {
+        data: [],
+        meta: {
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+          radiusKm,
+          locationExpanded: false,
+        },
+      };
+    }
+
+    const services = await this.prisma.service.findMany({
+      where: { id: { in: serviceIds } },
+      include: {
+        category: { select: { id: true, name: true } },
+        provider: { select: { id: true, fullName: true, avatarUrl: true } },
+        images: { orderBy: { displayOrder: 'asc' }, take: 1 },
+        featuredListings: {
+          where: { status: 'ACTIVE', endDate: { gt: new Date() } },
+          take: 1,
+        },
+      },
+    });
+    const serviceMap = new Map(
+      services.map((service) => [service.id, service]),
+    );
+    const data = rows.flatMap((row) => {
+      const service = serviceMap.get(row.id);
+      if (!service) return [];
+      return [
+        {
+          ...service,
+          isFeatured: service.featuredListings.length > 0,
+          distance: Number(row.distanceKm),
+          distanceKm: Number(row.distanceKm),
+          providerAddress: row.providerAddress,
+        },
+      ];
+    }) as SearchServiceItem[];
+    const total = rows[0]?.totalCount ?? 0;
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        radiusKm,
+        locationExpanded: false,
+      },
+    };
   }
 
   private hasLocationFilter(dto: SearchServiceDto) {

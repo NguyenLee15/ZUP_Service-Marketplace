@@ -16,6 +16,7 @@ import { BookingStatePolicy } from './booking-state.policy';
 import { BookingCommissionService } from './booking-commission.service';
 import { BookingTimeoutService } from './booking-timeout.service';
 import { BookingSharedService } from './booking-shared.service';
+import { BookingIdempotencyService } from './booking-idempotency.service';
 
 type MockPrisma = {
   booking: {
@@ -98,6 +99,12 @@ describe('BookingLifecycleService', () => {
     setJson: jest.fn().mockResolvedValue(undefined),
   };
 
+  const mockIdempotency = {
+    claim: jest.fn(),
+    complete: jest.fn(),
+    fail: jest.fn(),
+  };
+
   const mockEventEmitter = {
     emit: jest.fn(),
   };
@@ -138,6 +145,7 @@ describe('BookingLifecycleService', () => {
         { provide: EventEmitter2, useValue: mockEventEmitter },
         { provide: AiService, useValue: mockAi },
         { provide: RedisService, useValue: mockRedis },
+        { provide: BookingIdempotencyService, useValue: mockIdempotency },
         { provide: JobsService, useValue: mockJobs },
         { provide: BookingStatePolicy, useValue: mockBookingStatePolicy },
         {

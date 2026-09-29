@@ -9,6 +9,7 @@ import { generateBookingCode } from '../../common/utils/generate.util';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BookingSharedService } from './booking-shared.service';
 import { BookingStatePolicy } from './booking-state.policy';
+import { BookingIdempotencyService } from './booking-idempotency.service';
 import {
   BookingTimeoutService,
   PROVIDER_ACCEPTANCE_TIMEOUT_MS,
@@ -18,7 +19,7 @@ import {
   ConfirmSurveyorDto,
   CreateBookingDto,
 } from './dto/bookings.dto';
-import { RedisService } from '../../shared/redis/redis.service';
+import { createHash } from 'node:crypto';
 
 export type BookingCreationResult = {
   data: unknown;
@@ -27,76 +28,50 @@ export type BookingCreationResult = {
 
 @Injectable()
 export class BookingCreationService {
-  private readonly memoryIdempotency = new Map<
-    string,
-    { data: BookingCreationResult; expiresAt: number }
-  >();
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly shared: BookingSharedService,
     private readonly bookingTimeoutService: BookingTimeoutService,
     private readonly bookingStatePolicy: BookingStatePolicy,
-    private readonly redisService: RedisService,
+    private readonly idempotencyService: BookingIdempotencyService,
   ) {}
-
-  private async getIdempotency(
-    key: string,
-  ): Promise<BookingCreationResult | null> {
-    try {
-      if (this.redisService.isEnabled()) {
-        const cached =
-          await this.redisService.getJson<BookingCreationResult>(key);
-        if (cached) return cached;
-      }
-    } catch {
-      // Fallback to memory on Redis error
-    }
-    const mem = this.memoryIdempotency.get(key);
-    if (mem) {
-      if (mem.expiresAt > Date.now()) {
-        return mem.data;
-      }
-      this.memoryIdempotency.delete(key);
-    }
-    return null;
-  }
-
-  private async setIdempotency(
-    key: string,
-    data: BookingCreationResult,
-    ttlSeconds = 120,
-  ): Promise<void> {
-    try {
-      if (this.redisService.isEnabled()) {
-        await this.redisService.setJson(key, data, ttlSeconds);
-      }
-    } catch {
-      // Fallback to memory on Redis error
-    }
-    this.memoryIdempotency.set(key, {
-      data,
-      expiresAt: Date.now() + ttlSeconds * 1000,
-    });
-  }
 
   async create(
     customerId: number,
     dto: CreateBookingDto,
-    idempotencyKey?: string,
+    idempotencyKey: string,
   ): Promise<BookingCreationResult> {
-    const normalizedKey = idempotencyKey?.trim();
-    const idempotencyCacheKey = normalizedKey
-      ? `booking:idempotency:${customerId}:${normalizedKey}`
-      : null;
-
-    if (idempotencyCacheKey) {
-      const cached = await this.getIdempotency(idempotencyCacheKey);
-      if (cached) {
-        return cached;
-      }
+    const requestHash = createHash('sha256')
+      .update(JSON.stringify(dto))
+      .digest('hex');
+    const claim = await this.idempotencyService.claim(
+      customerId,
+      BookingIdempotencyService.bookingScope,
+      idempotencyKey,
+      requestHash,
+    );
+    if (claim.status === 'REPLAY') {
+      return claim.body as BookingCreationResult;
     }
 
+    try {
+      const result = await this.createBooking(customerId, dto);
+      await this.idempotencyService.complete(
+        claim.id,
+        201,
+        JSON.parse(JSON.stringify(result)),
+      );
+      return result;
+    } catch (error) {
+      await this.idempotencyService.fail(claim.id);
+      throw error;
+    }
+  }
+
+  private async createBooking(
+    customerId: number,
+    dto: CreateBookingDto,
+  ): Promise<BookingCreationResult> {
     await this.shared.checkActiveUser(customerId);
     const service = await this.prisma.service.findFirst({
       where: {
@@ -287,10 +262,6 @@ export class BookingCreationService {
       data: bookingWithItems,
       message: 'Đặt dịch vụ thành công',
     };
-    if (idempotencyCacheKey) {
-      await this.setIdempotency(idempotencyCacheKey, result, 120);
-    }
-
     return result;
   }
 

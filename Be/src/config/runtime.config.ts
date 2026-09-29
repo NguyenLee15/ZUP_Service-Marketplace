@@ -24,6 +24,14 @@ export function isRedisEnabled(): boolean {
 
 export function getQueueMode(): QueueMode {
   const requestedMode = (process.env.QUEUE_MODE || '').trim().toLowerCase();
+  if (getRuntimeProfile() === 'prod') {
+    if (!isRedisEnabled() || requestedMode !== 'redis') {
+      throw new Error(
+        'Production runtime requires Redis and QUEUE_MODE=redis; inline jobs are disabled',
+      );
+    }
+    return 'redis';
+  }
   if (requestedMode === 'redis' && isRedisEnabled()) return 'redis';
   return 'inline';
 }

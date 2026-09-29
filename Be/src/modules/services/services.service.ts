@@ -51,8 +51,13 @@ export class ServicesService {
     return this.commandService.show(providerId, serviceId);
   }
 
-  getMyServices(providerId: number, status?: string) {
-    return this.commandService.getMyServices(providerId, status);
+  getMyServices(
+    providerId: number,
+    status?: string,
+    page?: number,
+    limit?: number,
+  ) {
+    return this.commandService.getMyServices(providerId, status, page, limit);
   }
 
   deleteByProvider(providerId: number, serviceId: number) {
