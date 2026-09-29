@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -62,31 +62,52 @@ export default function KYCPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [page, setPage] = useState(1);
   const limit = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+      setPage(1);
+    }, 400);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const fetchKycList = useCallback(() => {
     const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
-    const params: { page: number; limit: number; status?: string } = {
+    const params: {
+      page: number;
+      limit: number;
+      status?: string;
+      keyword?: string;
+    } = {
       page,
       limit,
     };
     if (selectedStatus !== "all") {
       params.status = selectedStatus;
     }
+    if (debouncedSearch) params.keyword = debouncedSearch;
     adminApi
       .getKycRequests(params)
       .then((res) => {
         if (currentRequestId !== requestIdRef.current) return;
         const items = res.data?.data?.items || res.data?.data || [];
         setKycList(items);
+        setTotalPages(res.data?.meta?.totalPages || 1);
+        setTotalItems(res.data?.meta?.total || items.length);
       })
       .catch((err) => {
         if (currentRequestId !== requestIdRef.current) return;
         setKycList([]);
+        setTotalPages(1);
+        setTotalItems(0);
         setError(
           err?.response?.data?.error?.message ||
             err?.response?.data?.message ||
@@ -98,24 +119,11 @@ export default function KYCPage() {
           setLoading(false);
         }
       });
-  }, [page, selectedStatus]);
+  }, [debouncedSearch, page, selectedStatus]);
 
   useEffect(() => {
     fetchKycList();
   }, [fetchKycList]);
-
-  const filteredKycList = useMemo(() => {
-    if (!searchQuery.trim()) return kycList;
-    const query = searchQuery.toLowerCase();
-    return kycList.filter((item) => {
-      const name = item.provider?.fullName?.toLowerCase() || "";
-      const email = item.provider?.email?.toLowerCase() || "";
-      const phone = item.provider?.phone?.toLowerCase() || "";
-      return (
-        name.includes(query) || email.includes(query) || phone.includes(query)
-      );
-    });
-  }, [kycList, searchQuery]);
 
   return (
     <AdminPermissionGuard permission={AdminPermission.KYC_VIEW}>
@@ -182,7 +190,7 @@ export default function KYCPage() {
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="pb-3 border-b border-slate-100">
             <CardTitle className="text-base font-bold text-slate-800">
-              Danh sách hồ sơ ({filteredKycList.length})
+              Danh sách hồ sơ ({totalItems})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -210,7 +218,7 @@ export default function KYCPage() {
                   Tải lại danh sách
                 </Button>
               </div>
-            ) : filteredKycList.length === 0 ? (
+            ) : kycList.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500">
                 <AlertCircle className="h-10 w-10 text-slate-400 mb-2" />
                 <p className="font-semibold text-sm">Không tìm thấy hồ sơ nào</p>
@@ -231,7 +239,7 @@ export default function KYCPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-slate-100 text-slate-700">
-                  {filteredKycList.map((item) => {
+                  {kycList.map((item) => {
                     const status = statusConfig[item.status] || {
                       label: item.status,
                       className: "bg-slate-100 text-slate-700",
@@ -291,6 +299,31 @@ export default function KYCPage() {
                   })}
                 </TableBody>
               </Table>
+            )}
+            {!loading && !error && totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4">
+                <p className="text-xs text-slate-500 tabular-nums">
+                  Trang {page} / {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    Trước
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                  >
+                    Tiếp
+                  </Button>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>

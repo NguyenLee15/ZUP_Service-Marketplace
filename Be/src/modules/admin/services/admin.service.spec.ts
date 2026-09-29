@@ -125,6 +125,27 @@ describe('AdminService', () => {
       });
     });
 
+    it('filters KYC requests by provider identity keyword', async () => {
+      prisma.kycProfile.findMany.mockResolvedValue([]);
+      prisma.kycProfile.count.mockResolvedValue(0);
+
+      await service.getKycRequests(undefined, 1, 10, 'alice');
+
+      expect(prisma.kycProfile.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            provider: {
+              OR: [
+                { fullName: { contains: 'alice', mode: 'insensitive' } },
+                { email: { contains: 'alice', mode: 'insensitive' } },
+                { phone: { contains: 'alice', mode: 'insensitive' } },
+              ],
+            },
+          },
+        }),
+      );
+    });
+
     it('returns standardized pagination meta for getBookings', async () => {
       prisma.booking.findMany.mockResolvedValue([{ id: 1 }]);
       prisma.booking.count.mockResolvedValue(45);

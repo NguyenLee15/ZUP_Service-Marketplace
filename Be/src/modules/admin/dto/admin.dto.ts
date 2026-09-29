@@ -92,6 +92,10 @@ export class AdminKycQueryDto extends PaginationQueryDto {
   @IsEnum(KycStatus)
   @IsOptional()
   status?: KycStatus;
+
+  @IsString()
+  @IsOptional()
+  keyword?: string;
 }
 
 export class AdminDisputesQueryDto extends PaginationQueryDto {

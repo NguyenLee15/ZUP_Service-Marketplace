@@ -32,9 +32,24 @@ export class AdminService {
 
   // ===== KYC =====
 
-  async getKycRequests(status?: string, page: number = 1, limit: number = 20) {
+  async getKycRequests(
+    status?: string,
+    page: number = 1,
+    limit: number = 20,
+    keyword?: string,
+  ) {
     const where: Prisma.KycProfileWhereInput = {};
     if (this.isKycStatus(status)) where.status = status;
+    const normalizedKeyword = keyword?.trim();
+    if (normalizedKeyword) {
+      where.provider = {
+        OR: [
+          { fullName: { contains: normalizedKeyword, mode: 'insensitive' } },
+          { email: { contains: normalizedKeyword, mode: 'insensitive' } },
+          { phone: { contains: normalizedKeyword, mode: 'insensitive' } },
+        ],
+      };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.kycProfile.findMany({

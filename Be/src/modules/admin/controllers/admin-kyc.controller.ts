@@ -39,6 +39,7 @@ export class AdminKycController {
       query.status,
       query.page,
       query.limit,
+      query.keyword,
     );
   }
 
