@@ -23,14 +23,19 @@ export function useServiceDetailFlow(service: ApiPayload) {
   const [currentImage, setCurrentImage] = useState(0);
   const [chatLoading, setChatLoading] = useState(false);
   const [providerStats, setProviderStats] = useState<ProviderStats | null>(null);
+  const [providerStatsUnavailable, setProviderStatsUnavailable] = useState(false);
 
   useEffect(() => {
     if (!service?.id) return;
     const API = '/api';
     axios
       .get(`${API}/services/${service.id}/provider-stats`)
-      .then((res) => setProviderStats(res.data.data))
+      .then((res) => {
+        setProviderStats(res.data.data);
+        setProviderStatsUnavailable(false);
+      })
       .catch(() => {
+        setProviderStatsUnavailable(true);
         /* silent — metrics là phụ, không block trang */
       });
   }, [service?.id]);
@@ -105,6 +110,7 @@ export function useServiceDetailFlow(service: ApiPayload) {
     setCurrentImage,
     chatLoading,
     providerStats,
+    providerStatsUnavailable,
     images,
     reviews,
     referencePrice,

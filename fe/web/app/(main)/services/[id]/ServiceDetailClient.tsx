@@ -20,6 +20,7 @@ export function ServiceDetailClient({ service }: { service: ApiPayload }) {
     setCurrentImage,
     chatLoading,
     providerStats,
+    providerStatsUnavailable,
     images,
     reviews,
     referencePrice,
@@ -136,6 +137,7 @@ export function ServiceDetailClient({ service }: { service: ApiPayload }) {
         {/* Provider Performance Metrics */}
         <ServiceProviderStatsCard
           providerStats={providerStats}
+          unavailable={providerStatsUnavailable}
           avgRating={service.avgRating}
         />
 

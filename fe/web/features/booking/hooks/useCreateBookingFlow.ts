@@ -27,6 +27,20 @@ export interface UserAddress {
   isDefault: boolean;
 }
 
+function createSecureUuid(): string | null {
+  if (typeof crypto === "undefined") return null;
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  if (typeof crypto.getRandomValues !== "function") return null;
+
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex
+    .slice(6, 8)
+    .join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
+}
+
 export interface SelectedItem {
   serviceItemId: number;
   quantity: number;
@@ -83,13 +97,7 @@ export function useCreateBookingFlow() {
   const [step, setStep] = useState(1);
   const [gpsLoading, setGpsLoading] = useState(false);
   const submittedRef = useRef(false);
-  const idempotencyKeyRef = useRef<string>(
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `00000000-0000-4000-8000-${Math.floor(Math.random() * 1e12)
-          .toString(16)
-          .padStart(12, "0")}`,
-  );
+  const idempotencyKeyRef = useRef<string | null>(createSecureUuid());
 
   const [showSmartInput, setShowSmartInput] = useState(!serviceId);
   const [aiIntentResult, setAiIntentResult] = useState<ApiPayload>(null);
@@ -433,6 +441,12 @@ export function useCreateBookingFlow() {
     submittedRef.current = true;
     setLoading(true);
     try {
+      const idempotencyKey = idempotencyKeyRef.current ?? createSecureUuid();
+      if (!idempotencyKey) {
+        throw new Error("Thiết bị không hỗ trợ tạo khóa bảo mật cho yêu cầu.");
+      }
+      idempotencyKeyRef.current = idempotencyKey;
+
       const itemsPayload = Object.values(selectedItems).map((it) => ({
         serviceItemId: it.serviceItemId,
         quantity: it.quantity,
@@ -452,7 +466,7 @@ export function useCreateBookingFlow() {
               : new Date(desiredTime).toISOString(),
           items: itemsPayload.length > 0 ? itemsPayload : undefined,
         },
-        idempotencyKeyRef.current,
+        idempotencyKey,
       );
       toast({
         title: "Đặt dịch vụ thành công",

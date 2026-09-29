@@ -7,11 +7,13 @@ import { ProviderStats } from '../../hooks/useServiceDetailFlow';
 
 interface ServiceProviderStatsCardProps {
   providerStats: ProviderStats | null;
+  unavailable?: boolean;
   avgRating: number;
 }
 
 export function ServiceProviderStatsCard({
   providerStats,
+  unavailable = false,
   avgRating,
 }: ServiceProviderStatsCardProps) {
   return (
@@ -26,7 +28,14 @@ export function ServiceProviderStatsCard({
           </h3>
         </div>
 
-        {providerStats ? (
+        {unavailable ? (
+          <p
+            role="status"
+            className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300"
+          >
+            Thống kê nhà cung cấp hiện tạm thời chưa khả dụng.
+          </p>
+        ) : providerStats ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="p-3 sm:p-4 rounded-xl border border-slate-200/80 bg-slate-50 text-center dark:border-slate-700/60 dark:bg-slate-800/60">
               <div className="flex justify-center mb-1 sm:mb-2">
