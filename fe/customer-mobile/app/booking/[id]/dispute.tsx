@@ -17,6 +17,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button, Chip, Text, TextInput } from 'react-native-paper';
 import {
   CustomerCard,
+  ConfirmSheet,
   EmptyState,
   InlineMessage,
   LoadingState,
@@ -133,6 +134,7 @@ export default function DisputeScreen() {
   const [evidences, setEvidences] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [message, setMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const bookingQuery = useQuery({
     queryKey: ['booking', bookingId],
@@ -257,7 +259,7 @@ export default function DisputeScreen() {
     }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    disputeMutation.mutate();
+    setConfirmVisible(true);
   };
 
   const goToBookingDetail = () => {
@@ -471,6 +473,19 @@ export default function DisputeScreen() {
           Gửi tranh chấp
         </Button>
       </ScrollView>
+      <ConfirmSheet
+        visible={confirmVisible}
+        title="Gửi tranh chấp?"
+        description="Sau khi gửi, đơn hàng sẽ chuyển sang trạng thái tranh chấp để bộ phận hỗ trợ xem xét."
+        confirmLabel="Gửi tranh chấp"
+        destructive
+        loading={disputeMutation.isPending}
+        onDismiss={() => setConfirmVisible(false)}
+        onConfirm={() => {
+          setConfirmVisible(false);
+          disputeMutation.mutate();
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
