@@ -41,7 +41,7 @@ describe('AdminAuditLogService', () => {
     const result = await service.getAuditLogs({
       page: 2,
       limit: 10,
-      action: 'STAFF',
+      action: 'CREATE_STAFF',
       targetType: 'USER',
       targetId: 2,
       actorId: 1,
@@ -74,10 +74,18 @@ describe('AdminAuditLogService', () => {
       }),
     );
     const countArg = prisma.auditLog.count.mock.calls[0]?.[0] as {
-      where?: { actorId?: number; targetId?: number; OR?: unknown };
+      where?: {
+        actorId?: number;
+        targetId?: number;
+        action?: string;
+        targetType?: string;
+        OR?: unknown;
+      };
     };
     expect(countArg.where?.actorId).toBe(1);
     expect(countArg.where?.targetId).toBe(2);
+    expect(countArg.where?.action).toBe('CREATE_STAFF');
+    expect(countArg.where?.targetType).toBe('USER');
     expect(Array.isArray(countArg.where?.OR)).toBe(true);
   });
 

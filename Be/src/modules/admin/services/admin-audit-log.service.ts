@@ -78,8 +78,8 @@ export class AdminAuditLogService {
     const where: Prisma.AuditLogWhereInput = {};
 
     if (query.actorId) where.actorId = query.actorId;
-    if (query.action) where.action = { contains: query.action };
-    if (query.targetType) where.targetType = { contains: query.targetType };
+    if (query.action) where.action = query.action.trim();
+    if (query.targetType) where.targetType = query.targetType.trim();
     if (query.targetId) where.targetId = query.targetId;
 
     const createdAt = this.buildDateFilter(query.from, query.to);
