@@ -26,7 +26,12 @@ describe('CreateBookingDto', () => {
     const errors = await validate(dto);
 
     expect(errors.map((error) => error.property)).toEqual(
-      expect.arrayContaining(['description', 'province', 'ward', 'addressDetail']),
+      expect.arrayContaining([
+        'description',
+        'province',
+        'ward',
+        'addressDetail',
+      ]),
     );
   });
 
