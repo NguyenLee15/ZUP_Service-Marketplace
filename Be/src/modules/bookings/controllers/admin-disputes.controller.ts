@@ -24,11 +24,7 @@ export class DeprecatedAdminDisputesController {
       headers: Record<string, string | string[] | undefined>;
     },
   ) {
-    const forwardedFor = req.headers['x-forwarded-for'];
-    const ip =
-      req.ip ||
-      (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor) ||
-      '';
+    const ip = req.ip || '';
     return this.bookingDisputeService.resolveDispute(adminId, id, dto, ip);
   }
 }

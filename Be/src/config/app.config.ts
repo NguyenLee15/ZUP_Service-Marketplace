@@ -27,6 +27,10 @@ function getSecret(name: string, developmentFallback: string) {
 
 export default registerAs('app', () => ({
   port: parseNumber(process.env.PORT, 3001),
+  trustedProxyHops: Math.max(
+    0,
+    Math.min(parseNumber(process.env.TRUST_PROXY_HOPS, 1), 10),
+  ),
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: getSecret('JWT_SECRET', 'development-jwt-secret-change-me'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30m',

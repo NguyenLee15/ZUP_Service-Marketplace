@@ -19,4 +19,13 @@ describe('app configuration secrets', () => {
 
     expect(() => appConfig()).toThrow(/JWT_SECRET/);
   });
+
+  it('bounds trusted proxy hops instead of trusting arbitrary forwarded clients', () => {
+    process.env.NODE_ENV = 'test';
+    process.env.TRUST_PROXY_HOPS = '99';
+    process.env.JWT_SECRET = 'test-secret';
+    process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
+
+    expect(appConfig().trustedProxyHops).toBe(10);
+  });
 });

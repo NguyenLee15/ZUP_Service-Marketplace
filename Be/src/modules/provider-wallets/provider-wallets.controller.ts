@@ -95,15 +95,7 @@ export class ProviderWalletsController {
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
     this.walletIdempotency.assertValidKey(idempotencyKey);
-    const forwardedFor = req.headers['x-forwarded-for'];
-    const ip =
-      (Array.isArray(forwardedFor)
-        ? forwardedFor[0]
-        : typeof forwardedFor === 'string'
-          ? forwardedFor.split(',')[0]?.trim()
-          : undefined) ||
-      req.ip ||
-      '127.0.0.1';
+    const ip = req.ip || '127.0.0.1';
     return this.depositService.createDepositRequest(
       userId,
       body.amount,
