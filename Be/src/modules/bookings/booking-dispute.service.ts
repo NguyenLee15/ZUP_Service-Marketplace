@@ -16,6 +16,7 @@ import { JobName, JobsService } from '../../shared/jobs/jobs.service';
 import { BookingCommissionService } from './booking-commission.service';
 import { BookingSharedService } from './booking-shared.service';
 import { BookingStatePolicy } from './booking-state.policy';
+import { assertPenaltyWithinBookingValue } from './booking-dispute-policy';
 import { DisputeDto, ResolveDisputeDto } from './dto/bookings.dto';
 
 @Injectable()
@@ -301,6 +302,18 @@ export class BookingDisputeService {
           tx,
         );
       } else if (dto.resolutionAction === 'PENALIZE') {
+        const acceptedQuotationTotal = await tx.quotation.aggregate({
+          where: {
+            bookingId: dispute.bookingId,
+            status: 'ACCEPTED',
+          },
+          _sum: { actualPrice: true },
+        });
+        assertPenaltyWithinBookingValue(
+          dto.penaltyAmount,
+          acceptedQuotationTotal._sum.actualPrice,
+        );
+
         await tx.booking.update({
           where: { id: dispute.bookingId },
           data: {
@@ -310,7 +323,7 @@ export class BookingDisputeService {
 
         if (dto.penaltyAmount) {
           const wallet = await tx.providerWallet.findUnique({
-            where: { providerId: dispute.booking.providerId },
+            where: { providerId: currentBooking.providerId },
           });
 
           if (wallet) {
