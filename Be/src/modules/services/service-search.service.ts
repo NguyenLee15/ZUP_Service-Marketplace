@@ -11,6 +11,11 @@ import {
   SearchServiceItem,
   SearchServicesResult,
 } from './service-query.types';
+import {
+  buildServiceSearchCacheKey,
+  getCategoryIdsWithDescendants,
+  getRequestedCategoryIds,
+} from './service-search-params';
 
 type AiSearchDiagnostics = {
   query: string;
@@ -42,7 +47,7 @@ export class ServiceSearchService {
     const limit = Math.min(Math.max(1, dto.limit || 20), 50);
     const isLocationSearch = this.hasLocationFilter(dto);
     const radiusKm = Math.min(Math.max(1, dto.radiusKm || 30), 50);
-    const cacheKey = this.buildSearchCacheKey(dto, page, limit);
+    const cacheKey = buildServiceSearchCacheKey(dto, page, limit);
     const cached = this.getCachedSearchResult<SearchServicesResult>(cacheKey);
 
     if (cached) return cached;
@@ -79,10 +84,10 @@ export class ServiceSearchService {
       }
     }
 
-    const requestedCategoryIds = this.getRequestedCategoryIds(dto);
+    const requestedCategoryIds = getRequestedCategoryIds(dto);
     if (requestedCategoryIds.length > 0) {
       where.categoryId = {
-        in: this.getCategoryIdsWithDescendants(requestedCategoryIds),
+        in: getCategoryIdsWithDescendants(requestedCategoryIds),
       };
     }
 
@@ -373,49 +378,6 @@ export class ServiceSearchService {
     await this.redisService.delByPattern('ai_search:*');
   }
 
-  private buildSearchCacheKey(
-    dto: SearchServiceDto,
-    page: number,
-    limit: number,
-  ) {
-    const categoryIds = this.getRequestedCategoryIds(dto);
-
-    return JSON.stringify({
-      categoryId: dto.categoryId ?? null,
-      categoryIds: categoryIds.length > 0 ? categoryIds.join(',') : null,
-      keyword: dto.keyword?.trim().toLowerCase().replace(/\s+/g, ' ') ?? '',
-      limit,
-      maxPrice: dto.maxPrice ?? null,
-      minPrice: dto.minPrice ?? null,
-      minRating: dto.minRating ?? null,
-      page,
-      province: dto.province?.trim().toLowerCase() ?? '',
-      lat: dto.lat ?? null,
-      lng: dto.lng ?? null,
-      radiusKm: dto.radiusKm ?? null,
-      sortBy: dto.sortBy ?? 'newest',
-    });
-  }
-
-  private parseCategoryIds(categoryIds?: string) {
-    if (!categoryIds) return [];
-
-    return categoryIds
-      .split(',')
-      .map((categoryId) => Number.parseInt(categoryId.trim(), 10))
-      .filter((categoryId) => Number.isInteger(categoryId) && categoryId > 0);
-  }
-
-  private getRequestedCategoryIds(dto: SearchServiceDto) {
-    const categoryIds = new Set<number>(this.parseCategoryIds(dto.categoryIds));
-    if (dto.categoryId) categoryIds.add(dto.categoryId);
-    return [...categoryIds].sort((a, b) => a - b);
-  }
-
-  private getCategoryIdsWithDescendants(categoryIds: number[]) {
-    return Array.from(new Set(categoryIds));
-  }
-
   private getCachedSearchResult<T>(cacheKey: string): T | null {
     const cached = this.searchCache.get(cacheKey);
     if (!cached) return null;
@@ -475,7 +437,7 @@ export class ServiceSearchService {
         Prisma.sql`(s.name ILIKE ${pattern} OR s.description ILIKE ${pattern})`,
       );
     }
-    const categoryIds = this.getRequestedCategoryIds(dto);
+    const categoryIds = getRequestedCategoryIds(dto);
     if (categoryIds.length > 0) {
       conditions.push(
         Prisma.sql`s.category_id IN (${Prisma.join(categoryIds)})`,
