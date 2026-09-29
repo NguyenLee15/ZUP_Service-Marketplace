@@ -31,8 +31,11 @@ describe('ServiceSearchService location search', () => {
       prisma as unknown as PrismaService,
       { getState: jest.fn() } as unknown as AiService,
       {
+        isEnabled: jest.fn().mockReturnValue(false),
         get: jest.fn(),
+        getJson: jest.fn(),
         set: jest.fn(),
+        setJson: jest.fn(),
         delByPattern: jest.fn(),
       } as unknown as RedisService,
     );
@@ -53,5 +56,37 @@ describe('ServiceSearchService location search', () => {
       distanceKm: 1.5,
       providerAddress: 'Address 2',
     });
+  });
+
+  it('uses Redis for non-location search cache when enabled', async () => {
+    const cached = {
+      data: [{ id: 9 }],
+      meta: { total: 1, page: 1, limit: 20, totalPages: 1 },
+    };
+    const prisma = {
+      service: {
+        findMany: jest.fn(),
+        count: jest.fn(),
+      },
+    };
+    const redis = {
+      isEnabled: jest.fn().mockReturnValue(true),
+      getJson: jest.fn().mockResolvedValue(cached),
+      setJson: jest.fn(),
+      delByPattern: jest.fn(),
+    };
+    const service = new ServiceSearchService(
+      prisma as unknown as PrismaService,
+      { getState: jest.fn() } as unknown as AiService,
+      redis as unknown as RedisService,
+    );
+
+    await expect(service.search({ keyword: 'cleaning' })).resolves.toEqual(
+      cached,
+    );
+    expect(redis.getJson).toHaveBeenCalledWith(
+      expect.stringMatching(/^service_search:/),
+    );
+    expect(prisma.service.findMany).not.toHaveBeenCalled();
   });
 });

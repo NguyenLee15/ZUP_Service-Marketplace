@@ -48,7 +48,8 @@ export class ServiceSearchService {
     const isLocationSearch = this.hasLocationFilter(dto);
     const radiusKm = Math.min(Math.max(1, dto.radiusKm || 30), 50);
     const cacheKey = buildServiceSearchCacheKey(dto, page, limit);
-    const cached = this.getCachedSearchResult<SearchServicesResult>(cacheKey);
+    const cached =
+      await this.getCachedSearchResult<SearchServicesResult>(cacheKey);
 
     if (cached) return cached;
 
@@ -101,7 +102,7 @@ export class ServiceSearchService {
 
     if (isLocationSearch) {
       const result = await this.searchByLocation(dto, page, limit, radiusKm);
-      this.setCachedSearchResult(cacheKey, result);
+      await this.setCachedSearchResult(cacheKey, result);
       return result;
     }
 
@@ -158,7 +159,7 @@ export class ServiceSearchService {
       },
     };
 
-    this.setCachedSearchResult(cacheKey, result);
+    await this.setCachedSearchResult(cacheKey, result);
     return result;
   }
 
@@ -375,10 +376,24 @@ export class ServiceSearchService {
   async clearCache() {
     this.logger.log('Clearing service search caches...');
     this.searchCache.clear();
+    await this.redisService.delByPattern('service_search:*');
     await this.redisService.delByPattern('ai_search:*');
   }
 
-  private getCachedSearchResult<T>(cacheKey: string): T | null {
+  private async getCachedSearchResult<T>(cacheKey: string): Promise<T | null> {
+    if (this.redisService.isEnabled()) {
+      try {
+        const cached = await this.redisService.getJson<T>(
+          `service_search:${cacheKey}`,
+        );
+        if (cached) return cached;
+      } catch (error) {
+        this.logger.warn(
+          `Service search Redis read failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+        );
+      }
+    }
+
     const cached = this.searchCache.get(cacheKey);
     if (!cached) return null;
 
@@ -390,7 +405,22 @@ export class ServiceSearchService {
     return cached.result as T;
   }
 
-  private setCachedSearchResult(cacheKey: string, result: unknown) {
+  private async setCachedSearchResult(cacheKey: string, result: unknown) {
+    if (this.redisService.isEnabled()) {
+      try {
+        await this.redisService.setJson(
+          `service_search:${cacheKey}`,
+          result as object,
+          this.searchCacheTtlMs / 1000,
+        );
+        return;
+      } catch (error) {
+        this.logger.warn(
+          `Service search Redis write failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+        );
+      }
+    }
+
     const now = Date.now();
     if (this.searchCache.size >= this.searchCacheMaxEntries) {
       for (const [key, value] of this.searchCache) {
