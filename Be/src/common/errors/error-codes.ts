@@ -35,6 +35,7 @@ export const ErrorCodes = {
 
   // 500 Internal Server Error
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  ASSET_COMPENSATION_FAILED: 'ASSET_COMPENSATION_FAILED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

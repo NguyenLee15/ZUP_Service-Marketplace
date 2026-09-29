@@ -58,7 +58,7 @@ export class CloudinaryService {
           },
           (error, result: UploadApiResponse | undefined) => {
             if (error) {
-              this.logger.error('Cloudinary upload failed', error);
+              this.logger.error('Cloudinary upload failed');
               reject(new Error('Cloudinary upload failed'));
               return;
             }
@@ -77,11 +77,33 @@ export class CloudinaryService {
   }
 
   /** Xóa file trên Cloudinary */
-  async deleteFile(publicId: string): Promise<void> {
+  async deleteFile(publicId: string): Promise<boolean> {
     try {
       await cloudinary.uploader.destroy(publicId);
+      return true;
     } catch (error) {
-      this.logger.warn(`Failed to delete Cloudinary file: ${publicId}`, error);
+      void error;
+      this.logger.warn(`Failed to delete Cloudinary file: ${publicId}`);
+      return false;
     }
+  }
+
+  async cleanupFiles(
+    publicIds: string[],
+  ): Promise<{ failedPublicIds: string[] }> {
+    if (publicIds.length === 0) return { failedPublicIds: [] };
+
+    const results = await Promise.all(
+      publicIds.map(async (publicId) => ({
+        publicId,
+        deleted: await this.deleteFile(publicId).catch(() => false),
+      })),
+    );
+
+    return {
+      failedPublicIds: results
+        .filter((result) => !result.deleted)
+        .map((result) => result.publicId),
+    };
   }
 }
