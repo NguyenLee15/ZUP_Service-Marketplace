@@ -206,4 +206,26 @@ describe('ServiceModerationService', () => {
       });
     });
   });
+
+  describe('getAll', () => {
+    it('returns a bounded moderation projection with item counts', async () => {
+      prisma.service.findMany.mockResolvedValue([]);
+      prisma.service.count.mockResolvedValue(0);
+      shared.isServiceStatus.mockReturnValue(false);
+
+      await service.getAll({ page: 1, limit: 20 });
+
+      expect(prisma.service.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: expect.objectContaining({
+            images: expect.objectContaining({ take: 1 }),
+            _count: { select: { items: true } },
+          }),
+        }),
+      );
+      expect(prisma.service.findMany.mock.calls[0][0]).not.toHaveProperty(
+        'include',
+      );
+    });
+  });
 });

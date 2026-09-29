@@ -424,11 +424,30 @@ export class ServiceModerationService {
     const [data, total] = await Promise.all([
       this.prisma.service.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          providerId: true,
+          categoryId: true,
+          name: true,
+          description: true,
+          referencePrice: true,
+          status: true,
+          avgRating: true,
+          isSensitive: true,
+          createdAt: true,
           category: { select: { id: true, name: true } },
           provider: { select: { id: true, fullName: true, email: true } },
-          images: { orderBy: { displayOrder: 'asc' } },
-          items: true,
+          images: {
+            orderBy: { displayOrder: 'asc' },
+            take: 1,
+            select: { id: true, imageUrl: true, displayOrder: true },
+          },
+          items: {
+            orderBy: { id: 'asc' },
+            take: 20,
+            select: { id: true, name: true, price: true, unit: true },
+          },
+          _count: { select: { items: true } },
         },
         orderBy: { id: 'desc' },
         skip: (page - 1) * limit,
