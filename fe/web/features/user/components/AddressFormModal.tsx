@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
 import { AddressFormData } from '../hooks/useAddressManagementFlow';
 
 import {
@@ -36,8 +35,8 @@ interface AddressFormModalProps {
   wardOptions: string[];
   addressOptionsLoading: boolean;
   addressOptionsFallback: boolean;
-  provinceField: any;
-  wardField: any;
+  provinceField: UseFormRegisterReturn;
+  wardField: UseFormRegisterReturn;
   handleProvinceSelect: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   onClose: () => void;
   onSubmit: (data: AddressFormData) => void;

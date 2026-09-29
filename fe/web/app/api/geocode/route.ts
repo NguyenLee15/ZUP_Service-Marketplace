@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+type GeocodeResult = { error?: string; address?: Record<string, string>; display_name: string; lat: string; lon: string }
+
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams
@@ -12,14 +14,14 @@ export async function GET(req: NextRequest) {
     }
 
     const headers = { 'User-Agent': 'zup-service-marketplace-v1' }
-    let rawData: any = null
+    let rawData: GeocodeResult | null = null
 
     if (lat && lng) {
       // Reverse Geocoding
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
       const res = await fetch(url, { headers })
-      rawData = await res.json()
-      if (rawData.error) rawData = null
+      const reverseData = await res.json() as GeocodeResult
+      rawData = reverseData.error ? null : reverseData
     } else if (addressQuery) {
       // Forward Geocoding
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressQuery)}&format=json&addressdetails=1&countrycodes=vn&limit=1`

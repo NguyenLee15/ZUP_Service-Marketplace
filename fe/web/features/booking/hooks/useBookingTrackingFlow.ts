@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { bookingApi } from "@/features/booking/services/booking.api";
-import { BookingStatus } from "@/types";
+import { Booking, BookingStatus } from "@/types";
 import { getTrackingSocket } from "@/lib/socket";
 
 export interface ProviderLocation {
@@ -49,7 +49,7 @@ export function formatETA(distKm: number, speedKmh: number): string {
 
 export function useBookingTrackingFlow(id: string) {
   const router = useRouter();
-  const [booking, setBooking] = useState<any>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [, setTrackingEnded] = useState(false);
@@ -81,7 +81,7 @@ export function useBookingTrackingFlow(id: string) {
     setError("");
     bookingApi
       .getById(Number(id))
-      .then((res: any) => {
+      .then((res: { data: { data?: Booking } & Booking }) => {
         const data = res.data.data || res.data;
         setBooking(data);
 
@@ -148,7 +148,10 @@ export function useBookingTrackingFlow(id: string) {
       setTrackingConnection("disconnected");
     };
 
-    const handleLastKnown = (data: { bookingId: number; location: any }) => {
+    const handleLastKnown = (data: {
+      bookingId: number;
+      location?: ProviderLocation & { updatedAt?: string | number };
+    }) => {
       if (data.location) {
         socketConnectedRef.current = true;
         setTrackingConnection("connected");

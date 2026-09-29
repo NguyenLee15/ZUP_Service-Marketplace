@@ -4,8 +4,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, Star, Zap } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Sparkles, Star } from 'lucide-react';
 import { reviewsApi } from '@/features/auth/services/api';
 
 interface BookingInlineReviewProps {
@@ -31,8 +30,6 @@ export function BookingInlineReview({
   actionLoading,
   handleAction,
 }: BookingInlineReviewProps) {
-  const { toast } = useToast();
-
   return (
     <>
       {/* Review Display */}

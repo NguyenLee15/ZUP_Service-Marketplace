@@ -171,7 +171,7 @@ export function ChatMessageItem({
               </div>
             </div>
             {meta.action.type === "CREATE_BOOKING_DRAFT" &&
-              !(meta.action.payload as Record<string, any>)?.draft
+              !(meta.action.payload as { draft?: { desiredTime?: string } })?.draft
                 ?.desiredTime && (
                 <div className="mt-3 space-y-1 rounded-lg border border-blue-100 bg-white p-2 shadow-sm">
                   <label className="block text-[11px] font-medium text-slate-600">

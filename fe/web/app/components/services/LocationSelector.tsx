@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, MapPin, Search, Home, Briefcase } from 'lucide-react';
+import { Check, MapPin, Home, Briefcase } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 const COMMON_LOCATIONS = [
   { label: 'Hà Nội', lat: 21.0285, lng: 105.8522 },
@@ -27,7 +26,17 @@ const COMMON_LOCATIONS = [
 interface LocationSelectorProps {
   currentSource: 'gps' | 'manual' | 'fallback';
   currentLabel: string;
-  savedAddresses?: any[];
+  savedAddresses?: Array<{
+    id: number;
+    label?: string;
+    addressDetail?: string;
+    province?: string;
+    district?: string;
+    ward?: string;
+    isDefault?: boolean;
+    latitude: number;
+    longitude: number;
+  }>;
   onSelectManual: (lat: number, lng: number, label: string) => void;
   onSelectGps: () => void;
 }

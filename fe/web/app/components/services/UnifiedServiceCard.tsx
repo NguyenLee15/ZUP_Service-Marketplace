@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,8 +10,6 @@ import {
   ShoppingBag,
   Sparkles,
   Star,
-  CheckCircle,
-  TrendingUp,
   Wrench,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -102,8 +99,7 @@ export function UnifiedServiceCard({
   onRecentlyViewed,
 }: UnifiedServiceCardProps) {
   const router = useRouter();
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
+  const activeImageIndex = 0;
   const serviceImages = service.images?.length
     ? service.images.map((image) => getSafeServiceImageSrc(image.imageUrl, service))
     : [];

@@ -14,7 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Booking } from '@/types';
 import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+type BookingListParams = { page: number; limit: number; status?: string };
+type ApiError = { response?: { data?: { error?: { message?: string }; message?: string } } };
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Chờ xử lý', color: 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300', icon: Clock },
   ACCEPTED: { label: 'Đã tiếp nhận', color: 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300', icon: CheckCircle },
   QUOTED: { label: 'Đã báo giá', color: 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300', icon: Package },
@@ -40,14 +43,14 @@ export default function BookingsPage() {
   const fetchBookings = useCallback(() => {
     setIsFetching(true);
     setErrorMessage('');
-    const params: any = { page, limit: PAGE_SIZE };
+    const params: BookingListParams = { page, limit: PAGE_SIZE };
     if (status) params.status = status;
     bookingsApi.getMyBookings(params)
       .then((res) => {
         setBookings(res.data.data || []);
         if (res.data.meta) setMeta(res.data.meta);
       })
-      .catch((err: any) => {
+      .catch((err: ApiError) => {
         const msg =
           err?.response?.data?.error?.message ||
           err?.response?.data?.message ||

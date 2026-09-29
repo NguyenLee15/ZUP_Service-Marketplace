@@ -37,10 +37,6 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [metaMap, setMetaMap] = useState<Record<string, ChatbotMessageMeta>>({});
-  const [coords, setCoords] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
   const accessToken = useAuthStore((state) => state.accessToken);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sessionTitle, setSessionTitle] = useState("Trợ lý AI ZUP");
@@ -79,7 +75,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
         const sessions = response.data?.data;
         const current = Array.isArray(sessions)
           ? sessions.find(
-              (session: Record<string, any>) =>
+              (session: { id: string | number; title?: string }) =>
                 String(session.id) === String(sessionId),
             )
           : null;
@@ -108,12 +104,10 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           sessionId,
           pageContext: {
             ...pageContext,
-            latitude: coords?.latitude,
-            longitude: coords?.longitude,
           },
         },
       }),
-    [sessionId, pageContext, coords],
+    [sessionId, pageContext],
   );
 
   const { messages, sendMessage, setMessages, status } =
@@ -160,7 +154,7 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           setMessages(historyData);
 
           const newMetaMap: Record<string, ChatbotMessageMeta> = {};
-          historyData.forEach((msg: Record<string, any>) => {
+          historyData.forEach((msg: ChatbotUIMessage) => {
             if (msg.role === "assistant" && msg.metadata) {
               newMetaMap[msg.id] = msg.metadata;
             }
@@ -291,10 +285,17 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
           parts: [{ type: "text", text: data?.reply || "Đã xử lý thao tác." }],
         } as ChatbotUIMessage,
       ]);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorInfo =
+        typeof err === "object" && err !== null
+          ? (err as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            })
+          : {};
       const errMsg =
-        err?.response?.data?.message ||
-        err?.message ||
+        errorInfo.response?.data?.message ||
+        errorInfo.message ||
         "Tôi đang gặp lỗi kết nối. Bạn thử lại sau vài giây.";
       setMessages((prev) => [
         ...prev,

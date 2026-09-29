@@ -13,6 +13,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { ProviderLocation } from "../../hooks/useBookingTrackingFlow";
+import { Booking } from "@/types";
 
 const TRACK_STATUSES = [
   { key: "accepted", label: "Đã nhận đơn", icon: CheckCircle2, done: true },
@@ -22,7 +23,7 @@ const TRACK_STATUSES = [
 ];
 
 interface TrackingProviderInfoCardProps {
-  booking: any;
+  booking: Booking & { conversationId?: number | string | null };
   currentStepIdx: number;
   providerLoc: ProviderLocation | null;
 }

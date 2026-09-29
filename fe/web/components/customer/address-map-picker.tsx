@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 
 // Fix Leaflet's default icon path issues in Next.js
 if (typeof window !== 'undefined') {
-  delete (L.Icon.Default.prototype as any)._getIconUrl
+  delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -22,16 +22,35 @@ interface MapPickerProps {
   latitude: number
   longitude: number
   searchSuffix?: string
-  onChange: (lat: number, lng: number, addressDetails?: any) => void
+  onChange: (lat: number, lng: number, addressDetails?: AddressDetails) => void
 }
 
-const parseAddressComponents = (result: any) => {
+interface AddressDetails {
+  province: string;
+  district: string;
+  ward: string;
+  street: string;
+  fullAddress?: string;
+}
+
+interface GeocodeComponent {
+  types: string[];
+  long_name: string;
+}
+
+interface GeocodeResult {
+  address_components?: GeocodeComponent[];
+  formatted_address?: string;
+  geometry?: { location?: { lat: number; lng: number } };
+}
+
+const parseAddressComponents = (result: GeocodeResult): AddressDetails => {
   let province = ''
   let district = ''
   let ward = ''
   let street = ''
   
-  result.address_components?.forEach((component: any) => {
+  result.address_components?.forEach((component: GeocodeComponent) => {
     if (component.types.includes('administrative_area_level_1')) {
       province = component.long_name
     }
@@ -57,7 +76,7 @@ function MapUpdater({ center }: { center: [number, number] }) {
   return null
 }
 
-function MapEvents({ onChange }: { onChange: (lat: number, lng: number, details?: any) => void }) {
+function MapEvents({ onChange }: { onChange: (lat: number, lng: number, details?: AddressDetails) => void }) {
   useMapEvents({
     async click(e) {
       const lat = e.latlng.lat
