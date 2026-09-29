@@ -148,6 +148,9 @@ export function BookingQuotationTable({
                   {formatPrice(Number(originalQuote.actualPrice))}
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Đây là số tiền trong báo giá của nhà cung cấp; trạng thái thanh toán sẽ được cập nhật riêng sau khi hệ thống đối soát.
+              </p>
               <div className="flex justify-between items-center py-1">
                 <span className="text-muted-foreground text-xs">Thời gian thực hiện dự kiến:</span>
                 <span className="font-semibold text-xs text-foreground/90">

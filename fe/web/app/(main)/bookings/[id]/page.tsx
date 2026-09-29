@@ -16,6 +16,9 @@ export default function BookingDetailPage() {
   const {
     booking,
     loading,
+    error,
+    fetchBooking,
+    router,
     actionLoading,
     handleAction,
     formatPrice,
@@ -47,7 +50,32 @@ export default function BookingDetailPage() {
     );
   }
 
-  if (!booking) return null;
+  if (error || !booking) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center space-y-4" role="alert">
+        <h1 className="text-lg font-semibold text-foreground">Không thể tải đơn hàng</h1>
+        <p className="text-sm text-muted-foreground">
+          {error || 'Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn này.'}
+        </p>
+        <div className="flex justify-center gap-3">
+          <button
+            type="button"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            onClick={fetchBooking}
+          >
+            Thử lại
+          </button>
+          <button
+            type="button"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground"
+            onClick={() => router.push('/bookings')}
+          >
+            Về danh sách
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">

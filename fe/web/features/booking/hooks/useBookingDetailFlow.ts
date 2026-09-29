@@ -29,6 +29,7 @@ export function useBookingDetailFlow() {
   const [booking, setBooking] = useState<ApiPayload>(null);
   const [timeline, setTimeline] = useState<ApiPayload[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Review state
@@ -44,6 +45,7 @@ export function useBookingDetailFlow() {
   const fetchBooking = useCallback(() => {
     if (!id) return;
     setLoading(true);
+    setError(null);
     Promise.all([
       bookingsApi.getById(Number(id)),
       bookingsApi.getTimeline(Number(id)).catch(() => null),
@@ -53,7 +55,9 @@ export function useBookingDetailFlow() {
         const timelineData = timelineRes?.data?.data;
         setTimeline(Array.isArray(timelineData) ? timelineData : []);
       })
-      .catch(() => router.push('/bookings'))
+      .catch(() => {
+        setError('Không thể tải chi tiết đơn hàng. Vui lòng thử lại.');
+      })
       .finally(() => setLoading(false));
   }, [id, router]);
 
@@ -159,6 +163,7 @@ export function useBookingDetailFlow() {
     booking,
     timeline,
     loading,
+    error,
     actionLoading,
     fetchBooking,
     handleAction,

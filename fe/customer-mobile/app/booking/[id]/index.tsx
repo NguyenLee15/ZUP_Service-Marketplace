@@ -147,6 +147,14 @@ export default function BookingDetailScreen() {
   return <View style={styles.screen}>
     <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic" refreshControl={<RefreshControl refreshing={bookingQuery.isRefetching || timelineQuery.isRefetching} onRefresh={() => { bookingQuery.refetch(); timelineQuery.refetch(); }} />}>
       <CustomerBookingHeader booking={booking} statusColor={statusColor} />
+      {timelineQuery.isError ? (
+        <View>
+          <InlineMessage tone="warning" message="Chưa thể tải lịch sử trạng thái đơn hàng." />
+          <Button mode="outlined" icon="refresh" onPress={() => timelineQuery.refetch()}>
+            Thử lại lịch sử
+          </Button>
+        </View>
+      ) : null}
       {message ? <InlineMessage tone={message.includes('Không') || message.includes('Vui lòng') ? 'error' : 'success'} message={message} /> : null}
       <CustomerProviderInfoCard booking={booking} statusColor={statusColor} />
       <CustomerBookingTimeline booking={booking} history={timelineQuery.data} />
