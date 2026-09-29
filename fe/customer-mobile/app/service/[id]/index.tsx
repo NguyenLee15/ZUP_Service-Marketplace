@@ -71,6 +71,15 @@ type ServiceDetailData = {
   partialError: boolean;
 };
 
+type ReviewPageResponse = {
+  data?: ReviewItem[];
+  meta?: {
+    total?: number;
+    page?: number;
+    limit?: number;
+  };
+};
+
 function getImages(service?: ServiceDetail | null) {
   return (service?.images || []).filter((image) => image?.imageUrl || image?.url);
 }
@@ -176,20 +185,27 @@ export default function ServiceDetailScreen() {
     queryKey: ['service', serviceId, 'reviews'],
     enabled: validServiceId,
     initialPageParam: 1,
-    queryFn: async ({ pageParam }) =>
-      serviceApi.getReviews(serviceId, { page: pageParam, limit: 5 }),
+    queryFn: async ({ pageParam }): Promise<ReviewPageResponse> => {
+      const response = await serviceApi.getReviews(serviceId, {
+        page: pageParam,
+        limit: 5,
+      });
+      return response.data as ReviewPageResponse;
+    },
     getNextPageParam: (lastPage, _pages, lastPageParam) => {
-      const page = normalizePaginated<ReviewItem>(lastPage, Number(lastPageParam));
-      return page.hasMore ? Number(lastPageParam) + 1 : undefined;
+      const total = Number(lastPage.meta?.total || lastPage.data?.length || 0);
+      const limit = Number(lastPage.meta?.limit || 5);
+      const page = Number(lastPage.meta?.page || lastPageParam);
+      return page * limit < total ? page + 1 : undefined;
     },
   });
   const reviewPages = reviewQuery.data?.pages.flatMap((page) =>
-    normalizePaginated<ReviewItem>(page).items,
+    Array.isArray(page.data) ? page.data : [],
   ) || [];
   const fallbackReviews = getReviewList(service?.reviews, null);
   const reviews = reviewPages.length > 0 ? reviewPages : fallbackReviews.items;
   const reviewsTotal = reviewQuery.data?.pages.length
-    ? normalizePaginated<ReviewItem>(reviewQuery.data.pages.at(-1)).total || reviews.length
+    ? Number(reviewQuery.data.pages.at(-1)?.meta?.total || reviews.length)
     : Number(service?.totalReviews || fallbackReviews.total);
   const reviewsHasMore = reviewQuery.hasNextPage ?? fallbackReviews.hasMore;
   const provider = getProvider(service);
