@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
 import {
@@ -25,6 +25,12 @@ export function useAdminUsersFlow() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [statusCounts, setStatusCounts] = useState({
+    total: 0,
+    active: 0,
+    pending: 0,
+    locked: 0,
+  });
 
   const fetchUsers = useCallback(() => {
     const currentRequestId = ++requestIdRef.current;
@@ -35,17 +41,27 @@ export function useAdminUsersFlow() {
         page,
         limit: 10,
         role: roleFilter,
+        ...(statusFilter !== "ALL" ? { status: statusFilter } : {}),
         ...(searchTerm.trim() ? { keyword: searchTerm.trim() } : {}),
       })
       .then((res) => {
         if (currentRequestId !== requestIdRef.current) return;
         setUsers((res.data?.data || []) as AdminUserItem[]);
         setTotalPages(res.data?.meta?.totalPages || 1);
+        setStatusCounts(
+          res.data?.meta?.statusCounts || {
+            total: 0,
+            active: 0,
+            pending: 0,
+            locked: 0,
+          },
+        );
       })
       .catch((err) => {
         if (currentRequestId !== requestIdRef.current) return;
         setUsers([]);
         setTotalPages(1);
+        setStatusCounts({ total: 0, active: 0, pending: 0, locked: 0 });
         setError(
           err?.response?.data?.error?.message ||
             err?.response?.data?.message ||
@@ -57,7 +73,7 @@ export function useAdminUsersFlow() {
           setLoading(false);
         }
       });
-  }, [page, roleFilter, searchTerm]);
+  }, [page, roleFilter, searchTerm, statusFilter]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -65,24 +81,6 @@ export function useAdminUsersFlow() {
     }, 400);
     return () => clearTimeout(delayDebounceFn);
   }, [fetchUsers]);
-
-  const statusCounts = useMemo(
-    () => ({
-      total: users.length,
-      active: users.filter((user) => user.status === "ACTIVE").length,
-      pending: users.filter((user) => user.status === "PENDING").length,
-      locked: users.filter((user) => user.status === "LOCKED").length,
-    }),
-    [users],
-  );
-
-  const filteredUsers = useMemo(
-    () =>
-      statusFilter === "ALL"
-        ? users
-        : users.filter((user) => user.status === statusFilter),
-    [statusFilter, users],
-  );
 
   const handleLockUser = async (data: LockUserFormData) => {
     if (!selectedUser) return;
@@ -130,7 +128,7 @@ export function useAdminUsersFlow() {
   };
 
   return {
-    users: filteredUsers,
+    users,
     loading,
     searchTerm,
     setSearchTerm,

@@ -270,7 +270,10 @@ export class AdminService {
       ];
     }
 
-    const [data, total] = await Promise.all([
+    const countWhere = { ...where };
+    delete countWhere.status;
+
+    const [data, total, statusGroups] = await Promise.all([
       this.prisma.user.findMany({
         where,
         select: {
@@ -289,11 +292,27 @@ export class AdminService {
         take: limit,
       }),
       this.prisma.user.count({ where }),
+      this.prisma.user.groupBy({
+        by: ['status'],
+        where: countWhere,
+        _count: { _all: true },
+      }),
     ]);
+
+    const statusCounts = statusGroups.reduce(
+      (counts, group) => {
+        counts.total += group._count._all;
+        if (group.status === UserStatus.ACTIVE) counts.active = group._count._all;
+        if (group.status === UserStatus.PENDING) counts.pending = group._count._all;
+        if (group.status === UserStatus.LOCKED) counts.locked = group._count._all;
+        return counts;
+      },
+      { total: 0, active: 0, pending: 0, locked: 0 },
+    );
 
     return {
       data,
-      meta: paginationMeta(total, page, limit),
+      meta: { ...paginationMeta(total, page, limit), statusCounts },
     };
   }
 

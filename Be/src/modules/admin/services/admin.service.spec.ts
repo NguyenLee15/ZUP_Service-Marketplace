@@ -24,6 +24,7 @@ describe('AdminService', () => {
     user: {
       findMany: jest.Mock;
       count: jest.Mock;
+      groupBy: jest.Mock;
     };
     systemSetting: {
       findFirst: jest.Mock;
@@ -57,6 +58,7 @@ describe('AdminService', () => {
       user: {
         findMany: jest.fn().mockResolvedValue([]),
         count: jest.fn().mockResolvedValue(0),
+        groupBy: jest.fn().mockResolvedValue([]),
       },
       systemSetting: {
         findFirst: jest.fn(),
@@ -175,6 +177,11 @@ describe('AdminService', () => {
     it('returns standardized pagination meta for getUsers', async () => {
       prisma.user.findMany.mockResolvedValue([{ id: 1 }]);
       prisma.user.count.mockResolvedValue(100);
+      prisma.user.groupBy.mockResolvedValue([
+        { status: 'ACTIVE', _count: { _all: 7 } },
+        { status: 'PENDING', _count: { _all: 2 } },
+        { status: 'LOCKED', _count: { _all: 1 } },
+      ]);
 
       const result = await service.getUsers(3, 20);
       expect(result.meta).toEqual({
@@ -182,6 +189,12 @@ describe('AdminService', () => {
         page: 3,
         limit: 20,
         totalPages: 5,
+        statusCounts: { total: 10, active: 7, pending: 2, locked: 1 },
+      });
+      expect(prisma.user.groupBy).toHaveBeenCalledWith({
+        by: ['status'],
+        where: {},
+        _count: { _all: true },
       });
     });
   });
