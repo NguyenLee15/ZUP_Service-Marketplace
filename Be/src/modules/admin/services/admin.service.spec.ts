@@ -174,6 +174,41 @@ describe('AdminService', () => {
       });
     });
 
+    it('filters disputes by booking, customer, provider, and service keyword', async () => {
+      prisma.dispute.findMany.mockResolvedValue([]);
+      prisma.dispute.count.mockResolvedValue(0);
+
+      await service.getDisputes('PENDING', 1, 10, 'alice');
+
+      const findManyArg = prisma.dispute.findMany.mock.calls[0]?.[0] as {
+        where?: { status?: string; booking?: { OR?: unknown[] } };
+      };
+      expect(findManyArg.where?.status).toBe('PENDING');
+      expect(findManyArg.where?.booking?.OR).toEqual([
+        { bookingCode: { contains: 'alice', mode: 'insensitive' } },
+        {
+          customer: {
+            OR: [
+              { fullName: { contains: 'alice', mode: 'insensitive' } },
+              { email: { contains: 'alice', mode: 'insensitive' } },
+            ],
+          },
+        },
+        {
+          provider: {
+            OR: [
+              { fullName: { contains: 'alice', mode: 'insensitive' } },
+              { email: { contains: 'alice', mode: 'insensitive' } },
+            ],
+          },
+        },
+        { service: { name: { contains: 'alice', mode: 'insensitive' } } },
+      ]);
+      expect(prisma.dispute.count).toHaveBeenCalledWith({
+        where: findManyArg.where,
+      });
+    });
+
     it('returns standardized pagination meta for getUsers', async () => {
       prisma.user.findMany.mockResolvedValue([{ id: 1 }]);
       prisma.user.count.mockResolvedValue(100);

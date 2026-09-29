@@ -131,4 +131,67 @@ describe('AdminAuditLogService', () => {
       }),
     );
   });
+
+  it.each(['=', '+', '-', '@'])(
+    'neutralizes formula prefix %s in CSV values',
+    async (prefix) => {
+      prisma.auditLog.findMany.mockResolvedValue([
+        {
+          id: 1,
+          createdAt: new Date('2026-01-01T00:00:00.000Z'),
+          actor: {
+            email: 'admin@test.local',
+            fullName: 'Admin',
+            role: UserRole.ADMIN,
+          },
+          action: 'UPDATE_STAFF',
+          targetType: 'USER',
+          targetId: 2,
+          ipAddress: '127.0.0.1',
+          description: `${prefix}SUM(A1:A2)`,
+        },
+      ]);
+      prisma.auditLog.count.mockResolvedValue(1);
+
+      const chunks: string[] = [];
+      for await (const chunk of service.streamAuditLogsCsv({
+        page: 1,
+        limit: 20,
+      })) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks.join('')).toContain(`'${prefix}SUM(A1:A2)`);
+    },
+  );
+
+  it('neutralizes a formula prefix after leading whitespace and preserves CSV quoting', async () => {
+    prisma.auditLog.findMany.mockResolvedValue([
+      {
+        id: 1,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        actor: {
+          email: 'admin@test.local',
+          fullName: 'Admin',
+          role: UserRole.ADMIN,
+        },
+        action: 'UPDATE_STAFF',
+        targetType: 'USER',
+        targetId: 2,
+        ipAddress: '127.0.0.1',
+        description: '  =SUM(A1:A2),safe',
+      },
+    ]);
+    prisma.auditLog.count.mockResolvedValue(1);
+
+    const chunks: string[] = [];
+    for await (const chunk of service.streamAuditLogsCsv({
+      page: 1,
+      limit: 20,
+    })) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks.join('')).toContain('"\'  =SUM(A1:A2),safe"');
+  });
 });

@@ -9,6 +9,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsUrl,
   IsString,
   Max,
   MaxLength,
@@ -102,6 +103,10 @@ export class AdminDisputesQueryDto extends PaginationQueryDto {
   @IsEnum(DisputeStatus)
   @IsOptional()
   status?: DisputeStatus;
+
+  @IsString()
+  @IsOptional()
+  keyword?: string;
 }
 
 export class AdminBookingsQueryDto extends PaginationQueryDto {
@@ -226,23 +231,23 @@ export class SocialZaloConfigDto {
   oaId?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUrl()
   chatUrl?: string;
 }
 
 export class SocialFacebookConfigDto {
   @IsOptional()
-  @IsString()
+  @IsUrl()
   pageUrl?: string;
 }
 
 export class SocialTiktokConfigDto {
   @IsOptional()
-  @IsString()
+  @IsUrl()
   profileUrl?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUrl()
   videoUrl?: string;
 }
 

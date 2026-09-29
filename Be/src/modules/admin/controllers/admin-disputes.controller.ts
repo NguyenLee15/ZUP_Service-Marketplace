@@ -38,7 +38,12 @@ export class AdminDisputesController {
   @Permissions(AdminPermission.DISPUTE_VIEW)
   @ApiOperation({ summary: 'List customer/provider disputes' })
   async getDisputes(@Query() query: AdminDisputesQueryDto) {
-    return this.adminService.getDisputes(query.status, query.page, query.limit);
+    return this.adminService.getDisputes(
+      query.status,
+      query.page,
+      query.limit,
+      query.keyword,
+    );
   }
 
   @Get(':id')

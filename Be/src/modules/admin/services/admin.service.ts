@@ -189,9 +189,71 @@ export class AdminService {
 
   // ===== DISPUTES =====
 
-  async getDisputes(status?: string, page: number = 1, limit: number = 20) {
+  async getDisputes(
+    status?: string,
+    page: number = 1,
+    limit: number = 20,
+    keyword?: string,
+  ) {
     const where: Prisma.DisputeWhereInput = {};
     if (this.isDisputeStatus(status)) where.status = status;
+    const normalizedKeyword = keyword?.trim();
+    if (normalizedKeyword) {
+      where.booking = {
+        OR: [
+          {
+            bookingCode: {
+              contains: normalizedKeyword,
+              mode: 'insensitive',
+            },
+          },
+          {
+            customer: {
+              OR: [
+                {
+                  fullName: {
+                    contains: normalizedKeyword,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  email: {
+                    contains: normalizedKeyword,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            },
+          },
+          {
+            provider: {
+              OR: [
+                {
+                  fullName: {
+                    contains: normalizedKeyword,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  email: {
+                    contains: normalizedKeyword,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            },
+          },
+          {
+            service: {
+              name: {
+                contains: normalizedKeyword,
+                mode: 'insensitive',
+              },
+            },
+          },
+        ],
+      };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.dispute.findMany({

@@ -170,7 +170,8 @@ export class AdminAuditLogService {
 
   private escapeCsvValue(value: string | number) {
     const text = String(value);
-    if (!/[",\n\r]/.test(text)) return text;
-    return `"${text.replace(/"/g, '""')}"`;
+    const safeText = /^[\s]*[=+\-@]/.test(text) ? `'${text}` : text;
+    if (!/[",\n\r]/.test(safeText)) return safeText;
+    return `"${safeText.replace(/"/g, '""')}"`;
   }
 }
