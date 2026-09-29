@@ -10,24 +10,17 @@ import { ServiceFilterSidebar } from '@/app/components/services/ServiceFilterSid
 import type { Category } from '@/types';
 import type { UserLocationState } from '../hooks/useServicesSearchFlow';
 
-interface ServicesSearchBarProps {
+export interface ServicesSearchState {
   loading: boolean;
   searchParams: {
     get: (key: string) => string | null;
     toString: () => string;
   };
-  onSearchSubmit: (keyword: string) => void;
-  onToggleAi: () => void;
   userLocation: UserLocationState;
-  setUserLocation: React.Dispatch<React.SetStateAction<UserLocationState>>;
   savedAddresses: ApiPayload[];
-  fetchGpsLocation: () => void;
   isMobileFilterOpen: boolean;
-  setIsMobileFilterOpen: (open: boolean) => void;
   activeFilterCount: number;
   categories: Category[];
-  onFilterChange: (filters: ApiPayload) => void;
-  onClearFilters: () => void;
   categoryIds: string[];
   minPrice: string;
   maxPrice: string;
@@ -35,27 +28,48 @@ interface ServicesSearchBarProps {
   metaTotal: number;
 }
 
+export interface ServicesSearchActions {
+  onSearchSubmit: (keyword: string) => void;
+  onToggleAi: () => void;
+  setUserLocation: React.Dispatch<React.SetStateAction<UserLocationState>>;
+  fetchGpsLocation: () => void;
+  setIsMobileFilterOpen: (open: boolean) => void;
+  onFilterChange: (filters: ApiPayload) => void;
+  onClearFilters: () => void;
+}
+
+interface ServicesSearchBarProps {
+  state: ServicesSearchState;
+  actions: ServicesSearchActions;
+}
+
 export function ServicesSearchBar({
-  loading,
-  searchParams,
-  onSearchSubmit,
-  onToggleAi,
-  userLocation,
-  setUserLocation,
-  savedAddresses,
-  fetchGpsLocation,
-  isMobileFilterOpen,
-  setIsMobileFilterOpen,
-  activeFilterCount,
-  categories,
-  onFilterChange,
-  onClearFilters,
-  categoryIds,
-  minPrice,
-  maxPrice,
-  minRating,
-  metaTotal,
+  state,
+  actions,
 }: ServicesSearchBarProps) {
+  const {
+    loading,
+    searchParams,
+    userLocation,
+    savedAddresses,
+    isMobileFilterOpen,
+    activeFilterCount,
+    categories,
+    categoryIds,
+    minPrice,
+    maxPrice,
+    minRating,
+    metaTotal,
+  } = state;
+  const {
+    onSearchSubmit,
+    onToggleAi,
+    setUserLocation,
+    fetchGpsLocation,
+    setIsMobileFilterOpen,
+    onFilterChange,
+    onClearFilters,
+  } = actions;
   const isAiMode = searchParams.get('ai') === 'true';
 
   return (

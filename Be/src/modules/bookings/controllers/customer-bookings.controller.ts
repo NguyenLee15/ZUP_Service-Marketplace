@@ -38,6 +38,7 @@ import { BookingLifecycleService } from '../booking-lifecycle.service';
 import { BookingQueryService } from '../booking-query.service';
 import { CustomerBookingExportService } from '../customer-booking-export.service';
 import { BookingIntentService } from '../booking-intent.service';
+import { TrackingLocationService } from '../tracking-location.service';
 import { BookingListQueryDto } from '../dto/booking-query.dto';
 import { ExtractBookingIntentDto } from '../dto/booking-intent.dto';
 import {
@@ -61,6 +62,7 @@ export class BookingsController {
     private readonly bookingQueryService: BookingQueryService,
     private readonly customerBookingExportService: CustomerBookingExportService,
     private readonly bookingIntentService: BookingIntentService,
+    private readonly trackingLocationService: TrackingLocationService,
   ) {}
 
   /** POST /bookings/intent-extract — AI trích xuất ý định đặt lịch */
@@ -159,6 +161,14 @@ export class BookingsController {
   }
 
   /** GET /bookings/:id — Chi tiết đơn hàng */
+  @Get(':id/tracking/location')
+  async getTrackingLocation(
+    @CurrentUser('id') customerId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.trackingLocationService.getForCustomer(id, customerId);
+  }
+
   @Get(':id')
   async getById(
     @CurrentUser('id') userId: number,

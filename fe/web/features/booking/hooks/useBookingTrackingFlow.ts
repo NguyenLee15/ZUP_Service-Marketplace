@@ -65,6 +65,7 @@ export function useBookingTrackingFlow(id: string) {
     useState<TrackingConnection>("connecting");
   const [retryToken, setRetryToken] = useState(0);
   const socketConnectedRef = useRef(false);
+  const providerLocRef = useRef<ProviderLocation | null>(null);
 
   const retryTracking = useCallback(() => {
     setError("");
@@ -153,13 +154,15 @@ export function useBookingTrackingFlow(id: string) {
         setTrackingConnection("connected");
         setIsWaitingGps(false);
         const loc = data.location;
-        setProviderLoc({
+        const newLocation = {
           lat: loc.lat,
           lng: loc.lng,
           heading: loc.heading || 0,
           speed: loc.speed || 0,
           updatedAt: new Date(loc.updatedAt || Date.now()),
-        });
+        } satisfies ProviderLocation;
+        providerLocRef.current = newLocation;
+        setProviderLoc(newLocation);
         setTrail([[loc.lat, loc.lng]]);
       }
     };
@@ -183,6 +186,7 @@ export function useBookingTrackingFlow(id: string) {
         updatedAt: new Date(data.timestamp || Date.now()),
       };
 
+      providerLocRef.current = newLoc;
       setProviderLoc(newLoc);
       setTrail((prev) => [...prev.slice(-100), [data.lat, data.lng]]);
 
@@ -219,6 +223,48 @@ export function useBookingTrackingFlow(id: string) {
       socket.disconnect();
     };
   }, [booking?.status, id, customerLoc.lat, customerLoc.lng, retryToken]);
+
+  useEffect(() => {
+    if (
+      !booking ||
+      ![BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS].includes(
+        booking.status,
+      )
+    ) {
+      return;
+    }
+
+    const pollLastKnownLocation = async () => {
+      try {
+        const response = await bookingApi.getTrackingLocation(Number(id));
+        const location = response.data?.data;
+        if (!location) return;
+
+        const nextLocation = {
+          lat: location.lat,
+          lng: location.lng,
+          heading: location.heading || 0,
+          speed: location.speed || 0,
+          updatedAt: new Date(location.updatedAt),
+        } satisfies ProviderLocation;
+        const currentUpdatedAt = providerLocRef.current?.updatedAt.getTime() ?? 0;
+        if (nextLocation.updatedAt.getTime() <= currentUpdatedAt) return;
+
+        providerLocRef.current = nextLocation;
+        setProviderLoc(nextLocation);
+        setIsWaitingGps(false);
+        setTrackingConnection("connected");
+      } catch {
+        setTrackingConnection((current) =>
+          current === "connected" ? "stale" : current,
+        );
+      }
+    };
+
+    void pollLastKnownLocation();
+    const pollingTimer = window.setInterval(pollLastKnownLocation, 15_000);
+    return () => window.clearInterval(pollingTimer);
+  }, [booking?.status, id, retryToken]);
 
   useEffect(() => {
     if (

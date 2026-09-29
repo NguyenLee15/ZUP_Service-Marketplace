@@ -14,6 +14,7 @@ import {
   isWorkerEnabled,
 } from '../../config/runtime.config';
 import { TrackingGateway } from './tracking.gateway';
+import { TrackingLocationService } from './tracking-location.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BookingStatePolicy } from './booking-state.policy';
@@ -75,6 +76,7 @@ import { ProviderWalletsModule } from '../provider-wallets/provider-wallets.modu
     CustomerBookingExportService,
     BookingIntentService,
     TrackingGateway,
+    TrackingLocationService,
     ...(isCronEnabled() ? [BookingsCron] : []),
     ...(isWorkerEnabled() ? [BookingsProcessor, DisputeProcessor] : []),
   ],

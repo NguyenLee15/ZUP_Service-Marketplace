@@ -14,6 +14,9 @@ export const bookingApi = {
 
   getById: (id: number) => api.get(`/bookings/${id}`),
 
+  getTrackingLocation: (id: number) =>
+    api.get(`/bookings/${id}/tracking/location`),
+
   confirmQuote: (id: number) => api.patch(`/bookings/${id}/confirm-quote`),
 
   rejectQuote: (id: number, reason: string) =>

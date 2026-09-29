@@ -11,7 +11,11 @@ import {
 } from '@/components/ui/select';
 import { LayoutGrid, Map as MapIcon } from 'lucide-react';
 import { useServicesSearchFlow } from '@/features/service/hooks/useServicesSearchFlow';
-import { ServicesSearchBar } from '@/features/service/components/ServicesSearchBar';
+import {
+  ServicesSearchBar,
+  type ServicesSearchActions,
+  type ServicesSearchState,
+} from '@/features/service/components/ServicesSearchBar';
 import { ServicesActiveFilters } from '@/features/service/components/ServicesActiveFilters';
 import { ServicesSearchResults } from '@/features/service/components/ServicesSearchResults';
 import { ServicesFloatingFilterButton } from '@/features/service/components/ServicesFloatingFilterButton';
@@ -133,25 +137,33 @@ function ServicesSearchContent() {
     <div className="min-h-[100dvh] bg-background">
       {/* Search Header Bar */}
       <ServicesSearchBar
-        loading={loading}
-        searchParams={searchParams}
-        onSearchSubmit={handleSearchSubmit}
-        onToggleAi={handleToggleAi}
-        userLocation={userLocation}
-        setUserLocation={setUserLocation}
-        savedAddresses={savedAddresses}
-        fetchGpsLocation={fetchGpsLocation}
-        isMobileFilterOpen={isMobileFilterOpen}
-        setIsMobileFilterOpen={setIsMobileFilterOpen}
-        activeFilterCount={activeFilterCount}
-        categories={categories}
-        onFilterChange={onFilterChange}
-        onClearFilters={onClearFilters}
-        categoryIds={categoryIds}
-        minPrice={minPrice}
-        maxPrice={maxPrice}
-        minRating={minRating}
-        metaTotal={meta.total}
+        state={
+          {
+            loading,
+            searchParams,
+            userLocation,
+            savedAddresses,
+            isMobileFilterOpen,
+            activeFilterCount,
+            categories,
+            categoryIds,
+            minPrice,
+            maxPrice,
+            minRating,
+            metaTotal: meta.total,
+          } satisfies ServicesSearchState
+        }
+        actions={
+          {
+            onSearchSubmit: handleSearchSubmit,
+            onToggleAi: handleToggleAi,
+            setUserLocation,
+            fetchGpsLocation,
+            setIsMobileFilterOpen,
+            onFilterChange,
+            onClearFilters,
+          } satisfies ServicesSearchActions
+        }
       />
 
       <div className="max-w-7xl mx-auto px-0 py-6 sm:px-4 sm:py-10">
