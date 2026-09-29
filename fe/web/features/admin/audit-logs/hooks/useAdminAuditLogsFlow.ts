@@ -52,6 +52,7 @@ export function useAdminAuditLogsFlow() {
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
   const [meta, setMeta] = useState<{ total?: number; totalPages?: number }>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const fetchRequestIdRef = useRef(0);
@@ -65,6 +66,7 @@ export function useAdminAuditLogsFlow() {
   const fetchLogs = useCallback(async () => {
     const currentRequestId = ++fetchRequestIdRef.current;
     setLoading(true);
+    setError(null);
     try {
       const res = await adminApi.getAuditLogs(queryParams);
       if (currentRequestId !== fetchRequestIdRef.current) return;
@@ -76,6 +78,7 @@ export function useAdminAuditLogsFlow() {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })
           ?.response?.data?.error?.message || "Không tải được audit logs";
+      setError(msg);
       toast({
         title: "Lỗi",
         description: msg,
@@ -140,6 +143,7 @@ export function useAdminAuditLogsFlow() {
     updateFilter,
     logs,
     loading,
+    error,
     exporting,
     showAdvanced,
     setShowAdvanced,

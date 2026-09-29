@@ -17,6 +17,8 @@ import { AuditLogItem } from "../types/audit-log.types";
 interface AuditLogsTableProps {
   logs: AuditLogItem[];
   loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   page: number;
   totalPages: number;
   setPage: (page: number) => void;
@@ -36,6 +38,8 @@ const actionBadgeColors: Record<string, string> = {
 export function AuditLogsTable({
   logs,
   loading,
+  error,
+  onRetry,
   page,
   totalPages,
   setPage,
@@ -45,6 +49,19 @@ export function AuditLogsTable({
       <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-14 text-slate-400 space-y-2">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm">Đang tải nhật ký audit logs...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-rose-200 bg-rose-50 p-14 text-center text-rose-700">
+        <AlertCircle className="mb-2 h-10 w-10" aria-hidden="true" />
+        <p className="text-sm font-semibold">Không thể tải audit logs</p>
+        <p className="mt-1 max-w-md text-xs text-rose-600">{error}</p>
+        <Button className="mt-4" variant="outline" onClick={onRetry}>
+          Thử lại
+        </Button>
       </div>
     );
   }

@@ -18,12 +18,14 @@ function AuditLogsContent() {
     updateFilter,
     logs,
     loading,
+    error,
     exporting,
     showAdvanced,
     setShowAdvanced,
     totalPages,
     totalRecords,
     exportCsv,
+    refetch,
   } = useAdminAuditLogsFlow();
 
   return (
@@ -68,6 +70,8 @@ function AuditLogsContent() {
       <AuditLogsTable
         logs={logs}
         loading={loading}
+        error={error}
+        onRetry={refetch}
         page={filters.page}
         totalPages={totalPages}
         setPage={(newPage) => updateFilter("page", newPage)}
