@@ -1,5 +1,6 @@
 "use client";
 
+import { isCancel } from "axios";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { adminApi } from "@/features/admin/services/admin.api";
 
@@ -68,12 +69,16 @@ export function useAdminBookingsListFlow() {
     useState<BookingListItem | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const fetchRequestIdRef = useRef(0);
+  const requestControllerRef = useRef<AbortController | null>(null);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBookings = useCallback(() => {
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
     const currentRequestId = ++fetchRequestIdRef.current;
     setLoading(true);
     setError(null);
@@ -82,7 +87,7 @@ export function useAdminBookingsListFlow() {
     if (debouncedSearchTerm.trim()) params.keyword = debouncedSearchTerm.trim();
 
     adminApi
-      .getBookings(params)
+      .getBookings(params, { signal: controller.signal })
       .then((res) => {
         if (currentRequestId !== fetchRequestIdRef.current) return;
         const data = (res.data?.data || []) as BookingListItem[];
@@ -91,6 +96,7 @@ export function useAdminBookingsListFlow() {
         setSelectedBooking((prev) => prev || (data.length > 0 ? data[0] : null));
       })
       .catch((err) => {
+        if (isCancel(err)) return;
         if (currentRequestId !== fetchRequestIdRef.current) return;
         setBookings([]);
         setTotalPages(1);
@@ -118,6 +124,10 @@ export function useAdminBookingsListFlow() {
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
+
+  useEffect(() => {
+    return () => requestControllerRef.current?.abort();
+  }, []);
 
   return {
     bookings,

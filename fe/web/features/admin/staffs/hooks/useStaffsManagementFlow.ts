@@ -1,7 +1,9 @@
 'use client';
 
+import { isCancel } from 'axios';
 import { useState, useEffect, useCallback } from 'react';
-import { adminApi } from '@/features/auth/services/api';
+import { useRef } from 'react';
+import { adminApi } from '@/features/admin/services/admin.api';
 import { useToast } from '@/components/ui/use-toast';
 import {
   StaffAccount,
@@ -48,14 +50,21 @@ export function useStaffsManagementFlow() {
   const [deleteTarget, setDeleteTarget] = useState<StaffAccount | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [togglingStaffId, setTogglingStaffId] = useState<number | null>(null);
+  const requestControllerRef = useRef<AbortController | null>(null);
 
   const fetchStaffs = useCallback(async (search?: string) => {
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
     setLoading(true);
     try {
-      const res = await adminApi.getStaffs({ keyword: search || undefined });
+      const res = await adminApi.getStaffs(
+        { keyword: search || undefined },
+        { signal: controller.signal },
+      );
       setStaffs((res.data.data as StaffAccount[]) || []);
       setMeta((res.data.meta as StaffPaginationMeta) || {});
-    } catch {
+    } catch (err: unknown) {
+      if (isCancel(err)) return;
       toast({
         title: 'Lỗi',
         description: 'Không thể tải danh sách nhân viên',
@@ -93,6 +102,10 @@ export function useStaffsManagementFlow() {
     fetchStaffs();
     fetchPermissionGroups();
   }, [fetchStaffs, fetchPermissionGroups]);
+
+  useEffect(() => {
+    return () => requestControllerRef.current?.abort();
+  }, []);
 
   const handleSearch = () => {
     fetchStaffs(keyword);

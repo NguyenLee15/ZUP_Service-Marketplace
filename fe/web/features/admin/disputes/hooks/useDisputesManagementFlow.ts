@@ -1,5 +1,6 @@
 "use client";
 
+import { isCancel } from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adminApi } from "@/features/admin/services/admin.api";
 
@@ -18,6 +19,7 @@ export interface AdminDisputeListItem {
 
 export function useDisputesManagementFlow() {
   const fetchRequestIdRef = useRef(0);
+  const requestControllerRef = useRef<AbortController | null>(null);
   const [disputes, setDisputes] = useState<AdminDisputeListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,9 @@ export function useDisputesManagementFlow() {
   const [totalPages, setTotalPages] = useState(1);
 
   const fetchDisputes = useCallback(async () => {
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
     const currentRequestId = ++fetchRequestIdRef.current;
     setLoading(true);
     setError(null);
@@ -35,11 +40,14 @@ export function useDisputesManagementFlow() {
       const params: Record<string, string | number> = { page, limit: 10 };
       if (statusFilter) params.status = statusFilter;
       if (debouncedSearchTerm.trim()) params.keyword = debouncedSearchTerm.trim();
-      const res = await adminApi.getDisputes(params);
+      const res = await adminApi.getDisputes(params, {
+        signal: controller.signal,
+      });
       if (currentRequestId !== fetchRequestIdRef.current) return;
       setDisputes((res.data?.data || []) as AdminDisputeListItem[]);
       setTotalPages(res.data?.meta?.totalPages || 1);
     } catch (err: unknown) {
+      if (isCancel(err)) return;
       if (currentRequestId !== fetchRequestIdRef.current) return;
       setDisputes([]);
       setTotalPages(1);
@@ -64,6 +72,10 @@ export function useDisputesManagementFlow() {
   useEffect(() => {
     void fetchDisputes();
   }, [fetchDisputes]);
+
+  useEffect(() => {
+    return () => requestControllerRef.current?.abort();
+  }, []);
 
   return {
     disputes,

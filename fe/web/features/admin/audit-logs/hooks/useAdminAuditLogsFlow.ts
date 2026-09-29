@@ -1,5 +1,6 @@
 "use client";
 
+import { isCancel } from "axios";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
@@ -42,6 +43,7 @@ export function useAdminAuditLogsFlow() {
   const [exporting, setExporting] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const fetchRequestIdRef = useRef(0);
+  const requestControllerRef = useRef<AbortController | null>(null);
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
 
   const queryParams = useMemo(
@@ -50,16 +52,22 @@ export function useAdminAuditLogsFlow() {
   );
 
   const fetchLogs = useCallback(async () => {
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
     const currentRequestId = ++fetchRequestIdRef.current;
     setLoading(true);
     setError(null);
     try {
-      const res = await adminApi.getAuditLogs(queryParams);
+      const res = await adminApi.getAuditLogs(queryParams, {
+        signal: controller.signal,
+      });
       if (currentRequestId !== fetchRequestIdRef.current) return;
       const unwrapped = parseAdminAuditLogsResponse(res.data);
       setLogs(unwrapped.data);
       setMeta(unwrapped.meta);
     } catch (err: unknown) {
+      if (isCancel(err)) return;
       if (currentRequestId !== fetchRequestIdRef.current) return;
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })
@@ -83,6 +91,10 @@ export function useAdminAuditLogsFlow() {
   useEffect(() => {
     void fetchLogs();
   }, [fetchLogs]);
+
+  useEffect(() => {
+    return () => requestControllerRef.current?.abort();
+  }, []);
 
   const updateFilter = (key: keyof AuditFilters, value: string | number) => {
     setFilters((prev) => ({

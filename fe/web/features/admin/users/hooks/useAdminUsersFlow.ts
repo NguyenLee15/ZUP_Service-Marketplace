@@ -1,5 +1,6 @@
 "use client";
 
+import { isCancel } from "axios";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { adminApi } from "@/features/admin/services/admin.api";
@@ -14,6 +15,7 @@ import {
 export function useAdminUsersFlow() {
   const { toast } = useToast();
   const requestIdRef = useRef(0);
+  const requestControllerRef = useRef<AbortController | null>(null);
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,6 +36,9 @@ export function useAdminUsersFlow() {
   });
 
   const fetchUsers = useCallback(() => {
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
     const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
@@ -44,7 +49,7 @@ export function useAdminUsersFlow() {
         role: roleFilter,
         ...(statusFilter !== "ALL" ? { status: statusFilter } : {}),
         ...(searchTerm.trim() ? { keyword: searchTerm.trim() } : {}),
-      })
+      }, { signal: controller.signal })
       .then((res) => {
         if (currentRequestId !== requestIdRef.current) return;
         const payload = parseAdminUsersResponse(res.data);
@@ -55,6 +60,7 @@ export function useAdminUsersFlow() {
         );
       })
       .catch((err) => {
+        if (isCancel(err)) return;
         if (currentRequestId !== requestIdRef.current) return;
         setUsers([]);
         setTotalPages(1);
@@ -78,6 +84,10 @@ export function useAdminUsersFlow() {
     }, 400);
     return () => clearTimeout(delayDebounceFn);
   }, [fetchUsers]);
+
+  useEffect(() => {
+    return () => requestControllerRef.current?.abort();
+  }, []);
 
   const handleLockUser = async (data: LockUserFormData) => {
     if (!selectedUser) return;
