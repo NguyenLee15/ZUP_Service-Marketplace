@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { bookingApi } from "@/features/booking/services/booking.api";
 import { BookingStatus } from "@/types";
@@ -13,6 +13,12 @@ export interface ProviderLocation {
   speed: number;
   updatedAt: Date;
 }
+
+export type TrackingConnection =
+  | "connecting"
+  | "connected"
+  | "stale"
+  | "disconnected";
 
 export function haversineDistance(
   lat1: number,
@@ -55,11 +61,23 @@ export function useBookingTrackingFlow(id: string) {
   });
   const [currentStepIdx, setCurrentStepIdx] = useState(1);
   const [isWaitingGps, setIsWaitingGps] = useState(true);
+  const [trackingConnection, setTrackingConnection] =
+    useState<TrackingConnection>("connecting");
+  const [retryToken, setRetryToken] = useState(0);
   const socketConnectedRef = useRef(false);
+
+  const retryTracking = useCallback(() => {
+    setError("");
+    setLoading(true);
+    setIsWaitingGps(true);
+    setTrackingConnection("connecting");
+    setRetryToken((current) => current + 1);
+  }, []);
 
   // ---- Fetch booking ----
   useEffect(() => {
     setLoading(true);
+    setError("");
     bookingApi
       .getById(Number(id))
       .then((res: any) => {
@@ -97,7 +115,7 @@ export function useBookingTrackingFlow(id: string) {
       })
       .catch(() => setError("Không tìm thấy đơn hàng"))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, retryToken]);
 
   // ---- Socket.io Realtime Tracking ----
   useEffect(() => {
@@ -109,12 +127,30 @@ export function useBookingTrackingFlow(id: string) {
     const bookingId = Number(id);
     const socket = getTrackingSocket();
 
+    setTrackingConnection("connecting");
     socket.connect();
     socket.emit("subscribeTracking", { bookingId });
+
+    const handleConnect = () => {
+      socketConnectedRef.current = true;
+      setTrackingConnection("connected");
+      socket.emit("subscribeTracking", { bookingId });
+    };
+
+    const handleDisconnect = () => {
+      socketConnectedRef.current = false;
+      setTrackingConnection("disconnected");
+    };
+
+    const handleConnectError = () => {
+      socketConnectedRef.current = false;
+      setTrackingConnection("disconnected");
+    };
 
     const handleLastKnown = (data: { bookingId: number; location: any }) => {
       if (data.location) {
         socketConnectedRef.current = true;
+        setTrackingConnection("connected");
         setIsWaitingGps(false);
         const loc = data.location;
         setProviderLoc({
@@ -137,6 +173,7 @@ export function useBookingTrackingFlow(id: string) {
       timestamp?: number;
     }) => {
       socketConnectedRef.current = true;
+      setTrackingConnection("connected");
       setIsWaitingGps(false);
       const newLoc: ProviderLocation = {
         lat: data.lat,
@@ -164,18 +201,46 @@ export function useBookingTrackingFlow(id: string) {
       setTrackingEnded(true);
     };
 
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
     socket.on("lastKnownLocation", handleLastKnown);
     socket.on("providerLocation", handleProviderLocUpdate);
     socket.on("trackingEnded", handleTrackingEndedUpdate);
 
     return () => {
       socket.emit("unsubscribeTracking", { bookingId });
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectError);
       socket.off("lastKnownLocation", handleLastKnown);
       socket.off("providerLocation", handleProviderLocUpdate);
       socket.off("trackingEnded", handleTrackingEndedUpdate);
       socket.disconnect();
     };
-  }, [booking?.status, id, customerLoc.lat, customerLoc.lng]);
+  }, [booking?.status, id, customerLoc.lat, customerLoc.lng, retryToken]);
+
+  useEffect(() => {
+    if (
+      !booking ||
+      ![BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS].includes(
+        booking.status,
+      )
+    ) {
+      return;
+    }
+
+    const staleTimer = window.setInterval(() => {
+      const updatedAt = providerLoc?.updatedAt.getTime();
+      if (!updatedAt || Date.now() - updatedAt > 30_000) {
+        setTrackingConnection((current) =>
+          current === "disconnected" ? current : "stale",
+        );
+      }
+    }, 5_000);
+
+    return () => window.clearInterval(staleTimer);
+  }, [booking?.status, providerLoc?.updatedAt]);
 
   const distance = providerLoc
     ? haversineDistance(
@@ -209,6 +274,8 @@ export function useBookingTrackingFlow(id: string) {
     currentStepIdx,
     distance,
     eta,
+    trackingConnection,
+    retryTracking,
     router,
   };
 }

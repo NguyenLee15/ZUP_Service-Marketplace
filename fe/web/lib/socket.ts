@@ -22,6 +22,11 @@ const createSocket = (namespace: string): Socket => {
       }
     },
     transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 10000,
+    randomizationFactor: 0.5,
   });
 };
 

@@ -44,6 +44,8 @@ export default function TrackingPage({
     currentStepIdx,
     distance,
     eta,
+    trackingConnection,
+    retryTracking,
     router,
   } = useBookingTrackingFlow(id);
 
@@ -61,6 +63,12 @@ export default function TrackingPage({
         <BackButton fallbackHref="/bookings" className="mb-4" />
         <div className="rounded-2xl border border-border bg-card p-8 flex flex-col items-center gap-4">
           <AlertCircle className="w-12 h-12 text-red-400" />
+          <Button
+            onClick={retryTracking}
+            className="bg-action-blue text-white rounded-xl"
+          >
+            Retry
+          </Button>
           <p className="text-lg font-semibold text-foreground">
             {error || "Không tìm thấy đơn hàng"}
           </p>
@@ -168,6 +176,19 @@ export default function TrackingPage({
             className="rounded-full px-4 py-2 bg-background/90 border border-border shadow-md hover:bg-muted transition-colors text-foreground"
           />
         </div>
+
+        {trackingConnection !== "connected" && (
+          <div
+            role="status"
+            className="absolute top-4 right-4 z-[1000] max-w-[min(20rem,calc(100%-5rem))] rounded-xl border border-amber-200 bg-amber-50/95 px-3 py-2 text-xs font-medium text-amber-900 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/90 dark:text-amber-100"
+          >
+            {trackingConnection === "stale"
+              ? "GPS của thợ chưa được cập nhật trong 30 giây."
+              : trackingConnection === "disconnected"
+                ? "Mất kết nối GPS. Đang tự động kết nối lại…"
+                : "Đang kết nối tới GPS của thợ…"}
+          </div>
+        )}
 
         {/* Floating ETA Card */}
         <TrackingHeaderStatus
