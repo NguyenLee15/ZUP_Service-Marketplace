@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NOTIFICATION_EVENTS } from '../../common/events/notification-events';
@@ -47,44 +48,55 @@ export class KycService {
     }
 
     // Upload files lên Cloudinary
-    const [cccdFront, cccdBack, portrait] = await Promise.all([
-      this.cloudinaryService.uploadFile(files.cccdFront.buffer, 'kyc'),
-      this.cloudinaryService.uploadFile(files.cccdBack.buffer, 'kyc'),
-      this.cloudinaryService.uploadFile(files.portrait.buffer, 'kyc'),
-    ]);
-
-    let certificateUrl: string | undefined;
-    if (files.certificate) {
-      const cert = await this.cloudinaryService.uploadFile(
-        files.certificate.buffer,
-        'kyc',
-      );
-      certificateUrl = cert.url;
+    const uploadedAssets: Array<{ url: string; publicId: string }> = [];
+    try {
+      for (const file of [files.cccdFront, files.cccdBack, files.portrait]) {
+        uploadedAssets.push(
+          await this.cloudinaryService.uploadFile(file.buffer, 'kyc'),
+        );
+      }
+      if (files.certificate) {
+        uploadedAssets.push(
+          await this.cloudinaryService.uploadFile(
+            files.certificate.buffer,
+            'kyc',
+          ),
+        );
+      }
+    } catch (error) {
+      await this.compensateUploadedAssets(uploadedAssets, error);
     }
 
-    // Tạo KYC record
-    const kyc = await this.prisma.kycProfile.create({
-      data: {
-        providerId,
-        cccdFrontUrl: cccdFront.url,
-        cccdBackUrl: cccdBack.url,
-        portraitUrl: portrait.url,
-        certificateUrl,
-        status: KycStatus.PENDING,
-      },
-    });
+    const [cccdFront, cccdBack, portrait] = uploadedAssets;
+    const certificate = files.certificate ? uploadedAssets[3] : undefined;
+    const kyc = await this.prisma
+      .$transaction(async (tx) => {
+        const created = await tx.kycProfile.create({
+          data: {
+            providerId,
+            cccdFrontUrl: cccdFront.url,
+            cccdBackUrl: cccdBack.url,
+            portraitUrl: portrait.url,
+            certificateUrl: certificate?.url,
+            status: KycStatus.PENDING,
+          },
+        });
 
-    // Audit log
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: providerId,
-        action: 'SUBMIT_KYC',
-        targetType: 'KYC_PROFILE',
-        targetId: kyc.id,
-        description: 'Nộp hồ sơ KYC',
-        ipAddress: ip,
-      },
-    });
+        await tx.auditLog.create({
+          data: {
+            actorId: providerId,
+            action: 'SUBMIT_KYC',
+            targetType: 'KYC_PROFILE',
+            targetId: created.id,
+            description: 'Nộp hồ sơ KYC',
+            ipAddress: ip,
+          },
+        });
+        return created;
+      })
+      .catch((error: unknown) =>
+        this.compensateUploadedAssets(uploadedAssets, error),
+      );
 
     // Gửi notification cho tất cả Admin + Staff
     const admins = await this.prisma.user.findMany({
@@ -110,6 +122,23 @@ export class KycService {
       data: kyc,
       message: 'Nộp KYC thành công. Vui lòng chờ admin duyệt.',
     };
+  }
+
+  private async compensateUploadedAssets(
+    assets: Array<{ publicId: string }>,
+    originalError: unknown,
+  ): Promise<never> {
+    const { failedPublicIds } = await this.cloudinaryService.cleanupFiles(
+      assets.map((asset) => asset.publicId),
+    );
+    if (failedPublicIds.length > 0) {
+      throw new ServiceUnavailableException({
+        code: ErrorCodes.ASSET_COMPENSATION_FAILED,
+        message:
+          'Không thể hoàn tất việc dọn dẹp tệp KYC. Vui lòng thử lại sau.',
+      });
+    }
+    throw originalError;
   }
 
   /**
