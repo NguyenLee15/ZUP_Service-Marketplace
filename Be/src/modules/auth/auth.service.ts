@@ -102,7 +102,9 @@ export class AuthService {
       otp,
     });
 
-    this.logger.log(`User registered: ${dto.email} (role: ${dto.role})`);
+    this.logger.log(
+      `User registered: ${this.maskEmail(dto.email)} (role: ${dto.role})`,
+    );
 
     return {
       data: {
@@ -182,7 +184,7 @@ export class AuthService {
       });
     }
 
-    this.logger.log(`OTP verified: ${dto.email}`);
+    this.logger.log(`OTP verified: ${this.maskEmail(dto.email)}`);
 
     return {
       data: {
@@ -306,7 +308,9 @@ export class AuthService {
       user.role,
     );
 
-    this.logger.log(`User logged in: ${dto.email} (role: ${user.role})`);
+    this.logger.log(
+      `User logged in: ${this.maskEmail(dto.email)} (role: ${user.role})`,
+    );
 
     return {
       data: {
@@ -316,6 +320,13 @@ export class AuthService {
       },
       message: 'Đăng nhập thành công',
     };
+  }
+
+  private maskEmail(email: string): string {
+    const separator = email.indexOf('@');
+    if (separator <= 0 || separator === email.length - 1) return '***';
+
+    return `${email[0]}***${email.slice(separator)}`;
   }
 
   // ===== GOOGLE LOGIN =====
@@ -345,7 +356,7 @@ export class AuthService {
             emailVerified: true,
           },
         });
-        this.logger.log(`New Google user registered: ${email}`);
+          this.logger.log(`New Google user registered: ${this.maskEmail(email)}`);
       } else {
         const shouldForceCustomerRole =
           user.role === UserRole.ADMIN || user.role === UserRole.STAFF;
@@ -360,7 +371,9 @@ export class AuthService {
               ...(shouldForceCustomerRole && { role: UserRole.CUSTOMER }),
             },
           });
-          this.logger.log(`Linked Google account to existing user: ${email}`);
+          this.logger.log(
+            `Linked Google account to existing user: ${this.maskEmail(email)}`,
+          );
         }
       }
 
@@ -438,7 +451,9 @@ export class AuthService {
           where: { id: user.id },
           data: { googleId, avatarUrl: user.avatarUrl || picture },
         });
-        this.logger.log(`Linked Google account to provider: ${email}`);
+          this.logger.log(
+            `Linked Google account to provider: ${this.maskEmail(email)}`,
+          );
       }
 
       const tokens = await this.generateTokenPair(

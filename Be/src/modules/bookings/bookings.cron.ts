@@ -19,8 +19,13 @@ export class BookingsCron {
    */
   @Cron('*/15 * * * * *')
   async handleProviderAcceptanceTimeout() {
+    const reconciled =
+      await this.bookingTimeoutService.reconcilePendingBookingSideEffects();
     const expired =
       await this.bookingTimeoutService.expirePendingProviderAcceptances();
+    if (reconciled > 0) {
+      this.logger.log(`Reconciled ${reconciled} pending booking(s).`);
+    }
     if (expired > 0) {
       this.logger.log(`Expired ${expired} unaccepted provider booking(s).`);
     }

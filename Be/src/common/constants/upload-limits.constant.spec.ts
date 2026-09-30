@@ -1,4 +1,7 @@
-import { hasValidImageSignature } from './upload-limits.constant';
+import {
+  hasValidImageSignature,
+  hasValidMediaSignature,
+} from './upload-limits.constant';
 
 describe('hasValidImageSignature', () => {
   it.each([
@@ -17,5 +20,28 @@ describe('hasValidImageSignature', () => {
     expect(hasValidImageSignature('image/png', Buffer.from('not-a-png'))).toBe(
       false,
     );
+  });
+
+  it.each([
+    [
+      'video/mp4',
+      Buffer.from([
+        0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d,
+      ]),
+    ],
+    [
+      'video/quicktime',
+      Buffer.from([
+        0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70, 0x71, 0x74, 0x20, 0x20,
+      ]),
+    ],
+  ])('accepts a valid %s media signature', (mimetype, buffer) => {
+    expect(hasValidMediaSignature(mimetype, buffer)).toBe(true);
+  });
+
+  it('rejects forged video MIME before upload', () => {
+    expect(
+      hasValidMediaSignature('video/mp4', Buffer.from('not-a-video')),
+    ).toBe(false);
   });
 });

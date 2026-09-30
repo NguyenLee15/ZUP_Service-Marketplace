@@ -20,6 +20,7 @@ import { BookingSharedService } from './booking-shared.service';
 import { BookingStatePolicy } from './booking-state.policy';
 import { assertPenaltyWithinBookingValue } from './booking-dispute-policy';
 import { DisputeDto, ResolveDisputeDto } from './dto/bookings.dto';
+import { hasValidMediaSignature } from '../../common/constants/upload-limits.constant';
 
 @Injectable()
 export class BookingDisputeService {
@@ -74,6 +75,12 @@ export class BookingDisputeService {
           throw new BadRequestException({
             code: ErrorCodes.VALIDATION_ERROR,
             message: `Kích thước tệp vượt quá 10MB (${file.originalname}).`,
+          });
+        }
+        if (!hasValidMediaSignature(file.mimetype, file.buffer)) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: `Nội dung tệp không khớp với định dạng đã khai báo (${file.originalname}).`,
           });
         }
       }

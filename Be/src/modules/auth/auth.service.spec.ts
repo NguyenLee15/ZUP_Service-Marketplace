@@ -230,6 +230,39 @@ describe('AuthService token hardening', () => {
     });
   });
 
+  it('masks user email in successful login logs', async () => {
+    const hash = jest.requireMock('../../common/utils/hash.util');
+    hash.comparePassword.mockResolvedValue(true);
+    hash.needsPasswordRehash.mockReturnValue(false);
+    prisma.user.findUnique.mockResolvedValue({
+      id: 10,
+      email: 'user@example.com',
+      password: 'hash',
+      role: UserRole.CUSTOMER,
+      status: UserStatus.ACTIVE,
+      emailVerified: true,
+    });
+    const logSpy = jest.spyOn(Logger.prototype, 'log');
+
+    await service.login({ email: 'user@example.com', password: 'secret' });
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('u***@example.com'),
+    );
+    expect(logSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('user@example.com'),
+    );
+    logSpy.mockRestore();
+  });
+
+  it('masks malformed emails without throwing', () => {
+    const maskEmail = (
+      service as unknown as { maskEmail: (email: string) => string }
+    ).maskEmail;
+
+    expect(maskEmail.call(service, 'invalid')).toBe('***');
+  });
+
   it('rejects when refresh token CAS loses a concurrent rotation', async () => {
     prisma.refreshToken.findFirst.mockResolvedValue(
       refreshRecord({ tokenHash: hashToken('concurrent-refresh') }),
@@ -521,6 +554,9 @@ describe('AuthService token hardening', () => {
   });
 
   it('links and logs in an existing provider through provider Google login', async () => {
+    const loggerLogSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation();
     const provider = googleUserRecord({
       email: 'provider@test.local',
       role: UserRole.PROVIDER,
@@ -550,6 +586,13 @@ describe('AuthService token hardening', () => {
     });
     expect(result.data.user.role).toBe(UserRole.PROVIDER);
     expect(result.data.accessToken).toBe('access-token');
+    expect(loggerLogSpy).toHaveBeenCalledWith(
+      'Linked Google account to provider: p***@test.local',
+    );
+    expect(loggerLogSpy).not.toHaveBeenCalledWith(
+      'Linked Google account to provider: provider@test.local',
+    );
+    loggerLogSpy.mockRestore();
   });
 });
 

@@ -9,11 +9,22 @@ import compression from 'compression';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Express } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { RedisIoAdapter } from './common/websocket/redis-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
   const configService = app.get(ConfigService);
+
+  const redisIoAdapter = new RedisIoAdapter(app, configService);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
+  const httpServer = app.getHttpServer() as {
+    once(event: string, listener: () => void): void;
+  };
+  httpServer.once('close', () => {
+    void redisIoAdapter.close();
+  });
 
   const expressApp = app.getHttpAdapter().getInstance() as Express;
   expressApp.disable('x-powered-by');

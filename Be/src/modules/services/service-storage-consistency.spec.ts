@@ -35,7 +35,13 @@ describe('ServiceCommandService storage consistency', () => {
           description: 'Home cleaning',
           items: [],
         },
-        [{ buffer: Buffer.from('file') } as Express.Multer.File],
+        [
+          {
+            buffer: Buffer.from([0xff, 0xd8, 0xff, 0x00]),
+            mimetype: 'image/jpeg',
+            originalname: 'service.jpg',
+          } as Express.Multer.File,
+        ],
       ),
     ).rejects.toThrow('database unavailable');
 

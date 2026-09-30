@@ -8,7 +8,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ChatsService } from './chats.service';
 import { SenderType, UserRole } from '@prisma/client';
@@ -24,6 +24,7 @@ import {
   toAuthenticatedUser,
 } from '../../common/types/auth.types';
 import type { AuthenticatedSocket } from '../../common/types/auth.types';
+import { SendMessageWsDto } from './dto/send-message-ws.dto';
 
 interface ConversationEventPayload {
   conversationId: number;
@@ -113,16 +114,16 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('sendMessage')
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  )
   async handleSendMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody()
-    data: {
-      conversationId: number;
-      content: string;
-      messageType?: string;
-      imageUrl?: string;
-      clientId?: string;
-    },
+    @MessageBody() data: SendMessageWsDto,
   ) {
     const user = client.data.user;
     if (!user) return;

@@ -12,6 +12,7 @@ import { CreateServiceDto, UpdateServiceDto } from './dto/services.dto';
 import { ServiceSharedService } from './service-shared.service';
 import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { hasValidImageSignature } from '../../common/constants/upload-limits.constant';
 
 @Injectable()
 export class ServiceCommandService {
@@ -46,6 +47,12 @@ export class ServiceCommandService {
     }> = [];
     try {
       for (const [index, file] of (files ?? []).entries()) {
+        if (!hasValidImageSignature(file.mimetype, file.buffer)) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: `Nội dung tệp hình ảnh không khớp với định dạng đã khai báo (${file.originalname}).`,
+          });
+        }
         const uploaded = await this.cloudinaryService.uploadFile(
           file.buffer,
           'services',
@@ -173,6 +180,12 @@ export class ServiceCommandService {
     }> = [];
     try {
       for (const [index, file] of (files ?? []).entries()) {
+        if (!hasValidImageSignature(file.mimetype, file.buffer)) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: `Nội dung tệp hình ảnh không khớp với định dạng đã khai báo (${file.originalname}).`,
+          });
+        }
         const uploaded = await this.cloudinaryService.uploadFile(
           file.buffer,
           'services',
@@ -311,52 +324,61 @@ export class ServiceCommandService {
       });
     }
 
-    const activeServices = await this.prisma.service.findMany({
-      where: { providerId, status: 'ACTIVE', isDeleted: false },
-      select: { referencePrice: true },
-    });
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        SELECT id FROM provider_wallets
+        WHERE provider_id = ${providerId}
+        FOR UPDATE
+      `;
 
-    const wallet = await this.prisma.providerWallet.findUnique({
-      where: { providerId },
-    });
+      const activeServices = await tx.service.findMany({
+        where: { providerId, status: 'ACTIVE', isDeleted: false },
+        select: { referencePrice: true },
+      });
 
-    // Add the current service's price since we are about to activate it
-    const sumReferencePrice =
-      activeServices.reduce((sum, s) => sum + Number(s.referencePrice), 0) +
-      Number(service.referencePrice);
+      const wallet = await tx.providerWallet.findUnique({
+        where: { providerId },
+      });
 
-    // Get commission rate
-    let rate = 8.5;
-    const setting = await this.prisma.systemSetting.findUnique({
-      where: { key: 'commission_rate' },
-    });
-    if (setting?.value) {
-      try {
-        const parsed = JSON.parse(setting.value) as { rate?: unknown };
-        if (typeof parsed.rate === 'number') rate = parsed.rate;
-      } catch {
-        // use default fallback rate
+      // Add the current service's price since we are about to activate it
+      const sumReferencePrice =
+        activeServices.reduce(
+          (sum, item) => sum + Number(item.referencePrice),
+          0,
+        ) + Number(service.referencePrice);
+
+      let rate = 8.5;
+      const setting = await tx.systemSetting.findUnique({
+        where: { key: 'commission_rate' },
+      });
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value) as { rate?: unknown };
+          if (typeof parsed.rate === 'number') rate = parsed.rate;
+        } catch {
+          // use default fallback rate
+        }
+      } else {
+        const commissionConfig = await tx.commissionConfig.findFirst({
+          orderBy: { effectiveFrom: 'desc' },
+        });
+        if (commissionConfig) rate = Number(commissionConfig.rate);
       }
-    } else {
-      const commissionConfig = await this.prisma.commissionConfig.findFirst({
-        orderBy: { effectiveFrom: 'desc' },
+
+      const requiredDeposit = (sumReferencePrice * rate) / 100;
+      const balanceNum = wallet ? Number(wallet.balance) : 0;
+
+      if (balanceNum < requiredDeposit) {
+        throw new ForbiddenException({
+          code: ErrorCodes.FORBIDDEN,
+          message: `Bạn cần có số dư ví tối thiểu ${requiredDeposit.toLocaleString('vi-VN')}đ để bật hoạt động dịch vụ này (do tổng giá trị dịch vụ đang hoạt động). Vui lòng nạp thêm tiền.`,
+        });
+      }
+
+      return tx.service.update({
+        where: { id: serviceId },
+        data: { status: ServiceStatus.ACTIVE },
       });
-      if (commissionConfig) rate = Number(commissionConfig.rate);
-    }
-
-    const requiredDeposit = (sumReferencePrice * rate) / 100;
-    const balanceNum = wallet ? Number(wallet.balance) : 0;
-
-    if (balanceNum < requiredDeposit) {
-      throw new ForbiddenException({
-        code: ErrorCodes.FORBIDDEN,
-        message: `Bạn cần có số dư ví tối thiểu ${requiredDeposit.toLocaleString('vi-VN')}đ để bật hoạt động dịch vụ này (do tổng giá trị dịch vụ đang hoạt động). Vui lòng nạp thêm tiền.`,
-      });
-    }
-
-    const updated = await this.prisma.service.update({
-      where: { id: serviceId },
-      data: { status: ServiceStatus.ACTIVE },
     });
 
     await this.ledger.syncWalletRestriction(providerId, this.prisma);

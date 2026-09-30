@@ -16,6 +16,75 @@ export class BookingTimeoutService {
     private readonly bookingStatePolicy: BookingStatePolicy,
   ) {}
 
+  async reconcilePendingBookingSideEffects(limit = 50) {
+    const recentSince = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const pendingBookings = await this.prisma.booking.findMany({
+      where: {
+        status: BookingStatus.PENDING,
+        createdAt: { gte: recentSince },
+        providerResponseDeadline: { not: null },
+      },
+      select: {
+        id: true,
+        bookingCode: true,
+        customerId: true,
+        providerId: true,
+        serviceId: true,
+      },
+      orderBy: { id: 'asc' },
+      take: Math.min(Math.max(limit, 1), 100),
+    });
+
+    let repaired = 0;
+    for (const booking of pendingBookings) {
+      try {
+        const [notification, conversation] = await Promise.all([
+          this.prisma.notification.findFirst({
+            where: {
+              userId: booking.providerId,
+              type: 'NEW_BOOKING',
+              referenceId: booking.id,
+            },
+            select: { id: true },
+          }),
+          this.prisma.conversation.findUnique({
+            where: { bookingId: booking.id },
+            select: { id: true },
+          }),
+        ]);
+
+        let changed = false;
+        if (!conversation) {
+          await this.shared.linkConversationToBooking(
+            booking.id,
+            booking.customerId,
+            booking.providerId,
+            booking.serviceId,
+          );
+          changed = true;
+        }
+        if (!notification) {
+          await this.shared.notify(
+            booking.providerId,
+            'NEW_BOOKING',
+            'Đơn hàng mới',
+            `Bạn nhận được đơn hàng mới #${booking.bookingCode}`,
+            booking.id,
+          );
+          changed = true;
+        }
+        if (changed) repaired += 1;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `Failed to reconcile booking #${booking.id} side effects: ${message}`,
+        );
+      }
+    }
+
+    return repaired;
+  }
+
   async expirePendingProviderAcceptances() {
     const now = new Date();
     const overdueBookings = await this.prisma.booking.findMany({

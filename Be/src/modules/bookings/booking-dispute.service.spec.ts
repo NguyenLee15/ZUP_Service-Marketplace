@@ -6,7 +6,6 @@ import { JobsService } from '../../shared/jobs/jobs.service';
 import { BookingCommissionService } from './booking-commission.service';
 import { BookingDisputeService } from './booking-dispute.service';
 import { BookingSharedService } from './booking-shared.service';
-import { BookingStatePolicy } from './booking-state.policy';
 
 function file(name: string): Express.Multer.File {
   return {
@@ -18,7 +17,7 @@ function file(name: string): Express.Multer.File {
     destination: '',
     filename: name,
     path: '',
-    buffer: Buffer.from('image'),
+    buffer: Buffer.from([0xff, 0xd8, 0xff, 0x00]),
     stream: undefined as never,
   };
 }
@@ -107,5 +106,16 @@ describe('BookingDisputeService evidence compensation', () => {
         code: 'ASSET_COMPENSATION_FAILED',
       },
     });
+  });
+
+  it('rejects forged evidence signatures before Cloudinary upload', async () => {
+    const forged = { ...file('fake.jpg'), buffer: Buffer.from('not-an-image') };
+
+    await expect(
+      service.customerDispute(7, 42, { reason: 'bad result' }, [forged]),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(cloudinary.uploadFile).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });

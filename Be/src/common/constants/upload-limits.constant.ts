@@ -52,6 +52,33 @@ export function hasValidImageSignature(
   return false;
 }
 
+export function hasValidMediaSignature(
+  mimetype: string,
+  buffer: Buffer,
+): boolean {
+  if (mimetype.startsWith('image/')) {
+    return hasValidImageSignature(mimetype, buffer);
+  }
+
+  if (mimetype !== 'video/mp4' && mimetype !== 'video/quicktime') {
+    return false;
+  }
+
+  if (
+    buffer.length < 12 ||
+    buffer.subarray(4, 8).toString('ascii') !== 'ftyp'
+  ) {
+    return false;
+  }
+
+  const brand = buffer.subarray(8, 12).toString('ascii');
+  return mimetype === 'video/quicktime'
+    ? brand === 'qt  '
+    : ['isom', 'iso2', 'mp41', 'mp42', 'avc1', 'M4V ', 'MSNV', 'dash'].includes(
+        brand,
+      );
+}
+
 export const IMAGE_UPLOAD_LIMITS: MulterOptions = {
   limits: { fileSize: 10 * 1024 * 1024, files: 5 },
   fileFilter: imageFileFilter,

@@ -9,6 +9,12 @@ type MockPrisma = {
     findMany: jest.Mock;
     updateMany: jest.Mock;
   };
+  conversation: {
+    findUnique: jest.Mock;
+  };
+  notification: {
+    findFirst: jest.Mock;
+  };
 };
 
 type BookingUpdateManyCall = [
@@ -25,7 +31,10 @@ type BookingUpdateManyCall = [
 describe('BookingTimeoutService', () => {
   let prisma: MockPrisma;
   let shared: jest.Mocked<
-    Pick<BookingSharedService, 'addStatusHistory' | 'notify'>
+    Pick<
+      BookingSharedService,
+      'addStatusHistory' | 'notify' | 'linkConversationToBooking'
+    >
   >;
   let policy: jest.Mocked<Pick<BookingStatePolicy, 'assertTransition'>>;
   let service: BookingTimeoutService;
@@ -37,10 +46,13 @@ describe('BookingTimeoutService', () => {
         findMany: jest.fn(),
         updateMany: jest.fn(),
       },
+      conversation: { findUnique: jest.fn() },
+      notification: { findFirst: jest.fn() },
     };
     shared = {
       addStatusHistory: jest.fn(),
       notify: jest.fn(),
+      linkConversationToBooking: jest.fn(),
     };
     policy = {
       assertTransition: jest.fn(),
@@ -105,5 +117,59 @@ describe('BookingTimeoutService', () => {
 
     expect(policy.assertTransition).not.toHaveBeenCalled();
     expect(prisma.booking.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('repairs missing notification and conversation linkage without duplicating existing records', async () => {
+    prisma.booking.findMany.mockResolvedValue([
+      {
+        id: 10,
+        bookingCode: 'BK001',
+        customerId: 1,
+        providerId: 2,
+        serviceId: 3,
+        status: BookingStatus.PENDING,
+        providerResponseDeadline: new Date(Date.now() + 60_000),
+      },
+    ]);
+    prisma.notification.findFirst.mockResolvedValue(null);
+    prisma.conversation.findUnique.mockResolvedValue(null);
+
+    await expect(service.reconcilePendingBookingSideEffects()).resolves.toBe(1);
+
+    expect(prisma.booking.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: BookingStatus.PENDING }),
+        take: 50,
+      }),
+    );
+    expect(shared.notify).toHaveBeenCalledWith(
+      2,
+      'NEW_BOOKING',
+      expect.any(String),
+      expect.any(String),
+      10,
+    );
+    expect(shared.linkConversationToBooking).toHaveBeenCalledWith(10, 1, 2, 3);
+  });
+
+  it('does not repeat notification or conversation work when both records exist', async () => {
+    prisma.booking.findMany.mockResolvedValue([
+      {
+        id: 10,
+        bookingCode: 'BK001',
+        customerId: 1,
+        providerId: 2,
+        serviceId: 3,
+        status: BookingStatus.PENDING,
+        providerResponseDeadline: new Date(Date.now() + 60_000),
+      },
+    ]);
+    prisma.notification.findFirst.mockResolvedValue({ id: 99 });
+    prisma.conversation.findUnique.mockResolvedValue({ id: 88 });
+
+    await expect(service.reconcilePendingBookingSideEffects()).resolves.toBe(0);
+
+    expect(shared.notify).not.toHaveBeenCalled();
+    expect(shared.linkConversationToBooking).not.toHaveBeenCalled();
   });
 });

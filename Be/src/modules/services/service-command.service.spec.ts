@@ -1,6 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { WalletLedgerService } from '../provider-wallets/wallet-ledger.service';
 import { ServiceCommandService } from './service-command.service';
 import { ServiceSharedService } from './service-shared.service';
 
@@ -13,6 +15,12 @@ type ServiceCommandPrismaMock = {
   };
   providerWallet: {
     findUnique: jest.Mock;
+  };
+  systemSetting: {
+    findUnique: jest.Mock;
+  };
+  commissionConfig: {
+    findFirst: jest.Mock;
   };
   $transaction: jest.Mock;
 };
@@ -40,6 +48,12 @@ describe('ServiceCommandService ownership', () => {
       providerWallet: {
         findUnique: jest.fn(),
       },
+      systemSetting: {
+        findUnique: jest.fn(),
+      },
+      commissionConfig: {
+        findFirst: jest.fn(),
+      },
       $transaction: jest.fn(),
     };
     shared = {
@@ -55,8 +69,8 @@ describe('ServiceCommandService ownership', () => {
       prisma as unknown as PrismaService,
       {} as CloudinaryService,
       shared as unknown as ServiceSharedService,
-      {} as any,
-      {} as any,
+      { syncWalletRestriction: jest.fn() } as unknown as WalletLedgerService,
+      { emit: jest.fn() } as unknown as EventEmitter2,
     );
   });
 
@@ -90,5 +104,79 @@ describe('ServiceCommandService ownership', () => {
     expect(prisma.service.update).not.toHaveBeenCalled();
     expect(prisma.$transaction).not.toHaveBeenCalled();
     expect(shared.notifyAdmins).not.toHaveBeenCalled();
+  });
+
+  describe('show service deposit concurrency', () => {
+    it('locks the provider wallet before reading deposit inputs and updating service', async () => {
+      const serviceRecord = {
+        id: 99,
+        providerId: 1,
+        status: 'HIDDEN',
+        isDeleted: false,
+        referencePrice: 1000,
+      };
+      const tx = {
+        $executeRaw: jest.fn().mockResolvedValue(undefined),
+        service: {
+          findMany: jest.fn().mockResolvedValue([]),
+          update: jest.fn().mockResolvedValue({
+            ...serviceRecord,
+            status: 'ACTIVE',
+          }),
+        },
+        providerWallet: {
+          findUnique: jest.fn().mockResolvedValue({ balance: 1000 }),
+        },
+        systemSetting: { findUnique: jest.fn().mockResolvedValue(null) },
+        commissionConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+      };
+      prisma.$transaction.mockImplementation(
+        (callback: (value: typeof tx) => unknown) => callback(tx),
+      );
+      shared.checkOwnership.mockResolvedValue(serviceRecord);
+
+      await service.show(1, 99);
+
+      const lockOrder = tx.$executeRaw.mock.invocationCallOrder[0];
+      const walletOrder =
+        tx.providerWallet.findUnique.mock.invocationCallOrder[0];
+      const updateOrder = tx.service.update.mock.invocationCallOrder[0];
+      expect(lockOrder).toBeLessThan(walletOrder);
+      expect(lockOrder).toBeLessThan(updateOrder);
+      expect(tx.$executeRaw).toHaveBeenCalledTimes(1);
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(prisma.service.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects activation inside the transaction when the locked balance is insufficient', async () => {
+      const serviceRecord = {
+        id: 99,
+        providerId: 1,
+        status: 'HIDDEN',
+        isDeleted: false,
+        referencePrice: 1000,
+      };
+      const tx = {
+        $executeRaw: jest.fn().mockResolvedValue(undefined),
+        service: {
+          findMany: jest.fn().mockResolvedValue([]),
+          update: jest.fn(),
+        },
+        providerWallet: {
+          findUnique: jest.fn().mockResolvedValue({ balance: 0 }),
+        },
+        systemSetting: { findUnique: jest.fn().mockResolvedValue(null) },
+        commissionConfig: { findFirst: jest.fn().mockResolvedValue(null) },
+      };
+      prisma.$transaction.mockImplementation(
+        (callback: (value: typeof tx) => unknown) => callback(tx),
+      );
+      shared.checkOwnership.mockResolvedValue(serviceRecord);
+
+      await expect(service.show(1, 99)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(tx.service.update).not.toHaveBeenCalled();
+    });
   });
 });
