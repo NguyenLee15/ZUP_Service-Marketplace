@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../../lib/axios';
-import { unwrapData } from '../../lib/api-response';
+import { parseUserResponse } from '../../lib/schemas/api.schemas';
 import { storage } from '../../lib/storage';
 import { queryClient } from '../../lib/query-client';
 import { authApi } from './auth.api';
@@ -48,13 +48,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
 
-      const savedUser = await storage.getUser<CustomerUser>();
+      const savedUser = await storage.getUser();
       if (savedUser) {
         set({ user: savedUser, isAuthenticated: true });
       }
 
       const res = await api.get('/auth/profile');
-      const user = unwrapData<CustomerUser>(res);
+      const user = parseUserResponse(res);
       if (user?.role === 'CUSTOMER' && user.status !== 'LOCKED') {
         await storage.setUser(user);
         set({ user, isAuthenticated: true, isLoading: false });
@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         await storage.clearAll();
         set({ user: null, isAuthenticated: false, isLoading: false });
       } else {
-        const savedUser = await storage.getUser<CustomerUser>();
+        const savedUser = await storage.getUser();
         if (savedUser) {
           set({ user: savedUser, isAuthenticated: true, isLoading: false });
         } else {
@@ -82,7 +82,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchProfile: async () => {
     try {
       const res = await api.get('/auth/profile');
-      const user = unwrapData<CustomerUser>(res);
+      const user = parseUserResponse(res);
       if (user?.role === 'CUSTOMER' && user.status !== 'LOCKED') {
         set({ user, isAuthenticated: true });
         await storage.setUser(user);

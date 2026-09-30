@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { BookingStatus, Prisma, ServiceStatus } from '@prisma/client';
@@ -28,6 +29,8 @@ export type BookingCreationResult = {
 
 @Injectable()
 export class BookingCreationService {
+  private readonly logger = new Logger(BookingCreationService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly shared: BookingSharedService,
@@ -61,6 +64,15 @@ export class BookingCreationService {
         201,
         JSON.parse(JSON.stringify(result)),
       );
+
+      try {
+        await this.runPostCommitSideEffects(customerId, result);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `Booking ${String((result.data as { id?: number } | null)?.id ?? 'unknown')} created but post-commit side effects failed: ${message}`,
+        );
+      }
       return result;
     } catch (error) {
       await this.idempotencyService.fail(claim.id);
@@ -229,30 +241,6 @@ export class BookingCreationService {
       return createdBooking;
     });
 
-    await this.shared.addStatusHistory(
-      booking.id,
-      '',
-      'PENDING',
-      customerId,
-      'Khách hàng tạo đơn',
-    );
-
-    await this.shared.linkConversationToBooking(
-      booking.id,
-      customerId,
-      service.providerId,
-      service.id,
-    );
-
-    await this.shared.notify(
-      service.providerId,
-      'NEW_BOOKING',
-      'Đơn hàng mới',
-      `Bạn nhận được đơn hàng mới #${bookingCode}`,
-      booking.id,
-    );
-    this.bookingTimeoutService.scheduleProviderAcceptanceTimeout(booking.id);
-
     const bookingWithItems = await this.prisma.booking.findUnique({
       where: { id: booking.id },
       include: { bookingItems: true },
@@ -263,6 +251,41 @@ export class BookingCreationService {
       message: 'Đặt dịch vụ thành công',
     };
     return result;
+  }
+
+  private async runPostCommitSideEffects(
+    customerId: number,
+    result: BookingCreationResult,
+  ) {
+    const booking = result.data as {
+      id: number;
+      bookingCode: string;
+      providerId: number;
+      serviceId: number;
+    } | null;
+    if (!booking) return;
+
+    await this.shared.addStatusHistory(
+      booking.id,
+      '',
+      'PENDING',
+      customerId,
+      'Khách hàng tạo đơn',
+    );
+    await this.shared.linkConversationToBooking(
+      booking.id,
+      customerId,
+      booking.providerId,
+      booking.serviceId,
+    );
+    await this.shared.notify(
+      booking.providerId,
+      'NEW_BOOKING',
+      'Đơn hàng mới',
+      `Bạn nhận được đơn hàng mới #${booking.bookingCode}`,
+      booking.id,
+    );
+    this.bookingTimeoutService.scheduleProviderAcceptanceTimeout(booking.id);
   }
 
   async acceptByProvider(providerId: number, bookingId: number) {

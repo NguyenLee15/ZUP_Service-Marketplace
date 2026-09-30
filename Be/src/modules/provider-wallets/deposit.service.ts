@@ -39,6 +39,22 @@ export class DepositService {
       this.minDepositAmount,
       'Số tiền tối thiểu 10,000đ',
     );
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const configuredReturnUrl =
+      this.configService.get<string>('VNPAY_RETURN_URL') ||
+      this.configService.get<string>('vnpay.returnUrl');
+    const returnUrl =
+      configuredReturnUrl ||
+      (frontendUrl
+        ? `${frontendUrl.replace(/\/$/, '')}/payment/return`
+        : undefined);
+    if (!returnUrl) {
+      throw new BadRequestException({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: 'VNPay callback URL chưa được cấu hình trên máy chủ',
+      });
+    }
+
     const claim =
       this.idempotency && idempotencyKey
         ? await this.idempotency.claim(
@@ -54,18 +70,6 @@ export class DepositService {
       const wallet = await this.shared.getWalletOrThrow(providerId);
 
       const txnRef = generateVnpayTxnRef();
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL');
-      const configuredReturnUrl =
-        this.configService.get<string>('VNPAY_RETURN_URL');
-      const fallbackReturnUrl =
-        this.configService.get<string>('vnpay.returnUrl') ||
-        'http://localhost:3000/payment/return';
-      const returnUrl =
-        configuredReturnUrl ||
-        (frontendUrl
-          ? `${frontendUrl.replace(/\/$/, '')}/payment/return`
-          : fallbackReturnUrl);
-
       await this.prisma.walletTransaction.create({
         data: {
           walletId: wallet.id,

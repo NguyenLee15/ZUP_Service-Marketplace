@@ -26,6 +26,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ChatsService } from './chats.service';
 import { ChatHistoryQueryDto, CreateConversationDto } from './dto/chats.dto';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
+import { hasValidImageSignature } from '../../common/constants/upload-limits.constant';
 
 @Controller('chats')
 @UseGuards(JwtAuthGuard)
@@ -84,6 +85,9 @@ export class ChatsController {
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Vui lòng chọn ảnh');
+    }
+    if (!hasValidImageSignature(file.mimetype, file.buffer)) {
+      throw new BadRequestException('Tệp hình ảnh không hợp lệ');
     }
     const uploaded = await this.cloudinaryService.uploadFile(
       file.buffer,

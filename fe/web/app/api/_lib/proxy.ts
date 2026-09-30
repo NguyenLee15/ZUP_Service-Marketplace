@@ -10,6 +10,7 @@ const TRUSTED_PROXY_CIDRS = (process.env.TRUSTED_PROXY_CIDRS || "")
 const ACCESS_TOKEN_COOKIE = "hs_access_token";
 const REFRESH_TOKEN_COOKIE = "hs_refresh_token";
 const SESSION_MODE_COOKIE = "hs_session_mode";
+const MAX_MULTIPART_BODY_BYTES = 55 * 1024 * 1024;
 const AUTH_TOKEN_PATHS = new Set([
   "/auth/login",
   "/auth/google",
@@ -203,6 +204,54 @@ function getTrustedClientIp(req: NextRequest): string {
   return "unknown";
 }
 
+class PayloadTooLargeError extends Error {}
+
+async function readBoundedBody(
+  request: NextRequest,
+  maxBytes: number,
+): Promise<Uint8Array> {
+  if (!request.body) return new Uint8Array();
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        throw new PayloadTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
+function payloadTooLargeResponse() {
+  return NextResponse.json(
+    {
+      success: false,
+      error: {
+        code: "PAYLOAD_TOO_LARGE",
+        message: "Kích thước tệp tải lên vượt quá giới hạn cho phép (tối đa 50MB).",
+      },
+    },
+    { status: 413 },
+  );
+}
+
 /**
  * Proxy request tới NestJS backend.
  * Giữ nguyên method, headers (Authorization), body.
@@ -242,7 +291,7 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
     if (contentType.includes("multipart/form-data")) {
       // Guard against oversized uploads before buffering formData (55MB max)
       const contentLength = req.headers.get("content-length");
-      if (contentLength && parseInt(contentLength, 10) > 55 * 1024 * 1024) {
+      if (contentLength && parseInt(contentLength, 10) > MAX_MULTIPART_BODY_BYTES) {
         return NextResponse.json(
           {
             success: false,
@@ -257,8 +306,15 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
       }
 
       // FormData — pass through, let fetch set boundary
-      const formData = await req.formData();
-      fetchOptions.body = formData as ApiPayload;
+      try {
+        fetchOptions.body = await readBoundedBody(req, MAX_MULTIPART_BODY_BYTES);
+      } catch (error) {
+        if (error instanceof PayloadTooLargeError) {
+          return payloadTooLargeResponse();
+        }
+        throw error;
+      }
+      headers["Content-Type"] = contentType;
       // Do NOT set Content-Type — fetch will auto-set with correct boundary
     } else {
       // JSON or other text body

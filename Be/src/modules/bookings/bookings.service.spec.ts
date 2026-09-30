@@ -230,7 +230,7 @@ describe('BookingLifecycleService', () => {
       const mockFiles = [
         {
           originalname: 'test.jpg',
-          buffer: Buffer.from('test'),
+          buffer: Buffer.from([0xff, 0xd8, 0xff, 0x00]),
           mimetype: 'image/jpeg',
         } as Express.Multer.File,
       ];

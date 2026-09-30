@@ -44,6 +44,11 @@ export function hasValidImageSignature(
     );
   }
 
+  if (mimetype === 'image/gif') {
+    const header = buffer.subarray(0, 6).toString('ascii');
+    return header === 'GIF87a' || header === 'GIF89a';
+  }
+
   return false;
 }
 

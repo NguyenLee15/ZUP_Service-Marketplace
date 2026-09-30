@@ -58,6 +58,20 @@ export class PayosService implements OnModuleInit {
       });
     }
 
+    const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
+    const returnUrl =
+      process.env.PAYOS_RETURN_URL ||
+      (frontendUrl ? `${frontendUrl}/payment/return?code=00` : undefined);
+    const cancelUrl =
+      process.env.PAYOS_CANCEL_URL ||
+      (frontendUrl ? `${frontendUrl}/payment/return?code=01` : undefined);
+    if (!returnUrl || !cancelUrl) {
+      throw new BadRequestException({
+        code: ErrorCodes.INTERNAL_ERROR,
+        message: 'PayOS callback URL chưa được cấu hình trên máy chủ',
+      });
+    }
+
     const wallet = await this.walletShared.getOrCreateWallet(
       this.prisma,
       providerId,
@@ -80,14 +94,6 @@ export class PayosService implements OnModuleInit {
         idempotencyKey: `payos_dep_${orderCode}`,
       },
     });
-
-    const returnUrl = process.env.FRONTEND_URL
-      ? `${process.env.FRONTEND_URL.replace(/\/$/, '')}/payment/return?code=00` // simulating success param
-      : 'https://service-marketplace-prod.onrender.com/payment/return';
-
-    const cancelUrl = process.env.FRONTEND_URL
-      ? `${process.env.FRONTEND_URL.replace(/\/$/, '')}/payment/return?code=01`
-      : 'https://service-marketplace-prod.onrender.com/payment/return';
 
     const body = {
       orderCode,

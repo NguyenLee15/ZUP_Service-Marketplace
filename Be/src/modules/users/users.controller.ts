@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Body,
+  BadRequestException,
   Param,
   ParseIntPipe,
   UseGuards,
@@ -170,7 +171,9 @@ export class UsersController {
     },
   ) {
     if (!files.cccdFront?.[0] || !files.cccdBack?.[0] || !files.portrait?.[0]) {
-      throw new Error('Vui lòng upload đầy đủ CCCD 2 mặt và ảnh chân dung');
+      throw new BadRequestException(
+        'Vui lòng upload đầy đủ CCCD 2 mặt và ảnh chân dung',
+      );
     }
 
     return this.kycService.submitKyc(

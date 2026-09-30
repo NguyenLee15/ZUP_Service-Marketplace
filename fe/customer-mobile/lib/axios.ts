@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../constants/api';
 import { storage } from './storage';
 import { useAuthStore } from '../features/auth/auth.store';
+import { authResponseSchema } from './schemas/api.schemas';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -83,9 +84,9 @@ api.interceptors.response.use(
       const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
         refreshToken,
       });
-      const accessToken = data?.data?.accessToken;
-      const nextRefreshToken = data?.data?.refreshToken;
-      if (!accessToken || !nextRefreshToken) throw new Error('Invalid refresh response');
+      const parsed = authResponseSchema.parse(data);
+      const accessToken = parsed.data.accessToken;
+      const nextRefreshToken = parsed.data.refreshToken;
 
       await storage.setTokens(accessToken, nextRefreshToken);
       processQueue(null, accessToken);

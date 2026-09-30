@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { parseStoredUser, type MobileUser } from './schemas/api.schemas';
 
 const ACCESS_TOKEN_KEY = 'customer_access_token';
 const REFRESH_TOKEN_KEY = 'customer_refresh_token';
@@ -20,9 +21,9 @@ export const storage = {
     ]);
   },
 
-  async getUser<T = unknown>() {
+  async getUser(): Promise<MobileUser | null> {
     const value = await SecureStore.getItemAsync(USER_KEY);
-    return value ? (JSON.parse(value) as T) : null;
+    return value ? parseStoredUser(value) : null;
   },
 
   async setUser(user: unknown) {

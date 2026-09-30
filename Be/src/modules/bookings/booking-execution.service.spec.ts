@@ -17,7 +17,7 @@ function file(name: string): Express.Multer.File {
     destination: '',
     filename: name,
     path: '',
-    buffer: Buffer.from('image'),
+    buffer: Buffer.from([0xff, 0xd8, 0xff, 0x00]),
     stream: undefined as never,
   };
 }
@@ -80,5 +80,15 @@ describe('BookingExecutionService completion compensation', () => {
       'result-1',
       'result-2',
     ]);
+  });
+
+  it('rejects an image with a forged MIME type before upload', async () => {
+    await expect(
+      service.completeWork(8, 42, [
+        { ...file('fake.jpg'), buffer: Buffer.from('not-an-image') },
+      ]),
+    ).rejects.toThrow('Tệp hình ảnh kết quả không hợp lệ');
+    expect(cloudinary.uploadFile).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });

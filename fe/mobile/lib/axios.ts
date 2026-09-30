@@ -7,6 +7,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../constants/api";
 import { storage } from "./storage";
 import { useAuthStore } from "../features/auth/auth.store";
+import { authResponseSchema } from "./schemas/api.schemas";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -94,8 +95,9 @@ api.interceptors.response.use(
           refreshToken,
         });
 
-        const newAccessToken = data.data.accessToken;
-        const newRefreshToken = data.data.refreshToken;
+        const parsed = authResponseSchema.parse(data);
+        const newAccessToken = parsed.data.accessToken;
+        const newRefreshToken = parsed.data.refreshToken;
 
         await storage.setTokens(newAccessToken, newRefreshToken);
         processQueue(null, newAccessToken);

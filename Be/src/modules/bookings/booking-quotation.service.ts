@@ -75,62 +75,87 @@ export class BookingQuotationService {
       BookingStatus.QUOTED,
     );
 
-    const [quotation, updatedBooking] = await this.prisma.$transaction(
-      async (tx) => {
-        const createdQuotation = await tx.quotation.create({
-          data: {
-            bookingId,
-            actualPrice: actualPrice,
-            commissionRateSnapshot: commissionRate,
-            estimatedTime: dto.estimatedTime,
-            note: dto.note,
-          },
-        });
-
-        const quotationItems = items.map((item) => ({
-          quotationId: createdQuotation.id,
-          name: item.name,
-          unit: item.unit,
-          price: item.price,
-          quantity: item.quantity,
-        }));
-
-        await tx.quotationItem.createMany({ data: quotationItems });
-
-        const claim = await tx.booking.updateMany({
-          where: {
-            id: bookingId,
-            providerId,
-            status: BookingStatus.ACCEPTED,
-          },
-          data: { status: BookingStatus.QUOTED },
-        });
-        if (claim.count === 0) {
-          throw new BadRequestException({
-            code: ErrorCodes.BOOKING_INVALID_STATE,
-            message:
-              'Đơn hàng không ở trạng thái hợp lệ để gửi báo giá hoặc đã được cập nhật',
-          });
+    const uploadedAssets: Array<{ url: string; publicId: string }> = [];
+    try {
+      if (files && files.length > 0) {
+        for (const file of files) {
+          uploadedAssets.push(
+            await this.cloudinaryService.uploadFile(file.buffer, 'bookings'),
+          );
         }
-
-        const updated = await tx.booking.findUnique({
-          where: { id: bookingId },
-        });
-
-        return [createdQuotation, updated!];
-      },
-    );
-
-    if (files && files.length > 0) {
-      for (const file of files) {
-        const uploaded = await this.cloudinaryService.uploadFile(
-          file.buffer,
-          'bookings',
-        );
-        await this.prisma.bookingAttachment.create({
-          data: { bookingId, type: 'SURVEY', fileUrl: uploaded.url },
-        });
       }
+    } catch (error) {
+      await this.cloudinaryService.cleanupFiles(
+        uploadedAssets.map((asset) => asset.publicId),
+      );
+      throw error;
+    }
+
+    let quotation: Awaited<ReturnType<typeof this.prisma.quotation.create>>;
+    let updatedBooking: Awaited<
+      ReturnType<typeof this.prisma.booking.findUnique>
+    >;
+    try {
+      [quotation, updatedBooking] = await this.prisma.$transaction(
+        async (tx) => {
+          const createdQuotation = await tx.quotation.create({
+            data: {
+              bookingId,
+              actualPrice: actualPrice,
+              commissionRateSnapshot: commissionRate,
+              estimatedTime: dto.estimatedTime,
+              note: dto.note,
+            },
+          });
+
+          const quotationItems = items.map((item) => ({
+            quotationId: createdQuotation.id,
+            name: item.name,
+            unit: item.unit,
+            price: item.price,
+            quantity: item.quantity,
+          }));
+
+          await tx.quotationItem.createMany({ data: quotationItems });
+
+          if (uploadedAssets.length > 0) {
+            await tx.bookingAttachment.createMany({
+              data: uploadedAssets.map((asset) => ({
+                bookingId,
+                type: 'SURVEY' as const,
+                fileUrl: asset.url,
+              })),
+            });
+          }
+
+          const claim = await tx.booking.updateMany({
+            where: {
+              id: bookingId,
+              providerId,
+              status: BookingStatus.ACCEPTED,
+            },
+            data: { status: BookingStatus.QUOTED },
+          });
+          if (claim.count === 0) {
+            throw new BadRequestException({
+              code: ErrorCodes.BOOKING_INVALID_STATE,
+              message:
+                'Đơn hàng không ở trạng thái hợp lệ để gửi báo giá hoặc đã được cập nhật',
+            });
+          }
+
+          const updated = await tx.booking.findUnique({
+            where: { id: bookingId },
+          });
+
+          return [createdQuotation, updated!];
+        },
+      );
+    } catch (error) {
+      await this.cloudinaryService.cleanupFiles(
+        uploadedAssets.map((asset) => asset.publicId),
+      );
+      throw error;
     }
 
     await this.shared.addStatusHistory(

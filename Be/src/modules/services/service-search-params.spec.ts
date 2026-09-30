@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { validate } from 'class-validator';
 import { SearchServiceDto } from './dto/services.dto';
 import {
   buildServiceSearchCacheKey,
@@ -8,6 +9,18 @@ import {
 } from './service-search-params';
 
 describe('service search params', () => {
+  it('rejects unbounded public search pagination', async () => {
+    const pageTooLarge = Object.assign(new SearchServiceDto(), { page: 101 });
+    const limitTooLarge = Object.assign(new SearchServiceDto(), { limit: 51 });
+
+    await expect(validate(pageTooLarge)).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ property: 'page' })]),
+    );
+    await expect(validate(limitTooLarge)).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ property: 'limit' })]),
+    );
+  });
+
   it('parses only positive integer category ids and removes duplicates', () => {
     expect(parseCategoryIds('3, 2, invalid, -1, 3, 0')).toEqual([3, 2, 3]);
   });

@@ -174,11 +174,15 @@ export class SearchServiceDto {
   @IsInt()
   @IsOptional()
   @Type(() => Number)
+  @Min(1)
+  @Max(100)
   page?: number;
 
   @IsInt()
   @IsOptional()
   @Type(() => Number)
+  @Min(1)
+  @Max(50)
   limit?: number;
 }
 

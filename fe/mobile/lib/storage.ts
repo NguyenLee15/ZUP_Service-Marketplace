@@ -3,6 +3,7 @@
  * Token lưu encrypted trong Keychain (iOS) / Keystore (Android)
  */
 import * as SecureStore from 'expo-secure-store';
+import { parseStoredUser, type MobileUser } from './schemas/api.schemas';
 
 const KEYS = {
   ACCESS_TOKEN: 'access_token',
@@ -34,9 +35,9 @@ export const storage = {
     ]);
   },
 
-  async getUser(): Promise<any | null> {
+  async getUser(): Promise<MobileUser | null> {
     const data = await SecureStore.getItemAsync(KEYS.USER);
-    return data ? JSON.parse(data) : null;
+    return data ? parseStoredUser(data) : null;
   },
 
   async setUser(user: any): Promise<void> {

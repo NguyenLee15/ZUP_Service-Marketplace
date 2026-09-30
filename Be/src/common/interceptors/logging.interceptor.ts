@@ -21,10 +21,13 @@ export class LoggingInterceptor implements NestInterceptor {
     const { method, url } = req;
     const userId = req.user?.id ?? 'anon';
     const forwardedRequestId = req.headers['x-request-id'];
+    const candidateRequestId = Array.isArray(forwardedRequestId)
+      ? forwardedRequestId[0]
+      : forwardedRequestId;
     const requestId =
-      (Array.isArray(forwardedRequestId)
-        ? forwardedRequestId[0]
-        : forwardedRequestId) || randomUUID();
+      candidateRequestId && /^[A-Za-z0-9._-]{1,64}$/.test(candidateRequestId)
+        ? candidateRequestId
+        : randomUUID();
     req.requestId = requestId;
     res.setHeader('x-request-id', requestId);
     const start = Date.now();

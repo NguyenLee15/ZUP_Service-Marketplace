@@ -23,7 +23,7 @@ import {
         secret: configService.getOrThrow<string>('app.jwtSecret'),
         signOptions: {
           expiresIn: (configService.get<string>('app.jwtExpiresIn') ||
-            '30m') as JwtSignOptions['expiresIn'],
+            '15m') as JwtSignOptions['expiresIn'],
         },
       }),
       inject: [ConfigService],

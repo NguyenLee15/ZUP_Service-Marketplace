@@ -6,6 +6,7 @@ import { storage } from "../../lib/storage";
 import api from "../../lib/axios";
 import { queryClient } from "../../lib/query-client";
 import { authApi } from "./auth.api";
+import { parseUserResponse } from "../../lib/schemas/api.schemas";
 
 export interface ProviderUser {
   id: number;
@@ -70,7 +71,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       const res = await api.get("/auth/profile");
-      const user = res.data?.data as ProviderUser | undefined;
+      const user = parseUserResponse(res);
       if (user?.role === "PROVIDER" && user.status !== "LOCKED") {
         await storage.setUser(user);
         set({ user, isAuthenticated: true, isLoading: false });
@@ -98,7 +99,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchProfile: async () => {
     try {
       const res = await api.get("/users/profile");
-      const user = res.data?.data as ProviderUser | undefined;
+      const user = parseUserResponse(res);
       if (user?.role === "PROVIDER" && user.status !== "LOCKED") {
         set({ user, isAuthenticated: true });
         storage.setUser(user);

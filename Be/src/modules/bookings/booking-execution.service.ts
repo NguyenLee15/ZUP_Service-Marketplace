@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { ErrorCodes } from '../../common/errors/error-codes';
+import { hasValidImageSignature } from '../../common/constants/upload-limits.constant';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { RedisService } from '../../shared/redis/redis.service';
@@ -146,6 +147,12 @@ export class BookingExecutionService {
     const uploadedFiles: Array<{ url: string; publicId: string }> = [];
     try {
       for (const file of files) {
+        if (!hasValidImageSignature(file.mimetype, file.buffer)) {
+          throw new BadRequestException({
+            code: ErrorCodes.VALIDATION_ERROR,
+            message: 'Tệp hình ảnh kết quả không hợp lệ',
+          });
+        }
         uploadedFiles.push(
           await this.cloudinaryService.uploadFile(file.buffer, 'bookings'),
         );
@@ -219,6 +226,10 @@ export class BookingExecutionService {
     assets: Array<{ publicId: string }>,
     originalError: unknown,
   ): Promise<never> {
+    if (assets.length === 0) {
+      throw originalError;
+    }
+
     const { failedPublicIds } = await this.cloudinaryService.cleanupFiles(
       assets.map((asset) => asset.publicId),
     );

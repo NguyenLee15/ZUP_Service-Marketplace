@@ -11,10 +11,10 @@ let notifSocket: Socket | null = null;
 let trackingSocket: Socket | null = null;
 
 const createSocket = async (namespace: string): Promise<Socket> => {
+  const token = await storage.getAccessToken();
+  if (!token) throw new Error('Cannot connect socket without access token');
   const socket = io(`${WS_URL}${namespace}`, {
-    auth: (cb) => {
-      storage.getAccessToken().then(token => cb({ token }));
-    },
+    auth: { token },
     transports: ['websocket'],
     reconnection: true,
     reconnectionAttempts: 10,

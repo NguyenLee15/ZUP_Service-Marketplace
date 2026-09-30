@@ -96,7 +96,11 @@ export const useSocket = () => {
             }
           },
         );
-      } catch {}
+      } catch (error) {
+        if (mounted) {
+          console.warn('Provider socket connection failed', error instanceof Error ? error.message : 'unknown error');
+        }
+      }
     };
 
     connect();
@@ -112,6 +116,7 @@ export const useSocket = () => {
     return () => {
       mounted = false;
       subscription.remove();
+      notifSocketRef.current?.off('new_notification');
       disconnectAll();
     };
   }, [isAuthenticated]);

@@ -908,7 +908,7 @@ export class AuthService {
     const payload = { sub: userId, email, role };
     const secret = this.configService.getOrThrow<string>('app.jwtSecret');
     const expiresIn = (this.configService.get<string>('app.jwtExpiresIn') ||
-      '30m') as JwtSignOptions['expiresIn'];
+      '15m') as JwtSignOptions['expiresIn'];
 
     const signOptions: Parameters<JwtService['sign']>[1] = {
       secret,

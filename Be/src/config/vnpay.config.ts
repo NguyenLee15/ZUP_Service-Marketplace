@@ -6,8 +6,7 @@ export default registerAs('vnpay', () => ({
   url:
     process.env.VNPAY_URL ||
     'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
-  returnUrl:
-    process.env.VNPAY_RETURN_URL || 'http://localhost:3000/payment/return',
+  returnUrl: process.env.VNPAY_RETURN_URL || '',
   ipnUrl:
     process.env.VNPAY_IPN_URL ||
     'http://localhost:3001/provider-wallets/vnpay/ipn',

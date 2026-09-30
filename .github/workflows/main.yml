@@ -101,3 +101,39 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  provider-mobile:
+    name: Provider Mobile CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fe/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './fe/mobile/package-lock.json'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx expo-doctor
+
+  customer-mobile:
+    name: Customer Mobile CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fe/customer-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './fe/customer-mobile/package-lock.json'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx expo-doctor

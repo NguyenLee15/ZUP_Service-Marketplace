@@ -33,7 +33,7 @@ export default registerAs('app', () => ({
   ),
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: getSecret('JWT_SECRET', 'development-jwt-secret-change-me'),
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30m',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
   jwtRefreshSecret: getSecret(
     'JWT_REFRESH_SECRET',
     'development-refresh-secret-change-me',

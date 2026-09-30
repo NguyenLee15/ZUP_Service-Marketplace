@@ -43,7 +43,7 @@ export class ServiceSearchService {
   ) {}
 
   async search(dto: SearchServiceDto): Promise<SearchServicesResult> {
-    const page = Math.max(1, dto.page || 1);
+    const page = Math.min(Math.max(1, dto.page || 1), 100);
     const limit = Math.min(Math.max(1, dto.limit || 20), 50);
     const isLocationSearch = this.hasLocationFilter(dto);
     const radiusKm = Math.min(Math.max(1, dto.radiusKm || 30), 50);
