@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import type { Response } from 'express';
 import { BookingStatus, Prisma, ServiceStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -263,26 +263,42 @@ export class AdminDashboardService {
     res: Response,
     filters: DashboardReportFilters = {},
   ) {
+    const normalized = this.normalizeFilters(filters);
+    const boundedFilters = this.toReportFilters(normalized);
     const [stats, chartData, rows] = await Promise.all([
-      this.getDashboardStats(filters),
-      this.getDashboardChartData(filters),
-      this.getRecentBookings(filters),
+      this.getDashboardStats(boundedFilters),
+      this.getDashboardChartData(boundedFilters),
+      this.getRecentBookings(boundedFilters),
     ]);
 
-    return this.exportService.exportPdf(res, stats, chartData, rows, filters);
+    return this.exportService.exportPdf(
+      res,
+      stats,
+      chartData,
+      rows,
+      boundedFilters,
+    );
   }
 
   async exportDashboardExcel(
     res: Response,
     filters: DashboardReportFilters = {},
   ) {
+    const normalized = this.normalizeFilters(filters);
+    const boundedFilters = this.toReportFilters(normalized);
     const [stats, chartData, rows] = await Promise.all([
-      this.getDashboardStats(filters),
-      this.getDashboardChartData(filters),
-      this.getRecentBookings(filters),
+      this.getDashboardStats(boundedFilters),
+      this.getDashboardChartData(boundedFilters),
+      this.getRecentBookings(boundedFilters),
     ]);
 
-    return this.exportService.exportExcel(res, stats, chartData, rows, filters);
+    return this.exportService.exportExcel(
+      res,
+      stats,
+      chartData,
+      rows,
+      boundedFilters,
+    );
   }
 
   private async getRecentBookings(filters: DashboardReportFilters) {
@@ -343,14 +359,48 @@ export class AdminDashboardService {
   }
 
   private normalizeFilters(filters: DashboardReportFilters): NormalizedFilters {
+    const to = this.parseDate(filters.to, 'to') || new Date();
+    const from = this.parseDate(filters.from, 'from') || new Date(to);
+
+    if (!filters.from) {
+      from.setDate(from.getDate() - 30);
+    }
+
+    const fromDay = Date.UTC(
+      from.getFullYear(),
+      from.getMonth(),
+      from.getDate(),
+    );
+    const toDay = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+    const rangeDays = (toDay - fromDay) / 86_400_000;
+
+    if (from > to) {
+      throw new BadRequestException('from must be before or equal to to');
+    }
+    if (rangeDays > 365) {
+      throw new BadRequestException('date range cannot exceed 365 days');
+    }
+
     return {
-      from: this.parseDate(filters.from, 'from'),
-      to: this.parseDate(filters.to, 'to'),
+      from,
+      to,
       groupBy: filters.groupBy || 'month',
       status: this.parseStatus(filters.status),
       providerId: this.parseNumber(filters.providerId),
       categoryId: this.parseNumber(filters.categoryId),
       serviceId: this.parseNumber(filters.serviceId),
+    };
+  }
+
+  private toReportFilters(filters: NormalizedFilters): DashboardReportFilters {
+    return {
+      from: filters.from?.toISOString(),
+      to: filters.to?.toISOString(),
+      groupBy: filters.groupBy,
+      status: filters.status,
+      providerId: filters.providerId,
+      categoryId: filters.categoryId,
+      serviceId: filters.serviceId,
     };
   }
 
@@ -400,7 +450,9 @@ export class AdminDashboardService {
   private parseDate(value: string | undefined, edge: 'from' | 'to') {
     if (!value) return undefined;
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return undefined;
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException(`${edge} is invalid`);
+    }
     if (edge === 'to' && value.length <= 10) {
       date.setHours(23, 59, 59, 999);
     }

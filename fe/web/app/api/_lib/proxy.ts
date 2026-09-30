@@ -3,6 +3,10 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
+const TRUSTED_PROXY_CIDRS = (process.env.TRUSTED_PROXY_CIDRS || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 const ACCESS_TOKEN_COOKIE = "hs_access_token";
 const REFRESH_TOKEN_COOKIE = "hs_refresh_token";
 const SESSION_MODE_COOKIE = "hs_session_mode";
@@ -122,6 +126,83 @@ function storeAuthCookies(
   );
 }
 
+function parseIp(ip: string): { version: 4 | 6; value: bigint } | null {
+  const trimmed = ip.trim();
+  const ipv4Parts = trimmed.split(".");
+  if (
+    ipv4Parts.length === 4 &&
+    ipv4Parts.every((part) => /^(0|[1-9]\d{0,2})$/.test(part))
+  ) {
+    const numbers = ipv4Parts.map(Number);
+    if (numbers.every((part) => part >= 0 && part <= 255)) {
+      return {
+        version: 4,
+        value:
+          (BigInt(numbers[0]) << 24n) |
+          (BigInt(numbers[1]) << 16n) |
+          (BigInt(numbers[2]) << 8n) |
+          BigInt(numbers[3]),
+      };
+    }
+  }
+
+  if (!trimmed.includes(":")) return null;
+  const [left, right = ""] = trimmed.split("::");
+  if (trimmed.split("::").length > 2) return null;
+  const leftParts = left ? left.split(":") : [];
+  const rightParts = right ? right.split(":") : [];
+  const parts = trimmed.includes("::")
+    ? [...leftParts, ...Array(8 - leftParts.length - rightParts.length).fill("0"), ...rightParts]
+    : leftParts;
+  if (parts.length !== 8 || parts.some((part) => !/^[0-9a-f]{1,4}$/i.test(part))) {
+    return null;
+  }
+
+  return {
+    version: 6,
+    value: parts.reduce(
+      (value, part) => (value << 16n) | BigInt(parseInt(part, 16)),
+      0n,
+    ),
+  };
+}
+
+function isTrustedProxy(ip: string): boolean {
+  const parsedIp = parseIp(ip);
+  if (!parsedIp) return false;
+
+  return TRUSTED_PROXY_CIDRS.some((cidr) => {
+    const [networkValue, prefixValue] = cidr.split("/");
+    const network = parseIp(networkValue);
+    if (!network || network.version !== parsedIp.version) return false;
+    const bits = network.version === 4 ? 32 : 128;
+    const prefix = prefixValue === undefined ? bits : Number(prefixValue);
+    if (!Number.isInteger(prefix) || prefix < 0 || prefix > bits) return false;
+    const mask =
+      prefix === 0
+        ? 0n
+        : ((1n << BigInt(bits)) - 1n) ^ ((1n << BigInt(bits - prefix)) - 1n);
+    return (parsedIp.value & mask) === (network.value & mask);
+  });
+}
+
+function getTrustedClientIp(req: NextRequest): string {
+  const forwardedChain = (req.headers.get("x-forwarded-for") || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => parseIp(value) !== null);
+
+  if (forwardedChain.length < 2 || !isTrustedProxy(forwardedChain.at(-1)!)) {
+    return "unknown";
+  }
+
+  for (let index = forwardedChain.length - 2; index >= 0; index -= 1) {
+    if (!isTrustedProxy(forwardedChain[index])) return forwardedChain[index];
+  }
+
+  return "unknown";
+}
+
 /**
  * Proxy request tới NestJS backend.
  * Giữ nguyên method, headers (Authorization), body.
@@ -142,12 +223,8 @@ export async function proxyToBackend(req: NextRequest, backendPath: string) {
     (cookieAccessToken ? `Bearer ${cookieAccessToken}` : null);
   if (auth) headers["Authorization"] = auth;
 
-  // Forward IP for audit logs (sanitize X-Forwarded-For)
-  const clientIp =
-    req.headers.get("x-real-ip") ||
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown";
-  headers["X-Forwarded-For"] = clientIp;
+  // Only trust a client IP extracted from a configured reverse-proxy chain.
+  headers["X-Forwarded-For"] = getTrustedClientIp(req);
 
   // Forward Idempotency-Key if present
   const idempotencyKey =

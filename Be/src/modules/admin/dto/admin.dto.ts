@@ -18,6 +18,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import type { TransformFnParams } from 'class-transformer';
 import {
   BookingStatus,
   DisputeStatus,
@@ -27,6 +28,9 @@ import {
 } from '@prisma/client';
 import { ADMIN_PERMISSION_VALUES } from '../../../common/constants/admin-permissions';
 import { PaginationQueryDto } from '../../../common/dto/pagination.dto';
+
+const trimString = ({ value }: TransformFnParams): unknown =>
+  typeof value === 'string' ? value.trim() : value;
 
 export class AdminUsersQueryDto extends PaginationQueryDto {
   @IsEnum(UserRole)
@@ -155,7 +159,7 @@ export class AdminDashboardQueryDto {
 export class AdminReasonDto {
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @MinLength(3)
   @MaxLength(500)
   reason!: string;
@@ -284,7 +288,7 @@ export class AdminResolveDisputeDto {
 
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimString)
   @MinLength(5)
   @MaxLength(1000)
   resolutionReason!: string;

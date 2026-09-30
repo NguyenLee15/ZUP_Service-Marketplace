@@ -63,6 +63,13 @@ export class ServiceModerationService {
 
     const { updated, hasEnoughBalance } = await this.prisma.$transaction(
       async (tx) => {
+        await tx.$executeRaw`
+          SELECT id
+          FROM provider_wallets
+          WHERE provider_id = ${service.providerId}
+          FOR UPDATE
+        `;
+
         const wallet = await tx.providerWallet.findUnique({
           where: { providerId: service.providerId },
         });

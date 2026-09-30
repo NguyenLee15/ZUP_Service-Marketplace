@@ -12,6 +12,7 @@ describe('ServiceModerationService', () => {
 
   beforeEach(() => {
     prisma = {
+      $executeRaw: jest.fn().mockResolvedValue(1),
       $transaction: jest.fn(async (callback: (tx: any) => any) =>
         callback(prisma),
       ),
@@ -55,6 +56,42 @@ describe('ServiceModerationService', () => {
       eventEmitter,
       ledger,
     );
+  });
+
+  describe('approve', () => {
+    it('locks the provider wallet before reading moderation aggregates', async () => {
+      prisma.service.findUnique.mockResolvedValue({
+        id: 104,
+        name: 'Lắp đặt máy lạnh',
+        description: 'Dịch vụ lắp đặt',
+        status: ServiceStatus.PENDING,
+        providerId: 8,
+        referencePrice: 1_000_000,
+        provider: {
+          kycProfiles: [{ status: 'APPROVED' }],
+        },
+      });
+      prisma.providerWallet.findUnique.mockResolvedValue({ balance: 500_000 });
+      prisma.service.findMany.mockResolvedValue([]);
+      prisma.systemSetting.findUnique.mockResolvedValue({
+        value: JSON.stringify({ rate: 8.5 }),
+      });
+      prisma.service.updateMany.mockResolvedValue({ count: 1 });
+      prisma.service.findUniqueOrThrow.mockResolvedValue({
+        id: 104,
+        status: ServiceStatus.ACTIVE,
+      });
+
+      await service.approve(1, 104, '127.0.0.1');
+
+      expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+      expect(prisma.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+        prisma.providerWallet.findUnique.mock.invocationCallOrder[0],
+      );
+      expect(prisma.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+        prisma.service.findMany.mock.invocationCallOrder[0],
+      );
+    });
   });
 
   describe('reject', () => {

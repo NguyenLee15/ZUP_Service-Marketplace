@@ -67,6 +67,60 @@ const auditLogResponseSchema = z
   })
   .passthrough();
 
+const objectItemSchema = z.object({}).passthrough();
+const dashboardStatsSchema = z
+  .object({
+    totalBookings: z.number().optional(),
+    totalUsers: z.number().optional(),
+    totalProviders: z.number().optional(),
+    totalServices: z.number().optional(),
+    activeBookings: z.number().optional(),
+    pendingBookings: z.number().optional(),
+    doneBookings: z.number().optional(),
+    cancelledBookings: z.number().optional(),
+    totalRevenue: z.number().optional(),
+    commissionRevenue: z.number().optional(),
+    avgOrderValue: z.number().optional(),
+    filterSummary: z.string().optional(),
+    isTruncated: z.boolean().optional(),
+  })
+  .passthrough();
+
+const dashboardChartResponseSchema = z
+  .object({
+    data: z
+      .object({
+        revenueData: z.array(objectItemSchema).optional(),
+        statusData: z.array(objectItemSchema).optional(),
+        provinceData: z.array(objectItemSchema).optional(),
+        categoryData: z.array(objectItemSchema).optional(),
+        serviceData: z.array(objectItemSchema).optional(),
+        filterOptions: objectItemSchema.optional(),
+        filterSummary: z.string().optional(),
+      })
+      .passthrough(),
+  })
+  .passthrough();
+
+const dashboardStatsResponseSchema = z
+  .object({ data: dashboardStatsSchema })
+  .passthrough();
+
+const paginatedResponseSchema = z
+  .object({
+    data: z.array(objectItemSchema),
+    meta: paginationMetaSchema,
+  })
+  .passthrough();
+
+const listResponseSchema = z
+  .object({ data: z.array(objectItemSchema) })
+  .passthrough();
+
+const objectResponseSchema = z
+  .object({ data: objectItemSchema })
+  .passthrough();
+
 function parseOrThrow<T>(schema: z.ZodType<T>, payload: unknown, label: string): T {
   const parsed = schema.safeParse(payload);
   if (!parsed.success) {
@@ -90,4 +144,32 @@ export function parseAdminAuditLogsResponse(payload: unknown) {
   if (nested.success) return nested.data.data;
 
   throw new Error("Phản hồi audit logs không hợp lệ");
+}
+
+export function parseAdminDashboardStatsResponse(payload: unknown) {
+  return parseOrThrow(
+    dashboardStatsResponseSchema,
+    payload,
+    "dashboard stats",
+  );
+}
+
+export function parseAdminDashboardChartResponse(payload: unknown) {
+  return parseOrThrow(
+    dashboardChartResponseSchema,
+    payload,
+    "dashboard chart data",
+  );
+}
+
+export function parseAdminPaginatedResponse(payload: unknown, label: string) {
+  return parseOrThrow(paginatedResponseSchema, payload, label);
+}
+
+export function parseAdminListResponse(payload: unknown, label: string) {
+  return parseOrThrow(listResponseSchema, payload, label);
+}
+
+export function parseAdminObjectResponse(payload: unknown, label: string) {
+  return parseOrThrow(objectResponseSchema, payload, label);
 }

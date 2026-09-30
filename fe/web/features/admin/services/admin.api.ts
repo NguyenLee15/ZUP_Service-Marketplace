@@ -4,15 +4,36 @@ import {
   AdminCommissionSettings,
   AdminPaginationParams,
 } from "../types/admin.types";
+import {
+  parseAdminDashboardChartResponse,
+  parseAdminDashboardStatsResponse,
+  parseAdminListResponse,
+  parseAdminObjectResponse,
+  parseAdminPaginatedResponse,
+} from "../schemas/admin-response.schemas";
 
 type AdminRequestConfig = Pick<AxiosRequestConfig, "signal">;
+
+async function readResponse(
+  request: Promise<{ data: ApiPayload }>,
+  parser: (payload: unknown) => unknown,
+) : Promise<{ data: ApiPayload }> {
+  const response = await request;
+  return { ...response, data: parser(response.data) };
+}
 
 export const adminApi = {
   // Dashboard
   getDashboardStats: (params?: Record<string, unknown>) =>
-    api.get("/admin/dashboard/stats", { params }),
+    readResponse(
+      api.get("/admin/dashboard/stats", { params }),
+      parseAdminDashboardStatsResponse,
+    ),
   getDashboardChartData: (params?: Record<string, unknown>) =>
-    api.get("/admin/dashboard/chart-data", { params }),
+    readResponse(
+      api.get("/admin/dashboard/chart-data", { params }),
+      parseAdminDashboardChartResponse,
+    ),
   exportDashboardPdf: (params?: Record<string, unknown>) =>
     api.get("/admin/dashboard/export-pdf", { params, responseType: "blob" }),
   exportDashboardExcel: (params?: Record<string, unknown>) =>
@@ -20,14 +41,20 @@ export const adminApi = {
 
   // Users
   getUsers: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
-    api.get("/admin/users", { params, ...config }),
+    readResponse(
+      api.get("/admin/users", { params, ...config }),
+      (payload) => parseAdminPaginatedResponse(payload, "danh sách người dùng"),
+    ),
   lockUser: (id: number, data?: { reason: string }) =>
     api.patch(`/admin/users/${id}/lock`, data),
   unlockUser: (id: number) => api.patch(`/admin/users/${id}/unlock`),
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
 
   // Categories
-  getCategories: () => api.get("/categories"),
+  getCategories: () =>
+    readResponse(api.get("/categories"), (payload) =>
+      parseAdminListResponse(payload, "danh mục"),
+    ),
   createCategory: (data: { name: string; description?: string; iconUrl?: string }) =>
     api.post("/categories", data),
   updateCategory: (id: number, data: { name?: string; description?: string; iconUrl?: string }) =>
@@ -35,9 +62,15 @@ export const adminApi = {
   deleteCategory: (id: number) => api.delete(`/categories/${id}`),
 
   // Staffs — UC07
-  getPermissions: () => api.get("/admin/permissions"),
+  getPermissions: () =>
+    readResponse(api.get("/admin/permissions"), (payload) =>
+      parseAdminListResponse(payload, "quyền quản trị"),
+    ),
   getStaffs: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
-    api.get("/admin/staffs", { params, ...config }),
+    readResponse(
+      api.get("/admin/staffs", { params, ...config }),
+      (payload) => parseAdminPaginatedResponse(payload, "danh sách nhân sự"),
+    ),
   createStaff: (data: {
     fullName: string;
     email: string;
@@ -57,15 +90,22 @@ export const adminApi = {
 
   // KYC
   getKycRequests: (params?: AdminPaginationParams) =>
-    api.get("/admin/kyc", { params }),
-  getKycDetail: (id: number) => api.get(`/admin/kyc/${id}`),
+    readResponse(api.get("/admin/kyc", { params }), (payload) =>
+      parseAdminPaginatedResponse(payload, "danh sách KYC"),
+    ),
+  getKycDetail: (id: number) =>
+    readResponse(api.get(`/admin/kyc/${id}`), (payload) =>
+      parseAdminObjectResponse(payload, "chi tiết KYC"),
+    ),
   approveKyc: (id: number) => api.patch(`/admin/kyc/${id}/approve`),
   rejectKyc: (id: number, reason: string) =>
     api.patch(`/admin/kyc/${id}/reject`, { reason }),
 
   // Services
   getServices: (params?: AdminPaginationParams) =>
-    api.get("/admin/services", { params }),
+    readResponse(api.get("/admin/services", { params }), (payload) =>
+      parseAdminPaginatedResponse(payload, "danh sách dịch vụ"),
+    ),
   approveService: (id: number) => api.patch(`/admin/services/${id}/approve`),
   rejectService: (id: number, reason: string) =>
     api.patch(`/admin/services/${id}/reject`, { reason }),
@@ -75,21 +115,34 @@ export const adminApi = {
 
   // Bookings
   getBookings: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
-    api.get("/admin/bookings", { params, ...config }),
-  getBookingDetail: (id: number) => api.get(`/admin/bookings/${id}`),
-  getBookingTimeline: (id: number) => api.get(`/admin/bookings/${id}/timeline`),
+    readResponse(
+      api.get("/admin/bookings", { params, ...config }),
+      (payload) => parseAdminPaginatedResponse(payload, "danh sách booking"),
+    ),
+  getBookingDetail: (id: number) =>
+    readResponse(api.get(`/admin/bookings/${id}`), (payload) =>
+      parseAdminObjectResponse(payload, "chi tiết booking"),
+    ),
+  getBookingTimeline: (id: number) =>
+    readResponse(api.get(`/admin/bookings/${id}/timeline`), (payload) =>
+      parseAdminListResponse(payload, "timeline booking"),
+    ),
   cancelBooking: (id: number, reason: string) =>
     api.patch(`/admin/bookings/${id}/cancel`, { reason }),
 
   // Wallet manual deposits / withdrawals
   getWalletDeposits: (params?: AdminPaginationParams) =>
-    api.get("/admin/wallet-deposits", { params }),
+    readResponse(api.get("/admin/wallet-deposits", { params }), (payload) =>
+      parseAdminPaginatedResponse(payload, "danh sách nạp tiền"),
+    ),
   approveWalletDeposit: (id: number, note?: string) =>
     api.patch(`/admin/wallet-deposits/${id}/approve`, { note }),
   rejectWalletDeposit: (id: number, note?: string) =>
     api.patch(`/admin/wallet-deposits/${id}/reject`, { note }),
   getWalletWithdrawals: (params?: AdminPaginationParams) =>
-    api.get("/admin/wallet-withdrawals", { params }),
+    readResponse(api.get("/admin/wallet-withdrawals", { params }), (payload) =>
+      parseAdminPaginatedResponse(payload, "danh sách rút tiền"),
+    ),
   approveWalletWithdrawal: (id: number, note?: string) =>
     api.patch(`/admin/wallet-withdrawals/${id}/approve`, { note }),
   rejectWalletWithdrawal: (id: number, note?: string) =>
@@ -97,8 +150,14 @@ export const adminApi = {
 
   // Disputes — UC09
   getDisputes: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
-    api.get("/admin/disputes", { params, ...config }),
-  getDisputeDetail: (id: number) => api.get(`/admin/disputes/${id}`),
+    readResponse(
+      api.get("/admin/disputes", { params, ...config }),
+      (payload) => parseAdminPaginatedResponse(payload, "danh sách tranh chấp"),
+    ),
+  getDisputeDetail: (id: number) =>
+    readResponse(api.get(`/admin/disputes/${id}`), (payload) =>
+      parseAdminObjectResponse(payload, "chi tiết tranh chấp"),
+    ),
   resolveDispute: (
     id: number,
     data: {
@@ -110,15 +169,24 @@ export const adminApi = {
 
   // Audit logs
   getAuditLogs: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>
-    api.get("/admin/audit-logs", { params, ...config }),
+    readResponse(
+      api.get("/admin/audit-logs", { params, ...config }),
+      (payload) => parseAdminPaginatedResponse(payload, "audit logs"),
+    ),
   exportAuditLogs: (params?: AdminPaginationParams) =>
     api.get("/admin/audit-logs/export", { params, responseType: "blob" }),
 
   // Settings — UC10.3
-  getCommission: () => api.get("/admin/settings/commission"),
+  getCommission: () =>
+    readResponse(api.get("/admin/settings/commission"), (payload) =>
+      parseAdminObjectResponse(payload, "cấu hình commission"),
+    ),
   updateCommission: (data: AdminCommissionSettings) =>
     api.patch("/admin/settings/commission", data),
-  getSocialSettings: () => api.get("/admin/settings/social"),
+  getSocialSettings: () =>
+    readResponse(api.get("/admin/settings/social"), (payload) =>
+      parseAdminObjectResponse(payload, "cấu hình mạng xã hội"),
+    ),
   updateSocialSettings: (data: Record<string, unknown>) =>
     api.patch("/admin/settings/social", data),
 };

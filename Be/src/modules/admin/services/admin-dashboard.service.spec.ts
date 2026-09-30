@@ -1,4 +1,5 @@
 import type { Response } from 'express';
+import { BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AdminDashboardService } from './admin-dashboard.service';
 import { AdminDashboardExportService } from './admin-dashboard-export.service';
@@ -34,6 +35,7 @@ describe('AdminDashboardService', () => {
   let service: AdminDashboardService;
 
   beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-09-30T12:00:00.000Z'));
     prisma = {
       $queryRaw: jest.fn().mockResolvedValue([]),
       booking: {
@@ -72,6 +74,55 @@ describe('AdminDashboardService', () => {
     );
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('defaults dashboard queries to the last 30 days', async () => {
+    await service.getDashboardStats({});
+
+    const where = prisma.booking.count.mock.calls[0][0].where;
+    expect(where.createdAt.gte).toEqual(new Date('2026-08-31T12:00:00.000Z'));
+    expect(where.createdAt.lte).toEqual(new Date('2026-09-30T12:00:00.000Z'));
+  });
+
+  it('fills the missing date edge while preserving the supplied edge', async () => {
+    await service.getDashboardStats({ from: '2026-01-10' });
+    const fromOnlyWhere = prisma.booking.count.mock.calls[0][0].where;
+    expect(fromOnlyWhere.createdAt.gte).toEqual(
+      new Date('2026-01-10T00:00:00.000Z'),
+    );
+    expect(fromOnlyWhere.createdAt.lte).toEqual(
+      new Date('2026-09-30T12:00:00.000Z'),
+    );
+
+    prisma.booking.count.mockClear();
+    await service.getDashboardStats({ to: '2026-02-15' });
+    const toOnlyWhere = prisma.booking.count.mock.calls[0][0].where;
+    expect(toOnlyWhere.createdAt.gte).toEqual(
+      new Date('2026-01-16T16:59:59.999Z'),
+    );
+    expect(toOnlyWhere.createdAt.lte).toEqual(
+      new Date('2026-02-15T16:59:59.999Z'),
+    );
+  });
+
+  it.each([
+    [
+      { from: '2024-01-01', to: '2025-01-02' },
+      'date range cannot exceed 365 days',
+    ],
+    [
+      { from: '2026-02-01', to: '2026-01-01' },
+      'from must be before or equal to to',
+    ],
+    [{ from: 'not-a-date' }, 'from is invalid'],
+  ])('rejects invalid dashboard date filters', async (filters, message) => {
+    await expect(service.getDashboardStats(filters)).rejects.toThrow(
+      new BadRequestException(message),
+    );
+  });
+
   it('delegates exportDashboardPdf to AdminDashboardExportService', async () => {
     const mockRes = {} as Response;
     const filters = { groupBy: 'month' as const };
@@ -83,7 +134,11 @@ describe('AdminDashboardService', () => {
       expect.objectContaining({ totalBookings: 10 }),
       expect.objectContaining({ revenueData: expect.any(Array) }),
       expect.any(Array),
-      filters,
+      expect.objectContaining({
+        groupBy: 'month',
+        from: expect.any(String),
+        to: expect.any(String),
+      }),
     );
   });
 
@@ -98,7 +153,11 @@ describe('AdminDashboardService', () => {
       expect.objectContaining({ totalBookings: 10 }),
       expect.objectContaining({ revenueData: expect.any(Array) }),
       expect.any(Array),
-      filters,
+      expect.objectContaining({
+        groupBy: 'day',
+        from: expect.any(String),
+        to: expect.any(String),
+      }),
     );
   });
 
