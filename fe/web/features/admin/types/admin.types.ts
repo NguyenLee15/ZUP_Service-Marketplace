@@ -116,3 +116,15 @@ export interface AdminCommissionSettings {
   minAmount: number;
   maxAmount: number;
 }
+
+export interface AdminFeaturedListingItem {
+  id: number;
+  serviceId: number;
+  providerId: number;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  service?: { id: number; name: string; status: string };
+  provider?: { id: number; fullName: string };
+}

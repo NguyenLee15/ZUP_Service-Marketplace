@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Ip,
   Patch,
   Body,
   Param,
@@ -78,10 +79,12 @@ export class AdminFeaturedRateController {
   async updateFeaturedRate(
     @CurrentUser('id') adminId: number,
     @Body() dto: UpdateFeaturedRateDto,
+    @Ip() ip?: string,
   ) {
     return this.featuredListingsService.updateFeaturedDailyRate(
       adminId,
       dto.dailyRate,
+      ip,
     );
   }
 }

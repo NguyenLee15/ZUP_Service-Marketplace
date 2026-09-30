@@ -71,11 +71,11 @@ export class AdminAuditLogsQueryDto extends PaginationQueryDto {
   @Type(() => Number)
   targetId?: number;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
   from?: string;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
   to?: string;
 

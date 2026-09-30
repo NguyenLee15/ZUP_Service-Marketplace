@@ -11,6 +11,7 @@ import {
   BookOpen,
   WalletCards,
   ScrollText,
+  Star,
 } from "lucide-react";
 import {
   AdminPermission,
@@ -42,6 +43,12 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: "Dịch vụ",
     href: "/admin/services",
     icon: <Package className="w-5 h-5" />,
+    requiredPermissions: [AdminPermission.SERVICE_MODERATE],
+  },
+  {
+    label: "Tin nổi bật",
+    href: "/admin/featured-listings",
+    icon: <Star className="w-5 h-5" />,
     requiredPermissions: [AdminPermission.SERVICE_MODERATE],
   },
   {

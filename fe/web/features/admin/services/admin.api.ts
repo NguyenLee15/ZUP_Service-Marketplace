@@ -7,6 +7,8 @@ import {
 import {
   parseAdminDashboardChartResponse,
   parseAdminDashboardStatsResponse,
+  parseAdminFeaturedListingsResponse,
+  parseAdminFeaturedRateResponse,
   parseAdminListResponse,
   parseAdminObjectResponse,
   parseAdminPaginatedResponse,
@@ -147,6 +149,22 @@ export const adminApi = {
     api.patch(`/admin/wallet-withdrawals/${id}/approve`, { note }),
   rejectWalletWithdrawal: (id: number, note?: string) =>
     api.patch(`/admin/wallet-withdrawals/${id}/reject`, { note }),
+
+  // Featured listings
+  getFeaturedListings: (params?: AdminPaginationParams) =>
+    readResponse(
+      api.get('/admin/featured-listings', { params }),
+      parseAdminFeaturedListingsResponse,
+    ),
+  cancelFeaturedListing: (id: number) =>
+    api.patch(`/admin/featured-listings/${id}/cancel`),
+  getFeaturedRate: () =>
+    readResponse(
+      api.get('/admin/settings/featured-rate'),
+      parseAdminFeaturedRateResponse,
+    ),
+  updateFeaturedRate: (dailyRate: number) =>
+    api.patch('/admin/settings/featured-rate', { dailyRate }),
 
   // Disputes — UC09
   getDisputes: (params?: AdminPaginationParams, config?: AdminRequestConfig) =>

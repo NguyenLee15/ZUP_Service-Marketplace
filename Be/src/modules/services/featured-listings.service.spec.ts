@@ -158,12 +158,22 @@ describe('FeaturedListingsService', () => {
   });
 
   it('updates featured daily rate through system setting', async () => {
-    const result = await service.updateFeaturedDailyRate(1, 75000);
+    const result = await service.updateFeaturedDailyRate(
+      1,
+      75000,
+      '203.0.113.10',
+    );
 
     expect(tx.systemSetting.upsert).toHaveBeenCalledWith({
       where: { key: 'featured_daily_rate' },
       create: { key: 'featured_daily_rate', value: '75000' },
       update: { value: '75000' },
+    });
+    expect(tx.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'UPDATE_FEATURED_RATE',
+        ipAddress: '203.0.113.10',
+      }),
     });
     expect(result.data.dailyRate).toBe(75000);
   });

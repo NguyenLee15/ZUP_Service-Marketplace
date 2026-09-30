@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import { AdminPermissionGuard } from '@/features/admin/components/AdminPermissionGuard';
+import { AdminPermissionGuard, useAdminPermission } from '@/features/admin/components/AdminPermissionGuard';
 import { AdminPermission } from '@/types/admin-permissions';
 import { useDisputeDetailFlow } from '@/features/admin/disputes/hooks/useDisputeDetailFlow';
 import {
@@ -30,6 +30,8 @@ function DisputeDetailSkeleton() {
 }
 
 function AdminDisputeDetailContent() {
+  const { hasPermission } = useAdminPermission();
+  const canResolve = hasPermission(AdminPermission.DISPUTE_RESOLVE);
   const params = useParams();
   const disputeId = params?.id ? Number(params.id) : null;
 
@@ -87,18 +89,24 @@ function AdminDisputeDetailContent() {
 
         {/* Right Column — Resolution Decision Panel */}
         <div className="space-y-5">
-          <DisputeResolutionForm
-            dispute={dispute}
-            quotationPrice={quotationPrice}
-            decision={decision}
-            reason={reason}
-            penaltyAmount={penaltyAmount}
-            submitting={submitting}
-            onDecisionChange={setDecision}
-            onReasonChange={setReason}
-            onPenaltyAmountChange={setPenaltyAmount}
-            onSubmit={handleResolve}
-          />
+          {canResolve ? (
+            <DisputeResolutionForm
+              dispute={dispute}
+              quotationPrice={quotationPrice}
+              decision={decision}
+              reason={reason}
+              penaltyAmount={penaltyAmount}
+              submitting={submitting}
+              onDecisionChange={setDecision}
+              onReasonChange={setReason}
+              onPenaltyAmountChange={setPenaltyAmount}
+              onSubmit={handleResolve}
+            />
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
+              Bạn có quyền xem tranh chấp nhưng không có quyền giải quyết.
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -107,7 +115,7 @@ function AdminDisputeDetailContent() {
 
 export default function AdminDisputeDetailPage() {
   return (
-    <AdminPermissionGuard permission={AdminPermission.DISPUTE_RESOLVE}>
+    <AdminPermissionGuard permission={AdminPermission.DISPUTE_VIEW}>
       <AdminDisputeDetailContent />
     </AdminPermissionGuard>
   );

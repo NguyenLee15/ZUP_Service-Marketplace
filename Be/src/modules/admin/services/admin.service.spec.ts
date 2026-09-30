@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ErrorCodes } from '../../../common/errors/error-codes';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AdminService } from './admin.service';
@@ -25,6 +25,8 @@ describe('AdminService', () => {
       findMany: jest.Mock;
       count: jest.Mock;
       groupBy: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
     };
     systemSetting: {
       findFirst: jest.Mock;
@@ -59,6 +61,8 @@ describe('AdminService', () => {
         findMany: jest.fn().mockResolvedValue([]),
         count: jest.fn().mockResolvedValue(0),
         groupBy: jest.fn().mockResolvedValue([]),
+        findUnique: jest.fn(),
+        update: jest.fn().mockResolvedValue({}),
       },
       systemSetting: {
         findFirst: jest.fn(),
@@ -340,6 +344,61 @@ describe('AdminService', () => {
       await expect(service.deleteUser(1, 5, '127.0.0.1')).rejects.toThrow(
         'Không thể xóa tài khoản khi còn đơn hàng chưa hoàn thành',
       );
+    });
+  });
+
+  describe('unlockUser', () => {
+    it('rejects staff from unlocking an admin account', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ id: 2, role: 'STAFF', status: 'ACTIVE' })
+        .mockResolvedValueOnce({ id: 3, role: 'ADMIN', status: 'LOCKED' });
+
+      await expect(
+        service.unlockUser(2, 3, '127.0.0.1'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it('allows an admin to unlock an admin account', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ id: 1, role: 'ADMIN', status: 'ACTIVE' })
+        .mockResolvedValueOnce({ id: 3, role: 'ADMIN', status: 'LOCKED' });
+
+      await service.unlockUser(1, 3, '127.0.0.1');
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 3 },
+        data: { status: 'ACTIVE' },
+      });
+      expect(prisma.auditLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          actorId: 1,
+          action: 'UNLOCK_USER',
+          targetId: 3,
+          ipAddress: '127.0.0.1',
+        }),
+      });
+    });
+
+    it('allows staff to unlock a non-admin account', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ id: 2, role: 'STAFF', status: 'ACTIVE' })
+        .mockResolvedValueOnce({ id: 4, role: 'CUSTOMER', status: 'LOCKED' });
+
+      await expect(
+        service.unlockUser(2, 4, '127.0.0.1'),
+      ).resolves.toBeUndefined();
+    });
+
+    it('rejects unlocking a missing account', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ id: 1, role: 'ADMIN', status: 'ACTIVE' })
+        .mockResolvedValueOnce(null);
+
+      await expect(
+        service.unlockUser(1, 999, '127.0.0.1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

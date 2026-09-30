@@ -121,6 +121,28 @@ const objectResponseSchema = z
   .object({ data: objectItemSchema })
   .passthrough();
 
+const featuredListingSchema = z
+  .object({
+    id: z.number().int(),
+    serviceId: z.number().int(),
+    providerId: z.number().int(),
+    status: z.enum(['ACTIVE', 'EXPIRED', 'CANCELLED']),
+    startDate: z.string(),
+    endDate: z.string(),
+    createdAt: z.string(),
+    service: z.object({ id: z.number().int(), name: z.string(), status: z.string() }).optional(),
+    provider: z.object({ id: z.number().int(), fullName: z.string() }).optional(),
+  })
+  .passthrough();
+
+const featuredListingsResponseSchema = z
+  .object({ data: z.array(featuredListingSchema), meta: paginationMetaSchema })
+  .passthrough();
+
+const featuredRateResponseSchema = z
+  .object({ data: z.object({ dailyRate: z.number() }).passthrough() })
+  .passthrough();
+
 function parseOrThrow<T>(schema: z.ZodType<T>, payload: unknown, label: string): T {
   const parsed = schema.safeParse(payload);
   if (!parsed.success) {
@@ -172,4 +194,12 @@ export function parseAdminListResponse(payload: unknown, label: string) {
 
 export function parseAdminObjectResponse(payload: unknown, label: string) {
   return parseOrThrow(objectResponseSchema, payload, label);
+}
+
+export function parseAdminFeaturedListingsResponse(payload: unknown) {
+  return parseOrThrow(featuredListingsResponseSchema, payload, 'danh sách tin nổi bật');
+}
+
+export function parseAdminFeaturedRateResponse(payload: unknown) {
+  return parseOrThrow(featuredRateResponseSchema, payload, 'giá tin nổi bật');
 }

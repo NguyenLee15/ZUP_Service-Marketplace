@@ -1,4 +1,5 @@
 import { UserRole } from '@prisma/client';
+import { BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AdminAuditLogService } from './admin-audit-log.service';
 
@@ -128,6 +129,41 @@ describe('AdminAuditLogService', () => {
         orderBy: { createdAt: 'desc' },
         skip: 0,
         take: 500,
+      }),
+    );
+  });
+
+  it('rejects invalid date filters before querying', async () => {
+    await expect(
+      service.getAuditLogs({ page: 1, limit: 20, from: 'not-a-date' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service
+        .streamAuditLogsCsv({ page: 1, limit: 20, to: 'not-a-date' })
+        .next(),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.auditLog.findMany).not.toHaveBeenCalled();
+    expect(prisma.auditLog.count).not.toHaveBeenCalled();
+  });
+
+  it('rejects reversed ranges and normalizes date-only to to end of day', async () => {
+    await expect(
+      service.getAuditLogs({
+        page: 1,
+        limit: 20,
+        from: '2026-02-01',
+        to: '2026-01-01',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    prisma.auditLog.findMany.mockResolvedValue([]);
+    prisma.auditLog.count.mockResolvedValue(0);
+    await service.getAuditLogs({ page: 1, limit: 20, to: '2026-01-01' });
+    expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          createdAt: { lte: new Date('2026-01-01T23:59:59.999') },
+        }),
       }),
     );
   });

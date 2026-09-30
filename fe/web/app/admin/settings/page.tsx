@@ -31,6 +31,9 @@ export default function SettingsPage() {
   const [editMin, setEditMin] = useState('');
   const [editMax, setEditMax] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [featuredRate, setFeaturedRate] = useState(0);
+  const [featuredRateInput, setFeaturedRateInput] = useState('');
+  const [featuredRateSaving, setFeaturedRateSaving] = useState(false);
 
   const validate = (name: string, value: string) => {
     const nextRate = name === 'rate' ? parseFloat(value) : parseFloat(editRate);
@@ -74,8 +77,42 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    loadCommission();
-  }, [loadCommission]);
+    if (canEditCommission) {
+      loadCommission();
+    } else {
+      setLoading(false);
+      setLoadError(null);
+    }
+  }, [canEditCommission, loadCommission]);
+
+  useEffect(() => {
+    if (!canEditCommission) return;
+    adminApi.getFeaturedRate().then((response) => {
+      const value = Number(response.data?.data?.dailyRate || 0);
+      setFeaturedRate(value);
+      setFeaturedRateInput(String(value));
+    }).catch(() => {
+      toast({ title: 'Không thể tải giá tin nổi bật', variant: 'destructive' });
+    });
+  }, [canEditCommission, toast]);
+
+  const saveFeaturedRate = async () => {
+    const value = Number(featuredRateInput);
+    if (!Number.isFinite(value) || value < 1000 || value > 10000000) {
+      toast({ title: 'Giá tin nổi bật phải từ 1.000 đến 10.000.000 VNĐ', variant: 'destructive' });
+      return;
+    }
+    setFeaturedRateSaving(true);
+    try {
+      await adminApi.updateFeaturedRate(value);
+      setFeaturedRate(value);
+      toast({ title: 'Đã cập nhật giá tin nổi bật' });
+    } catch {
+      toast({ title: 'Không thể cập nhật giá tin nổi bật', variant: 'destructive' });
+    } finally {
+      setFeaturedRateSaving(false);
+    }
+  };
 
   const startEditing = () => {
     setEditRate(String(currentCommission.rate));
@@ -136,7 +173,7 @@ export default function SettingsPage() {
         <p className="text-sm text-slate-500">Quản lý cấu hình vận hành, hoa hồng và trạng thái module.</p>
       </div>
 
-      {loadError && (
+      {canEditCommission && loadError && (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
@@ -154,7 +191,7 @@ export default function SettingsPage() {
       )}
 
       {/* Commission Settings */}
-      <Card className="overflow-hidden rounded-lg border-[var(--admin-border)] shadow-sm">
+      {canEditCommission && <Card className="overflow-hidden rounded-lg border-[var(--admin-border)] shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between border-b border-[var(--admin-border)] bg-white px-4 py-3">
           <div>
             <CardTitle className="text-sm font-semibold text-slate-950">Cài đặt hoa hồng</CardTitle>
@@ -294,7 +331,15 @@ export default function SettingsPage() {
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>}
+
+      {canEditCommission && <Card className="overflow-hidden rounded-lg border-[var(--admin-border)] shadow-sm">
+        <CardHeader><CardTitle className="text-sm">Giá tin nổi bật</CardTitle><p className="text-xs text-slate-500">Chi phí đẩy một dịch vụ lên đầu danh sách theo ngày.</p></CardHeader>
+        <CardContent className="flex max-w-md items-end gap-3">
+          <div className="flex-1"><label htmlFor="featured-daily-rate" className="mb-2 block text-xs font-medium">VNĐ/ngày</label><Input id="featured-daily-rate" type="number" min={1000} max={10000000} value={featuredRateInput} onChange={(event) => setFeaturedRateInput(event.target.value)} /></div>
+          <Button onClick={() => void saveFeaturedRate()} disabled={featuredRateSaving || Number(featuredRateInput) === featuredRate}>{featuredRateSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lưu giá'}</Button>
+        </CardContent>
+      </Card>}
 
       </div>
     </AdminPermissionGuard>

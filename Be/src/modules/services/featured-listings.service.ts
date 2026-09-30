@@ -358,7 +358,11 @@ export class FeaturedListingsService {
     return { data: { dailyRate } };
   }
 
-  async updateFeaturedDailyRate(adminId: number, dailyRate: number) {
+  async updateFeaturedDailyRate(
+    adminId: number,
+    dailyRate: number,
+    ip?: string,
+  ) {
     const setting = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.systemSetting.upsert({
         where: { key: 'featured_daily_rate' },
@@ -373,7 +377,7 @@ export class FeaturedListingsService {
           targetType: 'SYSTEM_SETTING',
           targetId: updated.id,
           description: `Cập nhật giá đẩy Top: ${dailyRate.toLocaleString('vi-VN')}đ/ngày`,
-          ipAddress: 'System',
+          ipAddress: ip || 'System',
         },
       });
 

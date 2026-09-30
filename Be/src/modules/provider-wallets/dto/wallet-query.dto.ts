@@ -1,6 +1,8 @@
 import { Transform, Type } from 'class-transformer';
+import { WalletRequestStatus } from '@prisma/client';
 import {
   IsInt,
+  IsIn,
   IsOptional,
   IsString,
   IsUrl,
@@ -19,9 +21,9 @@ export class WalletHistoryQueryDto extends PaginationQueryDto {
 }
 
 export class AdminWalletRequestQueryDto extends PaginationQueryDto {
-  @IsString()
+  @IsIn(['all', ...Object.values(WalletRequestStatus)])
   @IsOptional()
-  status?: string;
+  status?: WalletRequestStatus | 'all';
 }
 
 export class DepositRequestDto {

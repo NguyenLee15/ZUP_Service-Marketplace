@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { paginationMeta } from '../../../common/dto/pagination.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -115,6 +115,9 @@ export class AdminAuditLogService {
   ): Prisma.DateTimeFilter | undefined {
     const gte = this.parseDate(from, 'from');
     const lte = this.parseDate(to, 'to');
+    if (gte && lte && gte > lte) {
+      throw new BadRequestException('from must be before or equal to to');
+    }
     if (!gte && !lte) return undefined;
     return {
       ...(gte ? { gte } : {}),
@@ -125,7 +128,9 @@ export class AdminAuditLogService {
   private parseDate(value: string | undefined, edge: 'from' | 'to') {
     if (!value) return undefined;
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return undefined;
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException(`Invalid ${edge} date`);
+    }
     if (edge === 'to' && value.length <= 10) {
       date.setHours(23, 59, 59, 999);
     }

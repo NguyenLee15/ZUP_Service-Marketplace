@@ -455,16 +455,23 @@ export class AdminService {
   }
 
   async unlockUser(adminId: number, id: number, ip: string) {
-    await this.checkActiveActor(adminId);
+    const actor = await this.checkActiveActor(adminId);
 
     const targetUser = await this.prisma.user.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, role: true },
     });
     if (!targetUser) {
       throw new NotFoundException({
         code: ErrorCodes.NOT_FOUND,
         message: 'Người dùng không tồn tại',
+      });
+    }
+
+    if (targetUser.role === UserRole.ADMIN && actor.role !== UserRole.ADMIN) {
+      throw new ForbiddenException({
+        code: ErrorCodes.FORBIDDEN,
+        message: 'Nhân viên không có quyền mở khóa tài khoản Quản trị viên',
       });
     }
 
