@@ -95,6 +95,8 @@ export class ReviewsService {
     let review;
     try {
       review = await this.prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT id FROM services WHERE id = ${booking.serviceId} FOR UPDATE`;
+
         const createdReview = await tx.review.create({
           data: {
             bookingId,

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { Socket } from 'socket.io-client';
 import { ensureAccessToken } from '@/lib/auth-token';
 import { useAuthStore } from '@/store/auth.store';
+import { requireSocketBaseUrl } from '@/lib/socket';
 
 type NotificationPayload = {
   title?: string;
@@ -29,8 +30,7 @@ export const useNotificationsSocket = (onNotificationReceived: (notification: No
       if (cancelled) return;
 
       // WebSocket kết nối trực tiếp tới BE — không qua BFF proxy
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
-      const baseUrl = wsUrl.replace(/\/api\/?$/, '');
+      const baseUrl = requireSocketBaseUrl().replace(/\/api\/?$/, '');
 
       socket = io(`${baseUrl}/notifications`, {
         auth: { token },
@@ -44,7 +44,9 @@ export const useNotificationsSocket = (onNotificationReceived: (notification: No
       socketRef.current = socket;
     }
 
-    void connect();
+    void connect().catch(() => {
+      if (!cancelled) socketRef.current = null;
+    });
 
     return () => {
       cancelled = true;

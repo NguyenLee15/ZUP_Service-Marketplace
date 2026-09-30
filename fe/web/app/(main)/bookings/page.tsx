@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Package, Clock, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon, User, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { bookingsApi } from '@/features/auth/services/api';
 import { useNotificationsSocket } from '@/features/notification/hooks/useNotificationsSocket';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Booking } from '@/types';
 import { CustomerPageHeader } from '@/components/customer/CustomerPageHeader';
+import api from '@/lib/axios';
 
 type BookingListParams = { page: number; limit: number; status?: string };
 type ApiError = { response?: { data?: { error?: { message?: string }; message?: string } } };
@@ -39,18 +39,26 @@ export default function BookingsPage() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
+  const requestIdRef = useRef(0);
+  const activeControllerRef = useRef<AbortController | null>(null);
 
   const fetchBookings = useCallback(() => {
+    activeControllerRef.current?.abort();
+    const controller = new AbortController();
+    activeControllerRef.current = controller;
+    const requestId = ++requestIdRef.current;
     setIsFetching(true);
     setErrorMessage('');
     const params: BookingListParams = { page, limit: PAGE_SIZE };
     if (status) params.status = status;
-    bookingsApi.getMyBookings(params)
+    api.get('/bookings', { params, signal: controller.signal })
       .then((res) => {
+        if (requestId !== requestIdRef.current) return;
         setBookings(res.data.data || []);
         if (res.data.meta) setMeta(res.data.meta);
       })
       .catch((err: ApiError) => {
+        if (requestId !== requestIdRef.current || controller.signal.aborted) return;
         const msg =
           err?.response?.data?.error?.message ||
           err?.response?.data?.message ||
@@ -58,13 +66,20 @@ export default function BookingsPage() {
         setErrorMessage(msg);
       })
       .finally(() => {
+        if (requestId !== requestIdRef.current) return;
         setInitialLoading(false);
         setIsFetching(false);
+        activeControllerRef.current = null;
       });
   }, [status, page]);
 
   useEffect(() => {
     fetchBookings();
+    return () => {
+      requestIdRef.current += 1;
+      activeControllerRef.current?.abort();
+      activeControllerRef.current = null;
+    };
   }, [fetchBookings]);
 
   useNotificationsSocket(useCallback(() => {

@@ -116,7 +116,13 @@ export class TrackingGateway
     if (
       !data.bookingId ||
       typeof data.lat !== 'number' ||
-      typeof data.lng !== 'number'
+      typeof data.lng !== 'number' ||
+      !Number.isFinite(data.lat) ||
+      !Number.isFinite(data.lng) ||
+      data.lat < -90 ||
+      data.lat > 90 ||
+      data.lng < -180 ||
+      data.lng > 180
     )
       return;
 

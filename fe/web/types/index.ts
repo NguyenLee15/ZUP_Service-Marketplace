@@ -224,6 +224,8 @@ export interface Booking {
   surveyorName?: string | null;
   surveyorPhone?: string | null;
   providerAcceptedAt?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   providerArrivedAt?: string | null;
   providerResponseDeadline?: string | null;
   completedAt?: string | null;

@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 
 // ---- Custom icons ----
 const providerIcon = L.divIcon({
-  html: `<div style="
+  html: `<div role="img" aria-label="Vị trí nhà cung cấp đang di chuyển" title="Vị trí nhà cung cấp" style="
     width: 40px; height: 40px;
     background: linear-gradient(135deg, #006BFF, #004EBA);
     border-radius: 50%;
@@ -28,7 +28,7 @@ const providerIcon = L.divIcon({
 });
 
 const customerIcon = L.divIcon({
-  html: `<div style="
+  html: `<div role="img" aria-label="Địa chỉ của bạn" title="Địa chỉ của bạn" style="
     width: 36px; height: 36px;
     background: linear-gradient(135deg, #10B981, #059669);
     border-radius: 50%;

@@ -17,9 +17,8 @@ const ALLOWED_MIME_TYPES = new Set([
   'image/jpg',
   'image/png',
   'image/webp',
-  'image/heic',
-  'image/heif',
-  'application/pdf',
+  'video/mp4',
+  'video/quicktime',
 ]);
 
 export default function DisputePage({ params }: { params: Promise<{ id: string }> }) {
@@ -43,8 +42,8 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
     const valid: File[] = [];
     for (const file of incomingFiles) {
       const mime = file.type.toLowerCase();
-      if (mime && !ALLOWED_MIME_TYPES.has(mime)) {
-        toast.error(`Tệp "${file.name}" không hợp lệ. Chỉ chấp nhận ảnh (JPG, PNG, WebP) hoặc PDF.`);
+      if (!ALLOWED_MIME_TYPES.has(mime)) {
+        toast.error(`Tệp "${file.name}" không hợp lệ. Chỉ chấp nhận JPG, PNG, WebP, MP4 hoặc MOV.`);
         continue;
       }
       if (file.size > MAX_FILE_SIZE) {
@@ -189,8 +188,9 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
 
             {/* Description */}
             <div>
-              <label className="block text-foreground font-medium mb-3">Chi tiết khiếu nại *</label>
+              <label htmlFor="dispute-description" className="block text-foreground font-medium mb-3">Chi tiết khiếu nại *</label>
               <textarea
+                id="dispute-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Mô tả chi tiết vấn đề, bao gồm thời gian xảy ra, những gì không đúng, các bằng chứng, v.v."
@@ -240,7 +240,7 @@ export default function DisputePage({ params }: { params: Promise<{ id: string }
                   <input
                     type="file"
                     multiple
-                    accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,video/mp4,video/quicktime"
                     onChange={handleFileSelect}
                     className="hidden"
                   />

@@ -7,7 +7,7 @@ let notifSocket: Socket | null = null;
 let trackingSocket: Socket | null = null;
 
 const createSocket = (namespace: string): Socket => {
-  const url = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+  const url = requireSocketBaseUrl();
   
   return io(`${url}${namespace}`, {
     autoConnect: false,
@@ -29,6 +29,14 @@ const createSocket = (namespace: string): Socket => {
     randomizationFactor: 0.5,
   });
 };
+
+export function requireSocketBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_WS_URL?.trim();
+  if (!url) {
+    throw new Error('WebSocket chưa được cấu hình. Thiếu NEXT_PUBLIC_WS_URL.');
+  }
+  return url.replace(/\/$/, '');
+}
 
 export const getChatSocket = (): Socket => {
   if (chatSocket) return chatSocket;

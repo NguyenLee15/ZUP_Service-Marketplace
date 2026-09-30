@@ -14,6 +14,7 @@ describe('ReviewsService rating integrity', () => {
           _count: { rating: 2 },
         }),
       },
+      $executeRaw: jest.fn().mockResolvedValue(1),
       service: { update: jest.fn().mockResolvedValue({}) },
     };
     const prisma = {
@@ -43,6 +44,10 @@ describe('ReviewsService rating integrity', () => {
 
     await service.createReview(7, 99, 5, 'Great service');
 
+    expect(tx.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      tx.review.aggregate.mock.invocationCallOrder[0],
+    );
     expect(tx.review.aggregate).toHaveBeenCalledWith({
       where: { serviceId: 42, isFlagged: false },
       _avg: { rating: true },

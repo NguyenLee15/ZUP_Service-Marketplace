@@ -74,11 +74,10 @@ function isValidBookingId(value: number) {
   return Number.isFinite(value) && value > 0;
 }
 
-const TRACKABLE_STATUSES = ['QUOTED', 'CONFIRMED', 'IN_PROGRESS'];
+const TRACKABLE_STATUSES = ['CONFIRMED', 'IN_PROGRESS'];
 
 function isTrackableStatus(booking?: TrackingBooking | null) {
   if (!booking) return false;
-  if (booking.status === 'PENDING' && booking.providerAcceptedAt) return true;
   return TRACKABLE_STATUSES.includes(String(booking.status || ''));
 }
 

@@ -47,6 +47,41 @@ export function formatETA(distKm: number, speedKmh: number): string {
   return `${h}h${m > 0 ? ` ${m}p` : ""}`;
 }
 
+function isValidCoordinatePair(latitude: unknown, longitude: unknown) {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
+function getProvinceFallback(province?: string | null) {
+  const normalized = (province || '').toLowerCase();
+  if (
+    normalized.includes('hồ chí minh') ||
+    normalized.includes('hcm') ||
+    normalized.includes('sài gòn')
+  ) {
+    return { lat: 10.762622, lng: 106.660172 };
+  }
+  if (normalized.includes('đà nẵng')) return { lat: 16.047079, lng: 108.20623 };
+  if (normalized.includes('cần thơ')) return { lat: 10.045162, lng: 105.746857 };
+  if (normalized.includes('hải phòng')) return { lat: 20.844912, lng: 106.688087 };
+  return { lat: 21.028511, lng: 105.854167 };
+}
+
+function getCustomerLocation(booking: Booking) {
+  if (isValidCoordinatePair(booking.latitude, booking.longitude)) {
+    return { lat: Number(booking.latitude), lng: Number(booking.longitude) };
+  }
+  return getProvinceFallback(booking.province);
+}
+
 export function useBookingTrackingFlow(id: string) {
   const router = useRouter();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -86,22 +121,7 @@ export function useBookingTrackingFlow(id: string) {
         setBooking(data);
 
         if (data) {
-          const province = (data.province || "").toLowerCase();
-          if (
-            province.includes("hồ chí minh") ||
-            province.includes("hcm") ||
-            province.includes("sài gòn")
-          ) {
-            setCustomerLoc({ lat: 10.762622, lng: 106.660172 });
-          } else if (province.includes("đà nẵng")) {
-            setCustomerLoc({ lat: 16.047079, lng: 108.20623 });
-          } else if (province.includes("cần thơ")) {
-            setCustomerLoc({ lat: 10.045162, lng: 105.746857 });
-          } else if (province.includes("hải phòng")) {
-            setCustomerLoc({ lat: 20.844912, lng: 106.688087 });
-          } else {
-            setCustomerLoc({ lat: 21.028511, lng: 105.854167 });
-          }
+          setCustomerLoc(getCustomerLocation(data));
 
           if (data.status === BookingStatus.CONFIRMED) {
             setCurrentStepIdx(1);
@@ -126,7 +146,14 @@ export function useBookingTrackingFlow(id: string) {
     if (!trackable.includes(booking.status)) return;
 
     const bookingId = Number(id);
-    const socket = getTrackingSocket();
+    let socket: ReturnType<typeof getTrackingSocket>;
+    try {
+      socket = getTrackingSocket();
+    } catch (socketError) {
+      setTrackingConnection("disconnected");
+      setError(socketError instanceof Error ? socketError.message : "WebSocket chưa được cấu hình.");
+      return;
+    }
 
     setTrackingConnection("connecting");
     socket.connect();
