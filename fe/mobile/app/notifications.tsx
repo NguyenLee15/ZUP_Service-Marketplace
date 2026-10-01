@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from "react";
 import type { ComponentProps } from "react";
 import { RefreshControl, StyleSheet, View } from "react-native";
 import {
-  ActivityIndicator,
   Button,
   Chip,
   IconButton,
@@ -25,6 +24,7 @@ import {
   ProviderEmptyState,
   ProviderInlineMessage,
   ProviderPageHeader,
+  ProviderLoadingState,
   ProviderScreen,
 } from "../components/provider/provider-ui";
 
@@ -361,10 +361,7 @@ export default function NotificationsScreen() {
         }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator
-              style={styles.loading}
-              color={theme.colors.primary}
-            />
+            <ProviderLoadingState label="Đang tải thông báo..." />
           ) : (
             <ProviderEmptyState
               icon="bell-check-outline"
