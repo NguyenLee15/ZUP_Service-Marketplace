@@ -76,7 +76,6 @@ export class BookingQueryService {
     const data = await this.prisma.bookingStatusHistory.findMany({
       where: { bookingId },
       orderBy: { createdAt: 'asc' },
-      take: 100,
     });
 
     return { data };
@@ -98,7 +97,6 @@ export class BookingQueryService {
     const data = await this.prisma.bookingStatusHistory.findMany({
       where: { bookingId },
       orderBy: { createdAt: 'asc' },
-      take: 100,
     });
 
     return { data };
