@@ -9,12 +9,14 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { authApi } from '../../features/auth/auth.api';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { routes } from '../../lib/route-utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const OTP_LENGTH = 6;
 const COOLDOWN_SECONDS = 60;
 
 export default function OtpScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{
     email: string;
@@ -128,7 +130,7 @@ export default function OtpScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.content}>
         <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
           Xác thực OTP
