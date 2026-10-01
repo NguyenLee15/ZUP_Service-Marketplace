@@ -33,6 +33,7 @@ import { useAddressOptions } from '../../hooks/useAddressOptions';
 import { routes } from '../../lib/route-utils';
 import { BookingAddressSection } from '../../features/booking/components/BookingAddressSection';
 import { BookingScheduleSection } from '../../features/booking/components/BookingScheduleSection';
+import { BookingConfirmationSection } from '../../features/booking/components/BookingConfirmationSection';
 
 import type { BookingAddress } from '../../features/booking/components/BookingAddressSection';
 
@@ -390,32 +391,12 @@ export default function CreateBookingScreen() {
       </SectionWithIcon>
 
       <SectionWithIcon title="Xác nhận" icon="check-circle-outline">
-        <CustomerCard>
-          <View style={styles.formBlock}>
-            <Text variant="bodySmall" style={styles.subtitle}>
-              Đơn sẽ được gửi đến nhà cung cấp để xác nhận và báo giá nếu cần.
-            </Text>
-            {service?.referencePrice ? (
-              <View style={styles.priceSummaryRow}>
-                <MaterialCommunityIcons name="tag-outline" size={16} color={activeColors.primary} />
-                <Text variant="labelMedium" style={styles.priceSummaryText}>
-                  Giá tham khảo: {formatCurrency(service.referencePrice)}
-                </Text>
-              </View>
-            ) : null}
-            <Button
-              mode="contained"
-              icon="check-circle-outline"
-              loading={createMutation.isPending}
-              disabled={createMutation.isPending || !service}
-              onPress={submit}
-              style={styles.submitButton}
-              contentStyle={styles.submitContent}
-            >
-              Xác nhận đặt dịch vụ
-            </Button>
-          </View>
-        </CustomerCard>
+        <BookingConfirmationSection
+          referencePrice={service?.referencePrice}
+          submitting={createMutation.isPending}
+          disabled={createMutation.isPending || !service}
+          onSubmit={submit}
+        />
       </SectionWithIcon>
 
       {showDatePicker ? (
