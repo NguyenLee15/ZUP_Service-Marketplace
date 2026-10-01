@@ -157,6 +157,45 @@ describe('FeaturedListingsService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it('records the request IP when admin cancels an active listing', async () => {
+    prisma.featuredListing.findUnique.mockResolvedValue({
+      id: 1,
+      serviceId: 99,
+      status: FeaturedListingStatus.ACTIVE,
+      service: { name: 'Repair' },
+    });
+
+    await service.adminCancelFeaturedListing(1, 1, '203.0.113.10');
+
+    expect(tx.featuredListing.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 1 },
+        data: { status: FeaturedListingStatus.CANCELLED },
+      }),
+    );
+    expect(tx.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'CANCEL_FEATURED_LISTING',
+        ipAddress: '203.0.113.10',
+      }),
+    });
+  });
+
+  it('falls back to System when cancellation IP is unavailable', async () => {
+    prisma.featuredListing.findUnique.mockResolvedValue({
+      id: 1,
+      serviceId: 99,
+      status: FeaturedListingStatus.ACTIVE,
+      service: { name: 'Repair' },
+    });
+
+    await service.adminCancelFeaturedListing(1, 1);
+
+    expect(tx.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ ipAddress: 'System' }),
+    });
+  });
+
   it('updates featured daily rate through system setting', async () => {
     const result = await service.updateFeaturedDailyRate(
       1,

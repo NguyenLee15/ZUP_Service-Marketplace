@@ -301,7 +301,7 @@ export class FeaturedListingsService {
     return { data, meta: paginationMeta(total, page, limit) };
   }
 
-  async adminCancelFeaturedListing(adminId: number, id: number) {
+  async adminCancelFeaturedListing(adminId: number, id: number, ip?: string) {
     const listing = await this.prisma.featuredListing.findUnique({
       where: { id },
       select: {
@@ -342,7 +342,7 @@ export class FeaturedListingsService {
           targetType: 'FEATURED_LISTING',
           targetId: id,
           description: `Hủy đẩy Top dịch vụ #${listing.serviceId} (${listing.service.name})`,
-          ipAddress: 'System',
+          ipAddress: ip || 'System',
         },
       });
 

@@ -49,8 +49,13 @@ export class AdminFeaturedListingsController {
   async cancel(
     @CurrentUser('id') adminId: number,
     @Param('id', ParseIntPipe) id: number,
+    @Ip() ip?: string,
   ) {
-    return this.featuredListingsService.adminCancelFeaturedListing(adminId, id);
+    return this.featuredListingsService.adminCancelFeaturedListing(
+      adminId,
+      id,
+      ip,
+    );
   }
 }
 
