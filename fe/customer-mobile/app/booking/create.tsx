@@ -16,7 +16,6 @@ import {
   EmptyState,
   InlineMessage,
   LoadingState,
-  SectionHeader,
   StatusChip,
 } from '../../components/customer/customer-ui';
 import { Colors } from '../../constants/colors';
@@ -26,23 +25,15 @@ import { userApi } from '../../features/user/user.api';
 import { getApiErrorMessage, normalizeList, unwrapData } from '../../lib/api-response';
 import {
   NEW_ADMIN_DISTRICT_VALUE,
-  formatAdministrativeArea,
   getProvinceOptions,
   getWardOptions,
 } from '../../lib/address-options';
 import { formatCurrency, formatDateTime } from '../../lib/format';
 import { useAddressOptions } from '../../hooks/useAddressOptions';
 import { routes } from '../../lib/route-utils';
+import { BookingAddressSection } from '../../features/booking/components/BookingAddressSection';
 
-type BookingAddress = {
-  id?: number;
-  label?: string | null;
-  province?: string | null;
-  district?: string | null;
-  ward?: string | null;
-  addressDetail?: string | null;
-  isDefault?: boolean;
-};
+import type { BookingAddress } from '../../features/booking/components/BookingAddressSection';
 
 type BookingService = {
   id?: number | string;
@@ -365,51 +356,25 @@ export default function CreateBookingScreen() {
 
 
       <SectionWithIcon title="Địa chỉ" icon="map-marker-outline">
-        <View style={styles.formBlock}>
-          <SectionHeader title="Địa chỉ đã lưu" subtitle={addresses.length ? 'Chọn nhanh địa chỉ của bạn' : 'Bạn có thể nhập địa chỉ mới bên dưới'} />
-          {addresses.length ? (
-            <View style={styles.addressList}>
-              {addresses.map((address) => (
-                <AddressCard
-                  key={String(address.id || `${address.addressDetail}-${address.ward}`)}
-                  address={address}
-                  selected={selectedAddressId === address.id}
-                  onPress={() => applyAddress(address)}
-                />
-              ))}
-            </View>
-          ) : (
-            <InlineMessage tone="neutral" message="Bạn chưa có địa chỉ đã lưu. Hãy nhập địa chỉ mới cho đơn này." />
-          )}
-
-          <View style={styles.row}>
-            <Button mode="outlined" onPress={() => setProvincePickerOpen(true)} style={styles.flexButton} icon="map-marker-outline">
-              {form.province || 'Tỉnh/Thành'}
-            </Button>
-            <Button mode="outlined" onPress={() => setWardPickerOpen(true)} disabled={!form.province} style={styles.flexButton} icon="map-marker-radius-outline">
-              {form.ward || 'Phường/Xã'}
-            </Button>
-          </View>
-          <TextInput
-            label="Quận/Huyện"
-            mode="outlined"
-            value={form.district}
-            onChangeText={(district) => updateForm({ district })}
-            placeholder={NEW_ADMIN_DISTRICT_VALUE}
-          />
-          <TextInput
-            label="Địa chỉ chi tiết"
-            mode="outlined"
-            value={form.addressDetail}
-            onChangeText={(addressDetail) => updateForm({ addressDetail })}
-            placeholder="Số nhà, tên đường, tòa nhà..."
-          />
-          {form.province && form.ward ? (
-            <HelperText type="info" visible>
-              {formatAdministrativeArea(form.province, form.ward, form.district)}
-            </HelperText>
-          ) : null}
-        </View>
+        <BookingAddressSection
+          data={{
+            addresses,
+            selectedAddressId,
+            province: form.province,
+            district: form.district,
+            ward: form.ward,
+            addressDetail: form.addressDetail,
+            provinceOptions,
+            wardOptions,
+          }}
+          actions={{
+            onSelectAddress: applyAddress,
+            onOpenProvince: () => setProvincePickerOpen(true),
+            onOpenWard: () => setWardPickerOpen(true),
+            onDistrictChange: (district) => updateForm({ district }),
+            onAddressDetailChange: (addressDetail) => updateForm({ addressDetail }),
+          }}
+        />
       </SectionWithIcon>
 
       <SectionWithIcon title="Thời gian thực hiện" icon="calendar-clock">
@@ -578,49 +543,6 @@ function SectionWithIcon({
       </View>
       {children}
     </View>
-  );
-}
-
-function AddressCard({
-  address,
-  selected,
-  onPress,
-}: {
-  address: BookingAddress;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const activeColors = useActiveColors();
-  const styles = getStyles(activeColors);
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`Chọn địa chỉ ${address.label || address.addressDetail || ''}`}
-      accessibilityHint="Áp dụng địa chỉ này cho đơn đặt dịch vụ"
-      hitSlop={6}
-    >
-      <CustomerCard style={[styles.addressCard, selected && styles.addressCardSelected]}>
-        <View style={styles.addressHeader}>
-          <View style={{ flex: 1 }}>
-            <Text variant="titleSmall" style={styles.titleText} numberOfLines={1}>
-              {address.label || 'Địa chỉ'}
-            </Text>
-            <Text variant="bodySmall" style={styles.subtitle} numberOfLines={2}>
-              {address.addressDetail}, {address.ward}, {address.province}
-            </Text>
-          </View>
-          <View style={styles.addressBadgeRow}>
-            {address.isDefault ? <StatusChip label="Mặc định" color={activeColors.success} /> : null}
-            {selected ? (
-              <View style={styles.selectedCheck}>
-                <MaterialCommunityIcons name="check" size={14} color="#FFF" />
-              </View>
-            ) : null}
-          </View>
-        </View>
-      </CustomerCard>
-    </Pressable>
   );
 }
 
