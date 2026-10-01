@@ -18,7 +18,7 @@ import {
 
 function BookingDetailSkeleton() {
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 pb-10">
+    <div className="mx-auto w-full max-w-7xl space-y-6 pb-10">
       <div className="h-10 w-32 animate-pulse rounded-xl bg-slate-200" />
       <div className="h-24 animate-pulse rounded-2xl border bg-slate-100" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -59,7 +59,7 @@ function AdminBookingDetailContent() {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 pb-10">
+    <div className="mx-auto w-full max-w-7xl space-y-6 pb-10">
       <AdminBookingHeader
         bookingCode={booking.bookingCode}
         statusConfig={statusConfig}

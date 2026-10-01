@@ -16,7 +16,7 @@ import {
 
 function DisputeDetailSkeleton() {
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
       <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -62,7 +62,7 @@ function AdminDisputeDetailContent() {
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 pb-10">
+    <div className="mx-auto w-full max-w-7xl space-y-6 pb-10">
       <DisputeLightboxModal
         url={lightboxUrl}
         onClose={() => setLightboxUrl(null)}

@@ -167,7 +167,7 @@ export default function SettingsPage() {
 
   return (
     <AdminPermissionGuard permission={[AdminPermission.FINANCE_COMMISSION, AdminPermission.SETTINGS_MANAGE]}>
-      <div className="mx-auto max-w-[1440px] space-y-5">
+      <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col gap-1 border-b border-[var(--admin-border)] pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-slate-950">Cài đặt hệ thống</h1>
         <p className="text-sm text-slate-500">Quản lý cấu hình vận hành, hoa hồng và trạng thái module.</p>

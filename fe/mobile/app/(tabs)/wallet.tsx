@@ -10,6 +10,10 @@ import * as Clipboard from 'expo-clipboard';
 import * as WebBrowser from 'expo-web-browser';
 import { FlashList } from '@shopify/flash-list';
 import { walletApi } from '../../features/wallet/wallet.api';
+import type { WalletTransactionItem } from '../../features/wallet/wallet.types';
+import type { WalletRequest } from '../../features/wallet/wallet.types';
+import { WalletTransactionRow } from '../../features/wallet/components/WalletTransactionRow';
+import { WalletRequestRow } from '../../features/wallet/components/WalletRequestRow';
 import { useNotificationStore } from '../../features/notification/notification.store';
 import { Colors } from '../../constants/colors';
 import {
@@ -27,28 +31,6 @@ type MessageState = {
   tone: 'info' | 'success' | 'warning' | 'error';
   text: string;
 } | null;
-
-type WalletRequest = {
-  id: number;
-  amount: number | string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
-  createdAt: string;
-  adminNote?: string | null;
-  transferCode?: string | null;
-  bankName?: string;
-  bankAccountNumber?: string;
-};
-
-export type WalletTransactionItem = {
-  id: number;
-  type: string;
-  status: string;
-  amount: number | string;
-  createdAt: string;
-  booking?: {
-    bookingCode?: string;
-  } | null;
-};
 
 const MANUAL_BANK_INFO = {
   bankName: process.env.EXPO_PUBLIC_PROVIDER_DEPOSIT_BANK_NAME || '',
@@ -331,83 +313,29 @@ export default function WalletScreen() {
   };
 
   const renderRequest = (item: WalletRequest, type: 'deposit' | 'withdrawal') => {
-    const color = getRequestTone(item.status);
     return (
-      <ProviderCard key={`${type}-${item.id}`} style={styles.requestCard} contentStyle={styles.requestContent}>
-        <View style={[styles.requestIcon, { backgroundColor: `${color}16` }]}>
-          <MaterialCommunityIcons
-            name={type === 'deposit' ? 'bank-transfer-in' : 'bank-transfer-out'}
-            size={22}
-            color={color}
-          />
-        </View>
-        <View style={styles.requestBody}>
-          <Text variant="bodyMedium" style={styles.requestTitle} numberOfLines={1}>
-            {type === 'deposit' ? 'Nạp thủ công' : 'Rút tiền'} {formatCurrency(Number(item.amount || 0))}
-          </Text>
-          <Text variant="bodySmall" style={styles.txMeta} numberOfLines={1}>
-            {new Date(item.createdAt).toLocaleString('vi-VN')}
-          </Text>
-          {item.adminNote ? (
-            <Text variant="labelSmall" style={styles.txMeta} numberOfLines={2}>
-              {item.adminNote}
-            </Text>
-          ) : null}
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: `${color}14` }]}>
-          <Text variant="labelSmall" style={[styles.statusBadgeText, { color }]} numberOfLines={1}>
-            {getStatusLabel(item.status)}
-          </Text>
-        </View>
-      </ProviderCard>
+      <WalletRequestRow
+        key={`${type}-${item.id}`}
+        item={item}
+        type={type}
+        color={getRequestTone(item.status)}
+        title={type === 'deposit' ? 'Nạp thủ công' : 'Rút tiền'}
+        statusLabel={getStatusLabel(item.status)}
+        formatCurrency={formatCurrency}
+      />
     );
   };
 
-  const renderTransaction = ({ item }: { item: WalletTransactionItem }) => {
-    const color = getTxColor(item.type, item.status);
-    const isPositive = item.type === 'DEPOSIT';
-    const amount = Math.abs(Number(item.amount || 0));
-
-    return (
-      <ProviderCard style={styles.transactionCard} contentStyle={styles.transactionContent}>
-        <View style={[styles.txIcon, { backgroundColor: `${color}16` }]}>
-          <MaterialCommunityIcons
-            name={isPositive ? 'arrow-down-bold' : 'arrow-up-bold'}
-            size={22}
-            color={color}
-          />
-        </View>
-        <View style={styles.txContent}>
-          <Text variant="bodyLarge" style={styles.txTitle} numberOfLines={1}>
-            {getTxLabel(item.type)}
-          </Text>
-          <Text variant="bodySmall" style={styles.txMeta}>
-            {new Date(item.createdAt).toLocaleString('vi-VN')}
-          </Text>
-          {item.booking && (
-            <Text variant="labelSmall" style={styles.txMeta} selectable>
-              Đơn hàng #{item.booking.bookingCode}
-            </Text>
-          )}
-        </View>
-        <View style={styles.txRight}>
-          <Text
-            variant="titleSmall"
-            style={[styles.txAmount, { color: item.status === 'FAILED' ? activeColors.textSecondary : color }]}
-            selectable
-          >
-            {isPositive ? '+' : '-'}
-            {formatCurrency(amount)}
-          </Text>
-          <View style={[styles.statusBadge, { backgroundColor: `${color}14` }]}>
-            <Text variant="labelSmall" style={[styles.statusBadgeText, { color }]} numberOfLines={1}>
-              {getStatusLabel(item.status)}
-            </Text>
-          </View>
-        </View>
-      </ProviderCard>
-    );
-  };
+  const renderTransaction = ({ item }: { item: WalletTransactionItem }) => (
+    <WalletTransactionRow
+      item={item}
+      color={getTxColor(item.type, item.status)}
+      mutedColor={activeColors.textSecondary}
+      label={getTxLabel(item.type)}
+      statusLabel={getStatusLabel(item.status)}
+      formatCurrency={formatCurrency}
+    />
+  );
 
   return (
     <ProviderScreen>

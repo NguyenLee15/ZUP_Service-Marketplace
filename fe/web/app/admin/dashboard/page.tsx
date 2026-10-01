@@ -35,7 +35,7 @@ function AdminDashboardContent() {
   const serviceData = chartData?.serviceData || [];
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
+    <div className="mx-auto w-full max-w-7xl space-y-7 pb-10">
       <DashboardHeaderActions
         loading={loading}
         isExporting={isExporting}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -97,7 +97,7 @@ export default function SearchScreen() {
   const data = isInitialLoading ? skeletonRows : services;
 
   return (
-    <>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <FlashList
         data={data}
         keyExtractor={(item: any, index) => stableKey(item.id, `search-item-${index}`)}
@@ -431,7 +431,7 @@ export default function SearchScreen() {
           </Button>
         </View>
       </ConfirmSheet>
-    </>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -497,6 +497,7 @@ function FilterGroup({ title, children }: { title: string; children: React.React
 }
 
 const getStyles = (activeColors: any) => StyleSheet.create({
+  screen: { flex: 1 },
   listContent: { padding: 16, paddingBottom: 112 },
   headerContent: { gap: 12, marginBottom: 12 },
   separator: { height: 12 },

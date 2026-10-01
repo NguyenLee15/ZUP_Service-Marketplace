@@ -141,7 +141,7 @@ export default function AdminDisputeAiHelperPage() {
 
   return (
     <AdminPermissionGuard permission={AdminPermission.DISPUTE_RESOLVE}>
-      <div className="mx-auto max-w-[1440px] space-y-5">
+      <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Button asChild variant="outline" size="icon" className="rounded-md">

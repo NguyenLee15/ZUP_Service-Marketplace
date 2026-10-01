@@ -295,7 +295,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarLabel: { color: '#FFFFFF', fontWeight: '900', fontSize: 18 },
+  avatarLabel: { color: activeColors.onPrimary, fontWeight: '900', fontSize: 18 },
   // Unread count badge
   unreadBadge: {
     position: 'absolute',
@@ -311,8 +311,8 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
-  unreadBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '900' },
-  unreadCard: { borderColor: `${activeColors.primary}55`, backgroundColor: '#F0F7FF' },
+  unreadBadgeText: { color: activeColors.onPrimary, fontSize: 10, fontWeight: '900' },
+  unreadCard: { borderColor: `${activeColors.primary}55`, backgroundColor: activeColors.infoBg },
   roundedButton: { alignSelf: 'flex-start', borderRadius: 12 },
   skeletonWrap: { gap: 12 },
   skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 10 },
@@ -324,9 +324,9 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#10B981',
+    backgroundColor: activeColors.success,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: activeColors.surface,
     zIndex: 2,
   },
 });

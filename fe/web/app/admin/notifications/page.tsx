@@ -136,7 +136,7 @@ export default function AdminNotificationsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-[1440px] mx-auto space-y-4">
+      <div className="mx-auto w-full max-w-7xl space-y-4">
         <div className="h-8 w-48 bg-slate-200 rounded animate-pulse mb-6"></div>
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-24 bg-white rounded-xl border border-slate-100 shadow-sm animate-pulse"></div>
@@ -146,7 +146,7 @@ export default function AdminNotificationsPage() {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto space-y-5">
+    <div className="mx-auto w-full max-w-7xl space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">

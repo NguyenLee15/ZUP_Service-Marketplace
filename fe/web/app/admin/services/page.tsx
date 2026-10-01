@@ -138,7 +138,7 @@ export default function AdminServicesPage() {
 
   return (
     <AdminPermissionGuard permission={AdminPermission.SERVICE_MODERATE}>
-      <div className="mx-auto max-w-[1600px] space-y-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-950">Quản Lý Dịch Vụ</h1>
           <p className="text-muted-foreground mt-1 text-sm">Duyệt và quản lý dịch vụ của nhà cung cấp</p>

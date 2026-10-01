@@ -198,7 +198,7 @@ export default function CategoriesPage() {
 
   return (
     <AdminPermissionGuard permission={AdminPermission.SERVICE_MODERATE}>
-      <div className="mx-auto max-w-[1600px] space-y-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-950">Quản Lý Danh Mục</h1>

@@ -113,6 +113,52 @@
   --brand-shadow-button: rgba(0, 107, 255, 0.2) 0px 4px 12px 0px;
 }
 
+.dark {
+  --color-cloud-mist: #0f172a;
+  --color-pale-gray: #1e293b;
+  --color-slate-blue: #cbd5e1;
+  --color-steel-gray: #94a3b8;
+  --color-platinum-tint: #334155;
+  --color-outline-gray: #475569;
+  --color-text-black: #f8fafc;
+  --color-snow-white: #f8fafc;
+  --color-warm-canvas: #0f172a;
+  --admin-canvas: #0f172a;
+  --admin-surface: #1e293b;
+  --admin-border: #334155;
+  --admin-sidebar-muted: #cbd5e1;
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #38bdf8;
+  --primary-foreground: #082f49;
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #cbd5e1;
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
+  --border: #334155;
+  --input: #475569;
+  --ring: #38bdf8;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #082f49;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #334155;
+  --sidebar-ring: #38bdf8;
+  --brand-shadow-sm: rgba(0, 0, 0, 0.25) 0px 1px 3px 0px;
+  --brand-shadow-card: rgba(0, 0, 0, 0.35) 0px 4px 12px 0px;
+  --brand-shadow-button: rgba(56, 189, 248, 0.18) 0px 4px 12px 0px;
+}
+
 @theme inline {
   --font-sans: var(--font-montserrat), 'Montserrat', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';

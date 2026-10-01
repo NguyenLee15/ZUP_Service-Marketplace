@@ -44,7 +44,7 @@ export default function AdminDisputesPage() {
 
   return (
     <AdminPermissionGuard permission={AdminPermission.DISPUTE_VIEW}>
-      <div className="mx-auto max-w-[1600px] space-y-7 pb-10">
+      <div className="mx-auto w-full max-w-7xl space-y-7 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-950">
