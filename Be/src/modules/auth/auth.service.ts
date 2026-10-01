@@ -356,7 +356,7 @@ export class AuthService {
             emailVerified: true,
           },
         });
-          this.logger.log(`New Google user registered: ${this.maskEmail(email)}`);
+        this.logger.log(`New Google user registered: ${this.maskEmail(email)}`);
       } else {
         const shouldForceCustomerRole =
           user.role === UserRole.ADMIN || user.role === UserRole.STAFF;
@@ -451,9 +451,9 @@ export class AuthService {
           where: { id: user.id },
           data: { googleId, avatarUrl: user.avatarUrl || picture },
         });
-          this.logger.log(
-            `Linked Google account to provider: ${this.maskEmail(email)}`,
-          );
+        this.logger.log(
+          `Linked Google account to provider: ${this.maskEmail(email)}`,
+        );
       }
 
       const tokens = await this.generateTokenPair(
