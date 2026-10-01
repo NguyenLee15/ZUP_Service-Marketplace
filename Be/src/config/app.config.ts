@@ -34,6 +34,8 @@ export default registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: getSecret('JWT_SECRET', 'development-jwt-secret-change-me'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
+  jwtIssuer: process.env.JWT_ISSUER || 'service-marketplace',
+  jwtAudience: process.env.JWT_AUDIENCE || 'service-marketplace-client',
   jwtRefreshSecret: getSecret(
     'JWT_REFRESH_SECRET',
     'development-refresh-secret-change-me',

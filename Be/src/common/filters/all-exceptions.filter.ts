@@ -34,7 +34,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         // Hỗ trợ format: throw new BadRequestException({ code: '...', message: '...' })
         code =
           this.stringValue(resp.code) ??
-          this.stringValue(resp.error) ??
           this.statusToCode(status);
         const responseMessage =
           this.messageValue(resp.message) ?? exception.message;
@@ -43,7 +42,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : responseMessage;
         details = resp.details;
 
-        // class-validator trả về mảng message
+        if (Array.isArray(responseMessage) && details === undefined) {
+          details = {
+            validationErrors: responseMessage,
+          };
+        }
       } else {
         code = this.statusToCode(status);
         message =
@@ -78,6 +81,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error: {
         code,
         message,
+        timestamp: new Date().toISOString(),
+        path: request.url,
         ...(errorDetails !== undefined && { details: errorDetails }),
       },
     });
@@ -93,6 +98,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         return ErrorCodes.FORBIDDEN;
       case HttpStatus.NOT_FOUND:
         return ErrorCodes.NOT_FOUND;
+      case HttpStatus.CONFLICT:
+        return ErrorCodes.CONFLICT;
+      case HttpStatus.UNPROCESSABLE_ENTITY:
+        return ErrorCodes.UNPROCESSABLE_ENTITY;
+      case HttpStatus.TOO_MANY_REQUESTS:
+        return ErrorCodes.TOO_MANY_REQUESTS;
       case HttpStatus.INTERNAL_SERVER_ERROR:
       default:
         return ErrorCodes.INTERNAL_ERROR;

@@ -73,6 +73,11 @@ type AuthPrismaMock = {
   otpAttempt: {
     findFirst: jest.Mock;
     update: jest.Mock;
+    deleteMany: jest.Mock;
+  };
+  providerWallet: {
+    create: jest.Mock;
+    upsert: jest.Mock;
   };
   user: {
     findUnique: jest.Mock;
@@ -134,6 +139,11 @@ describe('AuthService token hardening', () => {
       otpAttempt: {
         findFirst: jest.fn(),
         update: jest.fn().mockResolvedValue({}),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      providerWallet: {
+        create: jest.fn().mockResolvedValue({}),
+        upsert: jest.fn().mockResolvedValue({}),
       },
       user: {
         findUnique: jest.fn(),
@@ -423,6 +433,55 @@ describe('AuthService token hardening', () => {
       response: { code: 'OTP_INVALID' },
     });
     expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('consumes OTP atomically and rejects when concurrent verification wins the claim', async () => {
+    const otp: OtpRecord = {
+      id: 1,
+      code: null,
+      codeHash: hashToken('123456'),
+      wrongAttempts: 0,
+    };
+    prisma.otpAttempt.findFirst.mockResolvedValue(otp);
+    prisma.otpAttempt.deleteMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.verifyOtp({ email: 'user@test.local', otp: '123456' }),
+    ).rejects.toMatchObject({
+      response: { code: 'OTP_INVALID' },
+    });
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('activates user, generates tokens, and creates provider wallet atomically in transaction on valid OTP', async () => {
+    const otp: OtpRecord = {
+      id: 1,
+      code: null,
+      codeHash: hashToken('123456'),
+      wrongAttempts: 0,
+    };
+    prisma.otpAttempt.findFirst.mockResolvedValue(otp);
+    prisma.otpAttempt.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.user.update.mockResolvedValue({
+      id: 10,
+      email: 'provider@test.local',
+      role: UserRole.PROVIDER,
+      status: UserStatus.ACTIVE,
+      emailVerified: true,
+    });
+
+    const result = await service.verifyOtp({
+      email: 'provider@test.local',
+      otp: '123456',
+    });
+
+    expect(result.data.user.email).toBe('provider@test.local');
+    expect(result.data.accessToken).toBe('access-token');
+    expect(prisma.providerWallet.upsert).toHaveBeenCalledWith({
+      where: { providerId: 10 },
+      create: { providerId: 10 },
+      update: {},
+    });
   });
 
   it('treats Google login for privileged email as a customer account', async () => {

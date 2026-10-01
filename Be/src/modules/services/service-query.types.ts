@@ -9,6 +9,7 @@ export type SearchServicesResult = {
     radiusKm?: number;
     total: number;
     totalPages: number;
+    nextCursor?: string | null;
   };
 };
 

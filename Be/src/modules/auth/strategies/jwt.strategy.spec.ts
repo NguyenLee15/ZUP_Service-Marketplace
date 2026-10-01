@@ -24,6 +24,11 @@ describe('JwtStrategy', () => {
           provide: ConfigService,
           useValue: {
             getOrThrow: jest.fn().mockReturnValue('test-jwt-secret'),
+            get: jest.fn().mockImplementation((key: string) => {
+              if (key === 'app.jwtIssuer') return 'test-issuer';
+              if (key === 'app.jwtAudience') return 'test-audience';
+              return undefined;
+            }),
           },
         },
         {

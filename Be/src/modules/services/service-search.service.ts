@@ -148,6 +148,15 @@ export class ServiceSearchService {
 
     const total = totalBeforeLocationFilter;
     const pagedData = mappedData;
+    const lastItem = pagedData[pagedData.length - 1];
+    const nextCursor =
+      pagedData.length === limit && lastItem
+        ? Buffer.from(
+            JSON.stringify({
+              id: lastItem.id,
+            }),
+          ).toString('base64url')
+        : null;
 
     const result = {
       data: pagedData,
@@ -156,6 +165,7 @@ export class ServiceSearchService {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+        nextCursor,
       },
     };
 
@@ -495,6 +505,25 @@ export class ServiceSearchService {
             ? Prisma.sql`s.reference_price DESC`
             : Prisma.sql`s.id DESC`;
 
+    let cursorPredicate = Prisma.empty;
+    if (dto.cursor) {
+      try {
+        const decoded = JSON.parse(
+          Buffer.from(dto.cursor, 'base64url').toString('utf8'),
+        );
+        if (
+          typeof decoded === 'object' &&
+          decoded !== null &&
+          typeof decoded.id === 'number' &&
+          typeof decoded.distanceKm === 'number'
+        ) {
+          cursorPredicate = Prisma.sql`AND (distance_km > ${decoded.distanceKm} OR (distance_km = ${decoded.distanceKm} AND id > ${decoded.id}))`;
+        }
+      } catch {
+        // bỏ qua nếu cursor không hợp lệ
+      }
+    }
+
     const rows = await this.prisma.$queryRaw<
       Array<{
         id: number;
@@ -529,8 +558,9 @@ export class ServiceSearchService {
         WHERE ${Prisma.join(conditions, ' AND ')}
       ) candidates
       WHERE distance_km <= ${radiusKm}
+      ${cursorPredicate}
       ORDER BY distance_km ASC, is_featured DESC, ${sortSql}
-      LIMIT ${limit} OFFSET ${(page - 1) * limit}
+      LIMIT ${limit} OFFSET ${dto.cursor ? 0 : (page - 1) * limit}
     `);
 
     const serviceIds = rows.map((row) => row.id);
@@ -544,6 +574,7 @@ export class ServiceSearchService {
           totalPages: 0,
           radiusKm,
           locationExpanded: false,
+          nextCursor: null,
         },
       };
     }
@@ -577,6 +608,17 @@ export class ServiceSearchService {
       ];
     }) as SearchServiceItem[];
     const total = rows[0]?.totalCount ?? 0;
+    const lastRow = data[data.length - 1];
+    const nextCursor =
+      data.length === limit && lastRow
+        ? Buffer.from(
+            JSON.stringify({
+              distanceKm: lastRow.distanceKm ?? 0,
+              id: lastRow.id,
+            }),
+          ).toString('base64url')
+        : null;
+
     return {
       data,
       meta: {
@@ -586,6 +628,7 @@ export class ServiceSearchService {
         totalPages: Math.ceil(total / limit),
         radiusKm,
         locationExpanded: false,
+        nextCursor,
       },
     };
   }

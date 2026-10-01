@@ -155,34 +155,53 @@ export class AuthService {
       });
     }
 
-    // 4. Kích hoạt tài khoản
-    const user = await this.prisma.user.update({
-      where: { email: dto.email },
-      data: {
-        status: UserStatus.ACTIVE,
-        emailVerified: true,
-      },
-    });
-
-    // 5. Xóa OTP records
-    await this.prisma.otpAttempt.deleteMany({
-      where: { email: dto.email, type: 'REGISTER' },
-    });
-
-    // 6. Tạo token pair
-    const tokens = await this.generateTokenPair(
-      this.prisma,
-      user.id,
-      user.email,
-      user.role,
-    );
-
-    // 7. Tạo ví nếu là Provider
-    if (user.role === UserRole.PROVIDER) {
-      await this.prisma.providerWallet.create({
-        data: { providerId: user.id },
+    // 4. Kích hoạt tài khoản, xóa OTP, tạo token pair và ví nguyên tử trong transaction
+    const { user, tokens } = await this.prisma.$transaction(async (tx) => {
+      // Atomic OTP consumption: xóa bản ghi OTP đã xác thực để đảm bảo chỉ được dùng 1 lần
+      const deletedOtp = await tx.otpAttempt.deleteMany({
+        where: { id: otpRecord.id },
       });
-    }
+
+      if (deletedOtp.count === 0) {
+        throw new BadRequestException({
+          code: ErrorCodes.OTP_INVALID,
+          message: 'Mã OTP không tồn tại hoặc đã được sử dụng',
+        });
+      }
+
+      // Xóa tất cả OTP records còn lại của email này cho type REGISTER
+      await tx.otpAttempt.deleteMany({
+        where: { email: dto.email, type: 'REGISTER' },
+      });
+
+      // Kích hoạt tài khoản
+      const activatedUser = await tx.user.update({
+        where: { email: dto.email },
+        data: {
+          status: UserStatus.ACTIVE,
+          emailVerified: true,
+        },
+      });
+
+      // Tạo token pair với tx
+      const generatedTokens = await this.generateTokenPair(
+        tx,
+        activatedUser.id,
+        activatedUser.email,
+        activatedUser.role,
+      );
+
+      // Tạo ví an toàn nếu là Provider (dùng upsert để đảm bảo idempotency)
+      if (activatedUser.role === UserRole.PROVIDER) {
+        await tx.providerWallet.upsert({
+          where: { providerId: activatedUser.id },
+          create: { providerId: activatedUser.id },
+          update: {},
+        });
+      }
+
+      return { user: activatedUser, tokens: generatedTokens };
+    });
 
     this.logger.log(`OTP verified: ${this.maskEmail(dto.email)}`);
 
@@ -925,9 +944,18 @@ export class AuthService {
     const expiresIn = (this.configService.get<string>('app.jwtExpiresIn') ||
       '15m') as JwtSignOptions['expiresIn'];
 
+    const issuer =
+      this.configService.get<string>('app.jwtIssuer') || 'service-marketplace';
+    const audience =
+      this.configService.get<string>('app.jwtAudience') ||
+      'service-marketplace-client';
+
     const signOptions: Parameters<JwtService['sign']>[1] = {
       secret,
       expiresIn,
+      issuer,
+      audience,
+      algorithm: 'HS256',
     };
     const accessToken = this.jwtService.sign(payload, signOptions);
 

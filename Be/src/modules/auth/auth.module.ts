@@ -24,6 +24,20 @@ import {
         signOptions: {
           expiresIn: (configService.get<string>('app.jwtExpiresIn') ||
             '15m') as JwtSignOptions['expiresIn'],
+          issuer:
+            configService.get<string>('app.jwtIssuer') || 'service-marketplace',
+          audience:
+            configService.get<string>('app.jwtAudience') ||
+            'service-marketplace-client',
+          algorithm: 'HS256',
+        },
+        verifyOptions: {
+          issuer:
+            configService.get<string>('app.jwtIssuer') || 'service-marketplace',
+          audience:
+            configService.get<string>('app.jwtAudience') ||
+            'service-marketplace-client',
+          algorithms: ['HS256'],
         },
       }),
       inject: [ConfigService],

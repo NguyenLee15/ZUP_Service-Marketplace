@@ -21,10 +21,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly prisma: PrismaService,
   ) {
     const secret = configService.getOrThrow<string>('app.jwtSecret');
+    const issuer =
+      configService.get?.<string>('app.jwtIssuer') || 'service-marketplace';
+    const audience =
+      configService.get?.<string>('app.jwtAudience') ||
+      'service-marketplace-client';
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: secret,
+      issuer,
+      audience,
+      algorithms: ['HS256'],
     });
   }
 

@@ -184,6 +184,10 @@ export class SearchServiceDto {
   @Min(1)
   @Max(50)
   limit?: number;
+
+  @IsString()
+  @IsOptional()
+  cursor?: string;
 }
 
 export class ProviderServicesQueryDto {
