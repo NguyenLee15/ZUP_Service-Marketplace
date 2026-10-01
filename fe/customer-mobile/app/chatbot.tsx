@@ -23,6 +23,7 @@ import {
   LoadingState,
 } from "../components/customer/customer-ui";
 import { MessageBubble } from "../features/chatbot/components/ChatBubble";
+import { ChatbotComposer } from "../features/chatbot/components/ChatbotComposer";
 import { Colors } from "../constants/colors";
 import { chatApi } from "../features/chat/chat.api";
 import { chatbotApi } from "../features/chatbot/chatbot.api";
@@ -526,49 +527,7 @@ export default function ChatbotScreen() {
         )}
       />
 
-      <View style={styles.inputShell}>
-        {quickReplies.length > 0 ? (
-          <View style={styles.quickReplyRow}>
-            {quickReplies.slice(0, 4).map((reply, index) => (
-              <Chip
-                key={`${reply.label || reply.message}-${index}`}
-                mode="outlined"
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  sendMessage(reply.message || reply.label || "");
-                }}
-                style={styles.quickReplyChip}
-              >
-                {reply.label || reply.message}
-              </Chip>
-            ))}
-          </View>
-        ) : null}
-        <View style={styles.inputRow}>
-          <TextInput
-            mode="outlined"
-            label="Bạn cần hỗ trợ gì?"
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            numberOfLines={1}
-            maxLength={1200}
-            style={styles.input}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Gửi cho AI"
-            disabled={!message.trim() || loading}
-            onPress={() => sendMessage(message)}
-            style={[
-              styles.sendButton,
-              !message.trim() || loading ? styles.sendButtonDisabled : null,
-            ]}
-          >
-            <MaterialCommunityIcons name="send" size={22} color={activeColors.onPrimary} />
-          </Pressable>
-        </View>
-      </View>
+      <ChatbotComposer quickReplies={quickReplies} message={message} loading={loading} onMessageChange={setMessage} onSend={sendMessage} />
     </KeyboardAvoidingView>
   );
 }
