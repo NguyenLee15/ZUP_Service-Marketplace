@@ -365,7 +365,7 @@ export default function ServiceDetailScreen() {
                 {hasReferencePrice ? formatCurrency(referencePrice) : 'Liên hệ báo giá'}
               </Text>
               <View style={styles.ratingPill}>
-                <MaterialCommunityIcons name="star" size={16} color="#FBBF24" />
+                <MaterialCommunityIcons name="star" size={16} color={activeColors.warning} />
                 <Text variant="labelMedium" style={styles.ratingText}>
                   {Number(service.avgRating || 0).toFixed(1)}
                 </Text>
@@ -621,7 +621,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
             ) : null}
           </View>
           <View style={styles.reviewRating}>
-            <MaterialCommunityIcons name="star" size={15} color="#FBBF24" />
+            <MaterialCommunityIcons name="star" size={15} color={activeColors.warning} />
             <Text variant="labelSmall" style={styles.ratingText}>
               {Number(review.rating || 0).toFixed(1)}
             </Text>
@@ -684,7 +684,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     paddingVertical: 5,
     backgroundColor: 'rgba(15, 23, 42, 0.72)',
   },
-  imageCounterText: { color: '#FFFFFF', fontWeight: '900', fontVariant: ['tabular-nums'] },
+  imageCounterText: { color: activeColors.onPrimary, fontWeight: '900', fontVariant: ['tabular-nums'] },
   thumbnailRow: { gap: 8, paddingRight: 16 },
   thumbnail: {
     width: 64,
@@ -754,7 +754,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  providerAvatarText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 20 },
+  providerAvatarText: { color: activeColors.onPrimary, fontWeight: 'bold', fontSize: 20 },
   providerNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   verifiedBadge: {
     flexDirection: 'row',
@@ -777,6 +777,6 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  reviewAvatarText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 },
+  reviewAvatarText: { color: activeColors.onPrimary, fontWeight: 'bold', fontSize: 13 },
   reviewDivider: { height: 1, backgroundColor: activeColors.border, marginVertical: 6, opacity: 0.6 },
 });
