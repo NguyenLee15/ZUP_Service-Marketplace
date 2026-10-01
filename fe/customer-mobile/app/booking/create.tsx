@@ -11,12 +11,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button, Text, TextInput } from 'react-native-paper';
 import {
-  CustomerCard,
   CustomerScreen,
   EmptyState,
   InlineMessage,
   LoadingState,
-  StatusChip,
 } from '../../components/customer/customer-ui';
 import { Colors } from '../../constants/colors';
 import { bookingApi } from '../../features/booking/booking.api';
@@ -28,13 +26,13 @@ import {
   getProvinceOptions,
   getWardOptions,
 } from '../../lib/address-options';
-import { formatCurrency } from '../../lib/format';
 import { useAddressOptions } from '../../hooks/useAddressOptions';
 import { routes } from '../../lib/route-utils';
 import { BookingAddressSection } from '../../features/booking/components/BookingAddressSection';
 import { BookingScheduleSection } from '../../features/booking/components/BookingScheduleSection';
 import { BookingConfirmationSection } from '../../features/booking/components/BookingConfirmationSection';
 import { BookingQuestionnaireSection } from '../../features/booking/components/BookingQuestionnaireSection';
+import { BookingServiceSummary } from '../../features/booking/components/BookingServiceSummary';
 
 import type { BookingAddress } from '../../features/booking/components/BookingAddressSection';
 
@@ -290,34 +288,11 @@ export default function CreateBookingScreen() {
       {error ? <InlineMessage tone="error" message={error} /> : null}
 
       <SectionWithIcon title="Dịch vụ đã chọn" icon="briefcase-outline">
-        {service ? (
-          <CustomerCard>
-            <View style={styles.serviceCard}>
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text variant="titleMedium" style={styles.titleText}>
-                  {service.name || 'Dịch vụ'}
-                </Text>
-                <Text variant="bodySmall" style={styles.subtitle}>
-                  {service.provider?.fullName || service.category?.name || 'HomeServe'}
-                </Text>
-                {service.referencePrice ? (
-                  <Text variant="titleSmall" style={styles.priceText}>
-                    {formatCurrency(service.referencePrice)}
-                  </Text>
-                ) : null}
-              </View>
-              {oldBookingId > 0 ? <StatusChip label="Đặt lại" color={activeColors.info} /> : null}
-            </View>
-          </CustomerCard>
-        ) : (
-          <EmptyState
-            icon="briefcase-search-outline"
-            title="Không tìm thấy dịch vụ"
-            description="Dịch vụ có thể đã ngừng hiển thị."
-            actionLabel="Tìm dịch vụ khác"
-            onAction={() => router.replace(routes.tabs.search)}
-          />
-        )}
+        <BookingServiceSummary
+          service={service}
+          isReorder={oldBookingId > 0}
+          onSearchPress={() => router.replace(routes.tabs.search)}
+        />
       </SectionWithIcon>
 
       <SectionWithIcon title="Chi tiết yêu cầu" icon="clipboard-text-outline">
@@ -549,12 +524,6 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleText: { color: activeColors.text, fontWeight: '900' },
-  subtitle: { color: activeColors.textSecondary, lineHeight: 20 },
-  priceText: { color: activeColors.primary, fontWeight: '900' },
-  priceSummaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  priceSummaryText: { color: activeColors.primary, fontWeight: '900' },
-  serviceCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   formBlock: { gap: 12 },
   fieldLabel: { color: activeColors.textSecondary, fontWeight: '800' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
