@@ -9,7 +9,7 @@ import { Linking } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, Text, TextInput } from 'react-native-paper';
 import {
   CustomerCard,
   CustomerScreen,
@@ -28,10 +28,11 @@ import {
   getProvinceOptions,
   getWardOptions,
 } from '../../lib/address-options';
-import { formatCurrency, formatDateTime } from '../../lib/format';
+import { formatCurrency } from '../../lib/format';
 import { useAddressOptions } from '../../hooks/useAddressOptions';
 import { routes } from '../../lib/route-utils';
 import { BookingAddressSection } from '../../features/booking/components/BookingAddressSection';
+import { BookingScheduleSection } from '../../features/booking/components/BookingScheduleSection';
 
 import type { BookingAddress } from '../../features/booking/components/BookingAddressSection';
 
@@ -378,54 +379,14 @@ export default function CreateBookingScreen() {
       </SectionWithIcon>
 
       <SectionWithIcon title="Thời gian thực hiện" icon="calendar-clock">
-        <CustomerCard>
-          <View style={styles.formBlock}>
-            <View style={styles.row}>
-              <Button
-                mode={form.timeMode === 'now' ? 'contained-tonal' : 'outlined'}
-                onPress={() => updateForm({ timeMode: 'now' })}
-                style={[styles.flexButton, form.timeMode === 'now' && { borderColor: activeColors.primary, borderWidth: 1 }]}
-                icon="lightning-bolt"
-              >
-                Làm ngay
-              </Button>
-              <Button
-                mode={form.timeMode === 'scheduled' ? 'contained-tonal' : 'outlined'}
-                onPress={() => updateForm({ timeMode: 'scheduled' })}
-                style={[styles.flexButton, form.timeMode === 'scheduled' && { borderColor: activeColors.primary, borderWidth: 1 }]}
-                icon="calendar-clock"
-              >
-                Hẹn giờ
-              </Button>
-            </View>
-
-            {form.timeMode === 'scheduled' && (
-              <View style={styles.formBlock}>
-                <View style={styles.row}>
-                  <Button mode="outlined" onPress={() => setShowDatePicker(true)} style={styles.flexButton} icon="calendar">
-                    {form.desiredTime
-                      ? new Date(form.desiredTime).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                      : 'Chọn ngày'}
-                  </Button>
-                  <Button mode="outlined" onPress={() => setShowTimePicker(true)} style={styles.flexButton} icon="clock-outline">
-                    {form.desiredTime
-                      ? new Date(form.desiredTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-                      : 'Chọn giờ'}
-                  </Button>
-                </View>
-                <HelperText type="info" visible>
-                  {form.desiredTime ? `Đã chọn: ${formatDateTime(form.desiredTime)}` : 'Chọn ngày và giờ trong tương lai.'}
-                </HelperText>
-              </View>
-            )}
-            
-            {form.timeMode === 'now' && (
-              <HelperText type="info" visible>
-                Thợ sẽ cố gắng đến hỗ trợ bạn trong thời gian sớm nhất có thể.
-              </HelperText>
-            )}
-          </View>
-        </CustomerCard>
+        <BookingScheduleSection
+          data={{ timeMode: form.timeMode, desiredTime: form.desiredTime }}
+          actions={{
+            onModeChange: (timeMode) => updateForm({ timeMode }),
+            onOpenDatePicker: () => setShowDatePicker(true),
+            onOpenTimePicker: () => setShowTimePicker(true),
+          }}
+        />
       </SectionWithIcon>
 
       <SectionWithIcon title="Xác nhận" icon="check-circle-outline">
