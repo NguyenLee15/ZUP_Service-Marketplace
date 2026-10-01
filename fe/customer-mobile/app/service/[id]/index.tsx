@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Avatar, Button, Chip, Text, IconButton } from 'react-native-paper';
+import { Avatar, Button, Text, IconButton } from 'react-native-paper';
 import {
   BottomActionBar,
   CustomerCard,
@@ -18,9 +18,10 @@ import { Colors } from '../../../constants/colors';
 import { chatApi } from '../../../features/chat/chat.api';
 import { serviceApi } from '../../../features/service/service.api';
 import { useServiceStore } from '../../../features/service/service.store';
-import { formatCurrency, formatDateTime } from '../../../lib/format';
+import { formatDateTime } from '../../../lib/format';
 import { normalizeList, normalizePaginated, unwrapData } from '../../../lib/api-response';
 import { toRouteId, routes } from '../../../lib/route-utils';
+import { ServiceOverviewCard } from '../../../features/service/components/ServiceOverviewCard';
 
 type ServiceImage = {
   id?: number | string;
@@ -358,50 +359,13 @@ export default function ServiceDetailScreen() {
         ) : null}
         {chatError ? <InlineMessage tone="error" message={chatError} /> : null}
 
-        <CustomerCard style={styles.infoCard}>
-          <View style={styles.infoBlock}>
-            <View style={styles.rowBetween}>
-              <Text variant="titleLarge" style={styles.price}>
-                {hasReferencePrice ? formatCurrency(referencePrice) : 'Liên hệ báo giá'}
-              </Text>
-              <View style={styles.ratingPill}>
-                <MaterialCommunityIcons name="star" size={16} color={activeColors.warning} />
-                <Text variant="labelMedium" style={styles.ratingText}>
-                  {Number(service.avgRating || 0).toFixed(1)}
-                </Text>
-              </View>
-            </View>
-
-            {hasReferencePrice ? (
-              <View style={styles.estimateBox}>
-                <MaterialCommunityIcons name="cash-multiple" size={16} color={activeColors.primary} />
-                <Text variant="bodySmall" style={styles.estimateText}>
-                  Khoảng giá ước tính: {formatCurrency(estimateLow)} - {formatCurrency(estimateHigh)}
-                </Text>
-              </View>
-            ) : null}
-
-            <View style={styles.infoDivider} />
-
-            <View style={{ gap: 4 }}>
-              <Text variant="labelSmall" style={styles.infoLabel}>Giới thiệu dịch vụ</Text>
-              <Text variant="bodyMedium" style={styles.description}>
-                {service.description || 'Chưa có mô tả'}
-              </Text>
-            </View>
-
-            <View style={styles.infoDivider} />
-
-            <View style={styles.rowBetween}>
-              <Text variant="labelLarge" style={styles.metaText}>
-                {Number(service.totalReviews || 0)} lượt đánh giá
-              </Text>
-              <Chip icon="check-circle-outline" mode="outlined" style={styles.serviceActiveChip}>
-                Đang hoạt động
-              </Chip>
-            </View>
-          </View>
-        </CustomerCard>
+        <ServiceOverviewCard
+          service={service}
+          hasReferencePrice={hasReferencePrice}
+          referencePrice={referencePrice}
+          estimateLow={estimateLow}
+          estimateHigh={estimateHigh}
+        />
 
         <ProviderCard
           provider={provider}
@@ -696,20 +660,8 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   },
   thumbnailSelected: { borderColor: activeColors.primary },
   infoBlock: { gap: 10 },
-  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  price: { color: activeColors.primary, fontWeight: '900' },
-  ratingPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: activeColors.surfaceVariant,
-  },
   ratingText: { color: activeColors.text, fontWeight: '900', fontVariant: ['tabular-nums'] },
   description: { color: activeColors.textSecondary, lineHeight: 22 },
-  metaText: { color: activeColors.text, fontWeight: '800' },
   providerCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   providerInfo: { flex: 1, gap: 4 },
   providerName: { color: activeColors.text, fontWeight: '900', marginRight: 4 },
@@ -731,22 +683,6 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   bottomButton: { flex: 1, borderRadius: 12 },
   skeletonScreen: { gap: 14 },
   skeleton: { backgroundColor: activeColors.surfaceVariant, borderRadius: 12 },
-  // Styled new components
-  infoCard: { borderColor: activeColors.border },
-  estimateBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: activeColors.primarySoft,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 4,
-  },
-  estimateText: { color: activeColors.primary, fontWeight: '700' },
-  infoDivider: { height: 1, backgroundColor: activeColors.border, marginVertical: 8 },
-  infoLabel: { color: activeColors.textSecondary, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
-  serviceActiveChip: { borderRadius: 999, height: 32 },
   providerAvatarCircle: {
     width: 58,
     height: 58,
