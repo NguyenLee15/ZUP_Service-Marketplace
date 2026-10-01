@@ -58,6 +58,17 @@ interface Stats {
   statusData?: Array<{ status: string; count: number }>;
 }
 
+export interface RecentBookingItem {
+  id: number;
+  bookingCode: string;
+  status: string;
+  desiredTime: string;
+  service?: { name?: string } | null;
+  customer?: { fullName?: string } | null;
+  district?: string;
+  province?: string;
+}
+
 type Message = {
   tone: "info" | "success" | "warning" | "error";
   text: string;
@@ -250,7 +261,7 @@ export default function DashboardScreen() {
 
   const [todayStats, setTodayStats] = useState<Stats | null>(null);
   const [yesterdayStats, setYesterdayStats] = useState<Stats | null>(null);
-  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [recentBookings, setRecentBookings] = useState<RecentBookingItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
@@ -276,6 +287,21 @@ export default function DashboardScreen() {
       if (todayRes?.data?.data) setTodayStats(todayRes.data.data);
       if (yesterdayRes?.data?.data) setYesterdayStats(yesterdayRes.data.data);
       if (bookingsRes?.data?.data) setRecentBookings(bookingsRes.data.data);
+
+      const hasFailed = !todayRes && !yesterdayRes && !bookingsRes;
+      const isPartial = (!todayRes || !yesterdayRes || !bookingsRes) && Boolean(todayRes || yesterdayRes || bookingsRes);
+
+      if (hasFailed) {
+        setMessage({
+          tone: "error",
+          text: "Không thể tải dữ liệu tổng quan. Kéo xuống để thử lại.",
+        });
+      } else if (isPartial) {
+        setMessage({
+          tone: "warning",
+          text: "Một phần số liệu thống kê hoặc đơn hàng chưa cập nhật được.",
+        });
+      }
     } catch {
       setMessage({
         tone: "error",

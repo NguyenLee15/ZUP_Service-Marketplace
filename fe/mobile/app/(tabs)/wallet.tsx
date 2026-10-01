@@ -39,6 +39,17 @@ type WalletRequest = {
   bankAccountNumber?: string;
 };
 
+export type WalletTransactionItem = {
+  id: number;
+  type: string;
+  status: string;
+  amount: number | string;
+  createdAt: string;
+  booking?: {
+    bookingCode?: string;
+  } | null;
+};
+
 const MANUAL_BANK_INFO = {
   bankName: process.env.EXPO_PUBLIC_PROVIDER_DEPOSIT_BANK_NAME || '',
   accountNumber: process.env.EXPO_PUBLIC_PROVIDER_DEPOSIT_ACCOUNT_NUMBER || '',
@@ -67,7 +78,7 @@ export default function WalletScreen() {
 
   const [balance, setBalance] = useState(0);
   const [isRestricted, setIsRestricted] = useState(false);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<WalletTransactionItem[]>([]);
   const [manualDeposits, setManualDeposits] = useState<WalletRequest[]>([]);
   const [withdrawals, setWithdrawals] = useState<WalletRequest[]>([]);
   const [message, setMessage] = useState<MessageState>(null);
@@ -352,7 +363,7 @@ export default function WalletScreen() {
     );
   };
 
-  const renderTransaction = ({ item }: { item: any }) => {
+  const renderTransaction = ({ item }: { item: WalletTransactionItem }) => {
     const color = getTxColor(item.type, item.status);
     const isPositive = item.type === 'DEPOSIT';
     const amount = Math.abs(Number(item.amount || 0));

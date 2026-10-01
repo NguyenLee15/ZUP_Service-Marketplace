@@ -36,7 +36,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (isAuthenticated && expoPushToken) {
-      authApi.updatePushToken(expoPushToken).catch(() => {});
+      authApi.updatePushToken(expoPushToken).catch((err: unknown) => {
+        if (__DEV__) {
+          console.warn('[PushNotification] Failed to update push token:', err);
+        }
+      });
     }
   }, [isAuthenticated, expoPushToken]);
 

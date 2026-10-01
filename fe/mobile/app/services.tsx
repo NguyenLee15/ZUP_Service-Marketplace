@@ -21,6 +21,16 @@ import {
 
 type FilterKey = 'ALL' | 'ACTIVE' | 'HIDDEN' | 'PENDING' | 'REJECTED';
 
+export type ProviderServiceListItem = {
+  id: number;
+  name: string;
+  status: 'ACTIVE' | 'HIDDEN' | 'PENDING' | 'DRAFT' | 'REJECTED' | string;
+  category?: { id?: number; name?: string } | null;
+  basePrice?: number;
+  referencePrice?: number;
+  description?: string;
+};
+
 const filters: Array<{ key: FilterKey; label: string }> = [
   { key: 'ALL', label: 'Tất cả' },
   { key: 'ACTIVE', label: 'Đang hiện' },
@@ -35,7 +45,7 @@ export default function ServicesScreen() {
   const styles = getStyles(theme, activeColors);
   const router = useRouter();
 
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<ProviderServiceListItem[]>([]);
   const [filter, setFilter] = useState<FilterKey>('ALL');
   const [message, setMessage] = useState<{ tone: 'success' | 'warning' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,7 +80,7 @@ export default function ServicesScreen() {
     return services.filter(service => service.status === filter);
   }, [filter, services]);
 
-  const toggleServiceStatus = async (service: any) => {
+  const toggleServiceStatus = async (service: ProviderServiceListItem) => {
     if (service.status !== 'ACTIVE' && service.status !== 'HIDDEN') {
       setMessage({ tone: 'warning', text: 'Chỉ có thể ẩn hoặc hiện dịch vụ đang hoạt động.' });
       return;
@@ -97,7 +107,7 @@ export default function ServicesScreen() {
     }
   };
 
-  const confirmDelete = (service: any) => {
+  const confirmDelete = (service: ProviderServiceListItem) => {
     Alert.alert('Xóa dịch vụ', `Bạn có chắc muốn xóa dịch vụ "${service.name}"?`, [
       { text: 'Hủy', style: 'cancel' },
       { text: 'Xóa', style: 'destructive', onPress: () => deleteService(service.id) },
@@ -151,7 +161,7 @@ export default function ServicesScreen() {
     }
   };
 
-  const renderService = ({ item }: { item: any }) => {
+  const renderService = ({ item }: { item: ProviderServiceListItem }) => {
     const color = getStatusColor(item.status);
     const canToggle = item.status === 'ACTIVE' || item.status === 'HIDDEN';
 

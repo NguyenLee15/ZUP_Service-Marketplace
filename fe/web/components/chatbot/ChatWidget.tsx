@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Bot, Loader2, MessageSquare } from "lucide-react";
+import { AlertCircle, Bot, Loader2, MessageSquare, RotateCcw } from "lucide-react";
 import api from "@/lib/axios";
 import { chatbotApi } from "@/features/auth/services/api";
 import { useAuthStore } from "@/store/auth.store";
@@ -110,7 +110,9 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
     [sessionId, pageContext],
   );
 
-  const { messages, sendMessage, setMessages, status } =
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  const { messages, sendMessage, setMessages, status, error, regenerate } =
     useChat<ChatbotUIMessage>({
       transport,
       messageMetadataSchema: chatbotMessageMetaSchema,
@@ -139,37 +141,39 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const isLoading = status === "streaming" || status === "submitted";
 
   // Khôi phục lịch sử chat từ API khi có sessionId và accessToken
+  const fetchHistory = useCallback(async () => {
+    if (!sessionId || !accessToken) return;
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const response = await api.get(
+        `/chatbot/history?sessionId=${sessionId}`,
+      );
+      const historyData = response.data?.data;
+      if (Array.isArray(historyData) && historyData.length > 0) {
+        setMessages(historyData);
+
+        const newMetaMap: Record<string, ChatbotMessageMeta> = {};
+        historyData.forEach((msg: ChatbotUIMessage) => {
+          if (msg.role === "assistant" && msg.metadata) {
+            newMetaMap[msg.id] = msg.metadata;
+          }
+        });
+        setMetaMap((prev) => ({ ...prev, ...newMetaMap }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch chatbot history:", err);
+      setHistoryError("Không thể tải lịch sử trò chuyện.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [sessionId, accessToken, setMessages]);
+
   useEffect(() => {
     if (!sessionId || !accessToken || messages.length > 1 || historyLoading)
       return;
-
-    const fetchHistory = async () => {
-      setHistoryLoading(true);
-      try {
-        const response = await api.get(
-          `/chatbot/history?sessionId=${sessionId}`,
-        );
-        const historyData = response.data?.data;
-        if (Array.isArray(historyData) && historyData.length > 0) {
-          setMessages(historyData);
-
-          const newMetaMap: Record<string, ChatbotMessageMeta> = {};
-          historyData.forEach((msg: ChatbotUIMessage) => {
-            if (msg.role === "assistant" && msg.metadata) {
-              newMetaMap[msg.id] = msg.metadata;
-            }
-          });
-          setMetaMap((prev) => ({ ...prev, ...newMetaMap }));
-        }
-      } catch (err) {
-        console.error("Failed to fetch chatbot history:", err);
-      } finally {
-        setHistoryLoading(false);
-      }
-    };
-
-    fetchHistory();
-  }, [sessionId, accessToken, setMessages, messages.length]);
+    void fetchHistory();
+  }, [sessionId, accessToken, messages.length, historyLoading, fetchHistory]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -385,6 +389,40 @@ export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
                 </div>
               </div>
             )}
+            {historyError && (
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                  <span>{historyError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void fetchHistory()}
+                  className="inline-flex items-center gap-1 font-semibold text-red-600 hover:text-red-800 hover:underline"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Thử lại
+                </button>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                  <span>Đã xảy ra lỗi khi trao đổi với AI.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void regenerate()}
+                  className="inline-flex items-center gap-1 font-semibold text-amber-700 hover:text-amber-900 hover:underline"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Thử lại
+                </button>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
