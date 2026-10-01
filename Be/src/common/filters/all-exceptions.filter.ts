@@ -32,9 +32,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         const resp = exceptionResponse as Record<string, unknown>;
         // Hỗ trợ format: throw new BadRequestException({ code: '...', message: '...' })
-        code =
-          this.stringValue(resp.code) ??
-          this.statusToCode(status);
+        code = this.stringValue(resp.code) ?? this.statusToCode(status);
         const responseMessage =
           this.messageValue(resp.message) ?? exception.message;
         message = Array.isArray(responseMessage)

@@ -68,7 +68,7 @@ export class VnpayReconciliationCron {
 
   private async reconcileTransaction(txn: {
     id: number;
-    amount: number | unknown;
+    amount: number | string | { toString(): string };
     vnpayTxnRef: string | null;
     idempotencyKey: string | null;
     createdAt: Date;
