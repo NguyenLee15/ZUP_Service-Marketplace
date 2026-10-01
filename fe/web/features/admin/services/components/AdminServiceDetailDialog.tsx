@@ -6,6 +6,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -92,7 +93,7 @@ export function AdminServiceDetailDialog({
                   <p className="text-muted-foreground text-sm mb-2">Hình Ảnh</p>
                   <div className="flex gap-2 overflow-x-auto pb-2">
                     {service.images.map((image: { id: number; imageUrl: string }) => (
-                      <img key={image.id} src={image.imageUrl} alt="service image" className="w-24 h-24 object-cover rounded-md flex-shrink-0" />
+                      <Image key={image.id} src={image.imageUrl} alt="Hình ảnh dịch vụ" width={96} height={96} className="h-24 w-24 flex-shrink-0 rounded-md object-cover" sizes="96px" />
                     ))}
                   </div>
                 </div>

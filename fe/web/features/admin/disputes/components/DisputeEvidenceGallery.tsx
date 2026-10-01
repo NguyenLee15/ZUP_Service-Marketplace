@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { AlertTriangle, Camera, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DisputeDetailData } from '../types/dispute-detail.types';
@@ -55,10 +56,12 @@ export function DisputeEvidenceGallery({ dispute, onOpenLightbox }: DisputeEvide
                   {ev.type === 'VIDEO' ? (
                     <video src={ev.fileUrl} className="h-full w-full object-cover" />
                   ) : (
-                    <img
+                    <Image
                       src={ev.fileUrl}
                       alt={`Bằng chứng ${i + 1}`}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="(max-width: 640px) 33vw, 25vw"
+                      className="object-cover"
                     />
                   )}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">

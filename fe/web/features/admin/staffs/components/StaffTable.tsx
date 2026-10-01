@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -105,10 +106,13 @@ export function StaffTable({
                           <div className="relative">
                             <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-sm overflow-hidden border border-slate-200">
                               {staff.avatarUrl ? (
-                                <img
+                                <Image
                                   src={staff.avatarUrl}
                                   alt={`Ảnh đại diện của nhân viên ${staff.fullName}`}
-                                  className="w-full h-full object-cover"
+                                  width={36}
+                                  height={36}
+                                  className="h-full w-full object-cover"
+                                  sizes="36px"
                                 />
                               ) : (
                                 staff.fullName?.charAt(0)?.toUpperCase() || 'U'
