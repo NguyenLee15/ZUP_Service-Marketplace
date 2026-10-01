@@ -6,6 +6,7 @@ import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { BookingCommissionService } from './booking-commission.service';
 import { BookingSharedService } from './booking-shared.service';
 import { BookingStatePolicy } from './booking-state.policy';
+import { hasValidImageSignature } from '../../common/constants/upload-limits.constant';
 import {
   RejectQuoteDto,
   SendQuoteDto,
@@ -79,6 +80,12 @@ export class BookingQuotationService {
     try {
       if (files && files.length > 0) {
         for (const file of files) {
+          if (!hasValidImageSignature(file.mimetype, file.buffer)) {
+            throw new BadRequestException({
+              code: ErrorCodes.VALIDATION_ERROR,
+              message: `Nội dung tệp hình ảnh không khớp với định dạng đã khai báo (${file.originalname}).`,
+            });
+          }
           uploadedAssets.push(
             await this.cloudinaryService.uploadFile(file.buffer, 'bookings'),
           );

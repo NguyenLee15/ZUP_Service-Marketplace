@@ -15,7 +15,9 @@ const file = (name: string): Express.Multer.File => ({
   destination: '',
   filename: name,
   path: '',
-  buffer: Buffer.from('img'),
+  buffer: Buffer.from([
+    0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46,
+  ]),
   stream: undefined as never,
 });
 
@@ -104,5 +106,20 @@ describe('BookingQuotationService upload/persistence boundary', () => {
       'asset-1',
       'asset-2',
     ]);
+  });
+
+  it('rejects a forged image before Cloudinary upload', async () => {
+    const { service, prisma, cloudinary } = createService();
+    const forgedFile = {
+      ...file('forged.jpg'),
+      buffer: Buffer.from('not-an-image'),
+    };
+
+    await expect(service.sendQuote(8, 42, dto, [forgedFile])).rejects.toThrow(
+      'Nội dung tệp hình ảnh không khớp',
+    );
+
+    expect(cloudinary.uploadFile).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });

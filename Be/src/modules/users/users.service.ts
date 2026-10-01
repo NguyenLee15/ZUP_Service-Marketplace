@@ -15,6 +15,7 @@ import {
 } from './dto/users.dto';
 import { Prisma } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { hasValidImageSignature } from '../../common/constants/upload-limits.constant';
 
 const MAX_ADDRESSES = 5;
 
@@ -84,6 +85,12 @@ export class UsersService {
 
     // Upload avatar nếu có
     if (avatarFile) {
+      if (!hasValidImageSignature(avatarFile.mimetype, avatarFile.buffer)) {
+        throw new BadRequestException({
+          code: ErrorCodes.VALIDATION_ERROR,
+          message: `Nội dung tệp hình ảnh không khớp với định dạng đã khai báo (${avatarFile.originalname}).`,
+        });
+      }
       const uploaded = await this.cloudinaryService.uploadFile(
         avatarFile.buffer,
         'avatars',

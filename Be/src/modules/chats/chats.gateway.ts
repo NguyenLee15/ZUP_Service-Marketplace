@@ -25,6 +25,8 @@ import {
 } from '../../common/types/auth.types';
 import type { AuthenticatedSocket } from '../../common/types/auth.types';
 import { SendMessageWsDto } from './dto/send-message-ws.dto';
+import { TypingWsDto } from './dto/typing-ws.dto';
+import { RevokeMessageWsDto } from './dto/revoke-message-ws.dto';
 
 interface ConversationEventPayload {
   conversationId: number;
@@ -175,7 +177,10 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         user.id === convo.customerId ? convo.providerId : convo.customerId;
 
       // Nếu recipient là Provider và offline -> Trigger AI
-      if (recipientId === convo.providerId && !this.isUserOnline(recipientId)) {
+      if (
+        recipientId === convo.providerId &&
+        !(await this.isUserOnline(recipientId))
+      ) {
         await this.jobsService.enqueue(JobName.ChatAiReply, {
           conversationId: data.conversationId,
           customerId: convo.customerId,
@@ -189,9 +194,16 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('typing')
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  )
   async handleTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { conversationId: number },
+    @MessageBody() data: TypingWsDto,
   ) {
     const userId = client.data.user?.id;
     if (!userId) return;
@@ -208,21 +220,37 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('revokeMessage')
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  )
   async handleRevokeMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { messageId: number },
+    @MessageBody() data: RevokeMessageWsDto,
   ) {
     const userId = client.data.user?.id;
-    if (!userId || !Number.isInteger(Number(data.messageId))) return;
+    if (!userId) return;
 
     try {
-      await this.chatsService.recallMessage(Number(data.messageId), userId);
+      await this.chatsService.recallMessage(data.messageId, userId);
     } catch {
       return;
     }
   }
 
-  isUserOnline(userId: number): boolean {
-    return this.connectedUsers.has(userId);
+  async isUserOnline(userId: number): Promise<boolean> {
+    try {
+      const sockets = await this.server.in(`user:${userId}`).fetchSockets();
+      return sockets.length > 0;
+    } catch (error) {
+      this.logger.warn(
+        `Unable to resolve cluster presence for user ${userId}; suppressing AI fallback`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      return true;
+    }
   }
 }
