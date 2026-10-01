@@ -9,7 +9,7 @@ import { Linking } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button, Chip, Text, TextInput } from 'react-native-paper';
+import { Button, Text, TextInput } from 'react-native-paper';
 import {
   CustomerCard,
   CustomerScreen,
@@ -34,6 +34,7 @@ import { routes } from '../../lib/route-utils';
 import { BookingAddressSection } from '../../features/booking/components/BookingAddressSection';
 import { BookingScheduleSection } from '../../features/booking/components/BookingScheduleSection';
 import { BookingConfirmationSection } from '../../features/booking/components/BookingConfirmationSection';
+import { BookingQuestionnaireSection } from '../../features/booking/components/BookingQuestionnaireSection';
 
 import type { BookingAddress } from '../../features/booking/components/BookingAddressSection';
 
@@ -320,40 +321,13 @@ export default function CreateBookingScreen() {
       </SectionWithIcon>
 
       <SectionWithIcon title="Chi tiết yêu cầu" icon="clipboard-text-outline">
-        <CustomerCard>
-          <View style={styles.formBlock}>
-            {questionnaire.map((block) => (
-              <View key={block.q} style={styles.formBlock}>
-                <Text variant="labelLarge" style={styles.fieldLabel}>
-                  {block.q}
-                </Text>
-                <View style={styles.chipWrap}>
-                  {block.options.map((option) => (
-                    <Chip
-                      key={option}
-                      selected={form.selectedChips.includes(option)}
-                      mode={form.selectedChips.includes(option) ? 'flat' : 'outlined'}
-                      onPress={() => toggleChip(option)}
-                      accessibilityLabel={`Chọn tình trạng ${option}`}
-                      style={styles.chip}
-                    >
-                      {option}
-                    </Chip>
-                  ))}
-                </View>
-              </View>
-            ))}
-            <TextInput
-              label="Mô tả thêm"
-              mode="outlined"
-              value={form.customText}
-              onChangeText={(customText) => updateForm({ customText })}
-              multiline
-              numberOfLines={4}
-              placeholder="Ví dụ: thời điểm xuất hiện lỗi, diện tích, yêu cầu riêng..."
-            />
-          </View>
-        </CustomerCard>
+        <BookingQuestionnaireSection
+          questionnaire={questionnaire}
+          selectedChips={form.selectedChips}
+          customText={form.customText}
+          onToggleChip={toggleChip}
+          onCustomTextChange={(customText) => updateForm({ customText })}
+        />
       </SectionWithIcon>
 
 
