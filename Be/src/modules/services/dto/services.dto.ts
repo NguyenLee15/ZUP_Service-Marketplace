@@ -52,12 +52,12 @@ export class CreateServiceDto {
   })
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (typeof value === 'string') {
       try {
-        const parsed = JSON.parse(value);
+        const parsed: unknown = JSON.parse(value);
         if (Array.isArray(parsed)) {
-          return plainToInstance(CreateServiceItemDto, parsed);
+          return plainToInstance(CreateServiceItemDto, parsed as unknown[]);
         }
         return parsed;
       } catch {
@@ -92,12 +92,12 @@ export class UpdateServiceDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateServiceItemDto)
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (typeof value === 'string') {
       try {
-        const parsed = JSON.parse(value);
+        const parsed: unknown = JSON.parse(value);
         if (Array.isArray(parsed)) {
-          return plainToInstance(CreateServiceItemDto, parsed);
+          return plainToInstance(CreateServiceItemDto, parsed as unknown[]);
         }
         return parsed;
       } catch {
@@ -212,7 +212,9 @@ export class ProviderServicesQueryDto {
 export class AdminRejectDto {
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : (value as string),
+  )
   @MinLength(3)
   @MaxLength(500)
   reason: string;
@@ -221,7 +223,9 @@ export class AdminRejectDto {
 export class AdminHideDto {
   @IsString()
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : (value as string | undefined),
+  )
   @MaxLength(500)
   reason?: string;
 }

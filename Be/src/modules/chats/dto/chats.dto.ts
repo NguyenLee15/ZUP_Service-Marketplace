@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional } from 'class-validator';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class CreateConversationDto {
   @IsInt()
@@ -18,4 +18,26 @@ export class ChatHistoryQueryDto {
   @IsOptional()
   @Type(() => Number)
   cursor?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  @Max(100)
+  limit?: number;
+}
+
+export class GetConversationsQueryDto {
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  page?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  @Max(50)
+  limit?: number;
 }

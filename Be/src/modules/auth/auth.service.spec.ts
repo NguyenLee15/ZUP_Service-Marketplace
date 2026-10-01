@@ -72,6 +72,7 @@ type AuthPrismaMock = {
   };
   otpAttempt: {
     findFirst: jest.Mock;
+    create: jest.Mock;
     update: jest.Mock;
     deleteMany: jest.Mock;
   };
@@ -138,6 +139,7 @@ describe('AuthService token hardening', () => {
       },
       otpAttempt: {
         findFirst: jest.fn(),
+        create: jest.fn().mockResolvedValue({ id: 1 }),
         update: jest.fn().mockResolvedValue({}),
         deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
@@ -652,6 +654,33 @@ describe('AuthService token hardening', () => {
       'Linked Google account to provider: provider@test.local',
     );
     loggerLogSpy.mockRestore();
+  });
+
+  it('registers user and creates OTP in an atomic transaction before enqueuing mail job', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+    prisma.otpAttempt.findFirst.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue(
+      googleUserRecord({
+        id: 1,
+        email: 'newuser@test.local',
+        role: UserRole.CUSTOMER,
+        status: UserStatus.PENDING,
+        emailVerified: false,
+      }),
+    );
+
+    const result = await service.register({
+      fullName: 'New User',
+      email: 'newuser@test.local',
+      phone: '0901234567',
+      password: 'StrongPassword123!',
+      role: UserRole.CUSTOMER,
+    });
+
+    expect(prisma.$transaction).toHaveBeenCalled();
+    expect(prisma.user.create).toHaveBeenCalled();
+    expect(prisma.otpAttempt.create).toHaveBeenCalled();
+    expect(result.data.email).toBe('newuser@test.local');
   });
 });
 

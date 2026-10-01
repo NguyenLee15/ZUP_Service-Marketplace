@@ -24,7 +24,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ChatsService } from './chats.service';
-import { ChatHistoryQueryDto, CreateConversationDto } from './dto/chats.dto';
+import {
+  ChatHistoryQueryDto,
+  CreateConversationDto,
+  GetConversationsQueryDto,
+} from './dto/chats.dto';
 import { CloudinaryService } from '../../shared/cloudinary/cloudinary.service';
 import { hasValidImageSignature } from '../../common/constants/upload-limits.constant';
 
@@ -42,13 +46,12 @@ export class ChatsController {
   @ApiOperation({ summary: 'List current user conversations' })
   async getConversations(
     @CurrentUser('id') userId: number,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: GetConversationsQueryDto,
   ) {
     return this.chatsService.getConversations(
       userId,
-      Number(page),
-      Number(limit),
+      query?.page,
+      query?.limit,
     );
   }
 
@@ -116,7 +119,12 @@ export class ChatsController {
     @Param('conversationId', ParseIntPipe) conversationId: number,
     @Query() query: ChatHistoryQueryDto,
   ) {
-    return this.chatsService.getHistory(conversationId, userId, query.cursor);
+    return this.chatsService.getHistory(
+      conversationId,
+      userId,
+      query.cursor,
+      query.limit,
+    );
   }
 
   @Get(':conversationId/smart-reply')

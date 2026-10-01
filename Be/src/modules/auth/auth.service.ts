@@ -68,32 +68,33 @@ export class AuthService {
     // 3. Hash mật khẩu
     const hashedPassword = await hashPassword(dto.password);
 
-    // 4. Tạo user (status: PENDING, emailVerified: false)
-    await this.prisma.user.create({
-      data: {
-        fullName: dto.fullName,
-        email: dto.email,
-        phone: dto.phone,
-        password: hashedPassword,
-        role: dto.role,
-        status: UserStatus.PENDING,
-        emailVerified: false,
-      },
-    });
-
-    // 5. Tạo OTP + lưu DB
+    // 4. Tạo user & lưu OTP nguyên tử trong một database transaction
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
 
-    await this.prisma.otpAttempt.create({
-      data: {
-        email: dto.email,
-        type: 'REGISTER',
-        code: null,
-        codeHash: hashToken(otp),
-        lastSentAt: new Date(),
-        expiresAt,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.create({
+        data: {
+          fullName: dto.fullName,
+          email: dto.email,
+          phone: dto.phone,
+          password: hashedPassword,
+          role: dto.role,
+          status: UserStatus.PENDING,
+          emailVerified: false,
+        },
+      });
+
+      await tx.otpAttempt.create({
+        data: {
+          email: dto.email,
+          type: 'REGISTER',
+          code: null,
+          codeHash: hashToken(otp),
+          lastSentAt: new Date(),
+          expiresAt,
+        },
+      });
     });
 
     // 6. Gửi OTP qua JobsService: inline ở free mode, BullMQ ở redis mode

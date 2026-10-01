@@ -110,6 +110,7 @@ describe('BookingQueryService ownership', () => {
     expect(prisma.bookingStatusHistory.findMany).toHaveBeenCalledWith({
       where: { bookingId: 77 },
       orderBy: { createdAt: 'asc' },
+      take: 100,
     });
   });
 });

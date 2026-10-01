@@ -26,7 +26,7 @@ class MemoryTrackingLocationStore implements TrackingLocationStore {
     { location: TrackingLocation; expiresAt: number }
   >();
 
-  async set(
+  set(
     bookingId: number,
     location: TrackingLocation,
     ttlSeconds: number,
@@ -35,20 +35,22 @@ class MemoryTrackingLocationStore implements TrackingLocationStore {
       location,
       expiresAt: Date.now() + ttlSeconds * 1000,
     });
+    return Promise.resolve();
   }
 
-  async get(bookingId: number): Promise<TrackingLocation | null> {
+  get(bookingId: number): Promise<TrackingLocation | null> {
     const entry = this.locations.get(bookingId);
-    if (!entry) return null;
+    if (!entry) return Promise.resolve(null);
     if (entry.expiresAt <= Date.now()) {
       this.locations.delete(bookingId);
-      return null;
+      return Promise.resolve(null);
     }
-    return entry.location;
+    return Promise.resolve(entry.location);
   }
 
-  async delete(bookingId: number): Promise<void> {
+  delete(bookingId: number): Promise<void> {
     this.locations.delete(bookingId);
+    return Promise.resolve();
   }
 
   clear(): void {
