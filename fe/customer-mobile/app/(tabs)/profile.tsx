@@ -237,7 +237,7 @@ export default function ProfileScreen() {
           <CustomerCard contentStyle={{ padding: 0 }}>
             <ProfileAction
               icon="account-edit-outline"
-              color="#0B7CFF"
+              color={activeColors.primary}
               title="Cập nhật hồ sơ"
               description="Đổi tên, số điện thoại và ảnh đại diện"
               onPress={() => router.push(routes.profile.edit)}
@@ -245,7 +245,7 @@ export default function ProfileScreen() {
             />
             <ProfileAction
               icon="map-marker-outline"
-              color="#10B981"
+              color={activeColors.success}
               title="Quản lý địa chỉ"
               description="Thêm địa chỉ đặt dịch vụ và đặt mặc định"
               onPress={() => router.push(routes.profile.addresses)}
@@ -253,7 +253,7 @@ export default function ProfileScreen() {
             />
             <ProfileAction
               icon="heart-outline"
-              color="#F43F5E"
+              color={activeColors.error}
               title="Dịch vụ yêu thích"
               description="Danh sách các dịch vụ bạn đã lưu lại"
               onPress={() => router.push('/profile/favorites' as any)}
@@ -261,7 +261,7 @@ export default function ProfileScreen() {
             />
             <ProfileAction
               icon="lock-outline"
-              color="#7C3AED"
+              color={activeColors.statusQuoted}
               title="Đổi mật khẩu"
               description="Cập nhật mật khẩu đăng nhập"
               onPress={() => router.push(routes.profile.changePassword)}
@@ -278,7 +278,7 @@ export default function ProfileScreen() {
           <CustomerCard contentStyle={{ padding: 0 }}>
             <ProfileAction
               icon="bell-outline"
-              color="#EC4899"
+              color={activeColors.primaryLight}
               title="Thông báo"
               description="Xem cập nhật đơn hàng và tin nhắn"
               onPress={() => router.push(routes.notifications)}
@@ -286,7 +286,7 @@ export default function ProfileScreen() {
             />
             <ProfileAction
               icon="help-circle-outline"
-              color="#0284C7"
+              color={activeColors.info}
               title="Trợ giúp & Hỗ trợ"
               description="Câu hỏi thường gặp và liên hệ hỗ trợ"
               onPress={() => {}}
@@ -577,7 +577,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#F59E0B',
+    backgroundColor: activeColors.warning,
     borderRadius: 3,
   },
   progressText: {

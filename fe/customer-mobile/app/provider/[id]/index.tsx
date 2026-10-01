@@ -354,11 +354,11 @@ function StatsGrid({ provider }: { provider: ProviderProfile }) {
 
   return (
     <View style={styles.statsGrid}>
-      <MetricCard icon="star" label="Đánh giá" value={formatMetric(stats.avgRating, '/5')} color="#FBBF24" />
+      <MetricCard icon="star" label="Đánh giá" value={formatMetric(stats.avgRating, '/5')} color={activeColors.warning} />
       <MetricCard icon="comment-quote-outline" label="Lượt đánh giá" value={formatMetric(stats.totalReviews)} color={activeColors.primary} />
       <MetricCard icon="briefcase-check-outline" label="Dịch vụ" value={formatMetric(stats.totalServices)} color={activeColors.success} />
       <MetricCard icon="timer-outline" label="Phản hồi TB" value={formatMetric(metrics.avgResponseHours, 'h')} color={activeColors.info} />
-      <MetricCard icon="progress-check" label="Hoàn thành" value={formatMetric(metrics.completionRate, '%')} color="#7C3AED" />
+      <MetricCard icon="progress-check" label="Hoàn thành" value={formatMetric(metrics.completionRate, '%')} color={activeColors.statusQuoted} />
       <MetricCard icon="check-decagram-outline" label="Đơn hoàn tất" value={formatMetric(metrics.totalCompleted)} color={activeColors.success} />
     </View>
   );
@@ -497,7 +497,7 @@ function ProviderServiceCard({
 
           <View style={styles.serviceMetaRow}>
             <View style={styles.ratingBadge}>
-              <MaterialCommunityIcons name="star" size={14} color="#FBBF24" />
+              <MaterialCommunityIcons name="star" size={14} color={activeColors.warning} />
               <Text variant="labelSmall" style={styles.ratingBadgeText}>
                 {rating.toFixed(1)}
               </Text>
