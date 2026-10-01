@@ -12,13 +12,13 @@ import {
   CustomerCard,
   EmptyState,
   InlineMessage,
-  SectionHeader,
 } from '../../../components/customer/customer-ui';
 import { Colors } from '../../../constants/colors';
 import { chatApi } from '../../../features/chat/chat.api';
 import { serviceApi } from '../../../features/service/service.api';
 import { useServiceStore } from '../../../features/service/service.store';
-import { formatDateTime } from '../../../lib/format';
+import { ServiceReviewsSection } from '../../../features/service/components/ServiceReviewsSection';
+import type { ServiceReview } from '../../../features/service/components/ServiceReviewsSection';
 import { normalizeList, normalizePaginated, unwrapData } from '../../../lib/api-response';
 import { toRouteId, routes } from '../../../lib/route-utils';
 import { ServiceOverviewCard } from '../../../features/service/components/ServiceOverviewCard';
@@ -29,15 +29,7 @@ type ServiceImage = {
   url?: string;
 };
 
-type ReviewItem = {
-  id?: number | string;
-  rating?: number | string;
-  comment?: string | null;
-  createdAt?: string | null;
-  customer?: {
-    fullName?: string | null;
-  } | null;
-};
+type ReviewItem = ServiceReview;
 
 type ServiceDetail = {
   id?: number | string;
@@ -89,6 +81,18 @@ function getProvider(service?: ServiceDetail | null) {
   return service?.provider || null;
 }
 
+function getAvatarColor(name?: string | null) {
+  const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#06B6D4', '#EF4444', '#6366F1'];
+  if (!name) return colors[0];
+  let hash = 0;
+  for (let index = 0; index < name.length; index += 1) hash = name.charCodeAt(index) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function getInitial(name?: string | null) {
+  return (name || 'N').trim().charAt(0).toUpperCase();
+}
+
 function getReviewList(serviceReviews: ReviewItem[] | undefined, reviewsResponse: unknown) {
   const remoteReviews = normalizePaginated<ReviewItem>(reviewsResponse, 1);
   const fallbackReviews = Array.isArray(serviceReviews) ? serviceReviews : [];
@@ -104,30 +108,6 @@ function getReviewList(serviceReviews: ReviewItem[] | undefined, reviewsResponse
 function getConversationId(payload: unknown) {
   const data: any = unwrapData(payload);
   return data?.id ?? data?.conversation?.id ?? data?.data?.id ?? data?.data?.conversation?.id;
-}
-
-function getAvatarColor(name?: string | null) {
-  const colors = [
-    '#3B82F6', // Blue
-    '#10B981', // Green
-    '#8B5CF6', // Purple
-    '#F59E0B', // Orange
-    '#EC4899', // Pink
-    '#06B6D4', // Cyan
-    '#EF4444', // Red
-    '#6366F1', // Indigo
-  ];
-  if (!name) return colors[0];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % colors.length;
-  return colors[index];
-}
-
-function getInitial(name?: string | null) {
-  return (name || 'N').trim().charAt(0).toUpperCase();
 }
 
 function formatStatValue(value: unknown, suffix = '') {
@@ -379,24 +359,14 @@ export default function ServiceDetailScreen() {
           }}
         />
 
-        <View style={styles.section}>
-          <SectionHeader
-            title="Đánh giá gần đây"
-            subtitle={reviewsTotal ? `${reviewsTotal} đánh giá` : undefined}
-            actionLabel={reviewsHasMore ? (reviewQuery.isFetchingNextPage ? 'Đang tải...' : 'Xem thêm') : undefined}
-            onAction={reviewsHasMore ? () => void reviewQuery.fetchNextPage() : undefined}
-          />
-          {reviewQuery.isError ? (
-            <InlineMessage tone="warning" message="Không thể tải thêm đánh giá. Hãy thử lại." />
-          ) : null}
-          {reviews.length === 0 ? (
-            <EmptyState icon="star-outline" title="Chưa có đánh giá" description="Hãy là khách hàng đầu tiên đánh giá dịch vụ này." />
-          ) : (
-            reviews.map((review, index) => (
-              <ReviewCard key={String(review.id || `review-${index}`)} review={review} />
-            ))
-          )}
-        </View>
+        <ServiceReviewsSection
+          reviews={reviews}
+          total={reviewsTotal}
+          hasMore={reviewsHasMore}
+          loadingMore={reviewQuery.isFetchingNextPage}
+          hasError={reviewQuery.isError}
+          onLoadMore={() => void reviewQuery.fetchNextPage()}
+        />
       </ScrollView>
 
       <BottomActionBar>
@@ -561,45 +531,6 @@ function StatItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ReviewCard({ review }: { review: ReviewItem }) {
-  const activeColors = useActiveColors();
-  const styles = getStyles(activeColors);
-  const avatarColor = useMemo(() => getAvatarColor(review.customer?.fullName), [review.customer?.fullName]);
-  const initials = useMemo(() => getInitial(review.customer?.fullName), [review.customer?.fullName]);
-
-  return (
-    <CustomerCard style={styles.reviewCardOuter}>
-      <View style={styles.reviewCard}>
-        <View style={styles.reviewHeader}>
-          <View style={[styles.reviewAvatar, { backgroundColor: avatarColor }]}>
-            <Text style={styles.reviewAvatarText}>{initials}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text variant="titleSmall" style={styles.reviewName} numberOfLines={1}>
-              {review.customer?.fullName || 'Khách hàng'}
-            </Text>
-            {review.createdAt ? (
-              <Text variant="labelSmall" style={styles.subtitle}>
-                {formatDateTime(review.createdAt)}
-              </Text>
-            ) : null}
-          </View>
-          <View style={styles.reviewRating}>
-            <MaterialCommunityIcons name="star" size={15} color={activeColors.warning} />
-            <Text variant="labelSmall" style={styles.ratingText}>
-              {Number(review.rating || 0).toFixed(1)}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.reviewDivider} />
-        <Text variant="bodySmall" style={styles.description}>
-          {review.comment || 'Không có phản hồi dạng văn bản.'}
-        </Text>
-      </View>
-    </CustomerCard>
-  );
-}
-
 function DetailSkeleton() {
   const activeColors = useActiveColors();
   const styles = getStyles(activeColors);
@@ -676,9 +607,6 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   statValue: { color: activeColors.text, fontWeight: '900', textAlign: 'center', fontVariant: ['tabular-nums'] },
   statLabel: { color: activeColors.textSecondary, textAlign: 'center' },
   section: { gap: 10 },
-  reviewCard: { gap: 8 },
-  reviewName: { color: activeColors.text, fontWeight: '900', flex: 1 },
-  reviewRating: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   retryButton: { borderRadius: 12, alignSelf: 'center' },
   bottomButton: { flex: 1, borderRadius: 12 },
   skeletonScreen: { gap: 14 },
@@ -704,15 +632,4 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   verifiedBadgeText: { color: activeColors.success, fontSize: 10, fontWeight: '700' },
   verticalDivider: { width: 1, height: 24, backgroundColor: activeColors.border, alignSelf: 'center' },
   divider: { height: 1, backgroundColor: activeColors.border, marginVertical: 4 },
-  reviewCardOuter: { borderColor: activeColors.border },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  reviewAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reviewAvatarText: { color: activeColors.onPrimary, fontWeight: 'bold', fontSize: 13 },
-  reviewDivider: { height: 1, backgroundColor: activeColors.border, marginVertical: 6, opacity: 0.6 },
 });
