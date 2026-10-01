@@ -86,7 +86,7 @@ function getAddressColor(label?: string | null, activeColors?: any): string {
   const text = String(label || '').toLowerCase();
   if (text.includes('nhà') || text.includes('home')) return activeColors.primary;
   if (text.includes('cơ quan') || text.includes('công ty') || text.includes('văn phòng') || text.includes('office') || text.includes('work')) {
-    return '#7C3AED';
+    return activeColors.statusQuoted;
   }
   return activeColors.secondary;
 }
@@ -289,7 +289,7 @@ export default function AddressesScreen() {
                 <MaterialCommunityIcons
                   name="home-outline"
                   size={16}
-                  color={form.label === 'Nhà riêng' ? '#FFFFFF' : activeColors.textSecondary}
+                  color={form.label === 'Nhà riêng' ? activeColors.onPrimary : activeColors.textSecondary}
                 />
                 <Text
                   style={[
@@ -314,7 +314,7 @@ export default function AddressesScreen() {
                 <MaterialCommunityIcons
                   name="briefcase-outline"
                   size={16}
-                  color={form.label === 'Văn phòng' ? '#FFFFFF' : activeColors.textSecondary}
+                  color={form.label === 'Văn phòng' ? activeColors.onPrimary : activeColors.textSecondary}
                 />
                 <Text
                   style={[
@@ -338,7 +338,7 @@ export default function AddressesScreen() {
                 <MaterialCommunityIcons
                   name="map-marker-outline"
                   size={16}
-                  color={isCustomLabel ? '#FFFFFF' : activeColors.textSecondary}
+                  color={isCustomLabel ? activeColors.onPrimary : activeColors.textSecondary}
                 />
                 <Text
                   style={[
@@ -418,7 +418,7 @@ export default function AddressesScreen() {
               <Switch
                 value={form.isDefault || false}
                 onValueChange={(val) => updateForm({ isDefault: val })}
-                color="#EA580C"
+                color={activeColors.statusInProgress}
               />
             </View>
           )}
@@ -712,7 +712,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   },
   segmentedButtonActive: { backgroundColor: activeColors.primary, borderColor: activeColors.primary },
   segmentedButtonText: { fontSize: 13, color: activeColors.textSecondary, fontWeight: '700' },
-  segmentedButtonTextActive: { color: '#FFFFFF' },
+  segmentedButtonTextActive: { color: activeColors.onPrimary },
   outlineStyle: { borderRadius: 14 },
   textInput: { backgroundColor: activeColors.surface },
   miniMapContainer: {

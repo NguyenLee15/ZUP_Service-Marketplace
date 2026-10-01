@@ -383,7 +383,7 @@ function HomeHero({
         {/* Content */}
         <View style={styles.heroContent}>
           <View style={styles.heroIcon}>
-            <MaterialCommunityIcons name="home-search-outline" size={28} color="#FFFFFF" />
+            <MaterialCommunityIcons name="home-search-outline" size={28} color={activeColors.onPrimary} />
           </View>
           <View style={{ gap: 6, flex: 1 }}>
             <Text variant="titleLarge" style={styles.heroTitle}>
@@ -631,7 +631,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     padding: 12,
     gap: 8,
     justifyContent: 'center',
-    shadowColor: '#0F172A',
+    shadowColor: activeColors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,

@@ -613,7 +613,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  providerAvatarText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 24 },
+  providerAvatarText: { color: activeColors.onPrimary, fontWeight: 'bold', fontSize: 24 },
   providerNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 },
   verifiedBadge: {
     flexDirection: 'row',
@@ -646,7 +646,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 2,
   },
-  ratingBadgeText: { color: '#D97706', fontSize: 11, fontWeight: '800' },
+  ratingBadgeText: { color: activeColors.warning, fontSize: 11, fontWeight: '800' },
   reviewCountText: { color: activeColors.textSecondary, fontSize: 12 },
   serviceDivider: { height: 1, backgroundColor: activeColors.border, marginVertical: 8, opacity: 0.6 },
   actionContent: { minHeight: 44 },

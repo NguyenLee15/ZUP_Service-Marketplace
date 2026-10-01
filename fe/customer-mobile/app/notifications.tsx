@@ -99,7 +99,7 @@ function getNotificationTone(type?: string | null, activeColors?: any) {
   }
   if (value.includes("COMPLETED") || value.includes("ACCEPTED"))
     return activeColors.success;
-  if (value.includes("QUOTE")) return "#7C3AED";
+  if (value.includes("QUOTE")) return activeColors.statusQuoted;
   return activeColors.primary;
 }
 
@@ -712,7 +712,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   },
   typeText: { color: activeColors.textSecondary, fontWeight: "800", flex: 1 },
   timeText: { color: activeColors.textSecondary },
-  unreadCard: { backgroundColor: "#F3F8FF" },
+  unreadCard: { backgroundColor: activeColors.infoBg },
   unreadDot: { width: 9, height: 9, borderRadius: 5, marginTop: 4 },
   deleteButton: { margin: -8 },
   roundedButton: { alignSelf: "flex-start", borderRadius: 12 },

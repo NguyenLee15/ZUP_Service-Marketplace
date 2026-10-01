@@ -177,7 +177,7 @@ export default function EditProfileScreen() {
               </View>
             )}
             <View style={styles.cameraBadge}>
-              <MaterialCommunityIcons name="camera" size={18} color="#FFFFFF" />
+              <MaterialCommunityIcons name="camera" size={18} color={activeColors.onPrimary} />
             </View>
           </Pressable>
           <Text variant="titleMedium" style={styles.avatarLabel}>

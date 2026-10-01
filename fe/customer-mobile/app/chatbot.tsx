@@ -565,7 +565,7 @@ export default function ChatbotScreen() {
               !message.trim() || loading ? styles.sendButtonDisabled : null,
             ]}
           >
-            <MaterialCommunityIcons name="send" size={22} color="#FFFFFF" />
+            <MaterialCommunityIcons name="send" size={22} color={activeColors.onPrimary} />
           </Pressable>
         </View>
       </View>
@@ -662,7 +662,7 @@ function LoadingBubble() {
     <View style={styles.messageWrap}>
       <View style={styles.aiMessageHeader}>
         <View style={styles.aiAvatar}>
-          <MaterialCommunityIcons name="robot" size={16} color="#FFF" />
+          <MaterialCommunityIcons name="robot" size={16} color={activeColors.onPrimary} />
         </View>
         <CustomerCard
           style={[
@@ -697,8 +697,8 @@ const getStyles = (activeColors: any) => StyleSheet.create({
   bubble: { maxWidth: "94%" },
   userBubble: { backgroundColor: activeColors.primarySoft },
   assistantBubble: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#D1FAE5",
+    backgroundColor: activeColors.successBg,
+    borderColor: activeColors.success,
     borderWidth: 1,
   },
   // Typing indicator and AI Avatar
@@ -714,7 +714,7 @@ const getStyles = (activeColors: any) => StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#059669", // Emerald dark
+    backgroundColor: activeColors.success,
     alignItems: "center",
     justifyContent: "center",
   },
